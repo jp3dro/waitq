@@ -52,3 +52,72 @@ create policy "public read by token" on public.waitlist_entries
   );
 
 
+-- Multiple waitlists per business
+create table if not exists public.waitlists (
+  id uuid primary key default uuid_generate_v4(),
+  business_id uuid not null references public.businesses(id) on delete cascade,
+  name text not null,
+  created_at timestamptz not null default now(),
+  unique (business_id, name)
+);
+
+-- RLS for waitlists
+alter table public.waitlists enable row level security;
+create policy if not exists "owner read waitlists" on public.waitlists
+  for select using (
+    exists(select 1 from public.businesses b where b.id = business_id and b.owner_user_id = auth.uid())
+  );
+create policy if not exists "owner write waitlists" on public.waitlists
+  for all using (
+    exists(select 1 from public.businesses b where b.id = business_id and b.owner_user_id = auth.uid())
+  );
+
+-- Add waitlist_id to entries for scoping per-list
+alter table public.waitlist_entries add column if not exists waitlist_id uuid references public.waitlists(id) on delete cascade;
+
+-- Backfill: create Default waitlist for any business missing one
+insert into public.waitlists (business_id, name)
+select b.id, 'Default'
+from public.businesses b
+where not exists (
+  select 1 from public.waitlists w where w.business_id = b.id
+);
+
+-- Backfill existing entries to Default list
+update public.waitlist_entries e
+set waitlist_id = (
+  select w.id from public.waitlists w where w.business_id = e.business_id and w.name = 'Default' limit 1
+)
+where e.waitlist_id is null;
+
+-- Enforce waitlist_id moving forward
+alter table public.waitlist_entries alter column waitlist_id set not null;
+
+-- Prevent deleting the last waitlist of a business
+create or replace function public.prevent_last_waitlist_delete() returns trigger language plpgsql as $$
+begin
+  if ( (select count(*) from public.waitlists where business_id = old.business_id) <= 1 ) then
+    raise exception 'Each business must have at least one waitlist';
+  end if;
+  return old;
+end; $$;
+
+drop trigger if exists trg_prevent_last_waitlist_delete on public.waitlists;
+create trigger trg_prevent_last_waitlist_delete
+before delete on public.waitlists
+for each row execute function public.prevent_last_waitlist_delete();
+
+-- Auto-create a Default waitlist for newly created businesses
+create or replace function public.create_default_waitlist() returns trigger language plpgsql as $$
+begin
+  insert into public.waitlists (business_id, name) values (new.id, 'Default')
+  on conflict (business_id, name) do nothing;
+  return new;
+end; $$;
+
+drop trigger if exists trg_create_default_waitlist on public.businesses;
+create trigger trg_create_default_waitlist
+after insert on public.businesses
+for each row execute function public.create_default_waitlist();
+
+
