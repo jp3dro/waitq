@@ -105,20 +105,7 @@ export default function WaitlistTable() {
     else if ((j.waitlists || []).length > 0) setWaitlistId(j.waitlists[0].id);
   }
 
-  const deleteList = () => {
-    if (!waitlistId) return;
-    startTransition(async () => {
-      setMsg(null);
-      const res = await fetch(`/api/waitlists?id=${encodeURIComponent(waitlistId)}`, { method: "DELETE" });
-      const j = await res.json().catch(() => ({}));
-      if (res.ok) {
-        await reloadWaitlists();
-        await load();
-      } else {
-        setMsg(j?.error ?? "Failed to delete waitlist");
-      }
-    });
-  };
+  // Deleting lists is managed in Settings → Lists
 
   const remove = (id: string) => {
     startTransition(async () => {
@@ -143,17 +130,13 @@ export default function WaitlistTable() {
   return (
     <div className="bg-white ring-1 ring-black/5 rounded-xl shadow-sm">
       <div className="px-6 py-4 border-b flex items-center justify-between gap-4">
-        <h2 className="text-base font-semibold">Current queue</h2>
-        <div className="flex items-center gap-2">
-          <label className="text-sm text-neutral-600">Waitlist</label>
+        <div className="flex items-center gap-3">
+          <h2 className="text-base font-semibold">Waiting queue</h2>
           <select className="rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 px-2 py-1 text-sm" value={waitlistId ?? ""} onChange={(e) => setWaitlistId(e.target.value)}>
             {waitlists.map((w) => (
               <option key={w.id} value={w.id}>{w.name}</option>
             ))}
           </select>
-          {waitlists.length > 1 ? (
-            <button disabled={isPending} onClick={deleteList} className="inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium ring-1 ring-inset ring-red-300 text-red-700 hover:bg-red-50 disabled:opacity-50">Delete</button>
-          ) : null}
         </div>
       </div>
       {msg ? (
