@@ -2,35 +2,80 @@
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-type Entry = { status: string; created_at: string; eta_minutes: number | null; queue_position: number | null };
+type Entry = { status: string; created_at: string; eta_minutes: number | null; queue_position: number | null; waitlist_id?: string; ticket_number?: number | null; notified_at?: string | null };
 
 export default function ClientStatus({ token }: { token: string }) {
   const supabase = createClient();
   const [data, setData] = useState<Entry | null>(null);
   const [loading, setLoading] = useState(true);
   const pollTimer = useRef<number | null>(null);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const [nowServing, setNowServing] = useState<number | null>(null);
+  const bcRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
-  async function load() {
-    setLoading(true);
-    const { data } = await supabase
-      .from("waitlist_entries")
-      .select("status, created_at, eta_minutes, queue_position, token")
-      .eq("token", token)
-      .single();
-    setData((data as unknown as Entry) || null);
-    setLoading(false);
+  async function load(silent: boolean = false) {
+    if (!silent && !data) setLoading(true);
+    const res = await fetch(`/api/w-status?token=${encodeURIComponent(token)}`, { cache: "no-store" });
+    const j = await res.json();
+    const entry = (j.entry as Entry) || null;
+    setData((prev) => ({ ...(prev || entry || null), ...(entry || {}) } as Entry));
+    setNowServing(j.nowServing ?? null);
+    if (!silent || !data) setLoading(false);
   }
 
   useEffect(() => {
     load();
-    // Poll every 2s for near real-time updates (no auth required)
-    pollTimer.current = window.setInterval(() => {
-      load();
-    }, 2000);
+    // Optional: disable polling fallback; rely only on realtime
+    // pollTimer.current = window.setInterval(() => {
+    //   load(true);
+    // }, 2000);
     return () => {
       if (pollTimer.current) window.clearInterval(pollTimer.current);
     };
   }, [token]);
+
+  // Realtime subscription by waitlist_id when known
+  useEffect(() => {
+    if (!data?.waitlist_id) return;
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
+    const channel = supabase
+      .channel(`user-status-${data.waitlist_id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "waitlist_entries", filter: `waitlist_id=eq.${data.waitlist_id}` },
+        () => {
+          // Refresh silently on any change in the same waitlist
+          load(true);
+        }
+      )
+      .subscribe();
+    channelRef.current = channel;
+    return () => {
+      if (channelRef.current) supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    };
+  }, [supabase, data?.waitlist_id]);
+
+  // Broadcast fallback: dashboard sends refresh on call; listen and refresh silently
+  useEffect(() => {
+    if (!data?.waitlist_id) return;
+    if (bcRef.current) {
+      supabase.removeChannel(bcRef.current);
+      bcRef.current = null;
+    }
+    const chan = supabase
+      .channel(`user-wl-${data.waitlist_id}`)
+      .on('broadcast', { event: 'refresh' }, () => load(true))
+      .subscribe();
+    bcRef.current = chan;
+    return () => {
+      if (bcRef.current) supabase.removeChannel(bcRef.current);
+      bcRef.current = null;
+    };
+  }, [supabase, data?.waitlist_id]);
 
   if (loading || !data) return (
     <main className="p-8">
@@ -47,6 +92,12 @@ export default function ClientStatus({ token }: { token: string }) {
       <div className="max-w-xl mx-auto">
         <div className="rounded-2xl bg-white ring-1 ring-black/5 shadow-sm p-6">
           <h1 className="text-xl font-semibold">Your place in line</h1>
+          {nowServing ? (
+            <div className="mt-2 flex items-center gap-2">
+              <span className="text-sm text-neutral-600">Now serving</span>
+              <span className="text-2xl font-bold">{nowServing}</span>
+            </div>
+          ) : null}
           <div className="mt-4 grid gap-3">
             <div className="flex items-center gap-2">
               <span className="text-sm text-neutral-600">Status</span>

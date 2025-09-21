@@ -35,11 +35,11 @@ export default function DisplayClient({ token }: { token: string }) {
     return () => { if (timer.current) window.clearInterval(timer.current); };
   }, [token]);
 
-  // Polling fallback without flicker
-  useEffect(() => {
-    const id = window.setInterval(() => load(true), 2000);
-    return () => window.clearInterval(id);
-  }, [token]);
+  // Optional: disable polling fallback; rely only on realtime and broadcast
+  // useEffect(() => {
+  //   const id = window.setInterval(() => load(true), 2000);
+  //   return () => window.clearInterval(id);
+  // }, [token]);
 
   useEffect(() => {
     if (!data?.listId || subCreated.current) return;
@@ -68,7 +68,7 @@ export default function DisplayClient({ token }: { token: string }) {
       .channel(`display-bc-${token}`)
       .on('broadcast', { event: 'refresh' }, () => {
         if (timer.current) window.clearTimeout(timer.current);
-        timer.current = window.setTimeout(() => load(), 100);
+        timer.current = window.setTimeout(() => load(true), 100);
       })
       .subscribe();
     bcCreated.current = true;

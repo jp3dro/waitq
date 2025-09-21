@@ -75,7 +75,7 @@ export default function WaitlistTable() {
           if (refreshTimer.current) window.clearTimeout(refreshTimer.current);
           refreshTimer.current = window.setTimeout(() => {
             load(true);
-          }, 150);
+          }, 100);
         }
       )
       .subscribe();
@@ -150,6 +150,15 @@ export default function WaitlistTable() {
         try {
           if (displayChannelRef.current) {
             await displayChannelRef.current.send({ type: 'broadcast', event: 'refresh', payload: {} });
+          }
+        } catch {}
+        // Broadcast to personal status clients of this waitlist
+        try {
+          const wl = waitlistId;
+          if (wl) {
+            const chan = supabase.channel(`user-wl-${wl}`);
+            await chan.send({ type: 'broadcast', event: 'refresh', payload: {} });
+            supabase.removeChannel(chan);
           }
         } catch {}
         await load(true);
