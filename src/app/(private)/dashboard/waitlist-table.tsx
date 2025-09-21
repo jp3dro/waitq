@@ -20,14 +20,31 @@ export default function WaitlistTable() {
   const [msg, setMsg] = useState<string | null>(null);
   const supabase = createClient();
   const refreshTimer = useRef<number | null>(null);
+  const prevIdsRef = useRef<Set<string>>(new Set());
+  const [highlightIds, setHighlightIds] = useState<Set<string>>(new Set());
 
-  async function load() {
-    setLoading(true);
+  async function load(silent: boolean = false) {
+    if (!silent) setLoading(true);
     const url = waitlistId ? `/api/waitlist-list?waitlistId=${encodeURIComponent(waitlistId)}` : "/api/waitlist-list";
     const res = await fetch(url, { cache: "no-store" });
     const data = (await res.json()) as { entries: Entry[] };
-    setEntries(data.entries || []);
-    setLoading(false);
+
+    // Compute new ids for highlight animation
+    const incoming = data.entries || [];
+    const incomingIds = new Set(incoming.map((e) => e.id));
+    const prevIds = prevIdsRef.current;
+    const newIds = new Set<string>();
+    incoming.forEach((e) => {
+      if (!prevIds.has(e.id)) newIds.add(e.id);
+    });
+    if (newIds.size > 0) {
+      setHighlightIds(newIds);
+      window.setTimeout(() => setHighlightIds(new Set()), 1200);
+    }
+    prevIdsRef.current = incomingIds;
+
+    setEntries(incoming);
+    if (!silent) setLoading(false);
   }
 
   useEffect(() => {
@@ -40,7 +57,7 @@ export default function WaitlistTable() {
   }, []);
 
   useEffect(() => {
-    load();
+    load(false);
   }, [waitlistId]);
 
   // Realtime: subscribe to entries for selected waitlist
@@ -55,7 +72,7 @@ export default function WaitlistTable() {
           // Debounce rapid bursts
           if (refreshTimer.current) window.clearTimeout(refreshTimer.current);
           refreshTimer.current = window.setTimeout(() => {
-            load();
+            load(true);
           }, 150);
         }
       )
@@ -106,7 +123,7 @@ export default function WaitlistTable() {
   const remove = (id: string) => {
     startTransition(async () => {
       await fetch(`/api/waitlist?id=${encodeURIComponent(id)}`, { method: "DELETE" });
-      await load();
+      await load(true);
     });
   };
 
@@ -156,7 +173,7 @@ export default function WaitlistTable() {
           </thead>
           <tbody>
             {entries.map((e) => (
-              <tr key={e.id} className="border-t hover:bg-neutral-50">
+              <tr key={e.id} className={`border-t hover:bg-neutral-50 ${highlightIds.has(e.id) ? "row-flash" : ""}`}>
                 <td className="p-2">{e.queue_position ?? "-"}</td>
                 <td className="p-2">{e.customer_name ?? "—"}</td>
                 <td className="p-2">{e.phone}</td>

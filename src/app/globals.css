@@ -30,3 +30,13 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* Subtle row flash on new entries */
+.row-flash {
+  animation: rowFlash 1.2s ease-out 1;
+}
+
+@keyframes rowFlash {
+  0% { background-color: #ecfeff; }
+  100% { background-color: transparent; }
+}

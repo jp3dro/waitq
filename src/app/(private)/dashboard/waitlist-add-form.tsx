@@ -42,8 +42,18 @@ export default function AddForm({ onDone }: { onDone?: () => void }) {
         } catch {}
         onDone?.();
       } else {
-        const j = await res.json().catch(() => ({}));
-        setMessage(j?.error ?? "Failed to add");
+        const j = await res.json().catch(() => ({} as any));
+        const err = (j as any)?.error;
+        let msg = "Failed to add";
+        if (typeof err === "string") msg = err;
+        else if (err?.message) msg = String(err.message);
+        else if (Array.isArray(err?.formErrors) && err.formErrors.length) msg = err.formErrors.join(", ");
+        else if (err?.fieldErrors && typeof err.fieldErrors === "object") {
+          const parts = Object.entries(err.fieldErrors as Record<string, string[] | undefined>)
+            .flatMap(([field, arr]) => (arr || []).map((e) => `${field}: ${e}`));
+          if (parts.length) msg = parts.join("; ");
+        }
+        setMessage(msg);
       }
     });
   };
