@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 type Entry = {
   id: string;
@@ -16,8 +17,9 @@ export default function WaitlistTable() {
   const [isPending, startTransition] = useTransition();
   const [waitlists, setWaitlists] = useState<{ id: string; name: string }[]>([]);
   const [waitlistId, setWaitlistId] = useState<string | null>(null);
-  const [newListName, setNewListName] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
+  const supabase = createClient();
+  const refreshTimer = useRef<number | null>(null);
 
   async function load() {
     setLoading(true);
@@ -41,6 +43,43 @@ export default function WaitlistTable() {
     load();
   }, [waitlistId]);
 
+  // Realtime: subscribe to entries for selected waitlist
+  useEffect(() => {
+    if (!waitlistId) return;
+    const channel = supabase
+      .channel(`waitlist-entries-${waitlistId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "waitlist_entries", filter: `waitlist_id=eq.${waitlistId}` },
+        () => {
+          // Debounce rapid bursts
+          if (refreshTimer.current) window.clearTimeout(refreshTimer.current);
+          refreshTimer.current = window.setTimeout(() => {
+            load();
+          }, 150);
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, waitlistId]);
+
+  // Realtime: watch waitlists list updates
+  useEffect(() => {
+    const channel = supabase
+      .channel("waitlists-meta")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "waitlists" },
+        () => reloadWaitlists()
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase]);
+
   async function reloadWaitlists(selectId?: string) {
     const res = await fetch("/api/waitlists", { cache: "no-store" });
     const j = await res.json();
@@ -48,27 +87,6 @@ export default function WaitlistTable() {
     if (selectId) setWaitlistId(selectId);
     else if ((j.waitlists || []).length > 0) setWaitlistId(j.waitlists[0].id);
   }
-
-  const createList = () => {
-    startTransition(async () => {
-      setMsg(null);
-      const name = newListName.trim();
-      if (!name) return;
-      const res = await fetch("/api/waitlists", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, businessId: undefined }),
-      });
-      const j = await res.json().catch(() => ({}));
-      if (res.ok) {
-        setNewListName("");
-        await reloadWaitlists(j.waitlist?.id);
-        await load();
-      } else {
-        setMsg(j?.error ?? "Failed to create waitlist");
-      }
-    });
-  };
 
   const deleteList = () => {
     if (!waitlistId) return;
@@ -116,8 +134,6 @@ export default function WaitlistTable() {
               <option key={w.id} value={w.id}>{w.name}</option>
             ))}
           </select>
-          <input value={newListName} onChange={(e) => setNewListName(e.target.value)} placeholder="New list name" className="rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 px-2 py-1 text-sm" />
-          <button disabled={isPending || !newListName.trim()} onClick={createList} className="inline-flex items-center rounded-md bg-black px-3 py-1.5 text-xs font-medium text-white shadow-sm disabled:opacity-50">Create</button>
           {waitlists.length > 1 ? (
             <button disabled={isPending} onClick={deleteList} className="inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium ring-1 ring-inset ring-red-300 text-red-700 hover:bg-red-50 disabled:opacity-50">Delete</button>
           ) : null}

@@ -9,6 +9,7 @@ const schema = z.object({
   waitlistId: z.string().uuid(),
   phone: z.string().min(8),
   customerName: z.string().min(1),
+  sendSms: z.boolean().optional().default(false),
 });
 
 export async function POST(req: NextRequest) {
@@ -25,7 +26,7 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const token = nanoid(16);
-  const { waitlistId, phone, customerName } = parse.data;
+  const { waitlistId, phone, customerName, sendSms } = parse.data;
 
   // Look up business_id from waitlist to keep entries consistent
   const { data: w, error: wErr } = await supabase
@@ -42,11 +43,13 @@ export async function POST(req: NextRequest) {
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
-  const statusUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/w/${data.token}`;
-  try {
-    await sendSms(phone, `You're on the list! Track your spot: ${statusUrl}`);
-  } catch {
-    // proceed even if SMS fails
+  if (sendSms) {
+    const statusUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/w/${data.token}`;
+    try {
+      await sendSms(phone, `You're on the list! Track your spot: ${statusUrl}`);
+    } catch {
+      // proceed even if SMS fails
+    }
   }
 
   return NextResponse.json({ id: data.id, token: data.token, statusUrl }, { status: 201 });
