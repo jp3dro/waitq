@@ -43,8 +43,8 @@ export async function POST(req: NextRequest) {
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
+  const statusUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/w/${data.token}`;
   if (sendSms) {
-    const statusUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/w/${data.token}`;
     try {
       await sendSms(phone, `You're on the list! Track your spot: ${statusUrl}`);
     } catch {

@@ -1,16 +1,18 @@
 "use client";
 import { useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
+import { parsePhoneNumberFromString, getCountries, getCountryCallingCode } from "libphonenumber-js";
 
-type FormValues = { phone: string; customerName: string; waitlistId: string; sendSms: boolean };
+type FormValues = { phone: string; customerName: string; waitlistId: string; sendSms: boolean; country: string };
 
 export default function AddForm({ onDone }: { onDone?: () => void }) {
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
-  const { register, handleSubmit, reset, watch } = useForm<FormValues>({
-    defaultValues: { phone: "", customerName: "", waitlistId: "", sendSms: false },
+  const { register, handleSubmit, reset, watch, setValue } = useForm<FormValues>({
+    defaultValues: { phone: "", customerName: "", waitlistId: "", sendSms: false, country: "US" },
   });
   const [waitlists, setWaitlists] = useState<{ id: string; name: string }[]>([]);
+  const countries = getCountries();
 
   useEffect(() => {
     (async () => {
@@ -32,7 +34,7 @@ export default function AddForm({ onDone }: { onDone?: () => void }) {
         body: JSON.stringify(values),
       });
       if (res.ok) {
-        reset({ phone: "", customerName: "", waitlistId: values.waitlistId, sendSms: false });
+        reset({ phone: "", customerName: "", waitlistId: values.waitlistId, sendSms: false, country: watch("country") });
         setMessage("Added and SMS sent (if configured)");
         try {
           const { toast } = await import("react-hot-toast");
@@ -63,7 +65,32 @@ export default function AddForm({ onDone }: { onDone?: () => void }) {
         </div>
         <div className="grid gap-1">
           <label className="text-sm font-medium">Phone</label>
-          <input className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-black px-3 py-2 text-sm" placeholder="+15551234567" {...register("phone", { required: true })} />
+          <div className="flex items-center gap-2">
+            <select className="w-1/5 min-w-24 rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-black px-3 py-2 text-sm"
+              {...register("country")}
+              onChange={(e) => {
+                const c = e.target.value;
+                setValue("country", c);
+                const code = getCountryCallingCode(c as any);
+                const current = watch("phone");
+                if (!current.startsWith("+")) {
+                  setValue("phone", `+${code}`);
+                }
+              }}
+            >
+              {countries.map((c) => (
+                <option key={c} value={c}>+{getCountryCallingCode(c as any)} {c}</option>
+              ))}
+            </select>
+            <input className="w-4/5 block rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-black px-3 py-2 text-sm" placeholder="Phone number" {...register("phone", { required: true, onBlur: (e) => {
+              const v = e.target.value.trim();
+              const p = parsePhoneNumberFromString(v, watch("country") as any);
+              if (p) {
+                setValue("phone", p.number);
+                setValue("country", p.country || watch("country"));
+              }
+            } })} />
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <input id="send-sms" type="checkbox" className="h-4 w-4 rounded border-neutral-300 text-black focus:ring-black" {...register("sendSms")} />

@@ -1,4 +1,5 @@
 import Nav from "@/components/nav";
+import Link from "next/link";
 
 export default function MarketingLayout({
   children,
@@ -8,7 +9,6 @@ export default function MarketingLayout({
   return (
     <div className="min-h-dvh flex flex-col">
       {/* Shared top navigation */}
-      {/* @ts-expect-error Async Server Component */}
       <Nav />
       <div className="flex-1">
         {children}
@@ -18,6 +18,8 @@ export default function MarketingLayout({
           <p>© {new Date().getFullYear()} WaitQ</p>
           <div className="flex gap-6">
             <Link href="/pricing" className="hover:text-black">Pricing</Link>
+            <Link href="/terms" className="hover:text-black">Terms</Link>
+            <Link href="/contact" className="hover:text-black">Contact</Link>
             <Link href="/login" className="hover:text-black">Sign in</Link>
           </div>
         </div>
