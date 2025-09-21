@@ -12,7 +12,7 @@ export default function AddForm({ onDone }: { onDone?: () => void }) {
   const { register, handleSubmit, reset, watch, setValue } = useForm<FormValues>({
     defaultValues: { phone: "", customerName: "", waitlistId: "", sendSms: false, country: "US" },
   });
-  const [waitlists, setWaitlists] = useState<{ id: string; name: string }[]>([]);
+  const [waitlists, setWaitlists] = useState<{ id: string; name: string; display_token?: string }[]>([]);
   const countries: CountryCode[] = getCountries() as CountryCode[];
 
   useEffect(() => {
@@ -40,6 +40,15 @@ export default function AddForm({ onDone }: { onDone?: () => void }) {
         try {
           const { toast } = await import("react-hot-toast");
           toast.success("Added to waitlist");
+        } catch {}
+        // Broadcast to public display for this waitlist
+        try {
+          const { createClient } = await import("@/lib/supabase/client");
+          const sb = createClient();
+          const token = (waitlists.find((w) => w.id === values.waitlistId)?.display_token) || "";
+          if (token) {
+            await sb.channel(`display-bc-${token}`).send({ type: 'broadcast', event: 'refresh', payload: {} });
+          }
         } catch {}
         onDone?.();
       } else {

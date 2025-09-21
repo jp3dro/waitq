@@ -6,7 +6,7 @@ export async function GET() {
   const supabase = await createRouteClient();
   const { data, error } = await supabase
     .from("waitlists")
-    .select("id, name, business_id, created_at")
+    .select("id, name, business_id, location_id, display_token, created_at, business_locations:location_id(id, name)")
     .order("created_at", { ascending: true });
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ waitlists: data ?? [] });
@@ -15,6 +15,7 @@ export async function GET() {
 const postSchema = z.object({
   businessId: z.string().uuid().optional(),
   name: z.string().min(1),
+  locationId: z.string().uuid().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -29,7 +30,8 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   let businessId = parse.data.businessId;
-  const { name } = parse.data;
+  const { name } = parse.data as { name: string; locationId?: string };
+  let { locationId } = parse.data as { name: string; locationId?: string };
   if (!businessId) {
     const { data: biz, error: bizErr } = await supabase
       .from("businesses")
@@ -40,10 +42,20 @@ export async function POST(req: NextRequest) {
     if (bizErr || !biz) return NextResponse.json({ error: "No business found for user" }, { status: 400 });
     businessId = biz.id as string;
   }
+  if (!locationId) {
+    const { data: loc } = await supabase
+      .from("business_locations")
+      .select("id")
+      .eq("business_id", businessId)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .single();
+    locationId = loc?.id as string | undefined;
+  }
   const { data, error } = await supabase
     .from("waitlists")
-    .insert({ business_id: businessId, name })
-    .select("id, name, business_id")
+    .insert({ business_id: businessId, name, location_id: locationId })
+    .select("id, name, business_id, location_id, display_token")
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ waitlist: data }, { status: 201 });
@@ -63,6 +75,39 @@ export async function DELETE(req: NextRequest) {
   const { error } = await supabase.from("waitlists").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ ok: true });
+}
+
+const patchSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(1).optional(),
+  locationId: z.string().uuid().optional(),
+});
+
+export async function PATCH(req: NextRequest) {
+  const json = await req.json();
+  const parse = patchSchema.safeParse(json);
+  if (!parse.success) return NextResponse.json({ error: parse.error.flatten() }, { status: 400 });
+
+  const supabase = await createRouteClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { id, name, locationId } = parse.data;
+  const payload: Record<string, unknown> = {};
+  if (typeof name === "string") payload.name = name;
+  if (typeof locationId === "string") payload.location_id = locationId;
+  if (Object.keys(payload).length === 0) return NextResponse.json({ error: "No fields to update" }, { status: 400 });
+
+  const { data, error } = await supabase
+    .from("waitlists")
+    .update(payload)
+    .eq("id", id)
+    .select("id, name, business_id, location_id, display_token")
+    .single();
+  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  return NextResponse.json({ waitlist: data });
 }
 
 

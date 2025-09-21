@@ -7,7 +7,7 @@ export async function GET(req: Request) {
   const supabase = await createRouteClient();
   let q = supabase
     .from("waitlist_entries")
-    .select("id, customer_name, phone, status, queue_position, created_at");
+    .select("id, customer_name, phone, status, queue_position, created_at, ticket_number");
   if (waitlistId) {
     q = q.eq("waitlist_id", waitlistId);
   }

@@ -9,19 +9,21 @@ type Entry = {
   status: string;
   queue_position: number | null;
   created_at: string;
+  ticket_number?: number | null;
 };
 
 export default function WaitlistTable() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
-  const [waitlists, setWaitlists] = useState<{ id: string; name: string }[]>([]);
+  const [waitlists, setWaitlists] = useState<{ id: string; name: string; display_token?: string }[]>([]);
   const [waitlistId, setWaitlistId] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const supabase = createClient();
   const refreshTimer = useRef<number | null>(null);
   const prevIdsRef = useRef<Set<string>>(new Set());
   const [highlightIds, setHighlightIds] = useState<Set<string>>(new Set());
+  const displayChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   async function load(silent: boolean = false) {
     if (!silent) setLoading(true);
@@ -30,7 +32,7 @@ export default function WaitlistTable() {
     const data = (await res.json()) as { entries: Entry[] };
 
     // Compute new ids for highlight animation
-    const incoming = data.entries || [];
+    const incoming = (data.entries || []).filter((e) => e.status !== "notified");
     const incomingIds = new Set(incoming.map((e) => e.id));
     const prevIds = prevIdsRef.current;
     const newIds = new Set<string>();
@@ -97,6 +99,24 @@ export default function WaitlistTable() {
     };
   }, [supabase]);
 
+  // Manage broadcast channel for current list's display token
+  useEffect(() => {
+    const token = waitlists.find((w) => w.id === waitlistId)?.display_token;
+    if (!token) return;
+    if (displayChannelRef.current) {
+      supabase.removeChannel(displayChannelRef.current);
+      displayChannelRef.current = null;
+    }
+    const channel = supabase
+      .channel(`display-bc-${token}`)
+      .subscribe();
+    displayChannelRef.current = channel;
+    return () => {
+      if (displayChannelRef.current) supabase.removeChannel(displayChannelRef.current);
+      displayChannelRef.current = null;
+    };
+  }, [supabase, waitlistId, waitlists]);
+
   async function reloadWaitlists(selectId?: string) {
     const res = await fetch("/api/waitlists", { cache: "no-store" });
     const j = await res.json();
@@ -111,6 +131,29 @@ export default function WaitlistTable() {
     startTransition(async () => {
       await fetch(`/api/waitlist?id=${encodeURIComponent(id)}`, { method: "DELETE" });
       await load(true);
+    });
+  };
+
+  const call = (id: string) => {
+    startTransition(async () => {
+      const res = await fetch("/api/waitlist", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, action: "call" }),
+      });
+      if (res.ok) {
+        try {
+          const { toast } = await import("react-hot-toast");
+          toast.success("User called and SMS sent (simulated)");
+        } catch {}
+        // Broadcast to public display clients of the selected list
+        try {
+          if (displayChannelRef.current) {
+            await displayChannelRef.current.send({ type: 'broadcast', event: 'refresh', payload: {} });
+          }
+        } catch {}
+        await load(true);
+      }
     });
   };
 
@@ -138,6 +181,20 @@ export default function WaitlistTable() {
             ))}
           </select>
         </div>
+        {waitlistId ? (
+          <div className="flex items-center gap-2">
+            {waitlists.find((w) => w.id === waitlistId)?.display_token ? (
+              <a
+                href={`/display/${encodeURIComponent(waitlists.find((w) => w.id === waitlistId)!.display_token!)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium ring-1 ring-inset ring-neutral-300 hover:bg-neutral-50"
+              >
+                Open Display
+              </a>
+            ) : null}
+          </div>
+        ) : null}
       </div>
       {msg ? (
         <div className="px-6 py-2 text-sm text-red-700">{msg}</div>
@@ -146,7 +203,7 @@ export default function WaitlistTable() {
         <table className="w-full text-sm">
           <thead className="bg-neutral-50 sticky top-0 z-10">
             <tr>
-              <th className="text-left p-2">Position</th>
+              <th className="text-left p-2">#</th>
               <th className="text-left p-2">Name</th>
               <th className="text-left p-2">Phone</th>
               <th className="text-left p-2">Status</th>
@@ -157,15 +214,23 @@ export default function WaitlistTable() {
           <tbody>
             {entries.map((e) => (
               <tr key={e.id} className={`border-t hover:bg-neutral-50 ${highlightIds.has(e.id) ? "row-flash" : ""}`}>
-                <td className="p-2">{e.queue_position ?? "-"}</td>
+                <td className="p-2">{e.ticket_number ?? e.queue_position ?? "-"}</td>
                 <td className="p-2">{e.customer_name ?? "—"}</td>
                 <td className="p-2">{e.phone}</td>
                 <td className="p-2">{e.status}</td>
                 <td className="p-2">{new Date(e.created_at).toLocaleString()}</td>
                 <td className="p-2 text-right">
-                  <button disabled={isPending} onClick={() => remove(e.id)} className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-red-300 text-red-700 hover:bg-red-50 disabled:opacity-50">
-                    Delete
-                  </button>
+                  <div className="inline-flex items-center gap-2">
+                    <button disabled={isPending} onClick={() => call(e.id)} className="inline-flex items-center rounded-md bg-black px-3 py-1.5 text-sm font-medium text-white shadow-sm disabled:opacity-50">
+                      Call
+                    </button>
+                    <details className="relative">
+                      <summary className="list-none inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-neutral-300 hover:bg-neutral-50 cursor-pointer">…</summary>
+                      <div className="absolute right-0 mt-1 w-40 rounded-md border bg-white shadow-sm text-sm">
+                        <button disabled={isPending} onClick={() => remove(e.id)} className="w-full text-left px-3 py-1.5 hover:bg-neutral-50 text-red-700">Delete</button>
+                      </div>
+                    </details>
+                  </div>
                 </td>
               </tr>
             ))}

@@ -39,20 +39,24 @@ export async function POST(req: NextRequest) {
   const { data, error } = await supabase
     .from("waitlist_entries")
     .insert({ business_id: w.business_id, waitlist_id: waitlistId, phone, customer_name: customerName, token })
-    .select("id, token")
+    .select("id, token, ticket_number")
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
   const statusUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/w/${data.token}`;
   if (shouldSendSms) {
     try {
-      await sendSms(phone, `You're on the list! Track your spot: ${statusUrl}`);
+      const ticket = data.ticket_number ? ` #${data.ticket_number}` : "";
+      await sendSms(
+        phone,
+        `You're on the list${ticket}! Track your spot: ${statusUrl}`
+      );
     } catch {
       // proceed even if SMS fails
     }
   }
 
-  return NextResponse.json({ id: data.id, token: data.token, statusUrl }, { status: 201 });
+  return NextResponse.json({ id: data.id, token: data.token, statusUrl, ticketNumber: data.ticket_number ?? null }, { status: 201 });
 }
 
 export async function DELETE(req: NextRequest) {
@@ -65,6 +69,43 @@ export async function DELETE(req: NextRequest) {
   const { error } = await admin.from("waitlist_entries").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ ok: true });
+}
+
+const patchSchema = z.object({
+  id: z.string().uuid(),
+  action: z.enum(["call"]).optional(),
+  status: z.enum(["waiting", "notified", "seated", "cancelled"]).optional(),
+});
+
+export async function PATCH(req: NextRequest) {
+  const json = await req.json();
+  const parse = patchSchema.safeParse(json);
+  if (!parse.success) return NextResponse.json({ error: parse.error.flatten() }, { status: 400 });
+
+  const supabase = await createRouteClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { id, action, status } = parse.data;
+  let payload: Record<string, unknown> = {};
+  if (action === "call") {
+    payload = { status: "notified", notified_at: new Date().toISOString() };
+  } else if (status) {
+    payload = { status };
+  } else {
+    return NextResponse.json({ error: "No update specified" }, { status: 400 });
+  }
+
+  const { data, error } = await supabase
+    .from("waitlist_entries")
+    .update(payload)
+    .eq("id", id)
+    .select("id, status, ticket_number")
+    .single();
+  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  return NextResponse.json({ entry: data });
 }
 
 

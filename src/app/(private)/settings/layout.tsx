@@ -11,6 +11,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
           <aside className="space-y-1 text-sm">
             <Link href="/settings/profile" className="block px-3 py-2 rounded-md hover:bg-neutral-50">Profile</Link>
             <Link href="/settings/lists" className="block px-3 py-2 rounded-md hover:bg-neutral-50">Lists</Link>
+            <Link href="/settings/locations" className="block px-3 py-2 rounded-md hover:bg-neutral-50">Locations</Link>
             <Link href="/settings/subscription" className="block px-3 py-2 rounded-md hover:bg-neutral-50">Subscription</Link>
           </aside>
           <section className="min-h-[300px]">
