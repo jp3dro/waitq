@@ -17,7 +17,7 @@ export default function ClientStatus({ token }: { token: string }) {
       .select("status, created_at, eta_minutes, queue_position, token")
       .eq("token", token)
       .single();
-    setData((data as any) || null);
+    setData((data as unknown as Entry) || null);
     setLoading(false);
   }
 

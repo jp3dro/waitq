@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const token = nanoid(16);
-  const { waitlistId, phone, customerName, sendSms } = parse.data;
+  const { waitlistId, phone, customerName, sendSms: shouldSendSms } = parse.data;
 
   // Look up business_id from waitlist to keep entries consistent
   const { data: w, error: wErr } = await supabase
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
   const statusUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/w/${data.token}`;
-  if (sendSms) {
+  if (shouldSendSms) {
     try {
       await sendSms(phone, `You're on the list! Track your spot: ${statusUrl}`);
     } catch {

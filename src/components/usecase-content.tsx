@@ -6,9 +6,9 @@ export default function UseCaseContent({ title }: { title: string }) {
         <div className="mt-6 grid gap-4 text-sm text-neutral-700">
           <p className="text-neutral-900 font-medium">Trim Client Wait Time and Streamline Operations</p>
           <p>Let Your Clients Join the Waitlist Remotely</p>
-          <p>Let your barber shop’s clients add themselves to the waitlist from wherever they are, whether it’s at home or using a tablet in your reception area. This convenience saves both you and your clients valuable time.</p>
+          <p>Let your barber shop&apos;s clients add themselves to the waitlist from wherever they are, whether it&apos;s at home or using a tablet in your reception area. This convenience saves both you and your clients valuable time.</p>
           <p>Free Up Lobby Space</p>
-          <p>Give clients the freedom to step out for a coffee or handle errands instead of waiting there in your shop. Keep them informed by sending a text message notification when it’s their turn.</p>
+          <p>Give clients the freedom to step out for a coffee or handle errands instead of waiting there in your shop. Keep them informed by sending a text message notification when it&apos;s their turn.</p>
           <p>Personalized Client Communication</p>
           <p>Automate and personalize two-way messaging throughout every client’s journey. Request inspiration images ahead of time, thank them for their visit, or ask for a review.</p>
           <p>Merge Walk-Ins and Appointments Seamlessly</p>
@@ -21,7 +21,7 @@ export default function UseCaseContent({ title }: { title: string }) {
           <ul className="mt-3 list-disc pl-6 text-sm text-neutral-700">
             <li>Reception work and waiting management are cumbersome</li>
             <li>The burden of reception work</li>
-            <li>I don't know the waiting time, it leads to dissatisfaction from customers</li>
+            <li>I don&apos;t know the waiting time, it leads to dissatisfaction from customers</li>
             <li>The stress of waiting time</li>
             <li>There is a queue in front of the store, the waiting room is crowded</li>
             <li>Occurrence of waiting line</li>

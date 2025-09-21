@@ -2,6 +2,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { parsePhoneNumberFromString, getCountries, getCountryCallingCode } from "libphonenumber-js";
+import type { CountryCode } from "libphonenumber-js";
 
 type FormValues = { phone: string; customerName: string; waitlistId: string; sendSms: boolean; country: string };
 
@@ -12,7 +13,7 @@ export default function AddForm({ onDone }: { onDone?: () => void }) {
     defaultValues: { phone: "", customerName: "", waitlistId: "", sendSms: false, country: "US" },
   });
   const [waitlists, setWaitlists] = useState<{ id: string; name: string }[]>([]);
-  const countries = getCountries();
+  const countries: CountryCode[] = getCountries() as CountryCode[];
 
   useEffect(() => {
     (async () => {
@@ -42,16 +43,26 @@ export default function AddForm({ onDone }: { onDone?: () => void }) {
         } catch {}
         onDone?.();
       } else {
-        const j = await res.json().catch(() => ({} as any));
-        const err = (j as any)?.error;
+        let parsed: unknown = {};
+        try {
+          parsed = await res.json();
+        } catch {}
+        const err = (parsed as { error?: unknown }).error;
         let msg = "Failed to add";
         if (typeof err === "string") msg = err;
-        else if (err?.message) msg = String(err.message);
-        else if (Array.isArray(err?.formErrors) && err.formErrors.length) msg = err.formErrors.join(", ");
-        else if (err?.fieldErrors && typeof err.fieldErrors === "object") {
-          const parts = Object.entries(err.fieldErrors as Record<string, string[] | undefined>)
-            .flatMap(([field, arr]) => (arr || []).map((e) => `${field}: ${e}`));
-          if (parts.length) msg = parts.join("; ");
+        else if (err && typeof err === "object") {
+          const e = err as {
+            message?: unknown;
+            formErrors?: unknown;
+            fieldErrors?: Record<string, string[] | undefined>;
+          };
+          if (typeof e.message === "string") msg = e.message;
+          else if (Array.isArray(e.formErrors) && e.formErrors.length) msg = e.formErrors.join(", ");
+          else if (e.fieldErrors && typeof e.fieldErrors === "object") {
+            const parts = Object.entries(e.fieldErrors)
+              .flatMap(([field, arr]) => (arr || []).map((v) => `${field}: ${v}`));
+            if (parts.length) msg = parts.join("; ");
+          }
         }
         setMessage(msg);
       }
@@ -81,7 +92,7 @@ export default function AddForm({ onDone }: { onDone?: () => void }) {
               onChange={(e) => {
                 const c = e.target.value;
                 setValue("country", c);
-                const code = getCountryCallingCode(c as any);
+                const code = getCountryCallingCode(c as CountryCode);
                 const current = watch("phone");
                 if (!current.startsWith("+")) {
                   setValue("phone", `+${code}`);
@@ -89,12 +100,12 @@ export default function AddForm({ onDone }: { onDone?: () => void }) {
               }}
             >
               {countries.map((c) => (
-                <option key={c} value={c}>+{getCountryCallingCode(c as any)} {c}</option>
+                <option key={c} value={c}>+{getCountryCallingCode(c as CountryCode)} {c}</option>
               ))}
             </select>
             <input className="w-4/5 block rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-black px-3 py-2 text-sm" placeholder="Phone number" {...register("phone", { required: true, onBlur: (e) => {
               const v = e.target.value.trim();
-              const p = parsePhoneNumberFromString(v, watch("country") as any);
+              const p = parsePhoneNumberFromString(v, watch("country") as CountryCode);
               if (p) {
                 setValue("phone", p.number);
                 setValue("country", p.country || watch("country"));

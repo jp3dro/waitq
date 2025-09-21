@@ -28,7 +28,8 @@ export async function POST(req: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  let { businessId, name } = parse.data;
+  let businessId = parse.data.businessId;
+  const { name } = parse.data;
   if (!businessId) {
     const { data: biz, error: bizErr } = await supabase
       .from("businesses")

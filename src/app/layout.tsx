@@ -29,7 +29,6 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {/* @ts-expect-error Async Server Component */}
         <Nav />
         {children}
         <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
