@@ -53,7 +53,7 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
             <EditListButton
               waitlistId={waitlist.id}
               initialName={waitlist.name}
-              initialLocationId={waitlist.location_id || (waitlist.business_locations as any)?.id}
+              initialLocationId={waitlist.location_id || (waitlist.business_locations as unknown as { id: string } | null)?.id}
               locations={typedLocations}
             />
             {waitlist.display_token && (
