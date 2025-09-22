@@ -196,32 +196,6 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
 
   return (
     <div className="bg-white ring-1 ring-black/5 rounded-xl shadow-sm">
-      <div className="px-6 py-4 border-b flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <h2 className="text-base font-semibold">Waiting queue</h2>
-          {fixedWaitlistId ? null : (
-            <select className="rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 px-2 py-1 text-sm" value={waitlistId ?? ""} onChange={(e) => setWaitlistId(e.target.value)}>
-              {waitlists.map((w) => (
-                <option key={w.id} value={w.id}>{w.name}</option>
-              ))}
-            </select>
-          )}
-        </div>
-        {waitlistId ? (
-          <div className="flex items-center gap-2">
-            {waitlists.find((w) => w.id === waitlistId)?.display_token ? (
-              <a
-                href={`/display/${encodeURIComponent(waitlists.find((w) => w.id === waitlistId)!.display_token!)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium ring-1 ring-inset ring-neutral-300 hover:bg-neutral-50"
-              >
-                Open Display
-              </a>
-            ) : null}
-          </div>
-        ) : null}
-      </div>
       {msg ? (
         <div className="px-6 py-2 text-sm text-red-700">{msg}</div>
       ) : null}
@@ -232,7 +206,6 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
               <th className="text-left p-2">#</th>
               <th className="text-left p-2">Name</th>
               <th className="text-left p-2">Phone</th>
-              <th className="text-left p-2">Status</th>
               <th className="text-left p-2">Created</th>
               <th className="text-left p-2"></th>
             </tr>
@@ -243,7 +216,6 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                 <td className="p-2">{e.ticket_number ?? e.queue_position ?? "-"}</td>
                 <td className="p-2">{e.customer_name ?? "—"}</td>
                 <td className="p-2">{e.phone}</td>
-                <td className="p-2">{e.status}</td>
                 <td className="p-2">{new Date(e.created_at).toLocaleString()}</td>
                 <td className="p-2 text-right">
                   <div className="inline-flex items-center gap-2">
