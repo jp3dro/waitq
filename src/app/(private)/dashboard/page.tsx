@@ -60,6 +60,13 @@ export default async function DashboardPage() {
   const etaByList = new Map(estimatedTimes.map((e) => [e.id, e.avgMs] as const));
   const totalWaiting = waitingCounts.reduce((sum, w) => sum + w.count, 0);
 
+  // Count total served users across all lists
+  const totalServed = await supabase
+    .from("waitlist_entries")
+    .select("id", { count: "exact", head: true })
+    .not("notified_at", "is", null);
+  const servedCount = totalServed.count || 0;
+
   return (
     <main className="py-10">
       <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
@@ -71,7 +78,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* Analytics cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-white ring-1 ring-black/5 rounded-xl shadow-sm p-6">
             <p className="text-sm text-neutral-600">Locations</p>
             <p className="mt-2 text-3xl font-semibold">{locationsCount}</p>
@@ -83,6 +90,10 @@ export default async function DashboardPage() {
           <div className="bg-white ring-1 ring-black/5 rounded-xl shadow-sm p-6">
             <p className="text-sm text-neutral-600">Users in queues</p>
             <p className="mt-2 text-3xl font-semibold">{totalWaiting}</p>
+          </div>
+          <div className="bg-white ring-1 ring-black/5 rounded-xl shadow-sm p-6">
+            <p className="text-sm text-neutral-600">Users served</p>
+            <p className="mt-2 text-3xl font-semibold">{servedCount}</p>
           </div>
         </div>
 
@@ -111,17 +122,18 @@ export default async function DashboardPage() {
                       const minutes = totalMin % 60;
                       const etaDisplay = totalMin > 0 ? (hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`) : '—';
                       return (
-                        <li key={l.id} className="bg-white ring-1 ring-black/5 rounded-xl shadow-sm p-5 hover:shadow transition">
-                          <div className="flex items-start justify-between gap-2">
-                            <div>
-                              <p className="font-medium">{l.name}</p>
-                              <div className="mt-1 flex items-center gap-3 text-xs text-neutral-600">
-                                <span>Waiting: {waiting}</span>
-                                <span>ETA: {etaDisplay}</span>
+                        <li key={l.id}>
+                          <Link href={`/lists/${l.id}`} className="block bg-white ring-1 ring-black/5 rounded-xl shadow-sm p-5 hover:shadow hover:bg-neutral-50 transition cursor-pointer">
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <p className="font-medium">{l.name}</p>
+                                <div className="mt-1 flex items-center gap-3 text-xs text-neutral-600">
+                                  <span>Waiting: {waiting}</span>
+                                  <span>ETA: {etaDisplay}</span>
+                                </div>
                               </div>
                             </div>
-                            <Link href={`/lists/${l.id}`} className="text-sm underline">Open</Link>
-                          </div>
+                          </Link>
                         </li>
                       );
                     })}

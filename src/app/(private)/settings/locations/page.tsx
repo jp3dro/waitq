@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import Modal from "@/components/modal";
+import toast from "react-hot-toast";
 
 type Location = { id: string; name: string; phone: string | null; address: string | null; city: string | null };
 
@@ -11,6 +12,8 @@ export default function LocationsPage() {
   const [form, setForm] = useState<{ name: string; phone: string; address: string; city: string }>({ name: "", phone: "", address: "", city: "" });
   const [openCreate, setOpenCreate] = useState(false);
   const [edit, setEdit] = useState<Location | null>(null);
+  const [editForm, setEditForm] = useState<{ name: string; phone: string; address: string; city: string }>({ name: "", phone: "", address: "", city: "" });
+  const [editMessage, setEditMessage] = useState<string | null>(null);
 
   async function load() {
     const res = await fetch("/api/locations", { cache: "no-store" });
@@ -45,23 +48,65 @@ export default function LocationsPage() {
     });
   };
 
-  const update = (id: string, updates: Partial<Omit<Location, "id">>) => {
+  const openEditModal = (location: Location) => {
+    setEdit(location);
+    setEditForm({
+      name: location.name,
+      phone: location.phone || "",
+      address: location.address || "",
+      city: location.city || "",
+    });
+    setEditMessage(null);
+  };
+
+  const closeEditModal = () => {
+    setEdit(null);
+    setEditForm({ name: "", phone: "", address: "", city: "" });
+    setEditMessage(null);
+  };
+
+  const saveEdit = () => {
+    if (!edit) return;
+    setEditMessage(null);
     startTransition(async () => {
-      setMsg(null);
+      const updates: Partial<Omit<Location, "id">> = {};
+
+      if (editForm.name !== edit.name) {
+        updates.name = editForm.name;
+      }
+      if (editForm.phone !== (edit.phone || "")) {
+        updates.phone = editForm.phone.trim() || null;
+      }
+      if (editForm.address !== (edit.address || "")) {
+        updates.address = editForm.address.trim() || null;
+      }
+      if (editForm.city !== (edit.city || "")) {
+        updates.city = editForm.city.trim() || null;
+      }
+
+      // If no fields changed, just close modal and show success
+      if (Object.keys(updates).length === 0) {
+        closeEditModal();
+        toast.success("Location updated successfully!");
+        return;
+      }
+
       const res = await fetch("/api/locations", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, ...updates }),
+        body: JSON.stringify({ id: edit.id, ...updates }),
       });
       const j = await res.json().catch(() => ({}));
       if (res.ok) {
-        setEdit(null);
+        closeEditModal();
         await load();
+        toast.success("Location updated successfully!");
       } else {
-        setMsg(j?.error ?? "Failed to update");
+        setEditMessage(j?.error ?? "Failed to update");
       }
     });
   };
+
 
   const remove = (id: string) => {
     startTransition(async () => {
@@ -93,7 +138,7 @@ export default function LocationsPage() {
             <span className="text-sm">{l.address || "—"}</span>
             <span className="text-sm">{l.city || "—"}</span>
             <div className="justify-self-end flex items-center gap-2">
-              <button onClick={() => setEdit(l)} className="inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium ring-1 ring-inset ring-neutral-300 hover:bg-neutral-50">Edit</button>
+              <button onClick={() => openEditModal(l)} className="inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium ring-1 ring-inset ring-neutral-300 hover:bg-neutral-50">Edit</button>
               {canDelete ? (
                 <button disabled={isPending} onClick={() => remove(l.id)} className="inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium ring-1 ring-inset ring-red-300 text-red-700 hover:bg-red-50 disabled:opacity-50">Delete</button>
               ) : (
@@ -120,18 +165,51 @@ export default function LocationsPage() {
     </Modal>
 
     {/* Edit Modal */}
-    <Modal open={!!edit} onClose={() => setEdit(null)} title="Edit location">
-      {edit ? (
-        <div className="grid gap-3">
-          <input defaultValue={edit.name || ""} onBlur={(e) => { const v = e.target.value.trim(); if (v && v !== edit.name) update(edit.id, { name: v }); }} placeholder="Name" className="rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 px-3 py-2 text-sm" />
-          <input defaultValue={edit.phone || ""} onBlur={(e) => { const v = e.target.value.trim(); if (v !== (edit.phone || "")) update(edit.id, { phone: v || null }); }} placeholder="Phone" className="rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 px-3 py-2 text-sm" />
-          <input defaultValue={edit.address || ""} onBlur={(e) => { const v = e.target.value.trim(); if (v !== (edit.address || "")) update(edit.id, { address: v || null }); }} placeholder="Address" className="rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 px-3 py-2 text-sm" />
-          <input defaultValue={edit.city || ""} onBlur={(e) => { const v = e.target.value.trim(); if (v !== (edit.city || "")) update(edit.id, { city: v || null }); }} placeholder="City" className="rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 px-3 py-2 text-sm" />
-          <div className="flex justify-end">
-            <button onClick={() => setEdit(null)} className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-neutral-300 hover:bg-neutral-50">Close</button>
-          </div>
+    <Modal open={!!edit} onClose={closeEditModal} title="Edit location">
+      <div className="grid gap-4">
+        <div className="grid gap-1">
+          <label className="text-sm font-medium">Name</label>
+          <input
+            value={editForm.name}
+            onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
+            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-black px-3 py-2 text-sm"
+          />
         </div>
-      ) : null}
+        <div className="grid gap-1">
+          <label className="text-sm font-medium">Phone</label>
+          <input
+            value={editForm.phone}
+            onChange={(e) => setEditForm((f) => ({ ...f, phone: e.target.value }))}
+            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-black px-3 py-2 text-sm"
+          />
+        </div>
+        <div className="grid gap-1">
+          <label className="text-sm font-medium">Address</label>
+          <input
+            value={editForm.address}
+            onChange={(e) => setEditForm((f) => ({ ...f, address: e.target.value }))}
+            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-black px-3 py-2 text-sm"
+          />
+        </div>
+        <div className="grid gap-1">
+          <label className="text-sm font-medium">City</label>
+          <input
+            value={editForm.city}
+            onChange={(e) => setEditForm((f) => ({ ...f, city: e.target.value }))}
+            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-black px-3 py-2 text-sm"
+          />
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            disabled={isPending}
+            onClick={saveEdit}
+            className="inline-flex items-center rounded-md bg-black px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-neutral-800 disabled:opacity-50"
+          >
+            {isPending ? "Saving…" : "Save"}
+          </button>
+          {editMessage ? <p className="text-sm text-red-700">{editMessage}</p> : null}
+        </div>
+      </div>
     </Modal>
     </>
   );

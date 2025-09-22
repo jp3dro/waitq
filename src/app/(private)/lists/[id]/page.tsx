@@ -16,10 +16,30 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
 
   const { data: waitlist, error } = await supabase
     .from("waitlists")
-    .select("id, name, display_token")
+    .select(`
+      id,
+      name,
+      display_token,
+      location_id,
+      business_locations (
+        id,
+        name
+      )
+    `)
     .eq("id", waitlistId)
     .single();
   if (error || !waitlist) redirect("/dashboard");
+
+  // Fetch all locations for the dropdown
+  const { data: locations } = await supabase
+    .from("business_locations")
+    .select("id, name")
+    .order("name");
+
+  const typedLocations = locations?.map(loc => ({
+    id: loc.id as string,
+    name: loc.name as string
+  })) || [];
 
   return (
     <main className="py-10">
@@ -30,7 +50,12 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
             <p className="mt-1 text-sm text-neutral-600">Manage your waitlist entries</p>
           </div>
           <div className="flex items-center gap-2">
-            <EditListButton waitlistId={waitlist.id} initialName={waitlist.name} />
+            <EditListButton
+              waitlistId={waitlist.id}
+              initialName={waitlist.name}
+              initialLocationId={waitlist.location_id || (waitlist.business_locations as any)?.id}
+              locations={typedLocations}
+            />
             {waitlist.display_token && (
               <a
                 href={`/display/${encodeURIComponent(waitlist.display_token)}`}
