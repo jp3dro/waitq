@@ -60,39 +60,42 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
     })();
   }, [fixedWaitlistId]);
 
+  // Listen to local window refresh events (triggered by forms/actions)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { waitlistId?: string } | undefined;
+      if (!detail || !waitlistId || (detail.waitlistId && detail.waitlistId !== waitlistId)) return;
+      load(true);
+    };
+    window.addEventListener('wl:refresh', handler as EventListener);
+    return () => window.removeEventListener('wl:refresh', handler as EventListener);
+  }, [waitlistId]);
+
   useEffect(() => {
     load(false);
   }, [waitlistId]);
 
-  // Realtime: subscribe to entries for selected waitlist only
+  // Realtime: subscribe to all entries and filter by waitlist_id in client
   useEffect(() => {
     if (!waitlistId) return;
     const channel = supabase
       .channel(`waitlist-entries-${waitlistId}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "waitlist_entries", filter: `waitlist_id=eq.${waitlistId}` },
-        () => {
-          if (refreshTimer.current) window.clearTimeout(refreshTimer.current);
-          refreshTimer.current = window.setTimeout(() => { load(true); }, 60);
+        { event: "*", schema: "public", table: "waitlist_entries" },
+        (payload: { new?: { waitlist_id?: string }, old?: { waitlist_id?: string } }) => {
+          const affectedNew = payload.new?.waitlist_id;
+          const affectedOld = payload.old?.waitlist_id;
+          if (affectedNew === waitlistId || affectedOld === waitlistId) {
+            if (refreshTimer.current) window.clearTimeout(refreshTimer.current);
+            refreshTimer.current = window.setTimeout(() => { load(true); }, 60);
+          }
         }
       )
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "waitlist_entries", filter: `waitlist_id=eq.${waitlistId}` },
-        () => {
-          if (refreshTimer.current) window.clearTimeout(refreshTimer.current);
-          refreshTimer.current = window.setTimeout(() => { load(true); }, 60);
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "DELETE", schema: "public", table: "waitlist_entries", filter: `waitlist_id=eq.${waitlistId}` },
-        () => {
-          if (refreshTimer.current) window.clearTimeout(refreshTimer.current);
-          refreshTimer.current = window.setTimeout(() => { load(true); }, 60);
-        }
-      )
+      .on("broadcast", { event: "refresh" }, () => {
+        if (refreshTimer.current) window.clearTimeout(refreshTimer.current);
+        refreshTimer.current = window.setTimeout(() => { load(true); }, 60);
+      })
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
@@ -157,24 +160,12 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
         body: JSON.stringify({ id, action: "call" }),
       });
       if (res.ok) {
+        // Local and cross-tab refresh
+        try { window.dispatchEvent(new CustomEvent('wl:refresh', { detail: { waitlistId } })); } catch {}
         try {
-          const { toast } = await import("react-hot-toast");
-          toast.success("User called and SMS sent (simulated)");
-        } catch {}
-        // Broadcast to public display clients of the selected list
-        try {
-          if (displayChannelRef.current) {
-            await displayChannelRef.current.send({ type: 'broadcast', event: 'refresh', payload: {} });
-          }
-        } catch {}
-        // Broadcast to personal status clients of this waitlist
-        try {
-          const wl = waitlistId;
-          if (wl) {
-            const chan = supabase.channel(`user-wl-${wl}`);
-            await chan.send({ type: 'broadcast', event: 'refresh', payload: {} });
-            supabase.removeChannel(chan);
-          }
+          const chan = supabase.channel(`waitlist-entries-${waitlistId}`);
+          await chan.send({ type: 'broadcast', event: 'refresh', payload: {} });
+          supabase.removeChannel(chan);
         } catch {}
         await load(true);
       }

@@ -39,7 +39,21 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist }: { o
       if (res.ok) {
         reset({ phone: "", customerName: "", waitlistId: values.waitlistId, sendSms: false, sendWhatsapp: false });
         setMessage("Added and message sent (if configured)");
-        // No extra toasts; rely on realtime to update UI
+        // Local optimistic refresh and broadcast
+        try {
+          window.dispatchEvent(new CustomEvent('wl:refresh', { detail: { waitlistId: values.waitlistId } }));
+        } catch {}
+        try {
+          const { createClient } = await import("@/lib/supabase/client");
+          const sb = createClient();
+          const ch = sb.channel(`waitlist-entries-${values.waitlistId}`);
+          ch.subscribe(async (status) => {
+            if (status === 'SUBSCRIBED') {
+              try { await ch.send({ type: 'broadcast', event: 'refresh', payload: {} }); } catch {}
+              try { sb.removeChannel(ch); } catch {}
+            }
+          });
+        } catch {}
         onDone?.();
       } else {
         let parsed: unknown = {};
