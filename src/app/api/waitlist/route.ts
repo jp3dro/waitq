@@ -3,13 +3,14 @@ import { nanoid } from "nanoid";
 import { createRouteClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { z } from "zod";
-import { sendSms } from "@/lib/twilio";
+import { sendSms, sendWhatsapp } from "@/lib/twilio";
 
 const schema = z.object({
   waitlistId: z.string().uuid(),
   phone: z.string().min(8),
   customerName: z.string().min(1),
   sendSms: z.boolean().optional().default(false),
+  sendWhatsapp: z.boolean().optional().default(false),
 });
 
 export async function POST(req: NextRequest) {
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const token = nanoid(16);
-  const { waitlistId, phone, customerName, sendSms: shouldSendSms } = parse.data;
+  const { waitlistId, phone, customerName, sendSms: shouldSendSms, sendWhatsapp: shouldSendWhatsapp } = parse.data;
 
   // Look up business_id from waitlist to keep entries consistent
   const { data: w, error: wErr } = await supabase
@@ -44,13 +45,16 @@ export async function POST(req: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
   const statusUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/w/${data.token}`;
-  if (shouldSendSms) {
+  if (shouldSendSms || shouldSendWhatsapp) {
     try {
       const ticket = data.ticket_number ? ` #${data.ticket_number}` : "";
-      await sendSms(
-        phone,
-        `You're on the list${ticket}! Track your spot: ${statusUrl}`
-      );
+      const message = `You're on the list${ticket}! Track your spot: ${statusUrl}`;
+      if (shouldSendSms) {
+        await sendSms(phone, message);
+      }
+      if (shouldSendWhatsapp) {
+        await sendWhatsapp(phone, message);
+      }
     } catch {
       // proceed even if SMS fails
     }

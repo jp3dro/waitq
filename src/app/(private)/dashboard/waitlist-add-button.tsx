@@ -4,7 +4,7 @@ import Modal from "@/components/modal";
 import AddForm from "./waitlist-add-form";
 import { Plus } from "lucide-react";
 
-export default function AddButton() {
+export default function AddButton({ defaultWaitlistId, lockWaitlist }: { defaultWaitlistId?: string; lockWaitlist?: boolean }) {
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -13,7 +13,7 @@ export default function AddButton() {
         Add to waitlist
       </button>
       <Modal open={open} onClose={() => setOpen(false)} title="Add to waitlist">
-        <AddForm onDone={() => setOpen(false)} />
+        <AddForm onDone={() => setOpen(false)} defaultWaitlistId={defaultWaitlistId} lockWaitlist={lockWaitlist} />
       </Modal>
     </>
   );

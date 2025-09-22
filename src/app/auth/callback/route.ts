@@ -28,7 +28,9 @@ export async function GET(req: NextRequest) {
       }
     }
   }
-  const redirectUrl = new URL("/dashboard", process.env.NEXT_PUBLIC_SITE_URL || req.url);
+  // Redirect back to the same origin that initiated the login (dev → localhost, prod → waitq.app)
+  const origin = new URL(req.url).origin;
+  const redirectUrl = new URL("/dashboard", origin);
   return NextResponse.redirect(redirectUrl);
 }
 

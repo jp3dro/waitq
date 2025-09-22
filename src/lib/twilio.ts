@@ -14,4 +14,12 @@ export async function sendSms(to: string, body: string) {
   await client.messages.create({ to, body, messagingServiceSid });
 }
 
+export async function sendWhatsapp(to: string, body: string) {
+  const client = getTwilioClient();
+  const from = process.env.TWILIO_WHATSAPP_FROM;
+  if (!from) throw new Error("TWILIO_WHATSAPP_FROM missing (e.g., whatsapp:+14155238886 or your WA-enabled number)");
+  const toAddr = to.startsWith("whatsapp:") ? to : `whatsapp:${to}`;
+  await client.messages.create({ to: toAddr, body, from });
+}
+
 

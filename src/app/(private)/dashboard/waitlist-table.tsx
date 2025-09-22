@@ -12,12 +12,12 @@ type Entry = {
   ticket_number?: number | null;
 };
 
-export default function WaitlistTable() {
+export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: string }) {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
   const [waitlists, setWaitlists] = useState<{ id: string; name: string; display_token?: string }[]>([]);
-  const [waitlistId, setWaitlistId] = useState<string | null>(null);
+  const [waitlistId, setWaitlistId] = useState<string | null>(fixedWaitlistId ?? null);
   const [msg, setMsg] = useState<string | null>(null);
   const supabase = createClient();
   const refreshTimer = useRef<number | null>(null);
@@ -54,28 +54,43 @@ export default function WaitlistTable() {
       const res = await fetch("/api/waitlists", { cache: "no-store" });
       const j = await res.json();
       setWaitlists(j.waitlists || []);
-      if ((j.waitlists || []).length > 0) setWaitlistId(j.waitlists[0].id);
+      if (fixedWaitlistId) {
+        setWaitlistId(fixedWaitlistId);
+      } else if ((j.waitlists || []).length > 0) setWaitlistId(j.waitlists[0].id);
     })();
-  }, []);
+  }, [fixedWaitlistId]);
 
   useEffect(() => {
     load(false);
   }, [waitlistId]);
 
-  // Realtime: subscribe to entries for selected waitlist
+  // Realtime: subscribe to entries for selected waitlist only
   useEffect(() => {
     if (!waitlistId) return;
     const channel = supabase
       .channel(`waitlist-entries-${waitlistId}`)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "waitlist_entries", filter: `waitlist_id=eq.${waitlistId}` },
+        { event: "INSERT", schema: "public", table: "waitlist_entries", filter: `waitlist_id=eq.${waitlistId}` },
         () => {
-          // Debounce rapid bursts
           if (refreshTimer.current) window.clearTimeout(refreshTimer.current);
-          refreshTimer.current = window.setTimeout(() => {
-            load(true);
-          }, 100);
+          refreshTimer.current = window.setTimeout(() => { load(true); }, 60);
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "waitlist_entries", filter: `waitlist_id=eq.${waitlistId}` },
+        () => {
+          if (refreshTimer.current) window.clearTimeout(refreshTimer.current);
+          refreshTimer.current = window.setTimeout(() => { load(true); }, 60);
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "waitlist_entries", filter: `waitlist_id=eq.${waitlistId}` },
+        () => {
+          if (refreshTimer.current) window.clearTimeout(refreshTimer.current);
+          refreshTimer.current = window.setTimeout(() => { load(true); }, 60);
         }
       )
       .subscribe();
@@ -184,11 +199,13 @@ export default function WaitlistTable() {
       <div className="px-6 py-4 border-b flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <h2 className="text-base font-semibold">Waiting queue</h2>
-          <select className="rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 px-2 py-1 text-sm" value={waitlistId ?? ""} onChange={(e) => setWaitlistId(e.target.value)}>
-            {waitlists.map((w) => (
-              <option key={w.id} value={w.id}>{w.name}</option>
-            ))}
-          </select>
+          {fixedWaitlistId ? null : (
+            <select className="rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 px-2 py-1 text-sm" value={waitlistId ?? ""} onChange={(e) => setWaitlistId(e.target.value)}>
+              {waitlists.map((w) => (
+                <option key={w.id} value={w.id}>{w.name}</option>
+              ))}
+            </select>
+          )}
         </div>
         {waitlistId ? (
           <div className="flex items-center gap-2">

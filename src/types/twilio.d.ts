@@ -1,6 +1,6 @@
 declare module "twilio" {
   export interface TwilioMessagesApi {
-    create(options: { to: string; body: string; messagingServiceSid: string }): Promise<unknown>;
+    create(options: { to: string; body: string; messagingServiceSid?: string; from?: string }): Promise<unknown>;
   }
 
   export interface TwilioClient {

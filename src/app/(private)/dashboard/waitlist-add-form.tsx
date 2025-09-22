@@ -1,30 +1,32 @@
 "use client";
 import { useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
-import { parsePhoneNumberFromString, getCountries, getCountryCallingCode } from "libphonenumber-js";
-import type { CountryCode } from "libphonenumber-js";
+import { parsePhoneNumberFromString } from "libphonenumber-js";
+import PhoneInput from "react-phone-number-input";
+import 'react-phone-number-input/style.css';
 
-type FormValues = { phone: string; customerName: string; waitlistId: string; sendSms: boolean; country: string };
+type FormValues = { phone: string; customerName: string; waitlistId: string; sendSms: boolean; sendWhatsapp: boolean };
 
-export default function AddForm({ onDone }: { onDone?: () => void }) {
+export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist }: { onDone?: () => void; defaultWaitlistId?: string; lockWaitlist?: boolean }) {
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const { register, handleSubmit, reset, watch, setValue } = useForm<FormValues>({
-    defaultValues: { phone: "", customerName: "", waitlistId: "", sendSms: false, country: "US" },
+    defaultValues: { phone: "", customerName: "", waitlistId: "", sendSms: false, sendWhatsapp: false },
   });
   const [waitlists, setWaitlists] = useState<{ id: string; name: string; display_token?: string }[]>([]);
-  const countries: CountryCode[] = getCountries() as CountryCode[];
 
   useEffect(() => {
     (async () => {
       const res = await fetch("/api/waitlists", { cache: "no-store" });
       const j = await res.json();
       setWaitlists(j.waitlists || []);
-      if ((j.waitlists || []).length > 0) {
+      if (defaultWaitlistId) {
+        reset((v) => ({ ...v, waitlistId: defaultWaitlistId }));
+      } else if ((j.waitlists || []).length > 0) {
         reset((v) => ({ ...v, waitlistId: j.waitlists[0].id }));
       }
     })();
-  }, [reset]);
+  }, [reset, defaultWaitlistId]);
 
   const onSubmit = (values: FormValues) => {
     setMessage(null);
@@ -35,21 +37,9 @@ export default function AddForm({ onDone }: { onDone?: () => void }) {
         body: JSON.stringify(values),
       });
       if (res.ok) {
-        reset({ phone: "", customerName: "", waitlistId: values.waitlistId, sendSms: false, country: watch("country") });
-        setMessage("Added and SMS sent (if configured)");
-        try {
-          const { toast } = await import("react-hot-toast");
-          toast.success("Added to waitlist");
-        } catch {}
-        // Broadcast to public display for this waitlist
-        try {
-          const { createClient } = await import("@/lib/supabase/client");
-          const sb = createClient();
-          const token = (waitlists.find((w) => w.id === values.waitlistId)?.display_token) || "";
-          if (token) {
-            await sb.channel(`display-bc-${token}`).send({ type: 'broadcast', event: 'refresh', payload: {} });
-          }
-        } catch {}
+        reset({ phone: "", customerName: "", waitlistId: values.waitlistId, sendSms: false, sendWhatsapp: false });
+        setMessage("Added and message sent (if configured)");
+        // No extra toasts; rely on realtime to update UI
         onDone?.();
       } else {
         let parsed: unknown = {};
@@ -81,50 +71,40 @@ export default function AddForm({ onDone }: { onDone?: () => void }) {
   return (
     <div>
       <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
-        <div className="grid gap-1">
-          <label className="text-sm font-medium">Waitlist</label>
-          <select className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-black px-3 py-2 text-sm" {...register("waitlistId", { required: true })}>
-            {waitlists.map((w) => (
-              <option key={w.id} value={w.id}>{w.name}</option>
-            ))}
-          </select>
-        </div>
+        {lockWaitlist ? null : (
+          <div className="grid gap-1">
+            <label className="text-sm font-medium">Waitlist</label>
+            <select disabled={!!lockWaitlist} className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-black px-3 py-2 text-sm disabled:opacity-50" {...register("waitlistId", { required: true })}>
+              {waitlists.map((w) => (
+                <option key={w.id} value={w.id}>{w.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
         <div className="grid gap-1">
           <label className="text-sm font-medium">Customer name</label>
           <input className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-black px-3 py-2 text-sm" placeholder="Full name" {...register("customerName", { required: true })}/>
         </div>
         <div className="grid gap-1">
           <label className="text-sm font-medium">Phone</label>
-          <div className="flex items-center gap-2">
-            <select className="w-1/5 min-w-24 rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-black px-3 py-2 text-sm"
-              {...register("country")}
-              onChange={(e) => {
-                const c = e.target.value;
-                setValue("country", c);
-                const code = getCountryCallingCode(c as CountryCode);
-                const current = watch("phone");
-                if (!current.startsWith("+")) {
-                  setValue("phone", `+${code}`);
-                }
-              }}
-            >
-              {countries.map((c) => (
-                <option key={c} value={c}>+{getCountryCallingCode(c as CountryCode)} {c}</option>
-              ))}
-            </select>
-            <input className="w-4/5 block rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-black px-3 py-2 text-sm" placeholder="Phone number" {...register("phone", { required: true, onBlur: (e) => {
-              const v = e.target.value.trim();
-              const p = parsePhoneNumberFromString(v, watch("country") as CountryCode);
-              if (p) {
-                setValue("phone", p.number);
-                setValue("country", p.country || watch("country"));
-              }
-            } })} />
-          </div>
+          <PhoneInput
+            international
+            defaultCountry="US"
+            value={watch("phone")}
+            onChange={(value) => setValue("phone", value || "")}
+            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-black px-3 py-2 text-sm"
+          />
         </div>
-        <div className="flex items-center gap-2">
-          <input id="send-sms" type="checkbox" className="h-4 w-4 rounded border-neutral-300 text-black focus:ring-black" {...register("sendSms")} />
-          <label htmlFor="send-sms" className="text-sm">Send SMS notification</label>
+        <div className="flex items-center gap-4">
+          <label className="text-sm font-medium">Notify via</label>
+          <div className="flex items-center gap-2">
+            <input id="send-sms" type="checkbox" className="h-4 w-4 rounded border-neutral-300 text-black focus:ring-black" {...register("sendSms")} />
+            <label htmlFor="send-sms" className="text-sm">SMS</label>
+          </div>
+          <div className="flex items-center gap-2">
+            <input id="send-wa" type="checkbox" className="h-4 w-4 rounded border-neutral-300 text-black focus:ring-black" {...register("sendWhatsapp")} />
+            <label htmlFor="send-wa" className="text-sm">WhatsApp</label>
+          </div>
         </div>
         <div className="flex items-center gap-3">
           <button disabled={isPending} className="inline-flex items-center rounded-md bg-black px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-neutral-800 disabled:opacity-50">

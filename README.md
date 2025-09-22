@@ -29,8 +29,16 @@ Open [http://localhost:3000](http://localhost:3000).
 - Get `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` and `STRIPE_SECRET_KEY`.
 - Add webhook: `http://localhost:3000/api/stripe/webhook` and save `STRIPE_WEBHOOK_SECRET`.
 
-### Twilio
+### Twilio (SMS + WhatsApp)
 - Get `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` and create a Messaging Service; set `TWILIO_MESSAGING_SERVICE_SID`.
+- For WhatsApp via Twilio:
+  - In Twilio Console, enable WhatsApp sandbox for testing or request production access.
+  - Set `TWILIO_WHATSAPP_FROM` to your WA-enabled number in the format `whatsapp:+14155238886` (use your own number once approved).
+  - In Sandbox, join the sandbox by sending the join code from the console to the sandbox number from your test phone.
+  - In production, ensure your WhatsApp templates are approved before sending business-initiated messages.
+  - Notes:
+    - We send using the API directly; no Messaging Service SID is required for WhatsApp.
+    - We will attempt SMS and/or WhatsApp depending on the checkboxes in the Add form.
 
 ## Routes
 - Public: `/`, `/pricing`, `/login`, `/w/[token]` (customer status)
