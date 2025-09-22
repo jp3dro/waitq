@@ -78,6 +78,17 @@ export default function StatsCards({ waitlistId }: { waitlistId: string }) {
     };
   }, [supabase, waitlistId]);
 
+  // Also react to local refresh events triggered by forms/actions
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { waitlistId?: string } | undefined;
+      if (!detail || (detail.waitlistId && detail.waitlistId !== waitlistId)) return;
+      calculateStats();
+    };
+    window.addEventListener('wl:refresh', handler as EventListener);
+    return () => window.removeEventListener('wl:refresh', handler as EventListener);
+  }, [waitlistId]);
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div className="bg-white ring-1 ring-black/5 rounded-xl shadow-sm p-6">
