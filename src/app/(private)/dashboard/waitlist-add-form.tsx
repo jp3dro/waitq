@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
-import { parsePhoneNumberFromString } from "libphonenumber-js";
 import PhoneInput from "react-phone-number-input";
 import 'react-phone-number-input/style.css';
 

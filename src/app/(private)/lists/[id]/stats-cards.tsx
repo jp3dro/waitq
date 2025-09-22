@@ -9,7 +9,7 @@ type ChangePayload = {
 
 export default function StatsCards({ waitlistId }: { waitlistId: string }) {
   const [lastCalledNumber, setLastCalledNumber] = useState<number | null>(null);
-  const [etaMin, setEtaMin] = useState<number>(0);
+  const [etaDisplay, setEtaDisplay] = useState<string>("");
   const supabase = createClient();
 
   const calculateStats = async () => {
@@ -38,14 +38,17 @@ export default function StatsCards({ waitlistId }: { waitlistId: string }) {
         .map((r) => (r.notified_at ? new Date(r.notified_at).getTime() - new Date(r.created_at).getTime() : null))
         .filter((v): v is number => typeof v === "number" && isFinite(v) && v > 0);
       const avgMs = durationsMs.length ? Math.round(durationsMs.reduce((a, b) => a + b, 0) / durationsMs.length) : 0;
-      const newEtaMin = avgMs ? Math.max(1, Math.round(avgMs / 60000)) : 0;
+      const totalMin = avgMs ? Math.max(1, Math.round(avgMs / 60000)) : 0;
+      const hours = Math.floor(totalMin / 60);
+      const minutes = totalMin % 60;
+      const newEtaDisplay = totalMin > 0 ? (hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`) : "";
 
       // Get last called number
       const lastCalledEntry = lastCalledRes.data?.[0] as { ticket_number: number | null; queue_position: number | null; notified_at: string | null } | undefined;
       const newLastCalledNumber = lastCalledEntry?.ticket_number ?? lastCalledEntry?.queue_position ?? null;
 
       setLastCalledNumber(newLastCalledNumber);
-      setEtaMin(newEtaMin);
+      setEtaDisplay(newEtaDisplay);
     } catch (error) {
       console.error("Error calculating stats:", error);
     }
@@ -95,10 +98,10 @@ export default function StatsCards({ waitlistId }: { waitlistId: string }) {
         <p className="text-sm text-neutral-600">Now serving</p>
         <p className="mt-2 text-3xl font-semibold">{lastCalledNumber ?? "—"}</p>
       </div>
-      <div className="bg-white ring-1 ring-black/5 rounded-xl shadow-sm p-6">
-        <p className="text-sm text-neutral-600">Estimated wait time</p>
-        <p className="mt-2 text-3xl font-semibold">{etaMin ? `${etaMin}m` : "—"}</p>
-      </div>
+          <div className="bg-white ring-1 ring-black/5 rounded-xl shadow-sm p-6">
+            <p className="text-sm text-neutral-600">Estimated wait time</p>
+            <p className="mt-2 text-3xl font-semibold">{etaDisplay || "—"}</p>
+          </div>
     </div>
   );
 }

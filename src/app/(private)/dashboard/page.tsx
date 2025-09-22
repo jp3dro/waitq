@@ -106,7 +106,10 @@ export default async function DashboardPage() {
                     {listsForLoc.map((l) => {
                       const waiting = waitingByList.get(l.id) || 0;
                       const etaMs = etaByList.get(l.id) || 0;
-                      const etaMin = etaMs ? Math.max(1, Math.round(etaMs / 60000)) : 0;
+                      const totalMin = etaMs ? Math.max(1, Math.round(etaMs / 60000)) : 0;
+                      const hours = Math.floor(totalMin / 60);
+                      const minutes = totalMin % 60;
+                      const etaDisplay = totalMin > 0 ? (hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`) : '—';
                       return (
                         <li key={l.id} className="bg-white ring-1 ring-black/5 rounded-xl shadow-sm p-5 hover:shadow transition">
                           <div className="flex items-start justify-between gap-2">
@@ -114,7 +117,7 @@ export default async function DashboardPage() {
                               <p className="font-medium">{l.name}</p>
                               <div className="mt-1 flex items-center gap-3 text-xs text-neutral-600">
                                 <span>Waiting: {waiting}</span>
-                                <span>ETA: {etaMin ? `${etaMin}m` : '—'}</span>
+                                <span>ETA: {etaDisplay}</span>
                               </div>
                             </div>
                             <Link href={`/lists/${l.id}`} className="text-sm underline">Open</Link>

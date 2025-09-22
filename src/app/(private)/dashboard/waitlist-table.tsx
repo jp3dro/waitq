@@ -18,7 +18,6 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
   const [isPending, startTransition] = useTransition();
   const [waitlists, setWaitlists] = useState<{ id: string; name: string; display_token?: string }[]>([]);
   const [waitlistId, setWaitlistId] = useState<string | null>(fixedWaitlistId ?? null);
-  const [msg, setMsg] = useState<string | null>(null);
   const supabase = createClient();
   const refreshTimer = useRef<number | null>(null);
   const prevIdsRef = useRef<Set<string>>(new Set());
@@ -187,9 +186,6 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
 
   return (
     <div className="bg-white ring-1 ring-black/5 rounded-xl shadow-sm">
-      {msg ? (
-        <div className="px-6 py-2 text-sm text-red-700">{msg}</div>
-      ) : null}
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-neutral-50 sticky top-0 z-10">

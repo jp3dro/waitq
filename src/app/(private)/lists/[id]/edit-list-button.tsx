@@ -1,5 +1,6 @@
 "use client";
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import Modal from "@/components/modal";
 
 export default function EditListButton({ waitlistId, initialName }: { waitlistId: string; initialName: string }) {
@@ -7,6 +8,7 @@ export default function EditListButton({ waitlistId, initialName }: { waitlistId
   const [name, setName] = useState(initialName);
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
+  const router = useRouter();
 
   const save = () => {
     setMessage(null);
@@ -18,11 +20,7 @@ export default function EditListButton({ waitlistId, initialName }: { waitlistId
       });
       if (res.ok) {
         setOpen(false);
-        try {
-          const { useRouter } = await import("next/navigation");
-          const r = useRouter();
-          r.refresh();
-        } catch {}
+        router.refresh();
       } else {
         try {
           const j = await res.json();
