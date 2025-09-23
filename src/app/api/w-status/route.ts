@@ -9,12 +9,13 @@ export async function GET(req: NextRequest) {
   const admin = getAdminClient();
   const { data: entry, error: e1 } = await admin
     .from("waitlist_entries")
-    .select("status, created_at, eta_minutes, queue_position, token, waitlist_id, ticket_number")
+    .select("status, created_at, eta_minutes, queue_position, token, waitlist_id, ticket_number, business_id")
     .eq("token", token)
     .single();
   if (e1) return NextResponse.json({ error: e1.message }, { status: 400 });
 
   let nowServing: number | null = null;
+  let business: { name: string | null; logo_url: string | null } | null = null;
   if (entry?.waitlist_id) {
     const { data } = await admin
       .from("waitlist_entries")
@@ -28,7 +29,17 @@ export async function GET(req: NextRequest) {
     nowServing = data?.ticket_number ?? null;
   }
 
-  return NextResponse.json({ entry, nowServing });
+  if (entry?.business_id) {
+    const { data: biz } = await admin
+      .from("businesses")
+      .select("name, logo_url")
+      .eq("id", entry.business_id)
+      .limit(1)
+      .maybeSingle();
+    if (biz) business = { name: (biz as any).name ?? null, logo_url: (biz as any).logo_url ?? null };
+  }
+
+  return NextResponse.json({ entry, nowServing, business });
 }
 
 

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 type Entry = { status: string; created_at: string; eta_minutes: number | null; queue_position: number | null; waitlist_id?: string; ticket_number?: number | null; notified_at?: string | null };
+type Business = { name: string | null; logo_url: string | null } | null;
 
 export default function ClientStatus({ token }: { token: string }) {
   const supabase = createClient();
@@ -12,6 +13,7 @@ export default function ClientStatus({ token }: { token: string }) {
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const [nowServing, setNowServing] = useState<number | null>(null);
   const bcRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const [business, setBusiness] = useState<Business>(null);
 
   async function load(silent: boolean = false) {
     if (!silent && !data) setLoading(true);
@@ -20,6 +22,7 @@ export default function ClientStatus({ token }: { token: string }) {
     const entry = (j.entry as Entry) || null;
     setData((prev) => ({ ...(prev || entry || null), ...(entry || {}) } as Entry));
     setNowServing(j.nowServing ?? null);
+    setBusiness(j.business || null);
     if (!silent || !data) setLoading(false);
   }
 
@@ -91,7 +94,7 @@ export default function ClientStatus({ token }: { token: string }) {
     <main className="p-8">
       <div className="max-w-xl mx-auto">
         <div className="rounded-2xl bg-white ring-1 ring-black/5 shadow-sm p-6">
-          <h1 className="text-xl font-semibold">Your place in line</h1>
+          <Header business={business} />
           {nowServing ? (
             <div className="mt-2 flex items-center gap-2">
               <span className="text-sm text-neutral-600">Now serving</span>
@@ -120,6 +123,23 @@ export default function ClientStatus({ token }: { token: string }) {
         </div>
       </div>
     </main>
+  );
+}
+
+function Header({ business }: { business: Business }) {
+  if (!business) {
+    return <h1 className="text-xl font-semibold">Your place in line</h1>;
+  }
+  return (
+    <div className="flex items-center gap-3">
+      {business.logo_url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={business.logo_url} alt="Logo" className="h-8 w-8 rounded object-cover ring-1 ring-neutral-200" />
+      ) : null}
+      <div>
+        <h1 className="text-xl font-semibold">{business.name || "Your place in line"}</h1>
+      </div>
+    </div>
   );
 }
 

@@ -48,7 +48,16 @@ export async function POST(req: NextRequest) {
   if (shouldSendSms || shouldSendWhatsapp) {
     try {
       const ticket = data.ticket_number ? ` #${data.ticket_number}` : "";
-      const message = `You're on the list${ticket}! Track your spot: ${statusUrl}`;
+      // Fetch business name for branding
+      let brand = "";
+      const { data: biz } = await supabase
+        .from("businesses")
+        .select("name")
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (biz?.name) brand = `${biz.name}: `;
+      const message = `${brand}You're on the list${ticket}! Track your spot: ${statusUrl}`;
       if (shouldSendSms) {
         await sendSms(phone, message);
       }
