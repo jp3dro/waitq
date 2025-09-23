@@ -14,7 +14,10 @@ export default async function Nav() {
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle();
-    if (data) business = { name: (data as any).name ?? null, logo_url: (data as any).logo_url ?? null };
+    if (data) {
+      const d = data as { name: string | null; logo_url: string | null };
+      business = { name: d.name ?? null, logo_url: d.logo_url ?? null };
+    }
   }
 
   return (

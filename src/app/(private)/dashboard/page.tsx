@@ -68,19 +68,26 @@ export default async function DashboardPage() {
   const servedCount = totalServed.count || 0;
 
   // Business info for header
-  const { data: biz } = await supabase.from("businesses").select("name, logo_url").order("created_at", { ascending: true }).limit(1).maybeSingle();
+  type BusinessHeader = { name: string | null; logo_url: string | null } | null;
+  const { data: biz } = await supabase
+    .from("businesses")
+    .select("name, logo_url")
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  const businessHeader = (biz as BusinessHeader);
 
   return (
     <main className="py-10">
       <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
         <div className="flex items-end justify-between gap-4">
           <div className="flex items-center gap-3">
-            {biz?.logo_url ? (
+            {businessHeader?.logo_url ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={biz.logo_url as any} alt="Logo" className="h-8 w-8 rounded object-cover ring-1 ring-neutral-200" />
+              <img src={businessHeader.logo_url || ""} alt="Logo" className="h-8 w-8 rounded object-cover ring-1 ring-neutral-200" />
             ) : null}
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">{(biz as any)?.name || "Dashboard"}</h1>
+              <h1 className="text-3xl font-bold tracking-tight">{businessHeader?.name || "Dashboard"}</h1>
               <p className="mt-1 text-sm text-neutral-600">Signed in as {user.email}</p>
             </div>
           </div>

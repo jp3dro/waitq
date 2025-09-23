@@ -9,6 +9,7 @@ export default async function ProfilePage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  type Business = { id: string; name: string | null; logo_url: string | null } | null;
   const { data: business } = await supabase
     .from("businesses")
     .select("id, name, logo_url")
@@ -28,12 +29,12 @@ export default async function ProfilePage() {
           <div className="text-neutral-600">User ID</div>
           <div className="font-mono text-xs">{user?.id}</div>
         </div>
-        <SaveBusinessNameForm initialName={(business as any)?.name || ""} />
+        <SaveBusinessNameForm initialName={(business as Business)?.name || ""} />
         <div className="grid md:grid-cols-[96px_1fr] items-start gap-4 mt-6">
           <div className="h-24 w-24 rounded-md ring-1 ring-neutral-200 overflow-hidden bg-neutral-50 flex items-center justify-center">
-            {((business as any)?.logo_url) ? (
+            {business?.logo_url ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={(business as any).logo_url} alt="Logo" className="h-full w-full object-cover" />
+              <img src={business.logo_url || ""} alt="Logo" className="h-full w-full object-cover" />
             ) : (
               <span className="text-xs text-neutral-500">No logo</span>
             )}

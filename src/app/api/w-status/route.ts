@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
       .eq("id", entry.business_id)
       .limit(1)
       .maybeSingle();
-    if (biz) business = { name: (biz as any).name ?? null, logo_url: (biz as any).logo_url ?? null };
+    if (biz) business = { name: (biz as { name: string | null; logo_url: string | null }).name ?? null, logo_url: (biz as { name: string | null; logo_url: string | null }).logo_url ?? null };
   }
 
   return NextResponse.json({ entry, nowServing, business });
