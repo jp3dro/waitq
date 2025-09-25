@@ -37,12 +37,57 @@ export async function POST(req: NextRequest) {
     .single();
   if (wErr) return NextResponse.json({ error: wErr.message }, { status: 400 });
 
-  const { data, error } = await supabase
+  // Compute next ticket number within this waitlist
+  const { data: maxRow } = await supabase
     .from("waitlist_entries")
-    .insert({ business_id: w.business_id, waitlist_id: waitlistId, phone, customer_name: customerName, token })
+    .select("ticket_number")
+    .eq("waitlist_id", waitlistId)
+    .order("ticket_number", { ascending: false, nullsFirst: false })
+    .limit(1)
+    .maybeSingle();
+  const nextTicket = (maxRow?.ticket_number || 0) + 1;
+
+  // Try to insert with notification preferences first
+  let insertData: Record<string, unknown> = {
+    business_id: w.business_id,
+    waitlist_id: waitlistId,
+    phone,
+    customer_name: customerName,
+    token,
+    ticket_number: nextTicket,
+    send_sms: shouldSendSms,
+    send_whatsapp: shouldSendWhatsapp,
+  };
+
+  let { data, error } = await supabase
+    .from("waitlist_entries")
+    .insert(insertData)
     .select("id, token, ticket_number")
     .single();
+
+  // If the insert fails due to missing columns, retry without them
+  if (error && (error.message.includes("send_sms") || error.message.includes("send_whatsapp") || error.message.includes("column"))) {
+    insertData = {
+      business_id: w.business_id,
+      waitlist_id: waitlistId,
+      phone,
+      customer_name: customerName,
+      token,
+      ticket_number: nextTicket,
+    };
+
+    const retryResult = await supabase
+      .from("waitlist_entries")
+      .insert(insertData)
+      .select("id, token, ticket_number")
+      .single();
+
+    data = retryResult.data;
+    error = retryResult.error;
+  }
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+  if (!data) return NextResponse.json({ error: "Failed to create entry" }, { status: 500 });
 
   const statusUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/w/${data.token}`;
   if (shouldSendSms || shouldSendWhatsapp) {

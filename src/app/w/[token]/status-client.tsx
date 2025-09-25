@@ -90,36 +90,63 @@ export default function ClientStatus({ token }: { token: string }) {
     </main>
   );
 
+  const isUserTurn = data.ticket_number !== null && data.ticket_number === nowServing;
+
   return (
     <main className="p-8">
       <div className="max-w-xl mx-auto">
-        <div className="rounded-2xl bg-white ring-1 ring-black/5 shadow-sm p-6">
+        <div className={`rounded-2xl ring-1 shadow-sm p-6 ${
+          isUserTurn
+            ? "bg-gradient-to-br from-green-50 to-emerald-50 ring-green-200 border-green-200"
+            : "bg-white ring-black/5"
+        }`}>
           <Header business={business} />
-          {nowServing ? (
-            <div className="mt-2 flex items-center gap-2">
-              <span className="text-sm text-neutral-600">Now serving</span>
-              <span className="text-2xl font-bold">{nowServing}</span>
-            </div>
-          ) : null}
-          <div className="mt-4 grid gap-3">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-neutral-600">Status</span>
-              <span className="inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-700">{data.status}</span>
-            </div>
-            {data.eta_minutes ? (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-neutral-600">ETA</span>
-                <span className="text-sm font-medium">{data.eta_minutes} min</span>
+
+          {isUserTurn ? (
+            <div className="mt-6 text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
               </div>
-            ) : null}
-            {typeof data.queue_position === "number" ? (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-neutral-600">Position</span>
-                <span className="text-sm font-medium">{data.queue_position}</span>
+              <h2 className="text-2xl font-bold text-green-800 mb-2">It&apos;s your turn!</h2>
+              <p className="text-lg text-green-700 mb-4">
+                Please proceed to {business?.name || "the venue"}
+              </p>
+              <div className="inline-flex items-center gap-2 bg-green-100 px-4 py-2 rounded-lg">
+                <span className="text-sm font-medium text-green-800">Your number:</span>
+                <span className="text-xl font-bold text-green-900">{data.ticket_number}</span>
               </div>
-            ) : null}
-          </div>
-          <p className="mt-6 text-sm text-neutral-600">This page updates automatically as the venue advances the queue.</p>
+            </div>
+          ) : (
+            <>
+              {nowServing ? (
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="text-sm text-neutral-600">Now serving</span>
+                  <span className="text-2xl font-bold">{nowServing}</span>
+                </div>
+              ) : null}
+              <div className="mt-4 grid gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-neutral-600">Status</span>
+                  <span className="inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-700">{data.status}</span>
+                </div>
+                {data.eta_minutes ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-neutral-600">ETA</span>
+                    <span className="text-sm font-medium">{data.eta_minutes} min</span>
+                  </div>
+                ) : null}
+                {typeof data.queue_position === "number" ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-neutral-600">Position</span>
+                    <span className="text-sm font-medium">{data.queue_position}</span>
+                  </div>
+                ) : null}
+              </div>
+              <p className="mt-6 text-sm text-neutral-600">This page updates automatically as the venue advances the queue.</p>
+            </>
+          )}
         </div>
       </div>
     </main>

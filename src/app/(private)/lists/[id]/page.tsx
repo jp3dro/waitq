@@ -1,9 +1,11 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import WaitlistTable from "@/app/(private)/dashboard/waitlist-table";
+import ToastOnQuery from "@/components/toast-on-query";
 import AddButton from "@/app/(private)/dashboard/waitlist-add-button";
 import EditListButton from "./edit-list-button";
 import StatsCards from "./stats-cards";
+import ClearWaitlistButton from "./clear-waitlist-button";
 
 export default async function ListDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient();
@@ -44,6 +46,7 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
   return (
     <main className="py-10">
       <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
+        <ToastOnQuery />
         <div className="flex items-end justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">{waitlist.name}</h1>
@@ -66,6 +69,7 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
                 Open Public Display
               </a>
             )}
+            <ClearWaitlistButton waitlistId={waitlist.id} displayToken={waitlist.display_token} />
             <AddButton defaultWaitlistId={waitlist.id} lockWaitlist />
           </div>
         </div>

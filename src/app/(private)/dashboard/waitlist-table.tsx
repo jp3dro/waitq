@@ -10,6 +10,9 @@ type Entry = {
   queue_position: number | null;
   created_at: string;
   ticket_number?: number | null;
+  token: string;
+  send_sms?: boolean | null;
+  send_whatsapp?: boolean | null;
 };
 
 export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: string }) {
@@ -31,7 +34,9 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
     const data = (await res.json()) as { entries: Entry[] };
 
     // Compute new ids for highlight animation
-    const incoming = (data.entries || []).filter((e) => e.status !== "notified");
+    const incoming = (data.entries || [])
+      .filter((e) => e.ticket_number != null)
+      .filter((e) => e.status !== "notified");
     const incomingIds = new Set(incoming.map((e) => e.id));
     const prevIds = prevIdsRef.current;
     const newIds = new Set<string>();
@@ -144,6 +149,20 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
 
   // Deleting lists is managed in Settings → Lists
 
+  const copyPersonalUrl = (token: string) => {
+    const url = `${window.location.origin}/w/${token}`;
+    navigator.clipboard.writeText(url).then(() => {
+      // Could add a toast here if desired
+    });
+  };
+
+  const getNotificationDisplay = (sendSms?: boolean | null, sendWhatsapp?: boolean | null) => {
+    const methods = [];
+    if (sendSms) methods.push("SMS");
+    if (sendWhatsapp) methods.push("WhatsApp");
+    return methods.length > 0 ? methods.join(", ") : "None";
+  };
+
   const remove = (id: string) => {
     startTransition(async () => {
       await fetch(`/api/waitlist?id=${encodeURIComponent(id)}`, { method: "DELETE" });
@@ -162,9 +181,23 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
         // Local and cross-tab refresh
         try { window.dispatchEvent(new CustomEvent('wl:refresh', { detail: { waitlistId } })); } catch {}
         try {
-          const chan = supabase.channel(`waitlist-entries-${waitlistId}`);
-          await chan.send({ type: 'broadcast', event: 'refresh', payload: {} });
-          supabase.removeChannel(chan);
+          // Broadcast to main waitlist table
+          const chan1 = supabase.channel(`waitlist-entries-${waitlistId}`);
+          await chan1.send({ type: 'broadcast', event: 'refresh', payload: {} });
+          supabase.removeChannel(chan1);
+
+          // Broadcast to user status pages
+          const chan2 = supabase.channel(`user-wl-${waitlistId}`);
+          await chan2.send({ type: 'broadcast', event: 'refresh', payload: {} });
+          supabase.removeChannel(chan2);
+
+          // Broadcast to public display if token is available
+          const displayToken = waitlists.find((w) => w.id === waitlistId)?.display_token;
+          if (displayToken) {
+            const chan3 = supabase.channel(`display-bc-${displayToken}`);
+            await chan3.send({ type: 'broadcast', event: 'refresh', payload: {} });
+            supabase.removeChannel(chan3);
+          }
         } catch {}
         await load(true);
       }
@@ -193,6 +226,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
               <th className="text-left p-2">#</th>
               <th className="text-left p-2">Name</th>
               <th className="text-left p-2">Phone</th>
+              <th className="text-left p-2">Notifications</th>
               <th className="text-left p-2">Created</th>
               <th className="text-left p-2"></th>
             </tr>
@@ -203,9 +237,21 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                 <td className="p-2">{e.ticket_number ?? e.queue_position ?? "-"}</td>
                 <td className="p-2">{e.customer_name ?? "—"}</td>
                 <td className="p-2">{e.phone}</td>
+                <td className="p-2">
+                  <span className="text-xs text-neutral-600">{getNotificationDisplay(e.send_sms, e.send_whatsapp)}</span>
+                </td>
                 <td className="p-2">{new Date(e.created_at).toLocaleString()}</td>
                 <td className="p-2 text-right">
                   <div className="inline-flex items-center gap-2">
+                    <button
+                      onClick={() => copyPersonalUrl(e.token)}
+                      className="inline-flex items-center rounded-md px-2 py-1.5 text-sm font-medium ring-1 ring-inset ring-neutral-300 hover:bg-neutral-50"
+                      title="Copy personal page URL"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                    </button>
                     <button disabled={isPending} onClick={() => call(e.id)} className="inline-flex items-center rounded-md bg-black px-3 py-1.5 text-sm font-medium text-white shadow-sm disabled:opacity-50">
                       Call
                     </button>

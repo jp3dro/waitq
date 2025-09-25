@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteClient } from "@/lib/supabase/server";
+import { getAdminClient } from "@/lib/supabase/admin";
 import { z } from "zod";
 
 export async function GET() {
@@ -77,13 +78,35 @@ export async function DELETE(req: NextRequest) {
   return NextResponse.json({ ok: true });
 }
 
+// Clear a waitlist: delete all entries
+export async function PATCH(req: NextRequest) {
+  const json = await req.json();
+  const { id, action } = json as { id?: string; action?: string };
+  if (!id || action !== "clear") return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+
+  const supabase = await createRouteClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  // Delete all entries for this waitlist
+  const admin = getAdminClient();
+  const { error: delErr } = await admin
+    .from("waitlist_entries")
+    .delete()
+    .eq("waitlist_id", id);
+  if (delErr) return NextResponse.json({ error: delErr.message }, { status: 400 });
+  return NextResponse.json({ ok: true });
+}
+
 const patchSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(1).optional(),
   locationId: z.string().uuid().optional(),
 });
 
-export async function PATCH(req: NextRequest) {
+export async function PUT(req: NextRequest) {
   const json = await req.json();
   const parse = patchSchema.safeParse(json);
   if (!parse.success) return NextResponse.json({ error: parse.error.flatten() }, { status: 400 });
