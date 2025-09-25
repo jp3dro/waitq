@@ -1,6 +1,12 @@
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
 
-export default function SettingsLayout({ children }: { children: React.ReactNode }) {
+export default async function SettingsLayout({ children }: { children: React.ReactNode }) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const isAdmin = user?.email === "jp3dro@gmail.com";
   return (
     <main className="py-10">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
@@ -13,6 +19,12 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
             <Link href="/settings/locations" className="block px-3 py-2 rounded-md hover:bg-neutral-50">Locations</Link>
             <Link href="/settings/lists" className="block px-3 py-2 rounded-md hover:bg-neutral-50">Lists</Link>
             <Link href="/settings/subscription" className="block px-3 py-2 rounded-md hover:bg-neutral-50">Subscription</Link>
+            {isAdmin ? (
+              <div className="pt-4">
+                <div className="px-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">Admin</div>
+                <Link href="/settings/admin/businesses" className="mt-1 block px-3 py-2 rounded-md hover:bg-neutral-50">Businesses</Link>
+              </div>
+            ) : null}
           </aside>
           <section className="min-h-[300px]">
             {children}

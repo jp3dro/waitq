@@ -6,34 +6,19 @@ export default async function Nav() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  let business: { name: string | null; logo_url: string | null } | null = null;
-  if (user) {
-    const { data } = await supabase
-      .from("businesses")
-      .select("name, logo_url")
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
-    if (data) {
-      const d = data as { name: string | null; logo_url: string | null };
-      business = { name: d.name ?? null, logo_url: d.logo_url ?? null };
-    }
-  }
 
   return (
     <header className="sticky top-0 z-40 backdrop-blur supports-[backdrop-filter]:bg-white/70 bg-white/90 border-b">
       <div className="mx-auto max-w-7xl px-6 lg:px-8 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-3 min-w-0">
-          {user && business?.logo_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={business.logo_url} alt="Logo" className="h-6 w-6 rounded object-cover ring-1 ring-neutral-200" />
-          ) : null}
-          <Link href={user ? "/dashboard" : "/"} className="font-semibold text-lg tracking-tight text-neutral-900">{user && business?.name ? business.name : "WaitQ"}</Link>
+        <div className="flex items-center gap-8 min-w-0">
+          <Link href={user ? "/dashboard" : "/"} className="font-semibold text-lg tracking-tight text-neutral-900">WaitQ</Link>
         </div>
         <div className="hidden md:flex items-center gap-6 text-sm text-neutral-700">
           {user ? (
             <>
               <Link href="/dashboard" className="hover:text-black">Dashboard</Link>
+              <Link href="/lists" className="hover:text-black">Lists</Link>
+              <Link href="/customers" className="hover:text-black">Customers</Link>
               <Link href="/settings" className="hover:text-black">Settings</Link>
             </>
           ) : (
