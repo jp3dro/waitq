@@ -16,31 +16,33 @@ export default async function Nav() {
         <div className="hidden md:flex items-center gap-6 text-sm text-neutral-700">
           {user ? (
             <>
-              <Link href="/dashboard" className="hover:text-black">Dashboard</Link>
-              <Link href="/lists" className="hover:text-black">Lists</Link>
-              <Link href="/customers" className="hover:text-black">Customers</Link>
-              <Link href="/settings" className="hover:text-black">Settings</Link>
+              <Link href="/dashboard" className="rounded px-2 py-1 hover:bg-neutral-100 hover:text-black">Dashboard</Link>
+              <Link href="/lists" className="rounded px-2 py-1 hover:bg-neutral-100 hover:text-black">Lists</Link>
+              <Link href="/customers" className="rounded px-2 py-1 hover:bg-neutral-100 hover:text-black">Customers</Link>
+              <Link href="/settings" className="rounded px-2 py-1 hover:bg-neutral-100 hover:text-black">Settings</Link>
             </>
           ) : (
             <>
               <div className="relative group">
-                <button className="inline-flex items-center gap-1 hover:text-black">Use cases
+                <button className="inline-flex items-center gap-1 rounded px-2 py-1 hover:bg-neutral-100 hover:text-black">Use cases
                   <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd"/></svg>
                 </button>
-                <div className="invisible opacity-0 group-hover:visible group-hover:opacity-100 transition pointer-events-none group-hover:pointer-events-auto absolute left-0 mt-2 w-[280px] rounded-md border bg-white shadow-md">
-                  <ul className="py-2 text-sm">
-                    <li><Link className="block px-3 py-1.5 hover:bg-neutral-50" href="/use-cases/barber-shop">Barber shops</Link></li>
-                    <li><Link className="block px-3 py-1.5 hover:bg-neutral-50" href="/use-cases/beauty-salons">Beauty salons</Link></li>
-                    <li><Link className="block px-3 py-1.5 hover:bg-neutral-50" href="/use-cases/restaurants">Restaurants</Link></li>
-                    <li><Link className="block px-3 py-1.5 hover:bg-neutral-50" href="/use-cases/massages">Massages</Link></li>
-                    <li><Link className="block px-3 py-1.5 hover:bg-neutral-50" href="/use-cases/clinics-and-medical">Clinics and medical</Link></li>
-                    <li><Link className="block px-3 py-1.5 hover:bg-neutral-50" href="/use-cases/warehouse-and-transport">Warehouse & transport</Link></li>
-                    <li><Link className="block px-3 py-1.5 hover:bg-neutral-50" href="/use-cases/hotels-and-accommodations">Hotels & accommodations</Link></li>
-                    <li><Link className="block px-3 py-1.5 hover:bg-neutral-50" href="/use-cases/public-services">Public services</Link></li>
-                  </ul>
+                <div className="invisible opacity-0 group-hover:visible group-hover:opacity-100 transition pointer-events-none group-hover:pointer-events-auto absolute left-0 mt-2 w-[320px] rounded-md border bg-white shadow-md">
+                  <div className="p-2">
+                    <ul className="grid grid-cols-2 gap-1 text-sm">
+                      <li><Link className="block rounded px-2 py-1.5 hover:bg-neutral-50" href="/use-cases/barber-shop">Barber shops</Link></li>
+                      <li><Link className="block rounded px-2 py-1.5 hover:bg-neutral-50" href="/use-cases/beauty-salons">Beauty salons</Link></li>
+                      <li><Link className="block rounded px-2 py-1.5 hover:bg-neutral-50" href="/use-cases/restaurants">Restaurants</Link></li>
+                      <li><Link className="block rounded px-2 py-1.5 hover:bg-neutral-50" href="/use-cases/massages">Massages</Link></li>
+                      <li><Link className="block rounded px-2 py-1.5 hover:bg-neutral-50" href="/use-cases/clinics-and-medical">Clinics and medical</Link></li>
+                      <li><Link className="block rounded px-2 py-1.5 hover:bg-neutral-50" href="/use-cases/warehouse-and-transport">Warehouse & transport</Link></li>
+                      <li><Link className="block rounded px-2 py-1.5 hover:bg-neutral-50" href="/use-cases/hotels-and-accommodations">Hotels & accommodations</Link></li>
+                      <li><Link className="block rounded px-2 py-1.5 hover:bg-neutral-50" href="/use-cases/public-services">Public services</Link></li>
+                    </ul>
+                  </div>
                 </div>
               </div>
-              <Link href="/pricing" className="hover:text-black">Pricing</Link>
+              <Link href="/pricing" className="rounded px-2 py-1 hover:bg-neutral-100 hover:text-black">Pricing</Link>
             </>
           )}
         </div>

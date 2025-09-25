@@ -25,18 +25,38 @@ export default function HomePage() {
             <div className="rounded-xl bg-white ring-1 ring-black/5 p-6">
               <p className="font-medium">Front desk</p>
               <p className="mt-1 text-neutral-600">Add guests in seconds, quote times, and keep the line visible to staff.</p>
+              <div className="mt-4 overflow-hidden rounded-lg">
+                <div className="relative w-full pt-[56.25%] bg-neutral-100">
+                  <img src="/window.svg" alt="Front desk" className="absolute inset-0 h-full w-full object-cover" />
+                </div>
+              </div>
             </div>
             <div className="rounded-xl bg-white ring-1 ring-black/5 p-6">
               <p className="font-medium">On the floor</p>
               <p className="mt-1 text-neutral-600">See who’s next from any device. Call, seat, or cancel with one tap.</p>
+              <div className="mt-4 overflow-hidden rounded-lg">
+                <div className="relative w-full pt-[56.25%] bg-neutral-100">
+                  <img src="/globe.svg" alt="On the floor" className="absolute inset-0 h-full w-full object-cover" />
+                </div>
+              </div>
             </div>
             <div className="rounded-xl bg-white ring-1 ring-black/5 p-6">
               <p className="font-medium">At the door</p>
               <p className="mt-1 text-neutral-600">Show a public display so guests can check their place in line.</p>
+              <div className="mt-4 overflow-hidden rounded-lg">
+                <div className="relative w-full pt-[56.25%] bg-neutral-100">
+                  <img src="/file.svg" alt="At the door" className="absolute inset-0 h-full w-full object-cover" />
+                </div>
+              </div>
             </div>
             <div className="rounded-xl bg-white ring-1 ring-black/5 p-6">
               <p className="font-medium">On the go</p>
               <p className="mt-1 text-neutral-600">Guests get SMS updates and a live status page. No apps needed.</p>
+              <div className="mt-4 overflow-hidden rounded-lg">
+                <div className="relative w-full pt-[56.25%] bg-neutral-100">
+                  <img src="/next.svg" alt="On the go" className="absolute inset-0 h-full w-full object-cover" />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -108,6 +128,43 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Dark footer (inverted) */}
+      <footer className="bg-black text-white">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8 py-10 text-sm grid gap-6 md:grid-cols-4">
+          <div>
+            <p className="font-semibold">WaitQ</p>
+            <p className="mt-2 text-neutral-300">© {new Date().getFullYear()} WaitQ</p>
+          </div>
+          <div>
+            <p className="font-semibold">Use cases</p>
+            <ul className="mt-2 space-y-2 text-neutral-300">
+              <li><a className="hover:text-white" href="/use-cases/barber-shop">Barber shops</a></li>
+              <li><a className="hover:text-white" href="/use-cases/beauty-salons">Beauty salons</a></li>
+              <li><a className="hover:text-white" href="/use-cases/restaurants">Restaurants</a></li>
+              <li><a className="hover:text-white" href="/use-cases/massages">Massages</a></li>
+              <li><a className="hover:text-white" href="/use-cases/clinics-and-medical">Clinics & medical</a></li>
+              <li><a className="hover:text-white" href="/use-cases/warehouse-and-transport">Warehouse & transport</a></li>
+              <li><a className="hover:text-white" href="/use-cases/hotels-and-accommodations">Hotels & accommodations</a></li>
+              <li><a className="hover:text-white" href="/use-cases/public-services">Public services</a></li>
+            </ul>
+          </div>
+          <div>
+            <p className="font-semibold">Company</p>
+            <ul className="mt-2 space-y-2 text-neutral-300">
+              <li><a className="hover:text-white" href="/pricing">Pricing</a></li>
+              <li><a className="hover:text-white" href="/terms">Terms</a></li>
+              <li><a className="hover:text-white" href="/contact">Contact</a></li>
+            </ul>
+          </div>
+          <div>
+            <p className="font-semibold">Account</p>
+            <ul className="mt-2 space-y-2 text-neutral-300">
+              <li><a className="hover:text-white" href="/login">Sign in</a></li>
+            </ul>
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }
