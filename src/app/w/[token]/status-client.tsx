@@ -33,7 +33,8 @@ export default function ClientStatus({ token }: { token: string }) {
     //   load(true);
     // }, 2000);
     return () => {
-      if (pollTimer.current) window.clearInterval(pollTimer.current);
+      const id = pollTimer.current;
+      if (id) window.clearInterval(id);
     };
   }, [token]);
 
@@ -60,7 +61,7 @@ export default function ClientStatus({ token }: { token: string }) {
       if (channelRef.current) supabase.removeChannel(channelRef.current);
       channelRef.current = null;
     };
-  }, [supabase, data?.waitlist_id]);
+  }, [supabase, data?.waitlist_id, load]);
 
   // Broadcast fallback: dashboard sends refresh on call; listen and refresh silently
   useEffect(() => {
@@ -78,7 +79,7 @@ export default function ClientStatus({ token }: { token: string }) {
       if (bcRef.current) supabase.removeChannel(bcRef.current);
       bcRef.current = null;
     };
-  }, [supabase, data?.waitlist_id]);
+  }, [supabase, data?.waitlist_id, load]);
 
   if (loading || !data) return (
     <main className="p-8">

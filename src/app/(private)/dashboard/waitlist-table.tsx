@@ -106,7 +106,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [supabase, waitlistId]);
+  }, [supabase, waitlistId, load]);
 
   // Realtime: watch waitlists list updates
   useEffect(() => {
@@ -121,7 +121,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [supabase]);
+  }, [supabase, reloadWaitlists]);
 
   // Manage broadcast channel for current list's display token
   useEffect(() => {

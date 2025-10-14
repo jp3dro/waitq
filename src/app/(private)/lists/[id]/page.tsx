@@ -7,6 +7,15 @@ import EditListButton from "./edit-list-button";
 import StatsCards from "./stats-cards";
 import ClearWaitlistButton from "./clear-waitlist-button";
 
+type WaitlistRow = {
+  id: string;
+  name: string;
+  kiosk_enabled: boolean | null;
+  display_token: string | null;
+  location_id: string | null;
+  business_locations: { id: string; name: string } | null;
+};
+
 export default async function ListDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient();
   const {
@@ -32,6 +41,7 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
     .eq("id", waitlistId)
     .single();
   if (error || !waitlist) redirect("/dashboard");
+  const wl = waitlist as unknown as WaitlistRow;
 
   // Fetch all locations for the dropdown
   const { data: locations } = await supabase
@@ -50,20 +60,20 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
         <ToastOnQuery />
         <div className="flex items-end justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">{waitlist.name}</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{wl.name}</h1>
             <p className="mt-1 text-sm text-neutral-600">Manage your waitlist entries</p>
           </div>
           <div className="flex items-center gap-2">
             <EditListButton
-              waitlistId={waitlist.id}
-              initialName={waitlist.name}
-              initialLocationId={waitlist.location_id || (waitlist.business_locations as unknown as { id: string } | null)?.id}
-              initialKioskEnabled={(waitlist as any).kiosk_enabled ?? false}
+              waitlistId={wl.id}
+              initialName={wl.name}
+              initialLocationId={wl.location_id || wl.business_locations?.id}
+              initialKioskEnabled={!!wl.kiosk_enabled}
               locations={typedLocations}
             />
-            {waitlist.display_token && (
+            {wl.display_token && (
               <a
-                href={`/display/${encodeURIComponent(waitlist.display_token)}`}
+                href={`/display/${encodeURIComponent(wl.display_token)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-neutral-300 hover:bg-neutral-50"
@@ -71,15 +81,15 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
                 Open Public Display
               </a>
             )}
-            <ClearWaitlistButton waitlistId={waitlist.id} displayToken={waitlist.display_token} />
-            <AddButton defaultWaitlistId={waitlist.id} lockWaitlist />
+            <ClearWaitlistButton waitlistId={wl.id} displayToken={wl.display_token} />
+            <AddButton defaultWaitlistId={wl.id} lockWaitlist />
           </div>
         </div>
 
         {/* Reactive stats cards */}
-        <StatsCards waitlistId={waitlist.id} />
+        <StatsCards waitlistId={wl.id} />
 
-        <WaitlistTable fixedWaitlistId={waitlist.id} />
+        <WaitlistTable fixedWaitlistId={wl.id} />
       </div>
     </main>
   );

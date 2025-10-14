@@ -1,4 +1,3 @@
-import Link from "next/link";
 import ActiveLink from "@/components/active-link";
 import { createClient } from "@/lib/supabase/server";
 

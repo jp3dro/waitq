@@ -39,16 +39,25 @@ export async function GET(req: NextRequest) {
   } catch {}
 
   let businessCountry: string | null = null;
-  if ((list as any).business_id) {
+  if (list.business_id) {
     const { data: biz } = await admin
       .from("businesses")
       .select("country_code")
-      .eq("id", (list as any).business_id)
+      .eq("id", list.business_id)
       .maybeSingle();
     businessCountry = (biz?.country_code as string | null) || null;
   }
 
-  return NextResponse.json({ listId: list.id, listName: list.name, kioskEnabled: !!(list as any).kiosk_enabled, businessCountry, listType: (list as any).list_type, seatingPreferences: (list as any).seating_preferences || [], estimatedMs, entries: entries ?? [] });
+  return NextResponse.json({
+    listId: list.id,
+    listName: list.name,
+    kioskEnabled: !!list.kiosk_enabled,
+    businessCountry,
+    listType: list.list_type,
+    seatingPreferences: (list.seating_preferences as string[] | null) || [],
+    estimatedMs,
+    entries: entries ?? [],
+  });
 }
 
 

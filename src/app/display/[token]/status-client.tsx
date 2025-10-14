@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Modal from "@/components/modal";
-import PhoneInput from "react-phone-number-input";
+import PhoneInput, { type Country } from "react-phone-number-input";
 import 'react-phone-number-input/style.css';
 
 type Entry = { id: string; ticket_number: number | null; queue_position: number | null; status: string; notified_at?: string | null; party_size?: number | null; seating_preference?: string | null };
@@ -192,7 +192,7 @@ function KioskButton({ token, defaultCountry, listType, seatingPreferences }: { 
       <button onClick={() => setOpen(true)} className="inline-flex items-center rounded-md bg-white text-black px-4 py-3 text-base font-semibold shadow-sm hover:bg-neutral-200">
         Add to Waiting list
       </button>
-      <Modal open={open} onClose={close} title={step === "confirm" ? "You're on the list" : "Add to waiting list"}>
+      <Modal open={open} onClose={close} title={step === "confirm" ? "You&apos;re on the list" : "Add to waiting list"}>
         {step === "intro" ? (
           <div className="grid gap-5 text-neutral-900">
             {listType === "restaurants" ? (
@@ -252,7 +252,7 @@ function KioskButton({ token, defaultCountry, listType, seatingPreferences }: { 
               <label className="text-base font-medium">Phone number</label>
               <PhoneInput
                 international
-                defaultCountry={defaultCountry as any}
+                defaultCountry={defaultCountry as Country}
                 value={phone}
                 onChange={(value) => setPhone(value || undefined)}
                 className="block w-full rounded-xl border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-black px-4 py-3 text-2xl text-neutral-900"
@@ -270,7 +270,7 @@ function KioskButton({ token, defaultCountry, listType, seatingPreferences }: { 
           </div>
         ) : (
           <div className="grid gap-5 text-center text-neutral-900">
-            <p className="text-lg">Thanks! You're on the waiting list.</p>
+            <p className="text-lg">Thanks! You&apos;re on the waiting list.</p>
             <div>
               <p className="text-sm text-neutral-600">Your ticket</p>
               <div className="mt-2 text-6xl font-extrabold text-neutral-900">{ticketNumber ?? "-"}</div>

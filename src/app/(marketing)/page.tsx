@@ -1,3 +1,4 @@
+import Image from "next/image";
 export const metadata = { title: "Waitlists for busy venues" };
 
 export default function HomePage() {
@@ -27,7 +28,7 @@ export default function HomePage() {
               <p className="mt-1 text-neutral-600">Add guests in seconds, quote times, and keep the line visible to staff.</p>
               <div className="mt-4 overflow-hidden rounded-lg">
                 <div className="relative w-full pt-[56.25%] bg-neutral-100">
-                  <img src="/window.svg" alt="Front desk" className="absolute inset-0 h-full w-full object-cover" />
+                  <Image src="/window.svg" alt="Front desk" fill className="object-cover" />
                 </div>
               </div>
             </div>
@@ -36,7 +37,7 @@ export default function HomePage() {
               <p className="mt-1 text-neutral-600">See who’s next from any device. Call, seat, or cancel with one tap.</p>
               <div className="mt-4 overflow-hidden rounded-lg">
                 <div className="relative w-full pt-[56.25%] bg-neutral-100">
-                  <img src="/globe.svg" alt="On the floor" className="absolute inset-0 h-full w-full object-cover" />
+                  <Image src="/globe.svg" alt="On the floor" fill className="object-cover" />
                 </div>
               </div>
             </div>
@@ -45,7 +46,7 @@ export default function HomePage() {
               <p className="mt-1 text-neutral-600">Show a public display so guests can check their place in line.</p>
               <div className="mt-4 overflow-hidden rounded-lg">
                 <div className="relative w-full pt-[56.25%] bg-neutral-100">
-                  <img src="/file.svg" alt="At the door" className="absolute inset-0 h-full w-full object-cover" />
+                  <Image src="/file.svg" alt="At the door" fill className="object-cover" />
                 </div>
               </div>
             </div>
@@ -54,7 +55,7 @@ export default function HomePage() {
               <p className="mt-1 text-neutral-600">Guests get SMS updates and a live status page. No apps needed.</p>
               <div className="mt-4 overflow-hidden rounded-lg">
                 <div className="relative w-full pt-[56.25%] bg-neutral-100">
-                  <img src="/next.svg" alt="On the go" className="absolute inset-0 h-full w-full object-cover" />
+                  <Image src="/next.svg" alt="On the go" fill className="object-cover" />
                 </div>
               </div>
             </div>
