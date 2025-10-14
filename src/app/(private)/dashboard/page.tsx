@@ -81,14 +81,13 @@ export default async function DashboardPage() {
     <main className="py-10">
       <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
         <div className="flex items-end justify-between gap-4">
-          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3">
             {businessHeader?.logo_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={businessHeader.logo_url || ""} alt="Logo" className="h-8 w-8 rounded object-cover ring-1 ring-neutral-200" />
             ) : null}
             <div>
               <h1 className="text-3xl font-bold tracking-tight">{businessHeader?.name || "Dashboard"}</h1>
-              <p className="mt-1 text-sm text-neutral-600">Signed in as {user.email}</p>
             </div>
           </div>
         </div>

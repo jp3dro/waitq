@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import CreateListButton from "./create-list-button";
+import ListCard from "./list-card";
 
 export const metadata = { title: "Lists" };
 
@@ -86,17 +87,7 @@ export default async function ListsIndexPage() {
                       const etaDisplay = totalMin > 0 ? (hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`) : '—';
                       return (
                         <li key={l.id}>
-                          <Link href={`/lists/${l.id}`} className="block bg-white ring-1 ring-black/5 rounded-xl shadow-sm p-5 hover:shadow hover:bg-neutral-50 transition cursor-pointer">
-                            <div className="flex items-start justify-between gap-2">
-                              <div>
-                                <p className="font-medium">{l.name}</p>
-                                <div className="mt-1 flex items-center gap-3 text-xs text-neutral-600">
-                                  <span>Waiting: {waiting}</span>
-                                  <span>ETA: {etaDisplay}</span>
-                                </div>
-                              </div>
-                            </div>
-                          </Link>
+                          <ListCard id={l.id} name={l.name} waiting={waiting} etaDisplay={etaDisplay} />
                         </li>
                       );
                     })}
