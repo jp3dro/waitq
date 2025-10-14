@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ActiveLink from "@/components/active-link";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function SettingsLayout({ children }: { children: React.ReactNode }) {
@@ -15,14 +16,14 @@ export default async function SettingsLayout({ children }: { children: React.Rea
         </div>
         <div className="mt-6 grid md:grid-cols-[220px_1fr] gap-8">
           <aside className="space-y-1 text-sm">
-            <Link href="/settings/profile" className="block px-3 py-2 rounded-md hover:bg-neutral-50">Profile</Link>
-            <Link href="/settings/locations" className="block px-3 py-2 rounded-md hover:bg-neutral-50">Locations</Link>
-            <Link href="/settings/lists" className="block px-3 py-2 rounded-md hover:bg-neutral-50">Lists</Link>
-            <Link href="/settings/subscription" className="block px-3 py-2 rounded-md hover:bg-neutral-50">Subscription</Link>
+            <ActiveLink href="/settings/profile" className="block px-3 py-2 rounded-md hover:bg-neutral-50" activeClassName="bg-neutral-100 text-black">Profile</ActiveLink>
+            <ActiveLink href="/settings/locations" className="block px-3 py-2 rounded-md hover:bg-neutral-50" activeClassName="bg-neutral-100 text-black">Locations</ActiveLink>
+            <ActiveLink href="/settings/lists" className="block px-3 py-2 rounded-md hover:bg-neutral-50" activeClassName="bg-neutral-100 text-black">Lists</ActiveLink>
+            <ActiveLink href="/settings/subscription" className="block px-3 py-2 rounded-md hover:bg-neutral-50" activeClassName="bg-neutral-100 text-black">Subscription</ActiveLink>
             {isAdmin ? (
               <div className="pt-4">
                 <div className="px-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">Admin</div>
-                <Link href="/settings/admin/businesses" className="mt-1 block px-3 py-2 rounded-md hover:bg-neutral-50">Businesses</Link>
+                <ActiveLink href="/settings/admin/businesses" className="mt-1 block px-3 py-2 rounded-md hover:bg-neutral-50" activeClassName="bg-neutral-100 text-black">Businesses</ActiveLink>
               </div>
             ) : null}
           </aside>

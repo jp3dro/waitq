@@ -104,15 +104,26 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist }: { o
               <label className="text-sm font-medium">Number of people</label>
               <input type="number" min={1} className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-black px-3 py-2 text-sm" placeholder="e.g., 2" {...register("partySize", { valueAsNumber: true })} />
             </div>
-            <div className="grid gap-1">
-              <label className="text-sm font-medium">Seating preference</label>
-              <select className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-black px-3 py-2 text-sm" {...register("seatingPreference")}>
-                <option value="">No preference</option>
-                {(waitlists.find(w => w.id === watch("waitlistId"))?.seating_preferences || []).map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            </div>
+            {(waitlists.find(w => w.id === watch("waitlistId"))?.seating_preferences || []).length > 0 ? (
+              <div className="grid gap-1">
+                <label className="text-sm font-medium">Seating preference</label>
+                <div className="flex flex-wrap gap-2">
+                  {(waitlists.find(w => w.id === watch("waitlistId"))?.seating_preferences || []).map((s) => {
+                    const selected = watch("seatingPreference") === s;
+                    return (
+                      <button
+                        type="button"
+                        key={s}
+                        onClick={() => setValue("seatingPreference", s)}
+                        className={`inline-flex items-center rounded-full px-3 py-1 text-xs ring-1 ring-inset transition ${selected ? "bg-black text-white ring-black" : "bg-white text-neutral-900 ring-neutral-300 hover:bg-neutral-50"}`}
+                      >
+                        {s}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
           </>
         ) : null}
         <div className="grid gap-1">

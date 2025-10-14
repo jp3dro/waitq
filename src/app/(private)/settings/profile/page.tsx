@@ -93,8 +93,7 @@ function SaveBusinessNameForm({ initialName }: { initialName: string }) {
 function SaveBusinessCountryForm({ initialCountry }: { initialCountry: string }) {
   async function action(formData: FormData) {
     "use server";
-    const codeRaw = (formData.get("country") as string) || "PT";
-    const code = codeRaw.trim().toUpperCase();
+    const code = ((formData.get("country") as string) || "PT").trim().toUpperCase();
     const allowed = ["PT","US","GB","ES","FR","DE","BR","CA","AU","IN","IT","NL","SE","NO","DK","IE","FI","MX","AR","CL","CO"];
     const final = allowed.includes(code) ? code : "PT";
     const supa = await createRouteClient();
@@ -110,17 +109,44 @@ function SaveBusinessCountryForm({ initialCountry }: { initialCountry: string })
     revalidatePath("/settings/profile");
     redirect("/settings/profile?ok=1");
   }
+  const countries: { code: string; name: string }[] = [
+    { code: "US", name: "United States" },
+    { code: "GB", name: "United Kingdom" },
+    { code: "PT", name: "Portugal" },
+    { code: "ES", name: "Spain" },
+    { code: "FR", name: "France" },
+    { code: "DE", name: "Germany" },
+    { code: "BR", name: "Brazil" },
+    { code: "CA", name: "Canada" },
+    { code: "AU", name: "Australia" },
+    { code: "IN", name: "India" },
+    { code: "IT", name: "Italy" },
+    { code: "NL", name: "Netherlands" },
+    { code: "SE", name: "Sweden" },
+    { code: "NO", name: "Norway" },
+    { code: "DK", name: "Denmark" },
+    { code: "IE", name: "Ireland" },
+    { code: "FI", name: "Finland" },
+    { code: "MX", name: "Mexico" },
+    { code: "AR", name: "Argentina" },
+    { code: "CL", name: "Chile" },
+    { code: "CO", name: "Colombia" },
+  ];
+
   return (
     <form action={action} className="mt-2 grid gap-3">
       <div>
-        <label className="text-neutral-600" htmlFor="country">Business country (ISO 2-letter)</label>
-        <input
+        <label className="text-neutral-600" htmlFor="country">Business country</label>
+        <select
           id="country"
           name="country"
-          defaultValue={initialCountry}
+          defaultValue={initialCountry || "PT"}
           className="mt-1 block w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black/10"
-          placeholder="e.g., PT"
-        />
+        >
+          {countries.map((c) => (
+            <option key={c.code} value={c.code}>{c.name}</option>
+          ))}
+        </select>
         <div className="mt-1 text-xs text-neutral-600">Used to set the default phone prefix in kiosk.</div>
       </div>
       <div>

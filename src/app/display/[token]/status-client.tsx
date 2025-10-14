@@ -215,24 +215,26 @@ function KioskButton({ token, defaultCountry, listType, seatingPreferences }: { 
                     }}
                   />
                 </div>
-                <div className="grid gap-2">
-                  <label className="text-base font-medium">Seating preference</label>
-                  <div className="flex flex-wrap gap-4">
-                    {seatingPreferences.map((s) => {
-                      const active = pref === s;
-                      return (
-                        <button
-                          type="button"
-                          key={s}
-                          onClick={() => setPref(s)}
-                          className={`px-6 py-4 rounded-2xl ring-1 ring-inset text-lg ${active ? "bg-black text-white ring-black" : "bg-white text-neutral-900 ring-neutral-300 hover:bg-neutral-100"}`}
-                        >
-                          {s}
-                        </button>
-                      );
-                    })}
+                {Array.isArray(seatingPreferences) && seatingPreferences.length > 0 ? (
+                  <div className="grid gap-2">
+                    <label className="text-base font-medium">Seating preference</label>
+                    <div className="flex flex-wrap gap-4">
+                      {seatingPreferences.map((s) => {
+                        const active = pref === s;
+                        return (
+                          <button
+                            type="button"
+                            key={s}
+                            onClick={() => setPref(s)}
+                            className={`px-6 py-4 rounded-2xl ring-1 ring-inset text-lg ${active ? "bg-black text-white ring-black" : "bg-white text-neutral-900 ring-neutral-300 hover:bg-neutral-100"}`}
+                          >
+                            {s}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
+                ) : null}
               </div>
             ) : (
               <div className="min-h-[120px]" />

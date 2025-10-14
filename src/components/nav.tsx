@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ActiveLink from "./active-link";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function Nav() {
@@ -16,10 +17,10 @@ export default async function Nav() {
         <div className="hidden md:flex items-center gap-6 text-sm text-neutral-700">
           {user ? (
             <>
-              <Link href="/dashboard" className="rounded px-2 py-1 hover:bg-neutral-100 hover:text-black">Dashboard</Link>
-              <Link href="/lists" className="rounded px-2 py-1 hover:bg-neutral-100 hover:text-black">Lists</Link>
-              <Link href="/customers" className="rounded px-2 py-1 hover:bg-neutral-100 hover:text-black">Customers</Link>
-              <Link href="/settings" className="rounded px-2 py-1 hover:bg-neutral-100 hover:text-black">Settings</Link>
+              <ActiveLink href="/dashboard" className="rounded px-2 py-1 hover:bg-neutral-100 hover:text-black" activeClassName="bg-neutral-200 text-black">Dashboard</ActiveLink>
+              <ActiveLink href="/lists" className="rounded px-2 py-1 hover:bg-neutral-100 hover:text-black" activeClassName="bg-neutral-200 text-black">Lists</ActiveLink>
+              <ActiveLink href="/customers" className="rounded px-2 py-1 hover:bg-neutral-100 hover:text-black" activeClassName="bg-neutral-200 text-black">Customers</ActiveLink>
+              <ActiveLink href="/settings" className="rounded px-2 py-1 hover:bg-neutral-100 hover:text-black" activeClassName="bg-neutral-200 text-black">Settings</ActiveLink>
             </>
           ) : (
             <>
