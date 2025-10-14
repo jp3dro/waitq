@@ -11,16 +11,19 @@ export default function EditListButton({
   waitlistId,
   initialName,
   initialLocationId,
-  locations
+  locations,
+  initialKioskEnabled = false,
 }: {
   waitlistId: string;
   initialName: string;
   initialLocationId?: string;
   locations: Location[];
+  initialKioskEnabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(initialName);
   const [locationId, setLocationId] = useState(initialLocationId || locations[0]?.id || "");
+  const [kioskEnabled, setKioskEnabled] = useState<boolean>(initialKioskEnabled);
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const router = useRouter();
@@ -29,6 +32,7 @@ export default function EditListButton({
     setOpen(true);
     setName(initialName);
     setLocationId(initialLocationId || locations[0]?.id || "");
+    setKioskEnabled(initialKioskEnabled);
     setMessage(null);
   };
 
@@ -36,13 +40,14 @@ export default function EditListButton({
     setOpen(false);
     setName(initialName);
     setLocationId(initialLocationId || locations[0]?.id || "");
+    setKioskEnabled(initialKioskEnabled);
     setMessage(null);
   };
 
   const save = () => {
     setMessage(null);
     startTransition(async () => {
-      const payload: { id: string; name?: string; locationId?: string } = { id: waitlistId };
+      const payload: { id: string; name?: string; locationId?: string; kioskEnabled?: boolean } = { id: waitlistId };
 
       // Only include fields that have changed
       if (name !== initialName) {
@@ -51,6 +56,7 @@ export default function EditListButton({
       if (locationId !== (initialLocationId || locations[0]?.id || "")) {
         payload.locationId = locationId;
       }
+      payload.kioskEnabled = kioskEnabled;
 
       // If no fields changed, just close modal and show success
       if (Object.keys(payload).length === 1) {
@@ -60,7 +66,7 @@ export default function EditListButton({
       }
 
       const res = await fetch("/api/waitlists", {
-        method: "PATCH",
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
@@ -103,6 +109,21 @@ export default function EditListButton({
               options={locations.map((l) => ({ value: l.id, label: l.name }))}
               disabled={isPending}
             />
+          </div>
+          <div className="grid gap-1">
+            <label className="text-sm font-medium">Self-checkin kiosk</label>
+            <div className="flex items-start gap-3">
+              <input
+                id="kiosk-enabled"
+                type="checkbox"
+                checked={kioskEnabled}
+                onChange={(e) => setKioskEnabled(e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-neutral-300 text-black focus:ring-black"
+              />
+              <label htmlFor="kiosk-enabled" className="text-sm text-neutral-700">
+                Users will be able to add themselves to the waiting list using your welcome Kiosk screen
+              </label>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <button

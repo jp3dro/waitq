@@ -9,10 +9,10 @@ export default async function ProfilePage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  type Business = { id: string; name: string | null; logo_url: string | null } | null;
+  type Business = { id: string; name: string | null; logo_url: string | null; country_code: string | null } | null;
   const { data: business } = await supabase
     .from("businesses")
-    .select("id, name, logo_url")
+    .select("id, name, logo_url, country_code")
     .order("created_at", { ascending: true })
     .limit(1)
     .single();
@@ -30,6 +30,7 @@ export default async function ProfilePage() {
           <div className="font-mono text-xs">{user?.id}</div>
         </div>
         <SaveBusinessNameForm initialName={(business as Business)?.name || ""} />
+        <SaveBusinessCountryForm initialCountry={(business as Business)?.country_code || "PT"} />
         <div className="grid md:grid-cols-[96px_1fr] items-start gap-4 mt-6">
           <div className="h-24 w-24 rounded-md ring-1 ring-neutral-200 overflow-hidden bg-neutral-50 flex items-center justify-center">
             {business?.logo_url ? (
@@ -81,6 +82,46 @@ function SaveBusinessNameForm({ initialName }: { initialName: string }) {
           className="mt-1 block w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black/10"
           placeholder="e.g., Acme Barbers"
         />
+      </div>
+      <div>
+        <button className="inline-flex items-center rounded-md bg-black px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-neutral-800">Save changes</button>
+      </div>
+    </form>
+  );
+}
+
+function SaveBusinessCountryForm({ initialCountry }: { initialCountry: string }) {
+  async function action(formData: FormData) {
+    "use server";
+    const codeRaw = (formData.get("country") as string) || "PT";
+    const code = codeRaw.trim().toUpperCase();
+    const allowed = ["PT","US","GB","ES","FR","DE","BR","CA","AU","IN","IT","NL","SE","NO","DK","IE","FI","MX","AR","CL","CO"];
+    const final = allowed.includes(code) ? code : "PT";
+    const supa = await createRouteClient();
+    const { data: biz } = await supa
+      .from("businesses")
+      .select("id")
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .single();
+    if (biz?.id) {
+      await supa.from("businesses").update({ country_code: final }).eq("id", biz.id);
+    }
+    revalidatePath("/settings/profile");
+    redirect("/settings/profile?ok=1");
+  }
+  return (
+    <form action={action} className="mt-2 grid gap-3">
+      <div>
+        <label className="text-neutral-600" htmlFor="country">Business country (ISO 2-letter)</label>
+        <input
+          id="country"
+          name="country"
+          defaultValue={initialCountry}
+          className="mt-1 block w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black/10"
+          placeholder="e.g., PT"
+        />
+        <div className="mt-1 text-xs text-neutral-600">Used to set the default phone prefix in kiosk.</div>
       </div>
       <div>
         <button className="inline-flex items-center rounded-md bg-black px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-neutral-800">Save changes</button>

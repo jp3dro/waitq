@@ -11,6 +11,8 @@ const schema = z.object({
   customerName: z.string().min(1),
   sendSms: z.boolean().optional().default(false),
   sendWhatsapp: z.boolean().optional().default(false),
+  partySize: z.number().int().positive().optional(),
+  seatingPreference: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -27,7 +29,7 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const token = nanoid(16);
-  const { waitlistId, phone, customerName, sendSms: shouldSendSms, sendWhatsapp: shouldSendWhatsapp } = parse.data;
+  const { waitlistId, phone, customerName, sendSms: shouldSendSms, sendWhatsapp: shouldSendWhatsapp, partySize, seatingPreference } = parse.data;
 
   // Look up business_id from waitlist to keep entries consistent
   const { data: w, error: wErr } = await supabase
@@ -57,6 +59,8 @@ export async function POST(req: NextRequest) {
     ticket_number: nextTicket,
     send_sms: shouldSendSms,
     send_whatsapp: shouldSendWhatsapp,
+    party_size: typeof partySize === 'number' ? partySize : null,
+    seating_preference: seatingPreference || null,
   };
 
   let { data, error } = await supabase
@@ -74,6 +78,8 @@ export async function POST(req: NextRequest) {
       customer_name: customerName,
       token,
       ticket_number: nextTicket,
+      party_size: typeof partySize === 'number' ? partySize : null,
+      seating_preference: seatingPreference || null,
     };
 
     const retryResult = await supabase

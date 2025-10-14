@@ -21,6 +21,7 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
     .select(`
       id,
       name,
+      kiosk_enabled,
       display_token,
       location_id,
       business_locations (
@@ -57,6 +58,7 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
               waitlistId={waitlist.id}
               initialName={waitlist.name}
               initialLocationId={waitlist.location_id || (waitlist.business_locations as unknown as { id: string } | null)?.id}
+              initialKioskEnabled={(waitlist as any).kiosk_enabled ?? false}
               locations={typedLocations}
             />
             {waitlist.display_token && (

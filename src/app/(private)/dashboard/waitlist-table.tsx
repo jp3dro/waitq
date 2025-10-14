@@ -13,6 +13,8 @@ type Entry = {
   token: string;
   send_sms?: boolean | null;
   send_whatsapp?: boolean | null;
+  party_size?: number | null;
+  seating_preference?: string | null;
 };
 
 export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: string }) {
@@ -226,6 +228,8 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
               <th className="text-left p-2">#</th>
               <th className="text-left p-2">Name</th>
               <th className="text-left p-2">Phone</th>
+              <th className="text-left p-2">Party</th>
+              <th className="text-left p-2">Seating</th>
               <th className="text-left p-2">Notifications</th>
               <th className="text-left p-2">Created</th>
               <th className="text-left p-2"></th>
@@ -237,6 +241,8 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                 <td className="p-2">{e.ticket_number ?? e.queue_position ?? "-"}</td>
                 <td className="p-2">{e.customer_name ?? "—"}</td>
                 <td className="p-2">{e.phone}</td>
+                <td className="p-2">{typeof e.party_size === 'number' ? e.party_size : "—"}</td>
+                <td className="p-2">{e.seating_preference || "—"}</td>
                 <td className="p-2">
                   <span className="text-xs text-neutral-600">{getNotificationDisplay(e.send_sms, e.send_whatsapp)}</span>
                 </td>

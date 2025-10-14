@@ -6,7 +6,7 @@ export async function GET(req: Request) {
   const waitlistId = searchParams.get("waitlistId");
   const supabase = await createRouteClient();
   // Try to select with notification columns first
-  let selectFields = "id, customer_name, phone, status, queue_position, created_at, ticket_number, token, send_sms, send_whatsapp";
+  let selectFields = "id, customer_name, phone, status, queue_position, created_at, ticket_number, token, send_sms, send_whatsapp, party_size, seating_preference";
 
   let q = supabase
     .from("waitlist_entries")
@@ -21,7 +21,7 @@ export async function GET(req: Request) {
 
   // If the query fails due to missing columns, retry without them
   if (error && (error.message.includes("send_sms") || error.message.includes("send_whatsapp") || error.message.includes("column"))) {
-    selectFields = "id, customer_name, phone, status, queue_position, created_at, ticket_number, token";
+    selectFields = "id, customer_name, phone, status, queue_position, created_at, ticket_number, token, party_size, seating_preference";
     q = supabase
       .from("waitlist_entries")
       .select(selectFields)

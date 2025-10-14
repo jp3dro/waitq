@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import PhoneInput from "react-phone-number-input";
 import 'react-phone-number-input/style.css';
 
-type FormValues = { phone: string; customerName: string; waitlistId: string; sendSms: boolean; sendWhatsapp: boolean };
+type FormValues = { phone: string; customerName: string; waitlistId: string; sendSms: boolean; sendWhatsapp: boolean; partySize?: number; seatingPreference?: string };
 
 export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist }: { onDone?: () => void; defaultWaitlistId?: string; lockWaitlist?: boolean }) {
   const [isPending, startTransition] = useTransition();
@@ -12,7 +12,7 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist }: { o
   const { register, handleSubmit, reset, watch, setValue } = useForm<FormValues>({
     defaultValues: { phone: "", customerName: "", waitlistId: "", sendSms: false, sendWhatsapp: false },
   });
-  const [waitlists, setWaitlists] = useState<{ id: string; name: string; display_token?: string }[]>([]);
+  const [waitlists, setWaitlists] = useState<{ id: string; name: string; display_token?: string; list_type?: string; seating_preferences?: string[] }[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -98,6 +98,23 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist }: { o
           <label className="text-sm font-medium">Customer name</label>
           <input className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-black px-3 py-2 text-sm" placeholder="Full name" {...register("customerName", { required: true })}/>
         </div>
+        {(waitlists.find(w => w.id === watch("waitlistId"))?.list_type || "restaurants") === "restaurants" ? (
+          <>
+            <div className="grid gap-1">
+              <label className="text-sm font-medium">Number of people</label>
+              <input type="number" min={1} className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-black px-3 py-2 text-sm" placeholder="e.g., 2" {...register("partySize", { valueAsNumber: true })} />
+            </div>
+            <div className="grid gap-1">
+              <label className="text-sm font-medium">Seating preference</label>
+              <select className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-black px-3 py-2 text-sm" {...register("seatingPreference")}>
+                <option value="">No preference</option>
+                {(waitlists.find(w => w.id === watch("waitlistId"))?.seating_preferences || []).map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
+          </>
+        ) : null}
         <div className="grid gap-1">
           <label className="text-sm font-medium">Phone</label>
           <PhoneInput
