@@ -11,9 +11,9 @@ export default async function PrivateSidebar() {
 
   const initial = (user?.email || "?").slice(0, 1).toUpperCase();
   return (
-    <aside className="h-dvh sticky top-0 w-64 shrink-0 border-r bg-white">
+    <aside className="h-dvh sticky top-0 w-64 shrink-0 border-r border-default bg-white">
       <div className="h-full flex flex-col">
-        <div className="px-4 py-4 border-b bg-gradient-to-b from-neutral-50 to-white">
+        <div className="px-4 py-4 border-b border-default bg-gradient-to-b from-neutral-50 to-white">
           <a href="/dashboard" className="flex items-center gap-3">
             <div className="h-8 w-8 rounded-lg bg-black text-white flex items-center justify-center font-semibold">W</div>
             <span className="font-semibold text-lg tracking-tight text-neutral-900">WaitQ</span>
@@ -21,15 +21,15 @@ export default async function PrivateSidebar() {
         </div>
         <nav className="flex-1 overflow-y-auto px-2 py-3 text-sm">
           <div className="space-y-1">
-            <ActiveLink href="/dashboard" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700" activeClassName="bg-neutral-900 text-white">
+            <ActiveLink href="/dashboard" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700" activeClassName="bg-[#efeefd] text-[#2b246b]">
               <LayoutDashboard className="h-4 w-4" />
               <span>Dashboard</span>
             </ActiveLink>
-            <ActiveLink href="/lists" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700" activeClassName="bg-neutral-900 text-white">
+            <ActiveLink href="/lists" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700" activeClassName="bg-[#efeefd] text-[#2b246b]">
               <ListChecks className="h-4 w-4" />
               <span>Lists</span>
             </ActiveLink>
-            <ActiveLink href="/customers" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700" activeClassName="bg-neutral-900 text-white">
+            <ActiveLink href="/customers" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700" activeClassName="bg-[#efeefd] text-[#2b246b]">
               <Users2 className="h-4 w-4" />
               <span>Customers</span>
             </ActiveLink>
@@ -37,20 +37,20 @@ export default async function PrivateSidebar() {
           <div className="mt-6">
             <div className="px-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">Settings</div>
             <div className="mt-2 space-y-1">
-              <ActiveLink href="/settings/profile" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700" activeClassName="bg-neutral-900 text-white">
+              <ActiveLink href="/settings/profile" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700" activeClassName="bg-[#efeefd] text-[#2b246b]">
                 <Settings className="h-4 w-4" />
                 <span>Profile</span>
               </ActiveLink>
-              <ActiveLink href="/settings/locations" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700" activeClassName="bg-neutral-900 text-white">
+              <ActiveLink href="/settings/locations" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700" activeClassName="bg-[#efeefd] text-[#2b246b]">
                 <MapPin className="h-4 w-4" />
                 <span>Locations</span>
               </ActiveLink>
-              <ActiveLink href="/settings/subscription" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700" activeClassName="bg-neutral-900 text-white">
+              <ActiveLink href="/settings/subscription" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700" activeClassName="bg-[#efeefd] text-[#2b246b]">
                 <CreditCard className="h-4 w-4" />
                 <span>Subscription</span>
               </ActiveLink>
               {isAdmin ? (
-                <ActiveLink href="/settings/admin/businesses" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700" activeClassName="bg-neutral-900 text-white">
+                <ActiveLink href="/settings/admin/businesses" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700" activeClassName="bg-[#efeefd] text-[#2b246b]">
                   <Building2 className="h-4 w-4" />
                   <span>Businesses</span>
                 </ActiveLink>
@@ -58,7 +58,7 @@ export default async function PrivateSidebar() {
             </div>
           </div>
         </nav>
-        <div className="border-t p-3 text-sm">
+        <div className="border-t border-default p-3 text-sm">
           {user ? (
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-3 min-w-0">

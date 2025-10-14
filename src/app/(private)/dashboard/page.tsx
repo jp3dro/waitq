@@ -78,7 +78,7 @@ export default async function DashboardPage() {
   const businessHeader = (biz as BusinessHeader);
 
   return (
-    <main className="py-10">
+    <main className="py-5">
       <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
         <div className="flex items-end justify-between gap-4">
             <div className="flex items-center gap-3">

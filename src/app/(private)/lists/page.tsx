@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import Link from "next/link";
 import CreateListButton from "./create-list-button";
 import ListCard from "./list-card";
 
@@ -14,9 +13,9 @@ export default async function ListsIndexPage() {
   if (!user) redirect("/login");
 
   const { data: locations } = await supabase.from("business_locations").select("id, name").order("created_at", { ascending: true });
-  const { data: lists } = await supabase.from("waitlists").select("id, name, location_id").order("created_at", { ascending: true });
+  const { data: lists } = await supabase.from("waitlists").select("id, name, location_id, display_token").order("created_at", { ascending: true });
   const locs = (locations || []) as { id: string; name: string }[];
-  const allLists = (lists || []) as { id: string; name: string; location_id: string | null }[];
+  const allLists = (lists || []) as { id: string; name: string; location_id: string | null; display_token?: string | null }[];
 
   // Per-list waiting counts and estimated times (reuse dashboard logic)
   const [waitingCounts, estimatedTimes] = await Promise.all([
@@ -52,7 +51,7 @@ export default async function ListsIndexPage() {
   const etaByList = new Map(estimatedTimes.map((e) => [e.id, e.avgMs] as const));
 
   return (
-    <main className="py-10">
+    <main className="py-5">
       <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
         <div className="flex items-end justify-between gap-4">
           <div>
@@ -87,7 +86,7 @@ export default async function ListsIndexPage() {
                       const etaDisplay = totalMin > 0 ? (hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`) : '—';
                       return (
                         <li key={l.id}>
-                          <ListCard id={l.id} name={l.name} waiting={waiting} etaDisplay={etaDisplay} />
+                          <ListCard id={l.id} name={l.name} waiting={waiting} etaDisplay={etaDisplay} displayToken={l.display_token} />
                         </li>
                       );
                     })}

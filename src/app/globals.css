@@ -3,6 +3,8 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --cta: #533AFD;
+  --border-color: #CDD6E2;
 }
 
 @theme inline {
@@ -21,6 +23,17 @@ body {
 
 /* Ensure all buttons get pointer cursor */
 button { cursor: pointer; }
+
+/* Primary CTA helper */
+.btn-primary {
+  background-color: var(--cta);
+  color: #ffffff;
+}
+.btn-primary:hover { background-color: #3d29d9; }
+
+/* Shared border helper */
+.border-default { border-color: var(--border-color); }
+.ring-default { --tw-ring-color: var(--border-color); }
 
 ::selection {
   background-color: #e5e7eb; /* neutral-200 */

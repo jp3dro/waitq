@@ -27,7 +27,7 @@ export default async function CustomersPage() {
   const business = (biz || null) as { id: string; name: string | null; logo_url: string | null } | null;
   if (!business) {
     return (
-      <main className="py-10">
+      <main className="py-5">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="bg-white ring-1 ring-black/5 rounded-xl shadow-sm p-10 text-center">
             <h3 className="text-base font-semibold">No business found</h3>
@@ -91,7 +91,7 @@ export default async function CustomersPage() {
   );
 
   return (
-    <main className="py-10">
+    <main className="py-5">
       <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
         <div className="flex items-center gap-3">
           {business.logo_url ? (
