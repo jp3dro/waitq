@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
   const admin = getAdminClient();
   const { data: entry, error: e1 } = await admin
     .from("waitlist_entries")
-    .select("status, created_at, eta_minutes, queue_position, token, waitlist_id, ticket_number, business_id")
+    .select("status, created_at, eta_minutes, queue_position, token, waitlist_id, ticket_number, business_id, party_size, seating_preference")
     .eq("token", token)
     .single();
   if (e1) return NextResponse.json({ error: e1.message }, { status: 400 });

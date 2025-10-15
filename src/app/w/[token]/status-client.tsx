@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
-type Entry = { status: string; created_at: string; eta_minutes: number | null; queue_position: number | null; waitlist_id?: string; ticket_number?: number | null; notified_at?: string | null };
+type Entry = { status: string; created_at: string; eta_minutes: number | null; queue_position: number | null; waitlist_id?: string; ticket_number?: number | null; notified_at?: string | null; seating_preference?: string | null; party_size?: number | null };
 type Business = { name: string | null; logo_url: string | null } | null;
 
 export default function ClientStatus({ token }: { token: string }) {
@@ -82,91 +83,88 @@ export default function ClientStatus({ token }: { token: string }) {
   }, [supabase, data?.waitlist_id, load]);
 
   if (loading || !data) return (
-    <main className="p-8">
-      <div className="max-w-xl mx-auto">
-        <div className="rounded-2xl bg-white ring-1 ring-black/5 shadow-sm p-6">
-          <p className="text-sm text-neutral-600">Loading…</p>
+    <div className="min-h-dvh bg-[#F6F8FA]">
+      <header className="border-b border-default bg-white">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8 h-14 flex items-center justify-start">
+          <span className="font-semibold text-lg tracking-tight text-neutral-900">&nbsp;</span>
         </div>
-      </div>
-    </main>
+      </header>
+      <main className="p-8">
+        <div className="max-w-xl mx-auto">
+          <div className="rounded-2xl bg-white ring-1 ring-default shadow-sm p-6">
+            <p className="text-sm text-neutral-600">Loading…</p>
+          </div>
+        </div>
+      </main>
+    </div>
   );
 
   const isUserTurn = data.ticket_number !== null && data.ticket_number === nowServing;
 
-  return (
-    <main className="p-8">
-      <div className="max-w-xl mx-auto">
-        <div className={`rounded-2xl ring-1 shadow-sm p-6 ${
-          isUserTurn
-            ? "bg-gradient-to-br from-green-50 to-emerald-50 ring-green-200 border-green-200"
-            : "bg-white ring-black/5"
-        }`}>
-          <Header business={business} />
+  const yourNumber = typeof data.ticket_number === 'number' ? data.ticket_number : (typeof data.queue_position === 'number' ? data.queue_position : null);
 
-          {isUserTurn ? (
-            <div className="mt-6 text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <h2 className="text-2xl font-bold text-green-800 mb-2">It&apos;s your turn!</h2>
-              <p className="text-lg text-green-700 mb-4">
-                Please proceed to {business?.name || "the venue"}
-              </p>
-              <div className="inline-flex items-center gap-2 bg-green-100 px-4 py-2 rounded-lg">
-                <span className="text-sm font-medium text-green-800">Your number:</span>
-                <span className="text-xl font-bold text-green-900">{data.ticket_number}</span>
-              </div>
-            </div>
-          ) : (
-            <>
-              {nowServing ? (
-                <div className="mt-2 flex items-center gap-2">
-                  <span className="text-sm text-neutral-600">Now serving</span>
-                  <span className="text-2xl font-bold">{nowServing}</span>
-                </div>
-              ) : null}
-              <div className="mt-4 grid gap-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-neutral-600">Status</span>
-                  <span className="inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-700">{data.status}</span>
-                </div>
-                {data.eta_minutes ? (
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-neutral-600">ETA</span>
-                    <span className="text-sm font-medium">{data.eta_minutes} min</span>
-                  </div>
-                ) : null}
-                {typeof data.queue_position === "number" ? (
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-neutral-600">Position</span>
-                    <span className="text-sm font-medium">{data.queue_position}</span>
-                  </div>
-                ) : null}
-              </div>
-              <p className="mt-6 text-sm text-neutral-600">This page updates automatically as the venue advances the queue.</p>
-            </>
-          )}
+  return (
+    <div className="min-h-dvh bg-[#F6F8FA]">
+      <header className="border-b border-default bg-white">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8 h-14 flex items-center gap-3">
+          {business?.logo_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={business.logo_url} alt="Logo" className="h-8 w-8 rounded object-cover ring-1 ring-neutral-200" />
+          ) : null}
+          <span className="font-semibold text-lg tracking-tight text-neutral-900">{business?.name || ""}</span>
         </div>
-      </div>
-    </main>
-  );
-}
-
-function Header({ business }: { business: Business }) {
-  if (!business) {
-    return <h1 className="text-xl font-semibold">Your place in line</h1>;
-  }
-  return (
-    <div className="flex items-center gap-3">
-      {business.logo_url ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={business.logo_url} alt="Logo" className="h-8 w-8 rounded object-cover ring-1 ring-neutral-200" />
-      ) : null}
-      <div>
-        <h1 className="text-xl font-semibold">{business.name || "Your place in line"}</h1>
-      </div>
+      </header>
+      <main className="p-8">
+        <div className="max-w-xl mx-auto">
+          <div className={`rounded-2xl ring-1 shadow-sm p-6 ${
+            isUserTurn
+              ? "bg-gradient-to-br from-green-50 to-emerald-50 ring-green-200"
+              : "bg-white ring-default"
+          }`}>
+            {isUserTurn ? (
+              <div className="text-center">
+                <h2 className="text-2xl font-bold text-green-800">It&apos;s your turn!</h2>
+                <p className="mt-2 text-green-700">Please proceed to {business?.name || "the venue"}</p>
+                {typeof yourNumber === 'number' ? (
+                  <div className="mt-6">
+                    <div className="text-sm text-green-800">Your number</div>
+                    <div className="mt-1 text-6xl font-extrabold text-green-900">{yourNumber}</div>
+                  </div>
+                ) : null}
+              </div>
+            ) : (
+              <div className="text-center">
+                <div className="text-sm text-neutral-600">Your number</div>
+                <div className="mt-1 text-7xl font-extrabold text-neutral-900">{typeof yourNumber === 'number' ? yourNumber : '-'}</div>
+                <div className="mt-4 flex items-center justify-center gap-3 flex-wrap">
+                  {data.seating_preference ? (
+                    <span className="inline-flex items-center rounded-full bg-neutral-100 px-3 py-1 text-sm font-medium text-neutral-800">{data.seating_preference}</span>
+                  ) : null}
+                  {typeof data.party_size === 'number' ? (
+                    <span className="inline-flex items-center rounded-full bg-neutral-100 px-3 py-1 text-sm font-medium text-neutral-800">Party: {data.party_size}</span>
+                  ) : null}
+                  <span className="inline-flex items-center rounded-full bg-neutral-100 px-3 py-1 text-sm font-medium text-neutral-800 capitalize">{data.status}</span>
+                </div>
+                <div className="mt-8">
+                  <div className="text-sm text-neutral-600">Now serving</div>
+                  <div className="mt-1 text-5xl font-bold text-neutral-900">{typeof nowServing === 'number' ? nowServing : '-'}</div>
+                </div>
+                {typeof data.eta_minutes === 'number' ? (
+                  <div className="mt-4 text-sm text-neutral-700">Estimated wait: <span className="font-medium">{data.eta_minutes} min</span></div>
+                ) : null}
+              </div>
+            )}
+          </div>
+          <p className="mt-4 text-center text-sm text-neutral-600">This page updates automatically as the venue advances the queue.</p>
+          <div className="mt-6 flex items-center justify-center">
+            <Link href="/" className="inline-flex items-center gap-2 text-neutral-500 hover:text-neutral-800">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/waitq.svg" alt="WaitQ" className="h-4 w-auto" />
+              <span className="text-sm">Powered by WaitQ</span>
+            </Link>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
