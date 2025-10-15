@@ -16,7 +16,7 @@ export default async function PrivateSidebar() {
       <div className="h-full flex flex-col">
         <div className="px-4 py-4 border-b border-default bg-gradient-to-b from-neutral-50 to-white">
           <a href="/dashboard" className="flex items-center" aria-label="WaitQ dashboard">
-            <Image src="/waitq.svg" alt="WaitQ" className="h-10 w-auto" width={135} height={40} />
+            <Image src="/waitq.svg" alt="WaitQ" className="h-8 w-auto" width={108} height={32} />
           </a>
         </div>
         <nav className="flex-1 overflow-y-auto px-2 py-3 text-sm">
