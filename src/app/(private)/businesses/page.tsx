@@ -8,7 +8,7 @@ export default async function AdminBusinessesPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user || user.email !== "jp3dro@gmail.com") redirect("/settings");
+  if (!user || user.email !== "jp3dro@gmail.com") redirect("/businesses");
 
   // For now, list all businesses with name, owner email and placeholder subscription status
   const { data: businesses } = await supabase
@@ -33,9 +33,17 @@ export default async function AdminBusinessesPage() {
   }));
 
   return (
-    <div className="bg-white ring-1 ring-black/5 rounded-xl p-6">
-      <h2 className="text-base font-semibold">Businesses</h2>
-      <div className="mt-4 overflow-x-auto">
+    <main className="py-5">
+      <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Businesses</h1>
+            <p className="mt-1 text-sm text-neutral-600">Admin view of all businesses</p>
+          </div>
+        </div>
+
+        <div className="bg-white ring-1 ring-black/5 rounded-xl p-6">
+          <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
           <thead>
             <tr className="text-left text-neutral-600">
@@ -61,8 +69,10 @@ export default async function AdminBusinessesPage() {
             ) : null}
           </tbody>
         </table>
+          </div>
+        </div>
       </div>
-    </div>
+    </main>
   );
 }
 

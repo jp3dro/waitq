@@ -19,10 +19,18 @@ export default async function ProfilePage() {
     .limit(1)
     .single();
   return (
-    <div className="bg-white ring-1 ring-black/5 rounded-xl p-6">
-      <h2 className="text-base font-semibold">Profile</h2>
-      <ToastOnQuery />
-      <div className="mt-4 grid gap-3 text-sm">
+    <main className="py-5">
+      <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Profile</h1>
+            <p className="mt-1 text-sm text-neutral-600">Manage your account and business settings</p>
+          </div>
+        </div>
+
+        <div className="bg-white ring-1 ring-black/5 rounded-xl p-6">
+          <ToastOnQuery />
+          <div className="grid gap-3 text-sm">
         <div>
           <div className="text-neutral-600">Email</div>
           <div className="font-medium">{user?.email}</div>
@@ -47,8 +55,10 @@ export default async function ProfilePage() {
             <div className="mt-2 text-xs text-neutral-600">PNG/JPG, square recommended. Max 5 MB.</div>
           </div>
         </div>
+        </div>
+        </div>
       </div>
-    </div>
+    </main>
   );
 }
 
@@ -70,8 +80,8 @@ function SaveBusinessNameForm({ initialName }: { initialName: string }) {
     if (biz?.id) {
       await supa.from("businesses").update({ name }).eq("id", biz.id);
     }
-    revalidatePath("/settings/profile");
-    redirect("/settings/profile?ok=1");
+    revalidatePath("/profile");
+    redirect("/profile?ok=1");
   }
   return (
     <form action={action} className="mt-4 grid gap-3">
@@ -108,8 +118,8 @@ function SaveBusinessCountryForm({ initialCountry }: { initialCountry: string })
     if (biz?.id) {
       await supa.from("businesses").update({ country_code: final }).eq("id", biz.id);
     }
-    revalidatePath("/settings/profile");
-    redirect("/settings/profile?ok=1");
+    revalidatePath("/profile");
+    redirect("/profile?ok=1");
   }
   const countries: { code: string; name: string }[] = [
     { code: "US", name: "United States" },
@@ -164,8 +174,8 @@ function UploadLogo() {
       action={async (formData: FormData) => {
         "use server";
         const file = formData.get("file") as File | null;
-        if (!file) redirect("/settings/profile?err=No%20file%20selected");
-        if (file.size > 5 * 1024 * 1024) redirect("/settings/profile?err=File%20too%20large%20(max%205MB)");
+        if (!file) redirect("/profile?err=No%20file%20selected");
+        if (file.size > 5 * 1024 * 1024) redirect("/profile?err=File%20too%20large%20(max%205MB)");
 
         const supa = await createRouteClient();
         const admin = getAdminClient();
@@ -175,10 +185,10 @@ function UploadLogo() {
           .order("created_at", { ascending: true })
           .limit(1)
           .single();
-        if (!biz?.id) redirect("/settings/profile?err=No%20business%20found");
+        if (!biz?.id) redirect("/profile?err=No%20business%20found");
 
         const contentType = file.type || "application/octet-stream";
-        if (!contentType.startsWith("image/")) redirect("/settings/profile?err=Unsupported%20file%20type");
+        if (!contentType.startsWith("image/")) redirect("/profile?err=Unsupported%20file%20type");
 
         const bytes = await file.arrayBuffer();
         const buffer = new Uint8Array(bytes);
@@ -186,13 +196,13 @@ function UploadLogo() {
         const objectPath = `${biz.id}/${Date.now()}.${fileExt}`;
 
         const { data: up, error: upErr } = await admin.storage.from("logos").upload(objectPath, buffer, { contentType, upsert: false });
-        if (upErr || !up) redirect(`/settings/profile?err=${encodeURIComponent(upErr?.message || "Upload failed")}`);
+        if (upErr || !up) redirect(`/profile?err=${encodeURIComponent(upErr?.message || "Upload failed")}`);
         const { data: pub } = admin.storage.from("logos").getPublicUrl(up.path);
         const { error: updErr } = await supa.from("businesses").update({ logo_url: pub.publicUrl }).eq("id", biz.id);
-        if (updErr) redirect(`/settings/profile?err=${encodeURIComponent(updErr.message)}`);
+        if (updErr) redirect(`/profile?err=${encodeURIComponent(updErr.message)}`);
 
-        revalidatePath("/settings/profile");
-        redirect("/settings/profile?ok=1");
+        revalidatePath("/profile");
+        redirect("/profile?ok=1");
       }}
       className="flex items-center gap-2"
     >
