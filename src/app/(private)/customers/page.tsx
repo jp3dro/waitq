@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import CustomersTable from "./table";
 
+export const metadata = { title: "Customers" };
+
 type Entry = {
   id: string;
   customer_name: string | null;

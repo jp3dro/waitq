@@ -9,7 +9,7 @@ const sans = Inter({ variable: "--font-sans", subsets: ["latin"], display: "swap
 export const metadata: Metadata = {
   title: {
     default: "WaitQ",
-    template: "%s – WaitQ",
+    template: "%s - WaitQ",
   },
   description: "WaitQ is a smart waitlist and queue management tool for local businesses.",
   metadataBase: typeof process !== "undefined" && process.env.NEXT_PUBLIC_SITE_URL ? new URL(process.env.NEXT_PUBLIC_SITE_URL) : undefined,

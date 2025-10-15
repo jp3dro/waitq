@@ -25,6 +25,10 @@ export default function LocationsPage() {
     load();
   }, []);
 
+  useEffect(() => {
+    document.title = "Locations - WaitQ";
+  }, []);
+
   const canDelete = useMemo(() => locations.length > 1, [locations.length]);
 
   const create = () => {

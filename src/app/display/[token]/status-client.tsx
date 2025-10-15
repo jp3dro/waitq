@@ -16,6 +16,7 @@ export default function DisplayClient({ token }: { token: string }) {
   const supabase = createClient();
   const subCreated = useRef<boolean>(false);
   const bcCreated = useRef<boolean>(false);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
 
   async function load(silent: boolean = false) {
     if (!silent && !data) setLoading(true);
@@ -153,6 +154,7 @@ function KioskButton({ token, defaultCountry, listType, seatingPreferences }: { 
   const [message, setMessage] = useState<string | null>(null);
   const [ticketNumber, setTicketNumber] = useState<number | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [phoneError, setPhoneError] = useState<string | null>(null);
 
   const close = () => {
     setOpen(false);
@@ -166,9 +168,10 @@ function KioskButton({ token, defaultCountry, listType, seatingPreferences }: { 
 
   const submit = () => {
     setMessage(null);
+    setPhoneError(null);
     startTransition(async () => {
       if (!phone) {
-        setMessage("Please enter your phone number");
+        setPhoneError("Please enter your phone number");
         return;
       }
       const res = await fetch("/api/display/checkin", {
@@ -182,7 +185,14 @@ function KioskButton({ token, defaultCountry, listType, seatingPreferences }: { 
         setStep("confirm");
       } else {
         const err = (j && j.error) || "Failed to add to waiting list";
-        setMessage(typeof err === "string" ? err : "Failed to add to waiting list");
+        // If server returns a structured error for phone, surface it on the field
+        const errStr = typeof err === "string" ? err : "";
+        if (/phone/i.test(errStr)) {
+          setPhoneError(errStr.replace(/^phone:\s*/i, "").trim() || errStr);
+          setMessage(null);
+        } else {
+          setMessage(typeof err === "string" ? err : "Failed to add to waiting list");
+        }
       }
     });
   };
@@ -249,14 +259,20 @@ function KioskButton({ token, defaultCountry, listType, seatingPreferences }: { 
         ) : step === "form" ? (
           <div className="grid gap-5 text-neutral-900">
             <div className="grid gap-2">
-              <label className="text-base font-medium">Phone number</label>
+              <label className="text-base font-medium" htmlFor="kiosk-phone">Phone number</label>
               <PhoneInput
+                id="kiosk-phone"
                 international
                 defaultCountry={defaultCountry as Country}
                 value={phone}
-                onChange={(value) => setPhone(value || undefined)}
-                className="block w-full rounded-xl border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-black px-4 py-3 text-2xl text-neutral-900"
+                onChange={(value) => { setPhone(value || undefined); setPhoneError(null); }}
+                className={`block w-full rounded-xl border-0 shadow-sm ring-1 ring-inset px-4 py-3 text-2xl text-neutral-900 focus:ring-2 ${phoneError ? "ring-red-500 focus:ring-red-600" : "ring-neutral-300 focus:ring-black"}`}
+                aria-invalid={phoneError ? true : false}
+                aria-describedby={phoneError ? "kiosk-phone-error" : undefined}
               />
+              {phoneError ? (
+                <p id="kiosk-phone-error" className="text-sm text-red-600">{phoneError}</p>
+              ) : null}
             </div>
             <Keypad value={phone} onChange={setPhone} />
             <button

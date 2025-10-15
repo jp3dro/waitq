@@ -1,3 +1,5 @@
+export const metadata = { title: "Subscription" };
+
 export default function SubscriptionPage() {
   return (
     <div className="bg-white ring-1 ring-black/5 rounded-xl p-6">

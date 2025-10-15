@@ -1,11 +1,27 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { Metadata } from "next";
 import WaitlistTable from "@/app/(private)/dashboard/waitlist-table";
 import ToastOnQuery from "@/components/toast-on-query";
 import AddButton from "@/app/(private)/dashboard/waitlist-add-button";
 import EditListButton from "./edit-list-button";
 import StatsCards from "./stats-cards";
 import ClearWaitlistButton from "./clear-waitlist-button";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const supabase = await createClient();
+  const { id: waitlistId } = await params;
+
+  const { data: waitlist } = await supabase
+    .from("waitlists")
+    .select("name")
+    .eq("id", waitlistId)
+    .single();
+
+  return {
+    title: waitlist?.name || "List Details",
+  };
+}
 
 type WaitlistRow = {
   id: string;

@@ -158,9 +158,9 @@ export default function ClientStatus({ token }: { token: string }) {
           <p className="mt-4 text-center text-sm text-neutral-600">This page updates automatically as the venue advances the queue.</p>
           <div className="mt-6 flex items-center justify-center">
             <Link href="/" className="inline-flex items-center gap-2 text-neutral-500 hover:text-neutral-800">
+              <span className="text-sm">Powered by</span>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/waitq.svg" alt="WaitQ" className="h-4 w-auto" />
-              <span className="text-sm">Powered by WaitQ</span>
             </Link>
           </div>
         </div>

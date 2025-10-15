@@ -1,5 +1,4 @@
 import Link from "next/link";
-import ActiveLink from "./active-link";
 import { createClient } from "@/lib/supabase/server";
 import Image from "next/image";
 
@@ -13,48 +12,35 @@ export default async function Nav() {
     <header className="sticky top-0 z-40 backdrop-blur supports-[backdrop-filter]:bg-white/70 bg-white/90 border-b">
       <div className="mx-auto max-w-7xl px-6 lg:px-8 h-16 flex items-center justify-between">
         <div className="flex items-center gap-8 min-w-0">
-          <Link href={user ? "/dashboard" : "/"} className="flex items-center" aria-label="WaitQ home">
+          <Link href="/" className="flex items-center" aria-label="WaitQ home">
             <Image src="/waitq.svg" alt="WaitQ" className="h-8 w-auto" width={108} height={32} />
           </Link>
         </div>
         <div className="hidden md:flex items-center gap-6 text-sm text-neutral-700">
-          {user ? (
-            <>
-              <ActiveLink href="/dashboard" className="rounded px-2 py-1 hover:bg-neutral-100 hover:text-black" activeClassName="bg-neutral-200 text-black">Dashboard</ActiveLink>
-              <ActiveLink href="/lists" className="rounded px-2 py-1 hover:bg-neutral-100 hover:text-black" activeClassName="bg-neutral-200 text-black">Lists</ActiveLink>
-              <ActiveLink href="/customers" className="rounded px-2 py-1 hover:bg-neutral-100 hover:text-black" activeClassName="bg-neutral-200 text-black">Customers</ActiveLink>
-              <ActiveLink href="/settings" className="rounded px-2 py-1 hover:bg-neutral-100 hover:text-black" activeClassName="bg-neutral-200 text-black">Settings</ActiveLink>
-            </>
-          ) : (
-            <>
-              <div className="relative group">
-                <button className="inline-flex items-center gap-1 rounded px-2 py-1 hover:bg-neutral-100 hover:text-black">Use cases
-                  <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd"/></svg>
-                </button>
-                <div className="invisible opacity-0 group-hover:visible group-hover:opacity-100 transition pointer-events-none group-hover:pointer-events-auto absolute left-0 mt-0 w-[280px] rounded-md border bg-white shadow-md">
-                  <ul className="py-2 text-sm">
-                    <li><Link className="block px-3 py-1.5 hover:bg-neutral-50" href="/use-cases/barber-shop">Barber shops</Link></li>
-                    <li><Link className="block px-3 py-1.5 hover:bg-neutral-50" href="/use-cases/beauty-salons">Beauty salons</Link></li>
-                    <li><Link className="block px-3 py-1.5 hover:bg-neutral-50" href="/use-cases/restaurants">Restaurants</Link></li>
-                    <li><Link className="block px-3 py-1.5 hover:bg-neutral-50" href="/use-cases/massages">Massages</Link></li>
-                    <li><Link className="block px-3 py-1.5 hover:bg-neutral-50" href="/use-cases/clinics-and-medical">Clinics and medical</Link></li>
-                    <li><Link className="block px-3 py-1.5 hover:bg-neutral-50" href="/use-cases/warehouse-and-transport">Warehouse & transport</Link></li>
-                    <li><Link className="block px-3 py-1.5 hover:bg-neutral-50" href="/use-cases/hotels-and-accommodations">Hotels & accommodations</Link></li>
-                    <li><Link className="block px-3 py-1.5 hover:bg-neutral-50" href="/use-cases/public-services">Public services</Link></li>
-                  </ul>
-                </div>
-              </div>
-              <Link href="/pricing" className="rounded px-2 py-1 hover:bg-neutral-100 hover:text-black">Pricing</Link>
-            </>
-          )}
+          <div className="relative group">
+            <button className="inline-flex items-center gap-1 rounded px-2 py-1 hover:bg-neutral-100 hover:text-black">Use cases
+              <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd"/></svg>
+            </button>
+            <div className="invisible opacity-0 group-hover:visible group-hover:opacity-100 transition pointer-events-none group-hover:pointer-events-auto absolute left-0 mt-0 w-[280px] rounded-md border bg-white shadow-md">
+              <ul className="py-2 text-sm">
+                <li><Link className="block px-3 py-1.5 hover:bg-neutral-50" href="/use-cases/barber-shop">Barber shops</Link></li>
+                <li><Link className="block px-3 py-1.5 hover:bg-neutral-50" href="/use-cases/beauty-salons">Beauty salons</Link></li>
+                <li><Link className="block px-3 py-1.5 hover:bg-neutral-50" href="/use-cases/restaurants">Restaurants</Link></li>
+                <li><Link className="block px-3 py-1.5 hover:bg-neutral-50" href="/use-cases/massages">Massages</Link></li>
+                <li><Link className="block px-3 py-1.5 hover:bg-neutral-50" href="/use-cases/clinics-and-medical">Clinics and medical</Link></li>
+                <li><Link className="block px-3 py-1.5 hover:bg-neutral-50" href="/use-cases/warehouse-and-transport">Warehouse & transport</Link></li>
+                <li><Link className="block px-3 py-1.5 hover:bg-neutral-50" href="/use-cases/hotels-and-accommodations">Hotels & accommodations</Link></li>
+                <li><Link className="block px-3 py-1.5 hover:bg-neutral-50" href="/use-cases/public-services">Public services</Link></li>
+              </ul>
+            </div>
+          </div>
+          <Link href="/pricing" className="rounded px-2 py-1 hover:bg-neutral-100 hover:text-black">Pricing</Link>
         </div>
         <div className="flex items-center gap-3">
           {!user ? (
             <Link href="/login" className="inline-flex items-center rounded-md bg-black px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-neutral-800">Sign up</Link>
           ) : (
-            <form action="/auth/logout" method="post">
-              <button className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-neutral-300 hover:bg-neutral-50">Log out</button>
-            </form>
+            <Link href="/dashboard" className="inline-flex items-center rounded-md bg-black px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-neutral-800">Dashboard</Link>
           )}
         </div>
       </div>

@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import ToastOnQuery from "@/components/toast-on-query";
 
+export const metadata = { title: "Profile" };
+
 export default async function ProfilePage() {
   const supabase = await createClient();
   const {

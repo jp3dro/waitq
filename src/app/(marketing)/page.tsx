@@ -1,5 +1,5 @@
 import Image from "next/image";
-export const metadata = { title: "Waitlists for busy venues" };
+export const metadata = { title: "Home" };
 
 export default function HomePage() {
   return (
