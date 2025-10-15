@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   description: "WaitQ is a smart waitlist and queue management tool for local businesses.",
   metadataBase: typeof process !== "undefined" && process.env.NEXT_PUBLIC_SITE_URL ? new URL(process.env.NEXT_PUBLIC_SITE_URL) : undefined,
   icons: {
-    icon: "/favicon.ico",
+    icon: "/waitq-square.svg",
   },
   openGraph: {
     title: "WaitQ",

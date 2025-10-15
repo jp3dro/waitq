@@ -1,6 +1,7 @@
 import Link from "next/link";
 import ActiveLink from "./active-link";
 import { createClient } from "@/lib/supabase/server";
+import Image from "next/image";
 
 export default async function Nav() {
   const supabase = await createClient();
@@ -12,7 +13,9 @@ export default async function Nav() {
     <header className="sticky top-0 z-40 backdrop-blur supports-[backdrop-filter]:bg-white/70 bg-white/90 border-b">
       <div className="mx-auto max-w-7xl px-6 lg:px-8 h-16 flex items-center justify-between">
         <div className="flex items-center gap-8 min-w-0">
-          <Link href={user ? "/dashboard" : "/"} className="font-semibold text-lg tracking-tight text-neutral-900">WaitQ</Link>
+          <Link href={user ? "/dashboard" : "/"} className="flex items-center" aria-label="WaitQ home">
+            <Image src="/waitq.svg" alt="WaitQ" className="h-10 w-auto" width={135} height={40} />
+          </Link>
         </div>
         <div className="hidden md:flex items-center gap-6 text-sm text-neutral-700">
           {user ? (

@@ -1,6 +1,7 @@
 import ActiveLink from "@/components/active-link";
 import { createClient } from "@/lib/supabase/server";
 import { LayoutDashboard, ListChecks, Users2, Settings, LogOut, MapPin, CreditCard, Building2 } from "lucide-react";
+import Image from "next/image";
 
 export default async function PrivateSidebar() {
   const supabase = await createClient();
@@ -14,9 +15,8 @@ export default async function PrivateSidebar() {
     <aside className="h-dvh sticky top-0 w-64 shrink-0 border-r border-default bg-white">
       <div className="h-full flex flex-col">
         <div className="px-4 py-4 border-b border-default bg-gradient-to-b from-neutral-50 to-white">
-          <a href="/dashboard" className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-black text-white flex items-center justify-center font-semibold">W</div>
-            <span className="font-semibold text-lg tracking-tight text-neutral-900">WaitQ</span>
+          <a href="/dashboard" className="flex items-center" aria-label="WaitQ dashboard">
+            <Image src="/waitq.svg" alt="WaitQ" className="h-10 w-auto" width={135} height={40} />
           </a>
         </div>
         <nav className="flex-1 overflow-y-auto px-2 py-3 text-sm">
