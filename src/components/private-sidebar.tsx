@@ -11,7 +11,7 @@ export default async function PrivateSidebar() {
   const isAdmin = user?.email === "jp3dro@gmail.com";
 
   return (
-    <aside className="h-dvh sticky top-0 w-40 shrink-0 border-r border-default bg-white">
+    <aside className="h-dvh sticky top-0 w-[200px] shrink-0 border-r border-default bg-white">
       <div className="h-full flex flex-col">
         <div className="px-4 py-4 border-b border-default bg-gradient-to-b from-neutral-50 to-white">
           <a href="/dashboard" className="flex items-center" aria-label="WaitQ dashboard">

@@ -53,11 +53,11 @@ export default function CreateListButton() {
         <div className="grid gap-4">
           <div className="grid gap-1">
             <label className="text-sm font-medium">Name</label>
-            <input value={name} onChange={(e) => setName(e.target.value)} className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-black px-3 py-2 text-sm" placeholder="Enter list name" />
+            <input value={name} onChange={(e) => setName(e.target.value)} className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm" placeholder="Enter list name" />
           </div>
           <div className="grid gap-1">
             <label className="text-sm font-medium">Type</label>
-            <select value={listType} onChange={(e) => setListType(e.target.value)} className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-black px-3 py-2 text-sm">
+            <select value={listType} onChange={(e) => setListType(e.target.value)} className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-[#FF9500] pl-3 pr-10 py-2 text-sm">
               <option value="restaurants">Restaurants</option>
               <option value="barber_shops" disabled>Barber shops (coming soon)</option>
               <option value="beauty_salons" disabled>Beauty salons (coming soon)</option>
@@ -77,13 +77,14 @@ export default function CreateListButton() {
           <div className="grid gap-1">
             <label className="text-sm font-medium">Self-checkin kiosk</label>
             <div className="flex items-start gap-3">
-              <input id="kiosk-enabled" type="checkbox" checked={kioskEnabled} onChange={(e) => setKioskEnabled(e.target.checked)} className="mt-1 h-4 w-4 rounded border-neutral-300 text-black focus:ring-black" />
+              <input id="kiosk-enabled" type="checkbox" checked={kioskEnabled} onChange={(e) => setKioskEnabled(e.target.checked)} className="mt-1 h-4 w-4 rounded border-neutral-300 text-black focus:ring-[#FF9500] checked:bg-[#FF9500]" />
               <label htmlFor="kiosk-enabled" className="text-sm text-neutral-700">Users will be able to add themselves to the waiting list using your welcome Kiosk screen</label>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex justify-between">
             <button disabled={isPending} onClick={onCreate} className="inline-flex items-center rounded-md bg-black px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-neutral-800 disabled:opacity-50">{isPending ? "Creating…" : "Create"}</button>
-            {message ? <p className="text-sm text-red-700">{message}</p> : null}
+            <button onClick={() => { setOpen(false); reset(); }} className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-neutral-300 hover:bg-neutral-50">Cancel</button>
+            {message ? <p className="mt-2 text-sm text-red-700">{message}</p> : null}
           </div>
         </div>
       </Modal>
@@ -104,7 +105,7 @@ function SeatingPrefsEditor({ value, onChange }: { value: string[]; onChange: (v
   return (
     <div className="grid gap-2">
       <div className="flex gap-2">
-        <input value={input} onChange={(e) => setInput(e.target.value)} className="flex-1 block rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-black px-3 py-2 text-sm" placeholder="Add seating preference" />
+        <input value={input} onChange={(e) => setInput(e.target.value)} className="flex-1 block rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm" placeholder="Add seating preference" />
         <button type="button" onClick={add} className="inline-flex items-center rounded-md bg-black px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-800">Add</button>
       </div>
       {value.length ? (

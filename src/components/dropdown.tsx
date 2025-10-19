@@ -46,12 +46,12 @@ export default function Dropdown({
         type="button"
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
-        className="relative w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-black pl-3 pr-10 py-2 text-sm text-left disabled:opacity-50 disabled:cursor-not-allowed"
+        className="relative w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-[#FF9500] pl-3 pr-10 py-2 text-sm text-left disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <span className={`block truncate ${selectedOption ? "text-neutral-900" : "text-neutral-500"}`}>
           {selectedOption ? selectedOption.label : placeholder}
         </span>
-        <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+        <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
           <svg className={`h-4 w-4 text-neutral-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>

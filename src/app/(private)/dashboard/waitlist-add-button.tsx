@@ -3,8 +3,9 @@ import { useState } from "react";
 import Modal from "@/components/modal";
 import AddForm from "./waitlist-add-form";
 import { Plus } from "lucide-react";
+import type { Country } from "react-phone-number-input";
 
-export default function AddButton({ defaultWaitlistId, lockWaitlist }: { defaultWaitlistId?: string; lockWaitlist?: boolean }) {
+export default function AddButton({ defaultWaitlistId, lockWaitlist, businessCountry }: { defaultWaitlistId?: string; lockWaitlist?: boolean; businessCountry?: Country }) {
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -13,7 +14,7 @@ export default function AddButton({ defaultWaitlistId, lockWaitlist }: { default
         Add to waitlist
       </button>
       <Modal open={open} onClose={() => setOpen(false)} title="Add to waitlist">
-        <AddForm onDone={() => setOpen(false)} defaultWaitlistId={defaultWaitlistId} lockWaitlist={lockWaitlist} />
+        <AddForm onDone={() => setOpen(false)} defaultWaitlistId={defaultWaitlistId} lockWaitlist={lockWaitlist} businessCountry={businessCountry} />
       </Modal>
     </>
   );

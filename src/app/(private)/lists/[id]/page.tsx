@@ -7,6 +7,7 @@ import AddButton from "@/app/(private)/dashboard/waitlist-add-button";
 import EditListButton from "./edit-list-button";
 import StatsCards from "./stats-cards";
 import ClearWaitlistButton from "./clear-waitlist-button";
+import type { Country } from "react-phone-number-input";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const supabase = await createClient();
@@ -70,6 +71,16 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
     name: loc.name as string
   })) || [];
 
+  // Fetch business country for phone input default
+  const { data: business } = await supabase
+    .from("businesses")
+    .select("country_code")
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .single();
+
+  const businessCountry = (business?.country_code || "PT") as Country;
+
   return (
     <main className="py-5">
       <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
@@ -98,7 +109,7 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
               </a>
             )}
             <ClearWaitlistButton waitlistId={wl.id} displayToken={wl.display_token} />
-            <AddButton defaultWaitlistId={wl.id} lockWaitlist />
+            <AddButton defaultWaitlistId={wl.id} lockWaitlist businessCountry={businessCountry} />
           </div>
         </div>
 

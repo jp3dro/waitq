@@ -98,7 +98,7 @@ export default function EditListButton({
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-black px-3 py-2 text-sm"
+              className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm"
             />
           </div>
           <div className="grid gap-1">
@@ -118,7 +118,7 @@ export default function EditListButton({
                 type="checkbox"
                 checked={kioskEnabled}
                 onChange={(e) => setKioskEnabled(e.target.checked)}
-                className="mt-1 h-4 w-4 rounded border-neutral-300 text-black focus:ring-black"
+                className="mt-1 h-4 w-4 rounded border-neutral-300 text-black focus:ring-[#FF9500]"
               />
               <label htmlFor="kiosk-enabled" className="text-sm text-neutral-700">
                 Users will be able to add themselves to the waiting list using your welcome Kiosk screen

@@ -266,7 +266,7 @@ function KioskButton({ token, defaultCountry, listType, seatingPreferences }: { 
                 defaultCountry={defaultCountry as Country}
                 value={phone}
                 onChange={(value) => { setPhone(value || undefined); setPhoneError(null); }}
-                className={`block w-full rounded-xl border-0 shadow-sm ring-1 ring-inset px-4 py-3 text-2xl text-neutral-900 focus:ring-2 ${phoneError ? "ring-red-500 focus:ring-red-600" : "ring-neutral-300 focus:ring-black"}`}
+                className={`block w-full rounded-xl border-0 shadow-sm ring-1 ring-inset px-4 py-3 text-2xl text-neutral-900 focus:ring-2 ${phoneError ? "ring-red-500 focus:ring-red-600" : "ring-neutral-300 focus:ring-[#FF9500]"}`}
                 aria-invalid={phoneError ? true : false}
                 aria-describedby={phoneError ? "kiosk-phone-error" : undefined}
               />

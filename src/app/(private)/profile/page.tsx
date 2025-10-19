@@ -39,8 +39,10 @@ export default async function ProfilePage() {
           <div className="text-neutral-600">User ID</div>
           <div className="font-mono text-xs">{user?.id}</div>
         </div>
-        <SaveBusinessNameForm initialName={(business as Business)?.name || ""} />
-        <SaveBusinessCountryForm initialCountry={(business as Business)?.country_code || "PT"} />
+        <SaveBusinessForm
+          initialName={(business as Business)?.name || ""}
+          initialCountry={(business as Business)?.country_code || "PT"}
+        />
         <div className="grid md:grid-cols-[96px_1fr] items-start gap-4 mt-6">
           <div className="h-24 w-24 rounded-md ring-1 ring-neutral-200 overflow-hidden bg-neutral-50 flex items-center justify-center">
             {business?.logo_url ? (
@@ -64,63 +66,42 @@ export default async function ProfilePage() {
 
 // ToastOnQuery moved to a dedicated client component
 
-function SaveBusinessNameForm({ initialName }: { initialName: string }) {
+function SaveBusinessForm({ initialName, initialCountry }: { initialName: string; initialCountry: string }) {
   async function action(formData: FormData) {
     "use server";
+    const updates: { name?: string; country_code?: string } = {};
+
+    // Handle business name
     const nameRaw = (formData.get("name") as string) || "";
     const name = nameRaw.trim();
-    if (name.length === 0) return;
-    const supa = await createRouteClient();
-    const { data: biz } = await supa
-      .from("businesses")
-      .select("id")
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .single();
-    if (biz?.id) {
-      await supa.from("businesses").update({ name }).eq("id", biz.id);
+    if (name.length > 0) {
+      updates.name = name;
     }
-    revalidatePath("/profile");
-    redirect("/profile?ok=1");
-  }
-  return (
-    <form action={action} className="mt-4 grid gap-3">
-      <div>
-        <label className="text-neutral-600" htmlFor="name">Business name</label>
-        <input
-          id="name"
-          name="name"
-          defaultValue={initialName}
-          className="mt-1 block w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black/10"
-          placeholder="e.g., Acme Barbers"
-        />
-      </div>
-      <div>
-        <button className="inline-flex items-center rounded-md bg-black px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-neutral-800">Save changes</button>
-      </div>
-    </form>
-  );
-}
 
-function SaveBusinessCountryForm({ initialCountry }: { initialCountry: string }) {
-  async function action(formData: FormData) {
-    "use server";
+    // Handle country code
     const code = ((formData.get("country") as string) || "PT").trim().toUpperCase();
     const allowed = ["PT","US","GB","ES","FR","DE","BR","CA","AU","IN","IT","NL","SE","NO","DK","IE","FI","MX","AR","CL","CO"];
     const final = allowed.includes(code) ? code : "PT";
-    const supa = await createRouteClient();
-    const { data: biz } = await supa
-      .from("businesses")
-      .select("id")
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .single();
-    if (biz?.id) {
-      await supa.from("businesses").update({ country_code: final }).eq("id", biz.id);
+    updates.country_code = final;
+
+    // Only update if there are changes
+    if (Object.keys(updates).length > 0) {
+      const supa = await createRouteClient();
+      const { data: biz } = await supa
+        .from("businesses")
+        .select("id")
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .single();
+      if (biz?.id) {
+        await supa.from("businesses").update(updates).eq("id", biz.id);
+      }
     }
+
     revalidatePath("/profile");
     redirect("/profile?ok=1");
   }
+
   const countries: { code: string; name: string }[] = [
     { code: "US", name: "United States" },
     { code: "GB", name: "United Kingdom" },
@@ -146,14 +127,24 @@ function SaveBusinessCountryForm({ initialCountry }: { initialCountry: string })
   ];
 
   return (
-    <form action={action} className="mt-2 grid gap-3">
+    <form action={action} className="mt-4 grid gap-4">
       <div>
-        <label className="text-neutral-600" htmlFor="country">Business country</label>
+        <label className="text-sm font-medium text-neutral-700" htmlFor="name">Business name</label>
+        <input
+          id="name"
+          name="name"
+          defaultValue={initialName}
+          className="mt-1 block w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF9500]"
+          placeholder="e.g., Acme Barbers"
+        />
+      </div>
+      <div>
+        <label className="text-sm font-medium text-neutral-700" htmlFor="country">Business country</label>
         <select
           id="country"
           name="country"
           defaultValue={initialCountry || "PT"}
-          className="mt-1 block w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black/10"
+          className="mt-1 block w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF9500]"
         >
           {countries.map((c) => (
             <option key={c.code} value={c.code}>{c.name}</option>
@@ -161,8 +152,8 @@ function SaveBusinessCountryForm({ initialCountry }: { initialCountry: string })
         </select>
         <div className="mt-1 text-xs text-neutral-600">Used to set the default phone prefix in kiosk.</div>
       </div>
-      <div>
-        <button className="inline-flex items-center rounded-md bg-black px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-neutral-800">Save changes</button>
+      <div className="pt-2">
+        <button className="inline-flex items-center rounded-md bg-black px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-neutral-800">Save changes</button>
       </div>
     </form>
   );

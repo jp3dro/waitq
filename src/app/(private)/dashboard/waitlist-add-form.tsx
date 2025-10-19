@@ -3,10 +3,11 @@ import { useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import PhoneInput from "react-phone-number-input";
 import 'react-phone-number-input/style.css';
+import type { Country } from "react-phone-number-input";
 
 type FormValues = { phone: string; customerName: string; waitlistId: string; sendSms: boolean; sendWhatsapp: boolean; partySize?: number; seatingPreference?: string };
 
-export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist }: { onDone?: () => void; defaultWaitlistId?: string; lockWaitlist?: boolean }) {
+export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, businessCountry }: { onDone?: () => void; defaultWaitlistId?: string; lockWaitlist?: boolean; businessCountry?: Country }) {
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const { register, handleSubmit, reset, watch, setValue } = useForm<FormValues>({
@@ -87,7 +88,7 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist }: { o
         {lockWaitlist ? null : (
           <div className="grid gap-1">
             <label className="text-sm font-medium">Waitlist</label>
-            <select disabled={!!lockWaitlist} className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-black px-3 py-2 text-sm disabled:opacity-50" {...register("waitlistId", { required: true })}>
+            <select disabled={!!lockWaitlist} className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm disabled:opacity-50" {...register("waitlistId", { required: true })}>
               {waitlists.map((w) => (
                 <option key={w.id} value={w.id}>{w.name}</option>
               ))}
@@ -96,13 +97,13 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist }: { o
         )}
         <div className="grid gap-1">
           <label className="text-sm font-medium">Customer name</label>
-          <input className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-black px-3 py-2 text-sm" placeholder="Full name" {...register("customerName", { required: true })}/>
+          <input className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm" placeholder="Full name" {...register("customerName", { required: true })}/>
         </div>
         {(waitlists.find(w => w.id === watch("waitlistId"))?.list_type || "restaurants") === "restaurants" ? (
           <>
             <div className="grid gap-1">
               <label className="text-sm font-medium">Number of people</label>
-              <input type="number" min={1} className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-black px-3 py-2 text-sm" placeholder="e.g., 2" {...register("partySize", { valueAsNumber: true })} />
+              <input type="number" min={1} className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm" placeholder="e.g., 2" {...register("partySize", { valueAsNumber: true })} />
             </div>
             {(waitlists.find(w => w.id === watch("waitlistId"))?.seating_preferences || []).length > 0 ? (
               <div className="grid gap-1">
@@ -130,20 +131,20 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist }: { o
           <label className="text-sm font-medium">Phone</label>
           <PhoneInput
             international
-            defaultCountry="US"
+            defaultCountry={(businessCountry ?? "PT") as Country}
             value={watch("phone")}
             onChange={(value) => setValue("phone", value || "")}
-            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-black px-3 py-2 text-sm"
+            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm"
           />
         </div>
         <div className="flex items-center gap-4">
           <label className="text-sm font-medium">Notify via</label>
           <div className="flex items-center gap-2">
-            <input id="send-sms" type="checkbox" className="h-4 w-4 rounded border-neutral-300 text-black focus:ring-black" {...register("sendSms")} />
+            <input id="send-sms" type="checkbox" className="h-4 w-4 rounded border-neutral-300 text-black focus:ring-[#FF9500]" {...register("sendSms")} />
             <label htmlFor="send-sms" className="text-sm">SMS</label>
           </div>
           <div className="flex items-center gap-2">
-            <input id="send-wa" type="checkbox" className="h-4 w-4 rounded border-neutral-300 text-black focus:ring-black" {...register("sendWhatsapp")} />
+            <input id="send-wa" type="checkbox" className="h-4 w-4 rounded border-neutral-300 text-black focus:ring-[#FF9500]" {...register("sendWhatsapp")} />
             <label htmlFor="send-wa" className="text-sm">WhatsApp</label>
           </div>
         </div>

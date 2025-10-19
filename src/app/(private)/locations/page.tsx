@@ -191,7 +191,7 @@ export default function LocationsPage() {
           <input
             value={form.name}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-default focus:ring-2 focus:ring-black/10 px-3 py-2 text-sm"
+            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-default focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm"
           />
         </div>
         <div className="grid gap-1">
@@ -199,7 +199,7 @@ export default function LocationsPage() {
           <input
             value={form.phone}
             onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-default focus:ring-2 focus:ring-black/10 px-3 py-2 text-sm"
+            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-default focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm"
           />
         </div>
         <div className="grid gap-1">
@@ -207,7 +207,7 @@ export default function LocationsPage() {
           <input
             value={form.address}
             onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
-            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-default focus:ring-2 focus:ring-black/10 px-3 py-2 text-sm"
+            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-default focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm"
           />
         </div>
         <div className="grid gap-1">
@@ -215,7 +215,7 @@ export default function LocationsPage() {
           <input
             value={form.city}
             onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
-            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-default focus:ring-2 focus:ring-black/10 px-3 py-2 text-sm"
+            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-default focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm"
           />
         </div>
         <div className="flex justify-between">
@@ -233,7 +233,7 @@ export default function LocationsPage() {
           <input
             value={editForm.name}
             onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
-            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-default focus:ring-2 focus:ring-black/10 px-3 py-2 text-sm"
+            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-default focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm"
           />
         </div>
         <div className="grid gap-1">
@@ -241,7 +241,7 @@ export default function LocationsPage() {
           <input
             value={editForm.phone}
             onChange={(e) => setEditForm((f) => ({ ...f, phone: e.target.value }))}
-            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-default focus:ring-2 focus:ring-black/10 px-3 py-2 text-sm"
+            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-default focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm"
           />
         </div>
         <div className="grid gap-1">
@@ -249,7 +249,7 @@ export default function LocationsPage() {
           <input
             value={editForm.address}
             onChange={(e) => setEditForm((f) => ({ ...f, address: e.target.value }))}
-            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-default focus:ring-2 focus:ring-black/10 px-3 py-2 text-sm"
+            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-default focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm"
           />
         </div>
         <div className="grid gap-1">
@@ -257,7 +257,7 @@ export default function LocationsPage() {
           <input
             value={editForm.city}
             onChange={(e) => setEditForm((f) => ({ ...f, city: e.target.value }))}
-            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-default focus:ring-2 focus:ring-black/10 px-3 py-2 text-sm"
+            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-default focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm"
           />
         </div>
         <div className="flex justify-between">

@@ -11,7 +11,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("businesses")
-    .select("id, name, logo_url")
+    .select("id, name, logo_url, country_code")
     .order("created_at", { ascending: true })
     .limit(1)
     .single();
@@ -45,7 +45,7 @@ export async function PATCH(req: NextRequest) {
     .update(fields)
     .order("created_at", { ascending: true })
     .limit(1)
-    .select("id, name, logo_url")
+    .select("id, name, logo_url, country_code")
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ business: data });
