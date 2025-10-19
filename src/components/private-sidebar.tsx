@@ -46,6 +46,10 @@ export default async function PrivateSidebar() {
                   <Settings className="h-4 w-4" />
                   <span>Profile</span>
                 </ActiveLink>
+                <ActiveLink href="/customization" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700" activeClassName="bg-[#fff7ed] text-[#ea580c]">
+                  <Settings className="h-4 w-4" />
+                  <span>Customization</span>
+                </ActiveLink>
                 <ActiveLink href="/subscriptions" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700" activeClassName="bg-[#fff7ed] text-[#ea580c]">
                   <CreditCard className="h-4 w-4" />
                   <span>Subscription</span>
