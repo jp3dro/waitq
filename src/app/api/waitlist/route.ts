@@ -3,7 +3,7 @@ import { nanoid } from "nanoid";
 import { createRouteClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { z } from "zod";
-import { sendSms, sendWhatsapp } from "@/lib/twilio";
+import { sendSms, sendWhatsapp } from "@/lib/bulkgate";
 
 // Calculate ETA for all waiting entries in a waitlist
 // Assumes average service time of 15 minutes per person
@@ -156,14 +156,26 @@ export async function POST(req: NextRequest) {
         .maybeSingle();
       if (biz?.name) brand = `${biz.name}: `;
       const message = `${brand}You're on the list${ticket}! Track your spot: ${statusUrl}`;
+      const variables = { brand: brand.trim().replace(/:$/, ""), ticket: (data.ticket_number || "").toString(), link: statusUrl };
+      const templateParams = [brand.trim().replace(/:$/, ""), (data.ticket_number || "").toString(), statusUrl];
       if (shouldSendSms) {
-        await sendSms(phone, message);
+        try {
+          const resp = await sendSms(phone, message, { variables });
+          console.log("[Waitlist] SMS sent", resp);
+        } catch (err) {
+          console.error("[Waitlist] SMS error", err);
+        }
       }
       if (shouldSendWhatsapp) {
-        await sendWhatsapp(phone, message);
+        try {
+          const resp = await sendWhatsapp(phone, message, { templateParams, variables });
+          console.log("[Waitlist] WhatsApp sent", resp);
+        } catch (err) {
+          console.error("[Waitlist] WhatsApp error", err);
+        }
       }
-    } catch {
-      // proceed even if SMS fails
+    } catch (e) {
+      console.error("[Waitlist] Notification block error", e);
     }
   }
 

@@ -22,7 +22,7 @@ export interface PlanDefinition {
 export const plans: Record<PlanId, PlanDefinition> = {
   free: {
     id: "free",
-    name: "Plano Grátis",
+    name: "Free Plan",
     priceMonthlyEUR: 0,
     limits: {
       locations: 1,
@@ -31,10 +31,10 @@ export const plans: Record<PlanId, PlanDefinition> = {
       messagesPerMonth: 50,
     },
     features: [
-      "Gestão básica de filas e reservas",
-      "Estatísticas básicas",
-      "Branding do serviço",
-      "Suporte básico via email",
+      "Basic queue and reservation management",
+      "Basic statistics",
+      "Service branding",
+      "Basic email support",
     ],
     stripe: {
       productLookupKey: "waitq_free",
@@ -43,7 +43,7 @@ export const plans: Record<PlanId, PlanDefinition> = {
   },
   base: {
     id: "base",
-    name: "Plano Base",
+    name: "Base Plan",
     priceMonthlyEUR: 39,
     limits: {
       locations: 5,
@@ -52,10 +52,10 @@ export const plans: Record<PlanId, PlanDefinition> = {
       messagesPerMonth: 1000,
     },
     features: [
-      "Mensagens personalizáveis",
-      "Estatísticas e relatórios detalhados básicos",
-      "Exportação de dados simples (CSV)",
-      "Suporte por email",
+      "Customizable messages",
+      "Basic detailed statistics and reports",
+      "Simple data export (CSV)",
+      "Email support",
     ],
     stripe: {
       productLookupKey: "waitq_base",
@@ -64,7 +64,7 @@ export const plans: Record<PlanId, PlanDefinition> = {
   },
   premium: {
     id: "premium",
-    name: "Plano Premium",
+    name: "Premium Plan",
     priceMonthlyEUR: 99,
     limits: {
       locations: 100,
@@ -73,9 +73,9 @@ export const plans: Record<PlanId, PlanDefinition> = {
       messagesPerMonth: 5000,
     },
     features: [
-      "Analytics detalhados",
-      "Relatórios customizáveis internamente",
-      "Suporte prioritário por email e telefone",
+      "Detailed analytics",
+      "Customizable internal reports",
+      "Priority email and phone support",
     ],
     stripe: {
       productLookupKey: "waitq_premium",

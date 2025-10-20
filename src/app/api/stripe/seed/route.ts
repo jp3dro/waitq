@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
 import { createRouteClient } from "@/lib/supabase/server";
 import { orderedPlans } from "@/lib/plans";
+import type { Stripe } from "stripe";
 
-export async function POST(_req: NextRequest) {
+export async function POST() {
   const supabase = await createRouteClient();
   const {
     data: { user },
@@ -17,7 +18,7 @@ export async function POST(_req: NextRequest) {
   }
 
   const stripe = getStripe();
-  const results: any[] = [];
+  const results: { plan: string; productId?: string; priceId?: string; skipped?: boolean }[] = [];
 
   for (const plan of orderedPlans) {
     // Skip free plan for Stripe product/price creation
@@ -30,9 +31,8 @@ export async function POST(_req: NextRequest) {
     let productId: string | null = null;
     try {
       // Try search first
-      // @ts-expect-error search may not be typed depending on stripe lib version
-      const found = await (stripe.products as any).search?.({ query: `active:'true' AND name:'${plan.name}'`, limit: 1 });
-      if (found && found.data && found.data.length > 0) productId = found.data[0].id as string;
+      const found = await (stripe.products as unknown as { search: (params: { query: string; limit: number }) => Promise<{ data: Stripe.Product[] }> }).search?.({ query: `active:'true' AND name:'${plan.name}'`, limit: 1 });
+      if (found && found.data && found.data.length > 0) productId = found.data[0].id;
     } catch {}
     if (!productId) {
       const list = await stripe.products.list({ active: true, limit: 100 });
@@ -48,9 +48,8 @@ export async function POST(_req: NextRequest) {
     const lookupKey = plan.stripe.priceLookupKeyMonthly;
     let priceId: string | null = null;
     try {
-      // @ts-expect-error search may not be typed depending on stripe lib version
-      const found = await (stripe.prices as any).search?.({ query: `active:'true' AND lookup_key:'${lookupKey}'`, limit: 1 });
-      if (found && found.data && found.data.length > 0) priceId = found.data[0].id as string;
+      const found = await (stripe.prices as unknown as { search: (params: { query: string; limit: number }) => Promise<{ data: Stripe.Price[] }> }).search?.({ query: `active:'true' AND lookup_key:'${lookupKey}'`, limit: 1 });
+      if (found && found.data && found.data.length > 0) priceId = found.data[0].id;
     } catch {}
     if (!priceId) {
       const list = await stripe.prices.list({ product: productId, active: true, limit: 100 });
@@ -64,7 +63,7 @@ export async function POST(_req: NextRequest) {
         unit_amount: Math.round(plan.priceMonthlyEUR * 100),
         recurring: { interval: "month" },
         lookup_key: lookupKey,
-      } as any);
+      });
       priceId = created.id;
     }
 

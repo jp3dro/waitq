@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
 import { createRouteClient } from "@/lib/supabase/server";
 import { plans } from "@/lib/plans";
+import type { Stripe } from "stripe";
 
 export async function POST(req: NextRequest) {
   const { priceId, lookupKey, customerEmail, planId } = await req.json();
@@ -19,18 +20,17 @@ export async function POST(req: NextRequest) {
   if (!resolvedPriceId && lookupKey) {
     // Try search API first
     try {
-      // @ts-expect-error search may not be in types depending on stripe lib version
-      const search = await (stripe.prices as any).search?.({
+      const search = await (stripe.prices as unknown as { search: (params: { query: string; limit: number }) => Promise<{ data: Stripe.Price[] }> }).search?.({
         query: `active:'true' AND lookup_key:'${lookupKey}'`,
         limit: 1,
       });
       if (search && search.data && search.data.length > 0) {
-        resolvedPriceId = search.data[0].id as string;
+        resolvedPriceId = search.data[0].id;
       }
-    } catch (_) {
+    } catch {
       // Fallback to list; some accounts may not have search enabled
       const list = await stripe.prices.list({ active: true, limit: 50 });
-      const found = list.data.find((p: any) => p.lookup_key === lookupKey);
+      const found = list.data.find((p: Stripe.Price) => p.lookup_key === lookupKey);
       if (found) resolvedPriceId = found.id;
     }
   }
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     const p = plans[planId as keyof typeof plans];
     const targetAmount = Math.round(p.priceMonthlyEUR * 100);
     const list = await stripe.prices.list({ active: true, limit: 100, currency: "eur" });
-    const found = list.data.find((pr: any) => pr.recurring && pr.recurring.interval === "month" && pr.unit_amount === targetAmount);
+    const found = list.data.find((pr: Stripe.Price) => pr.recurring && pr.recurring.interval === "month" && pr.unit_amount === targetAmount);
     if (found) resolvedPriceId = found.id;
   }
 

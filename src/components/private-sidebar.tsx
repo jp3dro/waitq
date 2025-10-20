@@ -1,6 +1,6 @@
 import ActiveLink from "@/components/active-link";
 import { createClient } from "@/lib/supabase/server";
-import { LayoutDashboard, ListChecks, Users2, Settings, LogOut, MapPin, CreditCard, Building2 } from "lucide-react";
+import { LayoutDashboard, ListChecks, Users2, LogOut, MapPin, CreditCard, Building2, User, Palette } from "lucide-react";
 import Image from "next/image";
 
 export default async function PrivateSidebar() {
@@ -43,11 +43,11 @@ export default async function PrivateSidebar() {
                   <span>Locations</span>
                 </ActiveLink>
                 <ActiveLink href="/profile" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700" activeClassName="bg-[#fff7ed] text-[#ea580c]">
-                  <Settings className="h-4 w-4" />
+                  <User className="h-4 w-4" />
                   <span>Profile</span>
                 </ActiveLink>
                 <ActiveLink href="/customization" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700" activeClassName="bg-[#fff7ed] text-[#ea580c]">
-                  <Settings className="h-4 w-4" />
+                  <Palette className="h-4 w-4" />
                   <span>Customization</span>
                 </ActiveLink>
                 <ActiveLink href="/subscriptions" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700" activeClassName="bg-[#fff7ed] text-[#ea580c]">
