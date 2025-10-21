@@ -94,13 +94,13 @@ export default function StatsCards({ waitlistId }: { waitlistId: string }) {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <div className="bg-white ring-1 ring-black/5 rounded-xl shadow-sm p-6">
+      <div className="bg-white ring-1 ring-black/5 rounded-xl p-4">
         <p className="text-sm text-neutral-600">Now serving</p>
-        <p className="mt-2 text-3xl font-semibold">{lastCalledNumber ?? "—"}</p>
+        <p className="mt-1 text-xl font-semibold">{lastCalledNumber ?? "—"}</p>
       </div>
-          <div className="bg-white ring-1 ring-black/5 rounded-xl shadow-sm p-6">
+          <div className="bg-white ring-1 ring-black/5 rounded-xl p-4">
             <p className="text-sm text-neutral-600">Estimated wait time</p>
-            <p className="mt-2 text-3xl font-semibold">{etaDisplay || "—"}</p>
+            <p className="mt-1 text-xl font-semibold">{etaDisplay || "—"}</p>
           </div>
     </div>
   );

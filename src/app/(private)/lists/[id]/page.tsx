@@ -8,6 +8,7 @@ import EditListButton from "./edit-list-button";
 import StatsCards from "./stats-cards";
 import ClearWaitlistButton from "./clear-waitlist-button";
 import type { Country } from "react-phone-number-input";
+import Link from "next/link";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const supabase = await createClient();
@@ -85,38 +86,46 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
     <main className="py-5">
       <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
         <ToastOnQuery />
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">{wl.name}</h1>
-            <p className="mt-1 text-sm text-neutral-600">Manage your waitlist entries</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <EditListButton
-              waitlistId={wl.id}
-              initialName={wl.name}
-              initialLocationId={wl.location_id || wl.business_locations?.id}
-              initialKioskEnabled={!!wl.kiosk_enabled}
-              locations={typedLocations}
-            />
-            {wl.display_token && (
-              <a
-                href={`/display/${encodeURIComponent(wl.display_token)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-neutral-300 hover:bg-neutral-50"
-              >
-                Open Public Display
-              </a>
-            )}
-            <ClearWaitlistButton waitlistId={wl.id} displayToken={wl.display_token} />
-            <AddButton defaultWaitlistId={wl.id} lockWaitlist businessCountry={businessCountry} />
-          </div>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/lists"
+            className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-neutral-300 hover:bg-neutral-50"
+          >
+            ← Back to Lists
+          </Link>
+          <h1 className="text-3xl font-bold tracking-tight">{wl.name}</h1>
         </div>
 
-        {/* Reactive stats cards */}
-        <StatsCards waitlistId={wl.id} />
+        <div className="bg-white ring-1 ring-black/5 rounded-xl p-6 space-y-6">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <EditListButton
+                waitlistId={wl.id}
+                initialName={wl.name}
+                initialLocationId={wl.location_id || wl.business_locations?.id}
+                initialKioskEnabled={!!wl.kiosk_enabled}
+                locations={typedLocations}
+              />
+              {wl.display_token && (
+                <a
+                  href={`/display/${encodeURIComponent(wl.display_token)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-neutral-300 hover:bg-neutral-50"
+                >
+                  Open Public Display
+                </a>
+              )}
+              <ClearWaitlistButton waitlistId={wl.id} displayToken={wl.display_token} />
+              <AddButton defaultWaitlistId={wl.id} lockWaitlist businessCountry={businessCountry} />
+            </div>
+          </div>
 
-        <WaitlistTable fixedWaitlistId={wl.id} />
+          {/* Reactive stats cards */}
+          <StatsCards waitlistId={wl.id} />
+
+          <WaitlistTable fixedWaitlistId={wl.id} />
+        </div>
       </div>
     </main>
   );

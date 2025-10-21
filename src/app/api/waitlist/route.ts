@@ -162,16 +162,112 @@ export async function POST(req: NextRequest) {
         try {
           const resp = await sendSms(phone, message, { variables });
           console.log("[Waitlist] SMS sent", resp);
+
+          // Update the entry with SMS message ID and initial status
+          if (resp?.data?.message_id) {
+            await admin
+              .from("waitlist_entries")
+              .update({
+                sms_message_id: resp.data.message_id,
+                sms_status: 'sent', // BulkGate returns 'accepted' which we map to 'sent'
+                sms_sent_at: new Date().toISOString()
+              })
+              .eq("id", data.id);
+
+            // Insert into notification_logs for tracking
+            await admin
+              .from("notification_logs")
+              .insert({
+                user_id: user.id,
+                waitlist_entry_id: data.id,
+                message_type: 'sms',
+                message_id: resp.data.message_id,
+                phone_number: phone,
+                status: 'sent',
+                sent_at: new Date().toISOString(),
+                message_text: message
+              });
+          }
         } catch (err) {
           console.error("[Waitlist] SMS error", err);
+          // Update with failed status
+          await admin
+            .from("waitlist_entries")
+            .update({
+              sms_status: 'failed',
+              sms_error_message: err.message
+            })
+            .eq("id", data.id);
+
+          // Insert failed SMS log
+          await admin
+            .from("notification_logs")
+            .insert({
+              user_id: user.id,
+              waitlist_entry_id: data.id,
+              message_type: 'sms',
+              message_id: `failed-${Date.now()}`, // Generate a unique ID for failed messages
+              phone_number: phone,
+              status: 'failed',
+              error_message: err.message,
+              message_text: message
+            });
         }
       }
       if (shouldSendWhatsapp) {
         try {
           const resp = await sendWhatsapp(phone, message, { templateParams, variables });
           console.log("[Waitlist] WhatsApp sent", resp);
+
+          // Update the entry with WhatsApp message ID and initial status
+          if (resp?.data?.message_id) {
+            await admin
+              .from("waitlist_entries")
+              .update({
+                whatsapp_message_id: resp.data.message_id,
+                whatsapp_status: 'sent', // BulkGate returns 'accepted' which we map to 'sent'
+                whatsapp_sent_at: new Date().toISOString()
+              })
+              .eq("id", data.id);
+
+            // Insert into notification_logs for tracking
+            await admin
+              .from("notification_logs")
+              .insert({
+                user_id: user.id,
+                waitlist_entry_id: data.id,
+                message_type: 'whatsapp',
+                message_id: resp.data.message_id,
+                phone_number: phone,
+                status: 'sent',
+                sent_at: new Date().toISOString(),
+                message_text: message
+              });
+          }
         } catch (err) {
           console.error("[Waitlist] WhatsApp error", err);
+          // Update with failed status
+          await admin
+            .from("waitlist_entries")
+            .update({
+              whatsapp_status: 'failed',
+              whatsapp_error_message: err.message
+            })
+            .eq("id", data.id);
+
+          // Insert failed WhatsApp log
+          await admin
+            .from("notification_logs")
+            .insert({
+              user_id: user.id,
+              waitlist_entry_id: data.id,
+              message_type: 'whatsapp',
+              message_id: `failed-${Date.now()}`, // Generate a unique ID for failed messages
+              phone_number: phone,
+              status: 'failed',
+              error_message: err.message,
+              message_text: message
+            });
         }
       }
     } catch (e) {
@@ -196,7 +292,7 @@ export async function DELETE(req: NextRequest) {
 
 const patchSchema = z.object({
   id: z.string().uuid(),
-  action: z.enum(["call"]).optional(),
+  action: z.enum(["call", "retry_sms", "retry_whatsapp"]).optional(),
   status: z.enum(["waiting", "notified", "seated", "cancelled"]).optional(),
 });
 
@@ -212,6 +308,12 @@ export async function PATCH(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id, action, status } = parse.data;
+
+  // Handle retry actions
+  if (action === "retry_sms" || action === "retry_whatsapp") {
+    return await handleRetry(id, action, supabase);
+  }
+
   let payload: Record<string, unknown> = {};
   if (action === "call") {
     payload = { status: "notified", notified_at: new Date().toISOString() };
@@ -238,4 +340,113 @@ export async function PATCH(req: NextRequest) {
   return NextResponse.json({ entry: data });
 }
 
+// Handle retry logic for failed SMS/WhatsApp messages
+async function handleRetry(entryId: string, action: "retry_sms" | "retry_whatsapp", supabase: any) {
+  // Get entry details
+  const { data: entry, error: entryError } = await supabase
+    .from("waitlist_entries")
+    .select("id, phone, ticket_number, sms_status, whatsapp_status, waitlist_id")
+    .eq("id", entryId)
+    .single();
 
+  if (entryError || !entry) {
+    return NextResponse.json({ error: "Entry not found" }, { status: 404 });
+  }
+
+  const admin = getAdminClient();
+  const statusUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/w/${entry.token || 'unknown'}`;
+
+  try {
+    // Fetch business name for branding
+    const { data: biz } = await supabase
+      .from("businesses")
+      .select("name")
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    let brand = "";
+    if (biz?.name) brand = `${biz.name}: `;
+
+    const ticket = entry.ticket_number ? ` #${entry.ticket_number}` : "";
+    const message = `${brand}You're on the list${ticket}! Track your spot: ${statusUrl}`;
+    const variables = { brand: brand.trim().replace(/:$/, ""), ticket: (entry.ticket_number || "").toString(), link: statusUrl };
+    const templateParams = [brand.trim().replace(/:$/, ""), (entry.ticket_number || "").toString(), statusUrl];
+
+    if (action === "retry_sms") {
+      const resp = await sendSms(entry.phone, message, { variables });
+
+      if (resp?.data?.message_id) {
+        await admin
+          .from("waitlist_entries")
+          .update({
+            sms_message_id: resp.data.message_id,
+            sms_status: 'sent',
+            sms_sent_at: new Date().toISOString(),
+            sms_error_message: null // Clear previous error
+          })
+          .eq("id", entryId);
+
+        // Insert new SMS log for retry
+        const { data: { user } } = await supabase.auth.getUser();
+        await admin
+          .from("notification_logs")
+          .insert({
+            user_id: user.id,
+            waitlist_entry_id: entryId,
+            message_type: 'sms',
+            message_id: resp.data.message_id,
+            phone_number: entry.phone,
+            status: 'sent',
+            sent_at: new Date().toISOString(),
+            message_text: message
+          });
+      }
+    } else if (action === "retry_whatsapp") {
+      const resp = await sendWhatsapp(entry.phone, message, { templateParams, variables });
+
+      if (resp?.data?.message_id) {
+        await admin
+          .from("waitlist_entries")
+          .update({
+            whatsapp_message_id: resp.data.message_id,
+            whatsapp_status: 'sent',
+            whatsapp_sent_at: new Date().toISOString(),
+            whatsapp_error_message: null // Clear previous error
+          })
+          .eq("id", entryId);
+
+        // Insert new WhatsApp log for retry
+        const { data: { user } } = await supabase.auth.getUser();
+        await admin
+          .from("notification_logs")
+          .insert({
+            user_id: user.id,
+            waitlist_entry_id: entryId,
+            message_type: 'whatsapp',
+            message_id: resp.data.message_id,
+            phone_number: entry.phone,
+            status: 'sent',
+            sent_at: new Date().toISOString(),
+            message_text: message
+          });
+      }
+    }
+
+    return NextResponse.json({ success: true, message: `${action === 'retry_sms' ? 'SMS' : 'WhatsApp'} resent successfully` });
+  } catch (error) {
+    // Update with failed status
+    const updateField = action === 'retry_sms' ? 'sms_error_message' : 'whatsapp_error_message';
+    const statusField = action === 'retry_sms' ? 'sms_status' : 'whatsapp_status';
+
+    await admin
+      .from("waitlist_entries")
+      .update({
+        [statusField]: 'failed',
+        [updateField]: error.message
+      })
+      .eq("id", entryId);
+
+    return NextResponse.json({ error: `Failed to resend ${action === 'retry_sms' ? 'SMS' : 'WhatsApp'}: ${error.message}` }, { status: 500 });
+  }
+}

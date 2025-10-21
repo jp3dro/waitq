@@ -95,15 +95,9 @@ export default async function CustomersPage() {
   return (
     <main className="py-5">
       <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
-        <div className="flex items-center gap-3">
-          {business.logo_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={business.logo_url || ""} alt="Logo" className="h-8 w-8 rounded object-cover ring-1 ring-neutral-200" />
-          ) : null}
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">{business.name || "Customers"}</h1>
-            <p className="mt-1 text-sm text-neutral-600">Customers deduplicated from all waitlists</p>
-          </div>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Customers</h1>
+          <p className="mt-1 text-sm text-neutral-600">Customers deduplicated from all waitlists</p>
         </div>
 
         <CustomersTable initialCustomers={customers} />

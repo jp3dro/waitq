@@ -15,6 +15,16 @@ type Entry = {
   send_whatsapp?: boolean | null;
   party_size?: number | null;
   seating_preference?: string | null;
+  sms_message_id?: string | null;
+  sms_status?: 'pending' | 'sent' | 'delivered' | 'failed' | null;
+  sms_sent_at?: string | null;
+  sms_delivered_at?: string | null;
+  sms_error_message?: string | null;
+  whatsapp_message_id?: string | null;
+  whatsapp_status?: 'pending' | 'sent' | 'delivered' | 'failed' | null;
+  whatsapp_sent_at?: string | null;
+  whatsapp_delivered_at?: string | null;
+  whatsapp_error_message?: string | null;
 };
 
 export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: string }) {
@@ -158,17 +168,96 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
     });
   };
 
-  const getNotificationDisplay = (sendSms?: boolean | null, sendWhatsapp?: boolean | null) => {
+  const getNotificationDisplay = (
+    sendSms?: boolean | null,
+    sendWhatsapp?: boolean | null,
+    smsStatus?: 'pending' | 'sent' | 'delivered' | 'failed' | null,
+    whatsappStatus?: 'pending' | 'sent' | 'delivered' | 'failed' | null
+  ) => {
     const methods = [];
-    if (sendSms) methods.push("SMS");
-    if (sendWhatsapp) methods.push("WhatsApp");
-    return methods.length > 0 ? methods.join(", ") : "None";
+
+    const getStatusIcon = (status: 'pending' | 'sent' | 'delivered' | 'failed' | null) => {
+      switch (status) {
+        case 'delivered':
+          return '✓✓'; // Double check for delivered
+        case 'sent':
+          return '✓'; // Single check for sent
+        case 'pending':
+          return '⏳'; // Hourglass for pending
+        case 'failed':
+          return '✗'; // Cross mark for failed
+        default:
+          return '…'; // Fallback
+      }
+    };
+
+    const getStatusColor = (status: 'pending' | 'sent' | 'delivered' | 'failed' | null) => {
+      switch (status) {
+        case 'delivered':
+          return 'text-green-600';
+        case 'sent':
+          return 'text-blue-600';
+        case 'pending':
+          return 'text-yellow-600';
+        case 'failed':
+          return 'text-red-600';
+        default:
+          return 'text-gray-600';
+      }
+    };
+
+    // Consider a channel active if it was requested OR if we already have a status for it
+    const isSmsActive = !!(sendSms || smsStatus);
+    const isWhatsappActive = !!(sendWhatsapp || whatsappStatus);
+
+    if (isSmsActive) {
+      methods.push(
+        <span key="sms" className={`inline-flex items-center gap-1 ${getStatusColor(smsStatus)}`} title={`SMS: ${smsStatus || 'requested'}`}>
+          {getStatusIcon(smsStatus)} SMS
+        </span>
+      );
+    }
+
+    if (isWhatsappActive) {
+      methods.push(
+        <span key="whatsapp" className={`inline-flex items-center gap-1 ${getStatusColor(whatsappStatus)}`} title={`WhatsApp: ${whatsappStatus || 'requested'}`}>
+          {getStatusIcon(whatsappStatus)} WhatsApp
+        </span>
+      );
+    }
+
+    return methods.length > 0 ? methods.reduce((prev, curr, index) => (
+      <>
+        {prev}
+        {index > 0 && <span className="text-gray-400">, </span>}
+        {curr}
+      </>
+    )) : <span className="text-gray-500">None</span>;
   };
 
   const remove = (id: string) => {
     startTransition(async () => {
       await fetch(`/api/waitlist?id=${encodeURIComponent(id)}`, { method: "DELETE" });
       await load(true);
+    });
+  };
+
+  const retryMessage = (id: string, type: 'sms' | 'whatsapp') => {
+    startTransition(async () => {
+      const action = type === 'sms' ? 'retry_sms' : 'retry_whatsapp';
+      const res = await fetch("/api/waitlist", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, action }),
+      });
+
+      if (res.ok) {
+        // Refresh the list to show updated status
+        await load(true);
+      } else {
+        // Could add error handling/toast here
+        console.error('Failed to retry message');
+      }
     });
   };
 
@@ -207,20 +296,20 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
   };
 
   if (loading) return (
-    <div className="bg-white ring-1 ring-black/5 rounded-xl shadow-sm p-6">
+    <div className="bg-white ring-1 ring-black/5 rounded-xl p-6">
       <p className="text-sm text-neutral-600">Loading…</p>
     </div>
   );
 
   if (!loading && entries.length === 0) return (
-    <div className="bg-white ring-1 ring-black/5 rounded-xl shadow-sm p-10 text-center">
+    <div className="bg-white ring-1 ring-black/5 rounded-xl p-10 text-center">
       <h2 className="text-base font-semibold">No entries yet</h2>
       <p className="mt-1 text-sm text-neutral-600">Add your first guest to start the queue.</p>
     </div>
   );
 
   return (
-    <div className="bg-white ring-1 ring-black/5 rounded-xl shadow-sm">
+    <div className="bg-white ring-1 ring-black/5 rounded-xl">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-neutral-50 sticky top-0 z-10">
@@ -244,7 +333,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                 <td className="p-2">{typeof e.party_size === 'number' ? e.party_size : "—"}</td>
                 <td className="p-2">{e.seating_preference || "—"}</td>
                 <td className="p-2">
-                  <span className="text-xs text-neutral-600">{getNotificationDisplay(e.send_sms, e.send_whatsapp)}</span>
+                  <span className="text-xs">{getNotificationDisplay(e.send_sms, e.send_whatsapp, e.sms_status, e.whatsapp_status)}</span>
                 </td>
                 <td className="p-2">{new Date(e.created_at).toLocaleString()}</td>
                 <td className="p-2 text-right">
@@ -263,7 +352,30 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                     </button>
                     <details className="relative">
                       <summary className="list-none inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-neutral-300 hover:bg-neutral-50 cursor-pointer">…</summary>
-                      <div className="absolute right-0 mt-1 w-40 rounded-md border bg-white shadow-sm text-sm">
+                      <div className="absolute right-0 mt-1 w-48 rounded-md border bg-white shadow-sm text-sm">
+                        {(e.sms_status === 'failed' || e.whatsapp_status === 'failed') && (
+                          <>
+                            {e.sms_status === 'failed' && (
+                              <button
+                                disabled={isPending}
+                                onClick={() => retryMessage(e.id, 'sms')}
+                                className="w-full text-left px-3 py-1.5 hover:bg-neutral-50 text-orange-600 flex items-center gap-2"
+                              >
+                                <span>🔄</span> Retry SMS
+                              </button>
+                            )}
+                            {e.whatsapp_status === 'failed' && (
+                              <button
+                                disabled={isPending}
+                                onClick={() => retryMessage(e.id, 'whatsapp')}
+                                className="w-full text-left px-3 py-1.5 hover:bg-neutral-50 text-orange-600 flex items-center gap-2"
+                              >
+                                <span>🔄</span> Retry WhatsApp
+                              </button>
+                            )}
+                            <div className="border-t my-1"></div>
+                          </>
+                        )}
                         <button disabled={isPending} onClick={() => remove(e.id)} className="w-full text-left px-3 py-1.5 hover:bg-neutral-50 text-red-700">Delete</button>
                       </div>
                     </details>

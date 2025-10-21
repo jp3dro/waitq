@@ -31,29 +31,29 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
   }, [initialCustomers, query, sortKey]);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search name or phone..."
-          className="w-full sm:w-80 rounded-md border px-3 py-2 text-sm ring-1 ring-inset ring-neutral-300 focus:outline-none focus:ring-2 focus:ring-neutral-800"
-        />
-        <div className="flex items-center gap-2 text-sm">
-          <span className="text-neutral-600">Sort:</span>
-          <select
-            value={sortKey}
-            onChange={(e) => setSortKey(e.target.value as "lastSeen" | "visits" | "served")}
-            className="rounded-md border px-2 py-1.5 ring-1 ring-inset ring-neutral-300"
-          >
-            <option value="lastSeen">Last seen</option>
-            <option value="visits">Visits</option>
-            <option value="served">Served</option>
-          </select>
+    <div className="bg-white ring-1 ring-black/5 rounded-xl">
+      <div className="p-6 space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search name or phone..."
+            className="w-full sm:w-80 rounded-md border px-3 py-2 text-sm ring-1 ring-inset ring-neutral-300 focus:outline-none focus:ring-2 focus:ring-neutral-800"
+          />
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-neutral-600">Sort:</span>
+            <select
+              value={sortKey}
+              onChange={(e) => setSortKey(e.target.value as "lastSeen" | "visits" | "served")}
+              className="rounded-md border px-2 py-1.5 ring-1 ring-inset ring-neutral-300"
+            >
+              <option value="lastSeen">Last seen</option>
+              <option value="visits">Visits</option>
+              <option value="served">Served</option>
+            </select>
+          </div>
         </div>
-      </div>
 
-      <div className="bg-white ring-1 ring-black/5 rounded-xl shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-neutral-50 sticky top-0 z-10">
