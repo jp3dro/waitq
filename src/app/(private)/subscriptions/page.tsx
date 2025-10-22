@@ -42,16 +42,6 @@ export default async function SubscriptionPage() {
         <div className="flex items-end justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Subscription</h1>
-            <p className="mt-1 text-sm text-neutral-600">Manage your plan and billing</p>
-          </div>
-        </div>
-
-        <div className="bg-white ring-1 ring-black/5 rounded-xl p-4">
-          <div className="text-sm text-neutral-700">
-            Current Plan: <span className="font-medium">{orderedPlans.find(p => p.id === currentPlanId)?.name || "Free Plan"}</span>
-            {current?.status && current.status !== 'active' && (
-              <span className="ml-2 capitalize text-orange-600">({current.status})</span>
-            )}
           </div>
         </div>
 
@@ -59,25 +49,26 @@ export default async function SubscriptionPage() {
           {orderedPlans.map((plan) => {
             const isCurrentPlan = plan.id === currentPlanId;
             return (
-              <div key={plan.id} className={`bg-white ring-1 rounded-xl p-6 flex flex-col relative ${
+              <div key={plan.id} className={`bg-white ring-1 rounded-xl p-6 flex flex-col justify-between relative ${
                 isCurrentPlan
                   ? 'ring-[#ea580c] bg-orange-50/50'
                   : 'ring-black/5'
               }`}>
-              <div className="mb-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-semibold">{plan.name}</h3>
-                  {isCurrentPlan && (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#ea580c] text-white">
-                      Current Plan
-                    </span>
-                  )}
+              <div className="flex-grow">
+                <div className="mb-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-semibold">{plan.name}</h3>
+                    {isCurrentPlan && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#ea580c] text-white">
+                        Current Plan
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-2 text-2xl font-bold">
+                    {formatEUR(plan.priceMonthlyEUR)} <span className="text-sm font-normal">/ month</span>
+                  </div>
                 </div>
-                <div className="mt-2 text-2xl font-bold">
-                  {formatEUR(plan.priceMonthlyEUR)} <span className="text-sm font-normal">/ month</span>
-                </div>
-              </div>
-              <ul className="text-sm text-neutral-700 space-y-1 mb-6">
+                <ul className="text-sm text-neutral-700 space-y-1">
                 <li>{plan.limits.locations} locations</li>
                 <li>{plan.limits.users} users</li>
                 <li>
@@ -88,26 +79,29 @@ export default async function SubscriptionPage() {
                   <li key={idx}>{f}</li>
                 ))}
               </ul>
-              {plan.priceMonthlyEUR === 0 ? (
-                isCurrentPlan ? null : (
-                  <Link
-                    href="/dashboard"
-                    className="inline-flex items-center justify-center w-full rounded-md bg-neutral-900 px-4 py-2 text-white hover:bg-neutral-800"
+              </div>
+              <div className="mt-4">
+                {plan.priceMonthlyEUR === 0 ? (
+                  isCurrentPlan ? null : (
+                    <Link
+                      href="/dashboard"
+                      className="inline-flex items-center justify-center w-full rounded-md bg-neutral-900 px-4 py-2 text-white hover:bg-neutral-800"
+                    >
+                      Included
+                    </Link>
+                  )
+                ) : (
+                  <SubscribeButton
+                    lookupKey={plan.stripe.priceLookupKeyMonthly}
+                    planId={plan.id}
+                    className={`inline-flex items-center justify-center w-full rounded-md px-4 py-2 text-white ${
+                      isCurrentPlan ? 'bg-[#ea580c] hover:bg-[#dc2626]' : 'bg-neutral-900 hover:bg-neutral-800'
+                    }`}
                   >
-                    Included
-                  </Link>
-                )
-              ) : (
-                <SubscribeButton
-                  lookupKey={plan.stripe.priceLookupKeyMonthly}
-                  planId={plan.id}
-                  className={`inline-flex items-center justify-center w-full rounded-md px-4 py-2 text-white ${
-                    isCurrentPlan ? 'bg-[#ea580c] hover:bg-[#dc2626]' : 'bg-neutral-900 hover:bg-neutral-800'
-                  }`}
-                >
-                  {isCurrentPlan ? 'Manage' : 'Subscribe'}
-                </SubscribeButton>
-              )}
+                    {isCurrentPlan ? 'Manage' : 'Subscribe'}
+                  </SubscribeButton>
+                )}
+              </div>
             </div>
             );
           })}

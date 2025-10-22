@@ -81,7 +81,7 @@ export async function DELETE(req: NextRequest) {
   return NextResponse.json({ ok: true });
 }
 
-// Clear a waitlist: delete all entries
+// Clear a waitlist: archive all waiting entries (keep for analytics)
 export async function PATCH(req: NextRequest) {
   const json = await req.json();
   const { id, action } = json as { id?: string; action?: string };
@@ -93,13 +93,14 @@ export async function PATCH(req: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  // Delete all entries for this waitlist
+  // Archive all waiting entries for this waitlist (keep for analytics and customer history)
   const admin = getAdminClient();
-  const { error: delErr } = await admin
+  const { error: updateErr } = await admin
     .from("waitlist_entries")
-    .delete()
-    .eq("waitlist_id", id);
-  if (delErr) return NextResponse.json({ error: delErr.message }, { status: 400 });
+    .update({ status: "archived" })
+    .eq("waitlist_id", id)
+    .eq("status", "waiting");
+  if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 400 });
   return NextResponse.json({ ok: true });
 }
 

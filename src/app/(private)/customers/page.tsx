@@ -97,7 +97,6 @@ export default async function CustomersPage() {
       <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Customers</h1>
-          <p className="mt-1 text-sm text-neutral-600">Customers deduplicated from all waitlists</p>
         </div>
 
         <CustomersTable initialCustomers={customers} />

@@ -1,5 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getMessageStatus, sendSms } from "@/lib/bulkgate";
+import { BulkGateAdvancedResponse, getMessageStatus, sendSms } from "@/lib/bulkgate";
+
+type DiagnosticStatus = "running" | "success" | "failed";
+
+interface DiagnosticTest {
+  name: string;
+  status: DiagnosticStatus;
+  messageId?: string;
+  phone?: string;
+  result?: unknown;
+  error?: string;
+}
+
+interface DiagnosticResults {
+  timestamp: string;
+  tests: DiagnosticTest[];
+  error?: string;
+}
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -18,13 +35,14 @@ export async function GET(req: NextRequest) {
     const status = await getMessageStatus(messageId);
     return NextResponse.json({ messageId, status });
   } catch (error) {
-    console.error("Error checking BulkGate status:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("Error checking BulkGate status:", message);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
 async function runDiagnostics() {
-  const results = {
+  const results: DiagnosticResults = {
     timestamp: new Date().toISOString(),
     tests: []
   };
@@ -43,7 +61,7 @@ async function runDiagnostics() {
       results.tests[0].result = status;
     } catch (error) {
       results.tests[0].status = "failed";
-      results.tests[0].error = error.message;
+      results.tests[0].error = error instanceof Error ? error.message : String(error);
     }
 
     // Test 2: Send test SMS
@@ -54,15 +72,18 @@ async function runDiagnostics() {
     });
 
     try {
-      const testResult = await sendSms("351915558354", "WaitQ diagnostic test - please ignore");
+      const testResult: BulkGateAdvancedResponse = await sendSms("351915558354", "WaitQ diagnostic test - please ignore");
       results.tests[1].status = "success";
       results.tests[1].result = testResult;
 
       // Test 3: Check status of the test message
-      if (testResult.data?.message_id) {
+      const messageId = typeof testResult.data === "object" && testResult.data && "message_id" in testResult.data
+        ? String((testResult.data as Record<string, unknown>)["message_id"] ?? "")
+        : "";
+      if (messageId) {
         results.tests.push({
           name: "Check test message status",
-          messageId: testResult.data.message_id,
+          messageId,
           status: "running"
         });
 
@@ -70,21 +91,21 @@ async function runDiagnostics() {
         await new Promise(resolve => setTimeout(resolve, 3000));
 
         try {
-          const testStatus = await getMessageStatus(testResult.data.message_id);
+          const testStatus = await getMessageStatus(messageId);
           results.tests[2].status = "success";
           results.tests[2].result = testStatus;
         } catch (error) {
-          results.tests[2].status = "failed";
-          results.tests[2].error = error.message;
+        results.tests[2].status = "failed";
+        results.tests[2].error = error instanceof Error ? error.message : String(error);
         }
       }
     } catch (error) {
       results.tests[1].status = "failed";
-      results.tests[1].error = error.message;
+      results.tests[1].error = error instanceof Error ? error.message : String(error);
     }
 
   } catch (error) {
-    results.error = error.message;
+    results.error = error instanceof Error ? error.message : String(error);
   }
 
   return NextResponse.json(results);

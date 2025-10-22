@@ -6,7 +6,7 @@ import PhoneInput, { type Country } from "react-phone-number-input";
 import 'react-phone-number-input/style.css';
 
 type Entry = { id: string; ticket_number: number | null; queue_position: number | null; status: string; notified_at?: string | null; party_size?: number | null; seating_preference?: string | null };
-type Payload = { listId: string; listName: string; kioskEnabled?: boolean; businessCountry?: string | null; listType?: string | null; seatingPreferences?: string[]; estimatedMs?: number; entries: Entry[] };
+type Payload = { listId: string; listName: string; kioskEnabled?: boolean; businessCountry?: string | null; listType?: string | null; seatingPreferences?: string[]; estimatedMs?: number; entries: Entry[]; accentColor?: string; backgroundColor?: string };
 
 export default function DisplayClient({ token }: { token: string }) {
   const [data, setData] = useState<Payload | null>(null);
@@ -82,8 +82,10 @@ export default function DisplayClient({ token }: { token: string }) {
     };
   }, [supabase, token]);
 
+  const bg = data?.backgroundColor || "#000000";
+  const accent = data?.accentColor || "#FFFFFF";
   if (loading || !data) return (
-    <main className="min-h-screen bg-black text-white flex items-center justify-center">
+    <main className="min-h-screen text-white flex items-center justify-center" style={{ backgroundColor: bg }}>
       <p className="text-neutral-400">Loading…</p>
     </main>
   );
@@ -102,7 +104,7 @@ export default function DisplayClient({ token }: { token: string }) {
   const waiting = data.entries.filter((e) => e.status === "waiting").slice(0, 10);
 
   return (
-    <main className="min-h-screen bg-black text-white">
+    <main className="min-h-screen text-white" style={{ backgroundColor: bg }}>
       <div className="mx-auto max-w-6xl px-6 py-10">
         <h1 className="text-3xl font-bold tracking-tight">{data.listName}</h1>
         {typeof data.estimatedMs === 'number' && data.estimatedMs > 0 ? (
@@ -110,7 +112,7 @@ export default function DisplayClient({ token }: { token: string }) {
         ) : null}
         {data.kioskEnabled ? (
           <div className="mt-4">
-            <KioskButton token={token} defaultCountry={data.businessCountry || "PT"} listType={data.listType || "restaurants"} seatingPreferences={data.seatingPreferences || []} />
+            <KioskButton token={token} defaultCountry={data.businessCountry || "PT"} listType={data.listType || "restaurants"} seatingPreferences={data.seatingPreferences || []} accent={accent} />
           </div>
         ) : null}
         <div className="mt-8 grid md:grid-cols-[1fr_1.2fr] gap-8">
@@ -145,7 +147,7 @@ export default function DisplayClient({ token }: { token: string }) {
 }
 
 
-function KioskButton({ token, defaultCountry, listType, seatingPreferences }: { token: string; defaultCountry: string; listType: string; seatingPreferences: string[] }) {
+function KioskButton({ token, defaultCountry, listType, seatingPreferences, accent }: { token: string; defaultCountry: string; listType: string; seatingPreferences: string[]; accent: string }) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<"intro" | "form" | "confirm">("intro");
   const [phone, setPhone] = useState<string | undefined>(undefined);
@@ -199,7 +201,8 @@ function KioskButton({ token, defaultCountry, listType, seatingPreferences }: { 
 
   return (
     <>
-      <button onClick={() => setOpen(true)} className="inline-flex items-center rounded-md bg-white text-black px-4 py-3 text-base font-semibold shadow-sm hover:bg-neutral-200">
+      <button onClick={() => setOpen(true)} className="inline-flex items-center rounded-md px-4 py-3 text-base font-semibold shadow-sm"
+        style={{ backgroundColor: accent, color: getReadableTextColor(accent) }}>
         Add to Waiting list
       </button>
       <Modal open={open} onClose={close} title={step === "confirm" ? "You&apos;re on the list" : "Add to waiting list"}>
@@ -249,10 +252,8 @@ function KioskButton({ token, defaultCountry, listType, seatingPreferences }: { 
             ) : (
               <div className="min-h-[120px]" />
             )}
-            <button
-              onClick={() => setStep("form")}
-              className="w-full inline-flex items-center justify-center rounded-xl bg-black px-5 py-4 text-lg font-semibold text-white shadow-sm hover:bg-neutral-800"
-            >
+            <button onClick={() => setStep("form")} className="w-full inline-flex items-center justify-center rounded-xl px-5 py-4 text-lg font-semibold shadow-sm"
+              style={{ backgroundColor: accent, color: getReadableTextColor(accent) }}>
               Continue
             </button>
           </div>
@@ -275,11 +276,8 @@ function KioskButton({ token, defaultCountry, listType, seatingPreferences }: { 
               ) : null}
             </div>
             <Keypad value={phone} onChange={setPhone} />
-            <button
-              disabled={isPending}
-              onClick={submit}
-              className="w-full inline-flex items-center justify-center rounded-xl bg-black px-5 py-4 text-lg font-semibold text-white shadow-sm hover:bg-neutral-800 disabled:opacity-50"
-            >
+            <button disabled={isPending} onClick={submit} className="w-full inline-flex items-center justify-center rounded-xl px-5 py-4 text-lg font-semibold shadow-sm disabled:opacity-50"
+              style={{ backgroundColor: accent, color: getReadableTextColor(accent) }}>
               {isPending ? "Submitting…" : "Continue"}
             </button>
             {message ? <p className="text-sm text-red-600">{message}</p> : null}
@@ -291,7 +289,8 @@ function KioskButton({ token, defaultCountry, listType, seatingPreferences }: { 
               <p className="text-sm text-neutral-600">Your ticket</p>
               <div className="mt-2 text-6xl font-extrabold text-neutral-900">{ticketNumber ?? "-"}</div>
             </div>
-            <button onClick={close} className="w-full inline-flex items-center justify-center rounded-xl bg-black text-white px-5 py-4 text-lg font-semibold shadow-sm hover:bg-neutral-800">
+            <button onClick={close} className="w-full inline-flex items-center justify-center rounded-xl px-5 py-4 text-lg font-semibold shadow-sm"
+              style={{ backgroundColor: accent, color: getReadableTextColor(accent) }}>
               Done
             </button>
           </div>
@@ -358,6 +357,16 @@ function KeypadNumeric({ value, onChange }: { value: string; onChange: (v: strin
       ))}
     </div>
   );
+}
+
+function getReadableTextColor(hexColor: string): string {
+  const hex = hexColor.replace("#", "");
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  // Per W3C luminance approximation
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.6 ? "#000000" : "#FFFFFF";
 }
 
 

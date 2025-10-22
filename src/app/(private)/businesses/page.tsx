@@ -45,21 +45,21 @@ export default async function AdminBusinessesPage() {
         <div className="bg-white ring-1 ring-black/5 rounded-xl p-6">
           <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
-          <thead>
-            <tr className="text-left text-neutral-600">
-              <th className="py-2 pr-4">Name</th>
-              <th className="py-2 pr-4">Owner</th>
-              <th className="py-2 pr-4">Created</th>
-              <th className="py-2 pr-4">Subscription</th>
+          <thead className="bg-neutral-50 sticky top-0 z-10">
+            <tr className="text-left text-neutral-700">
+              <th className="px-4 py-2">Name</th>
+              <th className="px-4 py-2">Owner</th>
+              <th className="px-4 py-2">Created</th>
+              <th className="px-4 py-2">Subscription</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.id} className="border-t">
-                <td className="py-2 pr-4">{r.name}</td>
-                <td className="py-2 pr-4 font-mono text-xs">{r.owner}</td>
-                <td className="py-2 pr-4">{new Date(r.createdAt).toLocaleDateString()}</td>
-                <td className="py-2 pr-4">{r.subscription}</td>
+              <tr key={r.id} className="border-t hover:bg-neutral-50 odd:bg-neutral-50/30">
+                <td className="px-4 py-2">{r.name}</td>
+                <td className="px-4 py-2 font-mono text-xs">{r.owner}</td>
+                <td className="px-4 py-2">{new Date(r.createdAt).toLocaleDateString()}</td>
+                <td className="px-4 py-2">{r.subscription}</td>
               </tr>
             ))}
             {rows.length === 0 ? (

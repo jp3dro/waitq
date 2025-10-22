@@ -39,13 +39,17 @@ export async function GET(req: NextRequest) {
   } catch {}
 
   let businessCountry: string | null = null;
+  let accentColor: string | null = null;
+  let backgroundColor: string | null = null;
   if (list.business_id) {
     const { data: biz } = await admin
       .from("businesses")
-      .select("country_code")
+      .select("country_code, accent_color, background_color")
       .eq("id", list.business_id)
       .maybeSingle();
     businessCountry = (biz?.country_code as string | null) || null;
+    accentColor = (biz?.accent_color as string | null) || null;
+    backgroundColor = (biz?.background_color as string | null) || null;
   }
 
   return NextResponse.json({
@@ -53,6 +57,8 @@ export async function GET(req: NextRequest) {
     listName: list.name,
     kioskEnabled: !!list.kiosk_enabled,
     businessCountry,
+    accentColor: accentColor || "#FFFFFF",
+    backgroundColor: backgroundColor || "#000000",
     listType: list.list_type,
     seatingPreferences: (list.seating_preferences as string[] | null) || [],
     estimatedMs,

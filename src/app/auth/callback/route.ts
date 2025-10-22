@@ -24,7 +24,21 @@ export async function GET(req: NextRequest) {
         const defaultName = (user.email || "My Business").split("@")[0];
         await admin
           .from("businesses")
-          .insert({ owner_user_id: user.id, name: defaultName });
+          .insert({ owner_user_id: user.id, name: defaultName, accent_color: "#FFFFFF", background_color: "#000000" });
+
+        // Ensure owner is admin member
+        const { data: biz } = await admin
+          .from("businesses")
+          .select("id")
+          .eq("owner_user_id", user.id)
+          .maybeSingle();
+        if (biz?.id) {
+          await admin
+            .from("memberships")
+            .insert({ business_id: biz.id as string, user_id: user.id, role: 'admin' })
+            .select("id")
+            .maybeSingle();
+        }
       }
     }
   }

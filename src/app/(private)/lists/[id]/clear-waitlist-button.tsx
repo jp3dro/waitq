@@ -46,7 +46,7 @@ export default function ClearWaitlistButton({ waitlistId, displayToken }: { wait
             console.warn('Local refresh failed:', localRefreshError);
           }
 
-          toast.success("Waitlist cleared successfully");
+          toast.success("Waitlist cleared (entries archived for analytics)");
         } else {
           const error = await res.json();
           toast.error(error.error || "Failed to clear waitlist");

@@ -37,7 +37,7 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
         body: JSON.stringify(values),
       });
       if (res.ok) {
-        reset({ phone: "", customerName: "", waitlistId: values.waitlistId, sendSms: false, sendWhatsapp: false });
+        reset({ phone: "", customerName: "", waitlistId: values.waitlistId, sendSms: false, sendWhatsapp: false, partySize: undefined, seatingPreference: undefined });
         setMessage("Added and message sent (if configured)");
         // Local optimistic refresh and broadcast
         try {
@@ -103,7 +103,9 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
           <>
             <div className="grid gap-1">
               <label className="text-sm font-medium">Number of people</label>
-              <input type="number" min={1} className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm" placeholder="e.g., 2" {...register("partySize", { valueAsNumber: true })} />
+              <input type="number" min={1} className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm" placeholder="e.g., 2" {...register("partySize", {
+                setValueAs: (value) => value === "" ? undefined : parseInt(value, 10) || undefined
+              })} />
             </div>
             {(waitlists.find(w => w.id === watch("waitlistId"))?.seating_preferences || []).length > 0 ? (
               <div className="grid gap-1">

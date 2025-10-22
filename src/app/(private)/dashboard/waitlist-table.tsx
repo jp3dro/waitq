@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
+import Modal from "@/components/modal";
+import { createPortal } from "react-dom";
 
 type Entry = {
   id: string;
@@ -31,13 +33,37 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
-  const [waitlists, setWaitlists] = useState<{ id: string; name: string; display_token?: string }[]>([]);
+  const [waitlists, setWaitlists] = useState<{ id: string; name: string; display_token?: string; list_type?: string; seating_preferences?: string[] }[]>([]);
   const [waitlistId, setWaitlistId] = useState<string | null>(fixedWaitlistId ?? null);
   const supabase = createClient();
   const refreshTimer = useRef<number | null>(null);
   const prevIdsRef = useRef<Set<string>>(new Set());
   const [highlightIds, setHighlightIds] = useState<Set<string>>(new Set());
   const displayChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const tableRef = useRef<HTMLDivElement>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({
+    customerName: "",
+    phone: "",
+    partySize: "",
+    seatingPreference: ""
+  });
+  const [menuState, setMenuState] = useState<{ entryId: string; top: number; left: number } | null>(null);
+
+  const openMenuFor = (entryId: string, trigger: HTMLElement) => {
+    const rect = trigger.getBoundingClientRect();
+    const menuWidth = 192;
+    const estHeight = 200;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    let left = rect.left;
+    let top = rect.bottom + 4;
+    if (left + menuWidth > vw - 8) left = Math.max(8, rect.right - menuWidth);
+    if (top + estHeight > vh - 8 && rect.top - estHeight > 8) top = Math.max(8, rect.top - estHeight - 4);
+    setMenuState({ entryId, top, left });
+  };
+
+  const closeMenu = () => setMenuState(null);
 
   async function load(silent: boolean = false) {
     if (!silent) setLoading(true);
@@ -48,7 +74,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
     // Compute new ids for highlight animation
     const incoming = (data.entries || [])
       .filter((e) => e.ticket_number != null)
-      .filter((e) => e.status !== "notified");
+      .filter((e) => e.status !== "notified" && e.status !== "archived");
     const incomingIds = new Set(incoming.map((e) => e.id));
     const prevIds = prevIdsRef.current;
     const newIds = new Set<string>();
@@ -90,6 +116,20 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
   useEffect(() => {
     load(false);
   }, [waitlistId]);
+
+  useEffect(() => {
+    if (!menuState) return;
+    const onClose = () => setMenuState(null);
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenuState(null); };
+    window.addEventListener('scroll', onClose, true);
+    window.addEventListener('resize', onClose);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('scroll', onClose, true);
+      window.removeEventListener('resize', onClose);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [menuState]);
 
   // Realtime: subscribe to all entries and filter by waitlist_id in client
   useEffect(() => {
@@ -168,15 +208,17 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
     });
   };
 
+  // No-op: legacy dropdown positioning removed in favor of portal menu
+
   const getNotificationDisplay = (
     sendSms?: boolean | null,
     sendWhatsapp?: boolean | null,
-    smsStatus?: 'pending' | 'sent' | 'delivered' | 'failed' | null,
-    whatsappStatus?: 'pending' | 'sent' | 'delivered' | 'failed' | null
+    smsStatus?: 'pending' | 'sent' | 'delivered' | 'failed' | null | undefined,
+    whatsappStatus?: 'pending' | 'sent' | 'delivered' | 'failed' | null | undefined
   ) => {
     const methods = [];
 
-    const getStatusIcon = (status: 'pending' | 'sent' | 'delivered' | 'failed' | null) => {
+    const getStatusIcon = (status: 'pending' | 'sent' | 'delivered' | 'failed' | null | undefined) => {
       switch (status) {
         case 'delivered':
           return '✓✓'; // Double check for delivered
@@ -191,7 +233,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
       }
     };
 
-    const getStatusColor = (status: 'pending' | 'sent' | 'delivered' | 'failed' | null) => {
+    const getStatusColor = (status: 'pending' | 'sent' | 'delivered' | 'failed' | null | undefined) => {
       switch (status) {
         case 'delivered':
           return 'text-green-600';
@@ -233,6 +275,59 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
         {curr}
       </>
     )) : <span className="text-gray-500">None</span>;
+  };
+
+  const archive = (id: string) => {
+    startTransition(async () => {
+      const res = await fetch("/api/waitlist", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, action: "archive" }),
+      });
+      if (res.ok) {
+        await load(true);
+      }
+    });
+  };
+
+  const edit = (id: string) => {
+    const entry = entries.find(e => e.id === id);
+    if (entry) {
+      setEditForm({
+        customerName: entry.customer_name || "",
+        phone: entry.phone || "",
+        partySize: entry.party_size?.toString() || "",
+        seatingPreference: entry.seating_preference || ""
+      });
+      setEditingId(id);
+    }
+  };
+
+  const saveEdit = () => {
+    if (!editingId) return;
+
+    startTransition(async () => {
+      const payload: any = {
+        id: editingId,
+      };
+
+      // Handle empty strings as null for database
+      payload.customer_name = editForm.customerName.trim() || null;
+      payload.phone = editForm.phone.trim() || null;
+      payload.party_size = editForm.partySize ? parseInt(editForm.partySize, 10) : null;
+      payload.seating_preference = editForm.seatingPreference.trim() || null;
+
+      const res = await fetch("/api/waitlist", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        setEditingId(null);
+        await load(true);
+      }
+    });
   };
 
   const remove = (id: string) => {
@@ -309,38 +404,38 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
   );
 
   return (
-    <div className="bg-white ring-1 ring-black/5 rounded-xl">
+    <div className="bg-white ring-1 ring-black/5 rounded-xl" ref={tableRef}>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-neutral-50 sticky top-0 z-10">
             <tr>
-              <th className="text-left p-2">#</th>
-              <th className="text-left p-2">Name</th>
-              <th className="text-left p-2">Phone</th>
-              <th className="text-left p-2">Party</th>
-              <th className="text-left p-2">Seating</th>
-              <th className="text-left p-2">Notifications</th>
-              <th className="text-left p-2">Created</th>
-              <th className="text-left p-2"></th>
+              <th className="text-left font-medium text-neutral-700 px-4 py-2">#</th>
+              <th className="text-left font-medium text-neutral-700 px-4 py-2">Name</th>
+              <th className="text-left font-medium text-neutral-700 px-4 py-2">Phone</th>
+              <th className="text-left font-medium text-neutral-700 px-4 py-2">Party</th>
+              <th className="text-left font-medium text-neutral-700 px-4 py-2">Seating</th>
+              <th className="text-left font-medium text-neutral-700 px-4 py-2">Notifications</th>
+              <th className="text-left font-medium text-neutral-700 px-4 py-2">Created</th>
+              <th className="text-left font-medium text-neutral-700 px-4 py-2"></th>
             </tr>
           </thead>
           <tbody>
             {entries.map((e) => (
-              <tr key={e.id} className={`border-t hover:bg-neutral-50 ${highlightIds.has(e.id) ? "row-flash" : ""}`}>
-                <td className="p-2">{e.ticket_number ?? e.queue_position ?? "-"}</td>
-                <td className="p-2">{e.customer_name ?? "—"}</td>
-                <td className="p-2">{e.phone}</td>
-                <td className="p-2">{typeof e.party_size === 'number' ? e.party_size : "—"}</td>
-                <td className="p-2">{e.seating_preference || "—"}</td>
-                <td className="p-2">
+              <tr key={e.id} className={`border-t hover:bg-neutral-50 odd:bg-neutral-50/30 ${highlightIds.has(e.id) ? "row-flash" : ""}`}>
+                <td className="px-4 py-2">{e.ticket_number ?? e.queue_position ?? "-"}</td>
+                <td className="px-4 py-2">{e.customer_name ?? "—"}</td>
+                <td className="px-4 py-2">{e.phone}</td>
+                <td className="px-4 py-2">{typeof e.party_size === 'number' ? e.party_size : "—"}</td>
+                <td className="px-4 py-2">{e.seating_preference || "—"}</td>
+                <td className="px-4 py-2">
                   <span className="text-xs">{getNotificationDisplay(e.send_sms, e.send_whatsapp, e.sms_status, e.whatsapp_status)}</span>
                 </td>
-                <td className="p-2">{new Date(e.created_at).toLocaleString()}</td>
-                <td className="p-2 text-right">
+                <td className="px-4 py-2">{new Date(e.created_at).toLocaleString()}</td>
+                <td className="px-4 py-2 text-right">
                   <div className="inline-flex items-center gap-2">
                     <button
                       onClick={() => copyPersonalUrl(e.token)}
-                      className="inline-flex items-center rounded-md px-2 py-1.5 text-sm font-medium ring-1 ring-inset ring-neutral-300 hover:bg-neutral-50"
+                      className="inline-flex items-center rounded-md px-2 py-1.5 text-sm font-medium ring-1 ring-inset ring-neutral-300 bg-white hover:bg-neutral-50 shadow-sm"
                       title="Copy personal page URL"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -350,35 +445,12 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                     <button disabled={isPending} onClick={() => call(e.id)} className="inline-flex items-center rounded-md bg-black px-3 py-1.5 text-sm font-medium text-white shadow-sm disabled:opacity-50">
                       Call
                     </button>
-                    <details className="relative">
-                      <summary className="list-none inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-neutral-300 hover:bg-neutral-50 cursor-pointer">…</summary>
-                      <div className="absolute right-0 mt-1 w-48 rounded-md border bg-white shadow-sm text-sm">
-                        {(e.sms_status === 'failed' || e.whatsapp_status === 'failed') && (
-                          <>
-                            {e.sms_status === 'failed' && (
-                              <button
-                                disabled={isPending}
-                                onClick={() => retryMessage(e.id, 'sms')}
-                                className="w-full text-left px-3 py-1.5 hover:bg-neutral-50 text-orange-600 flex items-center gap-2"
-                              >
-                                <span>🔄</span> Retry SMS
-                              </button>
-                            )}
-                            {e.whatsapp_status === 'failed' && (
-                              <button
-                                disabled={isPending}
-                                onClick={() => retryMessage(e.id, 'whatsapp')}
-                                className="w-full text-left px-3 py-1.5 hover:bg-neutral-50 text-orange-600 flex items-center gap-2"
-                              >
-                                <span>🔄</span> Retry WhatsApp
-                              </button>
-                            )}
-                            <div className="border-t my-1"></div>
-                          </>
-                        )}
-                        <button disabled={isPending} onClick={() => remove(e.id)} className="w-full text-left px-3 py-1.5 hover:bg-neutral-50 text-red-700">Delete</button>
-                      </div>
-                    </details>
+                    <button
+                      onClick={(ev) => openMenuFor(e.id, ev.currentTarget as HTMLElement)}
+                      className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-neutral-300 bg-white hover:bg-neutral-50 shadow-sm"
+                    >
+                      ⋯
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -386,6 +458,134 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
           </tbody>
         </table>
       </div>
+
+      {menuState && (() => {
+        const me = entries.find(x => x.id === menuState.entryId);
+        if (!me) return null;
+        return createPortal(
+          <div className="fixed inset-0 z-50" onClick={closeMenu}>
+            <div
+              className="absolute w-48 rounded-md bg-white text-sm shadow-lg ring-1 ring-black/5 py-1"
+              style={{ top: menuState.top, left: menuState.left }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {(me.sms_status === 'failed' || me.whatsapp_status === 'failed') && (
+                <>
+                  {me.sms_status === 'failed' && (
+                    <button
+                      disabled={isPending}
+                      onClick={() => { closeMenu(); retryMessage(me.id, 'sms'); }}
+                      className="w-full text-left px-3 py-2 hover:bg-neutral-50 text-orange-600 flex items-center gap-2"
+                    >
+                      <span>🔄</span> Retry SMS
+                    </button>
+                  )}
+                  {me.whatsapp_status === 'failed' && (
+                    <button
+                      disabled={isPending}
+                      onClick={() => { closeMenu(); retryMessage(me.id, 'whatsapp'); }}
+                      className="w-full text-left px-3 py-2 hover:bg-neutral-50 text-orange-600 flex items-center gap-2"
+                    >
+                      <span>🔄</span> Retry WhatsApp
+                    </button>
+                  )}
+                  <div className="border-t my-1"></div>
+                </>
+              )}
+              <button disabled={isPending} onClick={() => { closeMenu(); archive(me.id); }} className="w-full text-left px-3 py-2 hover:bg-neutral-50 text-amber-700 flex items-center gap-2">
+                <span>📦</span> Archive
+              </button>
+              <button disabled={isPending} onClick={() => { closeMenu(); edit(me.id); }} className="w-full text-left px-3 py-2 hover:bg-neutral-50 text-blue-700 flex items-center gap-2">
+                <span>✏️</span> Edit
+              </button>
+              <div className="border-t my-1"></div>
+              <button disabled={isPending} onClick={() => { closeMenu(); remove(me.id); }} className="w-full text-left px-3 py-2 hover:bg-neutral-50 text-red-700">Delete</button>
+            </div>
+          </div>,
+          document.body
+        );
+      })()}
+
+      {/* Edit Modal */}
+      <Modal open={!!editingId} onClose={() => setEditingId(null)} title="Edit Entry">
+        <form className="grid gap-4">
+          <div className="grid gap-1">
+            <label className="text-sm font-medium">Customer name</label>
+            <input
+              type="text"
+              value={editForm.customerName}
+              onChange={(e) => setEditForm(prev => ({ ...prev, customerName: e.target.value }))}
+              className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm"
+              placeholder="Full name"
+            />
+          </div>
+
+          <div className="grid gap-1">
+            <label className="text-sm font-medium">Phone</label>
+            <input
+              type="tel"
+              value={editForm.phone}
+              onChange={(e) => setEditForm(prev => ({ ...prev, phone: e.target.value }))}
+              className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm"
+              placeholder="Phone number"
+            />
+          </div>
+
+          {(waitlists.find(w => w.id === waitlistId)?.list_type || "restaurants") === "restaurants" && (
+            <>
+              <div className="grid gap-1">
+                <label className="text-sm font-medium">Number of people</label>
+                <input
+                  type="number"
+                  min={1}
+                  value={editForm.partySize}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, partySize: e.target.value }))}
+                  className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm"
+                  placeholder="e.g., 2"
+                />
+              </div>
+
+              {(waitlists.find(w => w.id === waitlistId)?.seating_preferences || []).length > 0 && (
+                <div className="grid gap-1">
+                  <label className="text-sm font-medium">Seating preference</label>
+                  <div className="flex flex-wrap gap-2">
+                    {(waitlists.find(w => w.id === waitlistId)?.seating_preferences || []).map((s) => {
+                      const selected = editForm.seatingPreference === s;
+                      return (
+                        <button
+                          type="button"
+                          key={s}
+                          onClick={() => setEditForm(prev => ({ ...prev, seatingPreference: s }))}
+                          className={`inline-flex items-center rounded-full px-3 py-1 text-xs ring-1 ring-inset transition ${selected ? "bg-black text-white ring-black" : "bg-white text-neutral-900 ring-neutral-300 hover:bg-neutral-50"}`}
+                        >
+                          {s}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          <div className="flex items-center gap-3 pt-2">
+            <button
+              onClick={saveEdit}
+              disabled={isPending}
+              className="inline-flex items-center rounded-md bg-black px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-neutral-800 disabled:opacity-50"
+            >
+              {isPending ? "Saving…" : "Save"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditingId(null)}
+              className="inline-flex items-center rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm hover:bg-neutral-50"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

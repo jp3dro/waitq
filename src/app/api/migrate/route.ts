@@ -38,7 +38,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, message: 'Migration completed successfully' });
   } catch (error) {
     console.error('Migration failed:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 

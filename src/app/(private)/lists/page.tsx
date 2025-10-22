@@ -56,14 +56,13 @@ export default async function ListsIndexPage() {
         <div className="flex items-end justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Lists</h1>
-            <p className="mt-1 text-sm text-neutral-600">All your lists grouped by location</p>
           </div>
           <CreateListButton />
         </div>
 
-        <div className="space-y-6">
+        <div className="bg-white ring-1 ring-black/5 rounded-xl p-6 space-y-6">
           {locs.length === 0 ? (
-            <div className="bg-white ring-1 ring-black/5 rounded-xl shadow-sm p-10 text-center">
+            <div className="p-10 text-center">
               <h3 className="text-base font-semibold">No locations yet</h3>
               <p className="mt-1 text-sm text-neutral-600">Create a location to start adding lists.</p>
             </div>

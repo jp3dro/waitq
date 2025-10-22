@@ -1,5 +1,5 @@
-type BulkGateAdvancedResponse = {
-  data?: unknown;
+export type BulkGateAdvancedResponse = {
+  data?: Record<string, unknown> | undefined;
   type?: string;
   code?: number;
   error?: string;
@@ -59,7 +59,7 @@ function buildWhatsappChannel(text: string, templateParams?: string[]) {
   };
 }
 
-async function postAdvanced(payload: Record<string, unknown>) {
+async function postAdvanced(payload: Record<string, unknown>): Promise<BulkGateAdvancedResponse> {
   const url = "https://portal.bulkgate.com/api/2.0/advanced/transactional";
   console.log("[BulkGate] Request", { url, payload: { ...payload, application_token: "[redacted]" } });
   const res = await fetch(url, {
@@ -77,10 +77,14 @@ async function postAdvanced(payload: Record<string, unknown>) {
     throw new Error(`BulkGate error: ${reason}${code ? ` (code ${code})` : ""}${detail ? ` - ${JSON.stringify(detail)}` : ""}`);
   }
   console.log("[BulkGate] Response", json ?? raw);
-  return json ?? {};
+  return (json ?? {}) as BulkGateAdvancedResponse;
 }
 
-export async function sendSms(to: string, text: string, opts?: { variables?: Record<string, string> }) {
+export async function sendSms(
+  to: string,
+  text: string,
+  opts?: { variables?: Record<string, string> }
+): Promise<BulkGateAdvancedResponse> {
   const { applicationId, applicationToken } = getCredentials();
   const originalNumber = to;
   const number = normalizeNumber(to);
@@ -114,7 +118,7 @@ export async function sendSms(to: string, text: string, opts?: { variables?: Rec
     console.error("[BulkGate] SMS send failed", {
       originalNumber,
       normalizedNumber: number,
-      error: error.message
+      error: (error as Error)?.message
     });
     throw error;
   }
@@ -143,7 +147,7 @@ export async function sendWhatsapp(to: string, text: string, opts?: { templatePa
 
 // Note: getMessageStatus may not be available for all BulkGate plans
 // Consider using webhooks for delivery status instead
-export async function getMessageStatus(messageId: string) {
+export async function getMessageStatus(messageId: string): Promise<BulkGateAdvancedResponse> {
   const { applicationId, applicationToken } = getCredentials();
   const payload: Record<string, unknown> = {
     application_id: applicationId,
@@ -154,7 +158,7 @@ export async function getMessageStatus(messageId: string) {
 }
 
 // Alternative: Check delivery reports via different endpoint if available
-export async function getDeliveryReport(messageId: string) {
+export async function getDeliveryReport(messageId: string): Promise<BulkGateAdvancedResponse> {
   // Some BulkGate APIs use different endpoints for delivery reports
   const url = "https://portal.bulkgate.com/api/2.0/advanced/delivery-report";
   const { applicationId, applicationToken } = getCredentials();
@@ -185,7 +189,7 @@ export async function getDeliveryReport(messageId: string) {
   }
 
   console.log("[BulkGate] Delivery report response", json ?? raw);
-  return json ?? {};
+  return (json ?? {}) as BulkGateAdvancedResponse;
 }
 
 

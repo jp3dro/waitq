@@ -190,12 +190,13 @@ export async function POST(req: NextRequest) {
           }
         } catch (err) {
           console.error("[Waitlist] SMS error", err);
+          const errMsg = err instanceof Error ? err.message : String(err);
           // Update with failed status
           await admin
             .from("waitlist_entries")
             .update({
               sms_status: 'failed',
-              sms_error_message: err.message
+              sms_error_message: errMsg
             })
             .eq("id", data.id);
 
@@ -209,7 +210,7 @@ export async function POST(req: NextRequest) {
               message_id: `failed-${Date.now()}`, // Generate a unique ID for failed messages
               phone_number: phone,
               status: 'failed',
-              error_message: err.message,
+              error_message: errMsg,
               message_text: message
             });
         }
@@ -246,12 +247,13 @@ export async function POST(req: NextRequest) {
           }
         } catch (err) {
           console.error("[Waitlist] WhatsApp error", err);
+          const errMsg = err instanceof Error ? err.message : String(err);
           // Update with failed status
           await admin
             .from("waitlist_entries")
             .update({
               whatsapp_status: 'failed',
-              whatsapp_error_message: err.message
+              whatsapp_error_message: errMsg
             })
             .eq("id", data.id);
 
@@ -265,7 +267,7 @@ export async function POST(req: NextRequest) {
               message_id: `failed-${Date.now()}`, // Generate a unique ID for failed messages
               phone_number: phone,
               status: 'failed',
-              error_message: err.message,
+              error_message: errMsg,
               message_text: message
             });
         }
@@ -292,8 +294,8 @@ export async function DELETE(req: NextRequest) {
 
 const patchSchema = z.object({
   id: z.string().uuid(),
-  action: z.enum(["call", "retry_sms", "retry_whatsapp"]).optional(),
-  status: z.enum(["waiting", "notified", "seated", "cancelled"]).optional(),
+  action: z.enum(["call", "retry_sms", "retry_whatsapp", "archive"]).optional(),
+  status: z.enum(["waiting", "notified", "seated", "cancelled", "archived"]).optional(),
 });
 
 export async function PATCH(req: NextRequest) {
@@ -317,6 +319,8 @@ export async function PATCH(req: NextRequest) {
   let payload: Record<string, unknown> = {};
   if (action === "call") {
     payload = { status: "notified", notified_at: new Date().toISOString() };
+  } else if (action === "archive") {
+    payload = { status: "archived" };
   } else if (status) {
     payload = { status };
   } else {
@@ -331,11 +335,44 @@ export async function PATCH(req: NextRequest) {
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
-  // Recalculate ETA for all entries in this waitlist when status changes
-  if (data?.waitlist_id && (action === "call" || status)) {
+  // Recalculate ETA for all entries in this waitlist when status changes (including archive)
+  if (data?.waitlist_id && (action === "call" || action === "archive" || status)) {
     const admin = getAdminClient();
     await calculateAndUpdateETA(admin, data.waitlist_id);
   }
+
+  return NextResponse.json({ entry: data });
+}
+
+const putSchema = z.object({
+  id: z.string().uuid(),
+  customer_name: z.string().nullable().optional(),
+  phone: z.string().nullable().optional(),
+  party_size: z.number().nullable().optional(),
+  seating_preference: z.string().nullable().optional(),
+});
+
+export async function PUT(req: NextRequest) {
+  const json = await req.json();
+  const parse = putSchema.safeParse(json);
+  if (!parse.success) return NextResponse.json({ error: parse.error.flatten() }, { status: 400 });
+
+  const supabase = await createRouteClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { id, ...updates } = parse.data;
+
+  const { data, error } = await supabase
+    .from("waitlist_entries")
+    .update(updates)
+    .eq("id", id)
+    .select("id, customer_name, phone, party_size, seating_preference")
+    .single();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
   return NextResponse.json({ entry: data });
 }
@@ -438,15 +475,16 @@ async function handleRetry(entryId: string, action: "retry_sms" | "retry_whatsap
     // Update with failed status
     const updateField = action === 'retry_sms' ? 'sms_error_message' : 'whatsapp_error_message';
     const statusField = action === 'retry_sms' ? 'sms_status' : 'whatsapp_status';
+    const message = error instanceof Error ? error.message : String(error);
 
     await admin
       .from("waitlist_entries")
       .update({
         [statusField]: 'failed',
-        [updateField]: error.message
+        [updateField]: message
       })
       .eq("id", entryId);
 
-    return NextResponse.json({ error: `Failed to resend ${action === 'retry_sms' ? 'SMS' : 'WhatsApp'}: ${error.message}` }, { status: 500 });
+    return NextResponse.json({ error: `Failed to resend ${action === 'retry_sms' ? 'SMS' : 'WhatsApp'}: ${message}` }, { status: 500 });
   }
 }

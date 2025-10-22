@@ -11,6 +11,7 @@ export async function GET(req: Request) {
   let q = supabase
     .from("waitlist_entries")
     .select(selectFields)
+    .neq("status", "archived") // exclude archived entries
     .not("ticket_number", "is", null); // show only current-cycle entries
 
   if (waitlistId) {
@@ -25,6 +26,7 @@ export async function GET(req: Request) {
     q = supabase
       .from("waitlist_entries")
       .select(selectFields)
+      .neq("status", "archived")
       .not("ticket_number", "is", null);
 
     if (waitlistId) {
