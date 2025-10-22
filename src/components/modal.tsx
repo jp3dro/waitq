@@ -1,11 +1,12 @@
 "use client";
 import { useEffect } from "react";
 
-export default function Modal({ open, onClose, title, children }: {
+export default function Modal({ open, onClose, title, children, footer }: {
   open: boolean;
   onClose: () => void;
   title?: string;
   children: React.ReactNode;
+  footer?: React.ReactNode;
 }) {
   useEffect(() => {
     function onEsc(e: KeyboardEvent) {
@@ -20,14 +21,19 @@ export default function Modal({ open, onClose, title, children }: {
     <div className="fixed inset-0 z-50">
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
       <div className="absolute inset-0 flex items-center justify-center p-4">
-        <div className="w-full max-w-lg rounded-xl bg-white shadow-xl ring-1 ring-black/5">
-          <div className="flex items-center justify-between px-6 py-4 border-b border-default">
-            <h3 className="text-base font-semibold text-neutral-900">{title}</h3>
-            <button onClick={onClose} className="text-neutral-500 hover:text-neutral-700">✕</button>
+        <div className="w-full max-w-lg rounded-xl bg-card text-card-foreground shadow-xl ring-1 ring-border">
+          <div className="flex items-center justify-between px-4 h-12 border-b border-border">
+            <h3 className="text-base font-semibold">{title}</h3>
+            <button onClick={onClose} className="text-muted-foreground hover:opacity-90">✕</button>
           </div>
-          <div className="p-6">
+          <div className="p-4">
             {children}
           </div>
+          {footer && (
+            <div className="flex items-center justify-end gap-3 px-4 h-12 border-t border-border">
+              {footer}
+            </div>
+          )}
         </div>
       </div>
     </div>

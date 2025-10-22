@@ -115,21 +115,21 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
   };
 
   return (
-    <div className="bg-white ring-1 ring-black/5 rounded-xl">
+    <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl">
       <div className="p-6 space-y-4">
         <div className="flex items-center justify-between gap-3">
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search name or phone..."
-            className="w-full sm:w-80 rounded-md border px-3 py-2 text-sm ring-1 ring-inset ring-neutral-300 focus:outline-none focus:ring-2 focus:ring-neutral-800"
+            className="w-full sm:w-80 rounded-md border border-border px-3 py-2 text-sm ring-1 ring-inset ring-border focus:outline-none focus:ring-2 focus:ring-ring bg-card"
           />
           <div className="flex items-center gap-2 text-sm">
-            <span className="text-neutral-600">Sort:</span>
+            <span className="text-muted-foreground">Sort:</span>
             <select
               value={sortKey}
               onChange={(e) => setSortKey(e.target.value as "lastSeen" | "visits" | "served")}
-              className="rounded-md border px-2 py-1.5 ring-1 ring-inset ring-neutral-300"
+              className="rounded-md border border-border px-2 py-1.5 ring-1 ring-inset ring-border bg-card"
             >
               <option value="lastSeen">Last seen</option>
               <option value="visits">Visits</option>
@@ -140,20 +140,20 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-neutral-50 sticky top-0 z-10">
+            <thead className="bg-muted sticky top-0 z-10">
               <tr>
-                <th className="text-left font-medium text-neutral-700 px-4 py-2">Name</th>
-                <th className="text-left font-medium text-neutral-700 px-4 py-2">Phone</th>
-                <th className="text-left font-medium text-neutral-700 px-4 py-2">Visits</th>
-                <th className="text-left font-medium text-neutral-700 px-4 py-2">Served</th>
-                <th className="text-left font-medium text-neutral-700 px-4 py-2">First seen</th>
-                <th className="text-left font-medium text-neutral-700 px-4 py-2">Last seen</th>
-                <th className="text-left font-medium text-neutral-700 px-4 py-2"></th>
+                <th className="text-left font-medium text-foreground px-4 py-2">Name</th>
+                <th className="text-left font-medium text-foreground px-4 py-2">Phone</th>
+                <th className="text-left font-medium text-foreground px-4 py-2">Visits</th>
+                <th className="text-left font-medium text-foreground px-4 py-2">Served</th>
+                <th className="text-left font-medium text-foreground px-4 py-2">First seen</th>
+                <th className="text-left font-medium text-foreground px-4 py-2">Last seen</th>
+                <th className="text-left font-medium text-foreground px-4 py-2"></th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((c) => (
-                <tr key={c.key} className="border-t hover:bg-neutral-50 odd:bg-neutral-50/30">
+                <tr key={c.key} className="border-t border-border hover:bg-muted odd:bg-muted/50">
                   <td className="px-4 py-2">{c.name || "—"}</td>
                   <td className="px-4 py-2">{c.phone || "—"}</td>
                   <td className="px-4 py-2">{c.visits}</td>
@@ -164,7 +164,7 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
                     {(c.phone || "").replace(/\D+/g, "") ? (
                       <button
                         onClick={(ev) => openMenu(c, ev.currentTarget as HTMLElement)}
-                        className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-neutral-300 bg-white hover:bg-neutral-50 shadow-sm"
+                        className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-border bg-card hover:bg-muted shadow-sm"
                       >
                         ⋯
                       </button>
@@ -174,7 +174,7 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
               ))}
               {filtered.length === 0 ? (
                 <tr>
-                  <td className="px-4 py-6 text-neutral-600" colSpan={7}>No customers found</td>
+                  <td className="px-4 py-6 text-muted-foreground" colSpan={7}>No customers found</td>
                 </tr>
               ) : null}
             </tbody>
@@ -186,29 +186,51 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
           return createPortal(
             <div className="fixed inset-0 z-50" onClick={closeMenu}>
               <div
-                className="absolute w-48 rounded-md bg-white text-sm shadow-lg ring-1 ring-black/5 py-1"
+                className="absolute w-48 rounded-md bg-card text-card-foreground text-sm shadow-lg ring-1 ring-border py-1"
                 style={{ top: menuState.top, left: menuState.left }}
                 onClick={(e) => e.stopPropagation()}
               >
-                <button onClick={() => onEdit(me)} className="w-full text-left px-3 py-2 hover:bg-neutral-50 text-blue-700 flex items-center gap-2">
+                <button onClick={() => onEdit(me)} className="w-full text-left px-3 py-2 hover:bg-muted text-blue-700 flex items-center gap-2">
                   <span>✏️</span> Edit details
                 </button>
-                <div className="border-t my-1"></div>
-                <button onClick={() => onDelete(me)} className="w-full text-left px-3 py-2 hover:bg-neutral-50 text-red-700">Delete customer</button>
+                <div className="border-t border-border my-1"></div>
+                <button onClick={() => onDelete(me)} className="w-full text-left px-3 py-2 hover:bg-muted text-red-700">Delete customer</button>
               </div>
             </div>,
             document.body
           );
         })()}
       </div>
-      <Modal open={!!editing?.open} onClose={() => setEditing(null)} title="Edit customer">
+      <Modal
+        open={!!editing?.open}
+        onClose={() => setEditing(null)}
+        title="Edit customer"
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setEditing(null)}
+              className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-border hover:bg-muted"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={saveEdit}
+              disabled={isPending}
+              className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-90 disabled:opacity-50"
+            >
+              {isPending ? "Saving…" : "Save"}
+            </button>
+          </>
+        }
+      >
         <div className="grid gap-4">
           <div className="grid gap-1">
             <label className="text-sm font-medium">Name</label>
             <input
               value={editing?.name || ""}
               onChange={(e) => setEditing((prev) => (prev ? { ...prev, name: e.target.value } : prev))}
-              className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm"
+              className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm bg-card"
             />
           </div>
           <div className="grid gap-1">
@@ -216,24 +238,8 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
             <input
               value={editing?.phone || ""}
               onChange={(e) => setEditing((prev) => (prev ? { ...prev, phone: e.target.value } : prev))}
-              className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm"
+              className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm bg-card"
             />
-          </div>
-          <div className="flex items-center gap-3 pt-2">
-            <button
-              onClick={saveEdit}
-              disabled={isPending}
-              className="inline-flex items-center rounded-md bg-black px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-neutral-800 disabled:opacity-50"
-            >
-              {isPending ? "Saving…" : "Save"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setEditing(null)}
-              className="inline-flex items-center rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm hover:bg-neutral-50"
-            >
-              Cancel
-            </button>
           </div>
         </div>
       </Modal>

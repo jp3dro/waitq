@@ -13,6 +13,8 @@
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.57.4",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "libphonenumber-js": "^1.10.56",
     "lucide-react": "^0.544.0",
     "nanoid": "^5.1.5",
@@ -21,10 +23,10 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-hook-form": "^7.63.0",
-    "react-hot-toast": "^2.6.0",
     "react-phone-number-input": "^3.4.12",
+    "sonner": "^2.0.7",
     "stripe": "^18.5.0",
-    
+    "tailwind-merge": "^3.3.1",
     "zod": "^4.1.11",
     "zustand": "^5.0.8"
   },
@@ -42,5 +44,6 @@
     "tailwindcss": "^4",
     "tsx": "^4.20.5",
     "typescript": "^5"
-  }
+  },
+  "packageManager": "pnpm@9.15.4+sha512.b2dc20e2fc72b3e18848459b37359a32064663e5627a51e4c74b2c29dd8e8e0491483c3abb40789cfd578bf362fb6ba8261b05f0387d76792ed6e23ea3b1b6a0"
 }

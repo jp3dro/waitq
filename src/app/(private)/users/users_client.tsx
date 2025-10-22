@@ -64,42 +64,48 @@ export default function UsersClient() {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <button type="button" className="h-9 rounded-md bg-black text-white text-sm px-3" onClick={() => setInvOpen(true)}>Invite user</button>
+        <button type="button" className="h-9 rounded-md bg-primary text-primary-foreground text-sm px-3 hover:opacity-90" onClick={() => setInvOpen(true)}>Invite user</button>
       </div>
-      <ul className="mt-3 divide-y divide-neutral-200">
+      <ul className="mt-3 divide-y divide-border">
         {grouped.map((m) => (
           <li key={m.id} className="py-3 flex items-center justify-between">
             <div>
               <div className="text-sm font-medium">{m.user_id}</div>
-              <div className="text-xs text-neutral-600">{m.role}{ownerId && m.user_id === ownerId ? ' (owner)' : ''}</div>
+              <div className="text-xs text-muted-foreground">{m.role}{ownerId && m.user_id === ownerId ? ' (owner)' : ''}</div>
             </div>
             <div>
               {m.role === 'admin' || (ownerId && m.user_id === ownerId) ? (
-                <span className="text-xs text-neutral-500">Cannot remove</span>
+                <span className="text-xs text-muted-foreground">Cannot remove</span>
               ) : (
-                <button className="text-sm px-2 h-8 rounded-md border border-neutral-200" onClick={() => removeMember(m.id, m.user_id, m.role)}>More actions ▾</button>
+                <button className="text-sm px-2 h-8 rounded-md border border-border" onClick={() => removeMember(m.id, m.user_id, m.role)}>More actions ▾</button>
               )}
             </div>
           </li>
         ))}
       </ul>
 
-      <Modal open={invOpen} onClose={() => setInvOpen(false)} title="Invite user">
+      <Modal
+        open={invOpen}
+        onClose={() => setInvOpen(false)}
+        title="Invite user"
+        footer={
+          <>
+            <button type="button" className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-border hover:bg-muted" onClick={() => setInvOpen(false)}>Cancel</button>
+            <button type="button" className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-90" onClick={invite}>Invite</button>
+          </>
+        }
+      >
         <div className="grid gap-3">
           <div>
-            <label className="text-sm">Email</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 h-9 rounded-md border border-neutral-200 px-3 text-sm w-full" placeholder="user@example.com" />
+            <label className="text-sm font-medium">Email</label>
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm" placeholder="user@example.com" />
           </div>
           <div>
-            <label className="text-sm">Role</label>
-            <select value={role} onChange={(e) => setRole(e.target.value as any)} className="mt-1 h-9 rounded-md border border-neutral-200 px-2 text-sm w-full">
+            <label className="text-sm font-medium">Role</label>
+            <select value={role} onChange={(e) => setRole(e.target.value as any)} className="mt-1 block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring pl-3 pr-10 py-2 text-sm">
               <option value="manager">Manager</option>
               <option value="staff">Staff</option>
             </select>
-          </div>
-          <div className="pt-2 flex items-center justify-end gap-2">
-            <button type="button" className="h-9 rounded-md border border-neutral-200 text-sm px-3" onClick={() => setInvOpen(false)}>Cancel</button>
-            <button type="button" className="h-9 rounded-md bg-black text-white text-sm px-3" onClick={invite}>Invite</button>
           </div>
         </div>
       </Modal>

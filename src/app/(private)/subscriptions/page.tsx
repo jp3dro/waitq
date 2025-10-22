@@ -49,17 +49,17 @@ export default async function SubscriptionPage() {
           {orderedPlans.map((plan) => {
             const isCurrentPlan = plan.id === currentPlanId;
             return (
-              <div key={plan.id} className={`bg-white ring-1 rounded-xl p-6 flex flex-col justify-between relative ${
+              <div key={plan.id} className={`bg-card text-card-foreground ring-1 rounded-xl p-6 flex flex-col justify-between relative ${
                 isCurrentPlan
-                  ? 'ring-[#ea580c] bg-orange-50/50'
-                  : 'ring-black/5'
+                  ? 'ring-primary/80 bg-accent/10'
+                  : 'ring-border'
               }`}>
-              <div className="flex-grow">
+              <div className="grow">
                 <div className="mb-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-xl font-semibold">{plan.name}</h3>
                     {isCurrentPlan && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#ea580c] text-white">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary text-primary-foreground">
                         Current Plan
                       </span>
                     )}
@@ -68,7 +68,7 @@ export default async function SubscriptionPage() {
                     {formatEUR(plan.priceMonthlyEUR)} <span className="text-sm font-normal">/ month</span>
                   </div>
                 </div>
-                <ul className="text-sm text-neutral-700 space-y-1">
+                <ul className="text-sm text-foreground/80 space-y-1">
                 <li>{plan.limits.locations} locations</li>
                 <li>{plan.limits.users} users</li>
                 <li>
@@ -85,7 +85,7 @@ export default async function SubscriptionPage() {
                   isCurrentPlan ? null : (
                     <Link
                       href="/dashboard"
-                      className="inline-flex items-center justify-center w-full rounded-md bg-neutral-900 px-4 py-2 text-white hover:bg-neutral-800"
+                      className="inline-flex items-center justify-center w-full rounded-md bg-primary px-4 py-2 text-primary-foreground hover:opacity-90"
                     >
                       Included
                     </Link>
@@ -94,8 +94,8 @@ export default async function SubscriptionPage() {
                   <SubscribeButton
                     lookupKey={plan.stripe.priceLookupKeyMonthly}
                     planId={plan.id}
-                    className={`inline-flex items-center justify-center w-full rounded-md px-4 py-2 text-white ${
-                      isCurrentPlan ? 'bg-[#ea580c] hover:bg-[#dc2626]' : 'bg-neutral-900 hover:bg-neutral-800'
+                    className={`inline-flex items-center justify-center w-full rounded-md px-4 py-2 ${
+                      isCurrentPlan ? 'bg-primary text-primary-foreground hover:opacity-90' : 'bg-primary text-primary-foreground hover:opacity-90'
                     }`}
                   >
                     {isCurrentPlan ? 'Manage' : 'Subscribe'}

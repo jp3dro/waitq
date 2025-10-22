@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import PhoneInput from "react-phone-number-input";
 import 'react-phone-number-input/style.css';
 import type { Country } from "react-phone-number-input";
+import { toastManager } from "@/hooks/use-toast";
 
 type FormValues = { phone: string; customerName: string; waitlistId: string; sendSms: boolean; sendWhatsapp: boolean; partySize?: number; seatingPreference?: string };
 
@@ -37,6 +38,11 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
         body: JSON.stringify(values),
       });
       if (res.ok) {
+        toastManager.add({
+          title: "Success",
+          description: "Customer added to waitlist successfully",
+          type: "success",
+        });
         reset({ phone: "", customerName: "", waitlistId: values.waitlistId, sendSms: false, sendWhatsapp: false, partySize: undefined, seatingPreference: undefined });
         setMessage("Added and message sent (if configured)");
         // Local optimistic refresh and broadcast
@@ -88,7 +94,7 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
         {lockWaitlist ? null : (
           <div className="grid gap-1">
             <label className="text-sm font-medium">Waitlist</label>
-            <select disabled={!!lockWaitlist} className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm disabled:opacity-50" {...register("waitlistId", { required: true })}>
+            <select disabled={!!lockWaitlist} className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm disabled:opacity-50" {...register("waitlistId", { required: true })}>
               {waitlists.map((w) => (
                 <option key={w.id} value={w.id}>{w.name}</option>
               ))}
@@ -97,13 +103,13 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
         )}
         <div className="grid gap-1">
           <label className="text-sm font-medium">Customer name</label>
-          <input className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm" placeholder="Full name" {...register("customerName", { required: true })}/>
+          <input className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm" placeholder="Full name" {...register("customerName", { required: true })}/>
         </div>
         {(waitlists.find(w => w.id === watch("waitlistId"))?.list_type || "restaurants") === "restaurants" ? (
           <>
             <div className="grid gap-1">
               <label className="text-sm font-medium">Number of people</label>
-              <input type="number" min={1} className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm" placeholder="e.g., 2" {...register("partySize", {
+              <input type="number" min={1} className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm" placeholder="e.g., 2" {...register("partySize", {
                 setValueAs: (value) => value === "" ? undefined : parseInt(value, 10) || undefined
               })} />
             </div>
@@ -118,7 +124,7 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
                         type="button"
                         key={s}
                         onClick={() => setValue("seatingPreference", s)}
-                        className={`inline-flex items-center rounded-full px-3 py-1 text-xs ring-1 ring-inset transition ${selected ? "bg-black text-white ring-black" : "bg-white text-neutral-900 ring-neutral-300 hover:bg-neutral-50"}`}
+                      className={`inline-flex items-center rounded-full px-3 py-1 text-xs ring-1 ring-inset transition ${selected ? "bg-primary text-primary-foreground ring-primary" : "bg-card text-foreground ring-border hover:bg-muted"}`}
                       >
                         {s}
                       </button>
@@ -136,25 +142,25 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
             defaultCountry={(businessCountry ?? "PT") as Country}
             value={watch("phone")}
             onChange={(value) => setValue("phone", value || "")}
-            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm"
+            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm"
           />
         </div>
         <div className="flex items-center gap-4">
           <label className="text-sm font-medium">Notify via</label>
           <div className="flex items-center gap-2">
-            <input id="send-sms" type="checkbox" className="h-4 w-4 rounded border-neutral-300 text-black focus:ring-[#FF9500]" {...register("sendSms")} />
+            <input id="send-sms" type="checkbox" className="h-4 w-4 rounded border-border text-primary focus:ring-ring" {...register("sendSms")} />
             <label htmlFor="send-sms" className="text-sm">SMS</label>
           </div>
           <div className="flex items-center gap-2">
-            <input id="send-wa" type="checkbox" className="h-4 w-4 rounded border-neutral-300 text-black focus:ring-[#FF9500]" {...register("sendWhatsapp")} />
+            <input id="send-wa" type="checkbox" className="h-4 w-4 rounded border-border text-primary focus:ring-ring" {...register("sendWhatsapp")} />
             <label htmlFor="send-wa" className="text-sm">WhatsApp</label>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button disabled={isPending} className="inline-flex items-center rounded-md bg-black px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-neutral-800 disabled:opacity-50">
+          <button disabled={isPending} className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-90 disabled:opacity-50">
             {isPending ? "Adding…" : "Add"}
           </button>
-          {message ? <p className="text-sm text-neutral-600">{message}</p> : null}
+          {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
         </div>
       </form>
     </div>

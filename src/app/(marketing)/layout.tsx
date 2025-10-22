@@ -7,43 +7,43 @@ export default function MarketingLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-dvh flex flex-col">
+    <div className="min-h-dvh flex flex-col bg-background text-foreground">
       {/* Shared top navigation */}
       <Nav />
       <div className="flex-1">
         {children}
       </div>
-      <footer className="border-t">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8 py-10 text-sm text-neutral-600 grid gap-6 md:grid-cols-4">
+      <footer className="border-t border-border">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8 py-10 text-sm text-muted-foreground grid gap-6 md:grid-cols-4">
           <div>
-            <p className="font-semibold text-neutral-900">WaitQ</p>
+            <p className="font-semibold text-foreground">WaitQ</p>
             <p className="mt-2">© {new Date().getFullYear()} WaitQ</p>
           </div>
           <div>
-            <p className="font-semibold text-neutral-900">Use cases</p>
+            <p className="font-semibold text-foreground">Use cases</p>
             <ul className="mt-2 space-y-2">
-              <li><Link href="/use-cases/barber-shop" className="hover:text-black">Barber shops</Link></li>
-              <li><Link href="/use-cases/beauty-salons" className="hover:text-black">Beauty salons</Link></li>
-              <li><Link href="/use-cases/restaurants" className="hover:text-black">Restaurants</Link></li>
-              <li><Link href="/use-cases/massages" className="hover:text-black">Massages</Link></li>
-              <li><Link href="/use-cases/clinics-and-medical" className="hover:text-black">Clinics & medical</Link></li>
-              <li><Link href="/use-cases/warehouse-and-transport" className="hover:text-black">Warehouse & transport</Link></li>
-              <li><Link href="/use-cases/hotels-and-accommodations" className="hover:text-black">Hotels & accommodations</Link></li>
-              <li><Link href="/use-cases/public-services" className="hover:text-black">Public services</Link></li>
+              <li><Link href="/use-cases/barber-shop" className="hover:text-foreground">Barber shops</Link></li>
+              <li><Link href="/use-cases/beauty-salons" className="hover:text-foreground">Beauty salons</Link></li>
+              <li><Link href="/use-cases/restaurants" className="hover:text-foreground">Restaurants</Link></li>
+              <li><Link href="/use-cases/massages" className="hover:text-foreground">Massages</Link></li>
+              <li><Link href="/use-cases/clinics-and-medical" className="hover:text-foreground">Clinics & medical</Link></li>
+              <li><Link href="/use-cases/warehouse-and-transport" className="hover:text-foreground">Warehouse & transport</Link></li>
+              <li><Link href="/use-cases/hotels-and-accommodations" className="hover:text-foreground">Hotels & accommodations</Link></li>
+              <li><Link href="/use-cases/public-services" className="hover:text-foreground">Public services</Link></li>
             </ul>
           </div>
           <div>
-            <p className="font-semibold text-neutral-900">Company</p>
+            <p className="font-semibold text-foreground">Company</p>
             <ul className="mt-2 space-y-2">
-              <li><Link href="/pricing" className="hover:text-black">Pricing</Link></li>
-              <li><Link href="/terms" className="hover:text-black">Terms</Link></li>
-              <li><Link href="/contact" className="hover:text-black">Contact</Link></li>
+              <li><Link href="/pricing" className="hover:text-foreground">Pricing</Link></li>
+              <li><Link href="/terms" className="hover:text-foreground">Terms</Link></li>
+              <li><Link href="/contact" className="hover:text-foreground">Contact</Link></li>
             </ul>
           </div>
           <div>
-            <p className="font-semibold text-neutral-900">Account</p>
+            <p className="font-semibold text-foreground">Account</p>
             <ul className="mt-2 space-y-2">
-              <li><Link href="/login" className="hover:text-black">Sign in</Link></li>
+              <li><Link href="/login" className="hover:text-foreground">Sign in</Link></li>
             </ul>
           </div>
         </div>

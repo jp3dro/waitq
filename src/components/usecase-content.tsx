@@ -3,8 +3,8 @@ export default function UseCaseContent({ title }: { title: string }) {
     <main className="py-16">
       <div className="mx-auto max-w-3xl px-6 lg:px-8">
         <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
-        <div className="mt-6 grid gap-4 text-sm text-neutral-700">
-          <p className="text-neutral-900 font-medium">Trim Client Wait Time and Streamline Operations</p>
+        <div className="mt-6 grid gap-4 text-sm text-neutral-700 dark:text-neutral-300">
+          <p className="text-neutral-900 dark:text-neutral-100 font-medium">Trim Client Wait Time and Streamline Operations</p>
           <p>Let Your Clients Join the Waitlist Remotely</p>
           <p>Let your barber shop&apos;s clients add themselves to the waitlist from wherever they are, whether it&apos;s at home or using a tablet in your reception area. This convenience saves both you and your clients valuable time.</p>
           <p>Free Up Lobby Space</p>
@@ -18,7 +18,7 @@ export default function UseCaseContent({ title }: { title: string }) {
         </div>
         <div className="mt-10">
           <h2 className="text-base font-semibold">The problems you may be facing</h2>
-          <ul className="mt-3 list-disc pl-6 text-sm text-neutral-700">
+          <ul className="mt-3 list-disc pl-6 text-sm text-neutral-700 dark:text-neutral-300">
             <li>Reception work and waiting management are cumbersome</li>
             <li>The burden of reception work</li>
             <li>I don&apos;t know the waiting time, it leads to dissatisfaction from customers</li>

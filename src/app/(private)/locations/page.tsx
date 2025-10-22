@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import Modal from "@/components/modal";
-import toast from "react-hot-toast";
+import { toastManager } from "@/hooks/use-toast";
 
 type Location = { id: string; name: string; phone: string | null; address: string | null; city: string | null };
 
@@ -91,7 +91,11 @@ export default function LocationsPage() {
       // If no fields changed, just close modal and show success
       if (Object.keys(updates).length === 0) {
         closeEditModal();
-        toast.success("Location updated successfully!");
+        toastManager.add({
+          title: "Success",
+          description: "Location updated successfully!",
+          type: "success",
+        });
         return;
       }
 
@@ -104,7 +108,11 @@ export default function LocationsPage() {
       if (res.ok) {
         closeEditModal();
         await load();
-        toast.success("Location updated successfully!");
+        toastManager.add({
+          title: "Success",
+          description: "Location updated successfully!",
+          type: "success",
+        });
       } else {
         setEditMessage(j?.error ?? "Failed to update");
       }
@@ -133,30 +141,30 @@ export default function LocationsPage() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Locations</h1>
           </div>
-          <button onClick={() => setOpenCreate(true)} className="inline-flex items-center rounded-md bg-black px-4 py-2 text-sm font-medium text-white shadow-sm">New location</button>
+          <button onClick={() => setOpenCreate(true)} className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-90">New location</button>
         </div>
 
-        <div className="bg-white ring-1 ring-black/5 rounded-xl p-6 space-y-4">
-          {msg ? <p className="text-sm text-red-700">{msg}</p> : null}
+        <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-6 space-y-4">
+          {msg ? <p className="text-sm text-destructive">{msg}</p> : null}
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {locations.map((l) => (
-              <div key={l.id} className="bg-white ring-1 ring-black/5 rounded-xl shadow-sm p-5 hover:shadow hover:bg-neutral-50 transition">
+              <div key={l.id} className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-5 hover:shadow hover:bg-muted transition">
                 <div className="space-y-3">
                   <div>
                     <h3 className="font-medium">{l.name}</h3>
                   </div>
                   {l.phone && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <svg className="mr-2 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <svg className="mr-2 h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
                       </svg>
                       {l.phone}
                     </div>
                   )}
                   {l.address && (
-                    <div className="flex items-start text-sm text-gray-600">
-                      <svg className="mr-2 h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                    <div className="flex items-start text-sm text-muted-foreground">
+                      <svg className="mr-2 h-4 w-4 text-muted-foreground mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.458-7.5 11.458s-7.5-4.316-7.5-11.458a7.5 7.5 0 1115 0z" />
                       </svg>
@@ -164,17 +172,17 @@ export default function LocationsPage() {
                     </div>
                   )}
                   {l.city && (
-                    <div className="flex items-center text-sm text-gray-600 ml-6">
+                    <div className="flex items-center text-sm text-muted-foreground ml-6">
                       <span>{l.city}</span>
                     </div>
                   )}
                 </div>
-                <div className="mt-4 flex items-center justify-between pt-3 border-t border-neutral-100">
-                  <button onClick={() => openEditModal(l)} className="inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium ring-1 ring-inset ring-default hover:bg-neutral-50 transition-colors">
+                <div className="mt-4 flex items-center justify-between pt-3 border-t border-border">
+                  <button onClick={() => openEditModal(l)} className="inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium ring-1 ring-inset ring-border hover:bg-muted transition-colors">
                     Edit
                   </button>
                   {canDelete && (
-                    <button disabled={isPending} onClick={() => remove(l.id)} className="inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium ring-1 ring-inset ring-red-300 text-red-700 hover:bg-red-50 disabled:opacity-50 transition-colors">
+                    <button disabled={isPending} onClick={() => remove(l.id)} className="inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium ring-1 ring-inset ring-destructive/40 text-destructive hover:bg-destructive/10 disabled:opacity-50 transition-colors">
                       Delete
                     </button>
                   )}
@@ -185,14 +193,24 @@ export default function LocationsPage() {
         </div>
 
     {/* Create Modal */}
-    <Modal open={openCreate} onClose={() => setOpenCreate(false)} title="New location">
+    <Modal
+      open={openCreate}
+      onClose={() => setOpenCreate(false)}
+      title="New location"
+      footer={
+        <>
+          <button onClick={() => setOpenCreate(false)} className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-border hover:bg-muted">Cancel</button>
+          <button onClick={create} disabled={isPending || !form.name.trim()} className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground shadow-sm disabled:opacity-50 hover:opacity-90">Create</button>
+        </>
+      }
+    >
       <div className="grid gap-4">
         <div className="grid gap-1">
           <label className="text-sm font-medium">Name</label>
           <input
             value={form.name}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-default focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm"
+            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm"
           />
         </div>
         <div className="grid gap-1">
@@ -200,7 +218,7 @@ export default function LocationsPage() {
           <input
             value={form.phone}
             onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-default focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm"
+            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm"
           />
         </div>
         <div className="grid gap-1">
@@ -208,7 +226,7 @@ export default function LocationsPage() {
           <input
             value={form.address}
             onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
-            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-default focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm"
+            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm"
           />
         </div>
         <div className="grid gap-1">
@@ -216,25 +234,31 @@ export default function LocationsPage() {
           <input
             value={form.city}
             onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
-            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-default focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm"
+            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm"
           />
-        </div>
-        <div className="flex justify-between">
-          <button onClick={create} disabled={isPending || !form.name.trim()} className="inline-flex items-center rounded-md bg-black px-3 py-1.5 text-sm font-medium text-white shadow-sm disabled:opacity-50">Create</button>
-          <button onClick={() => setOpenCreate(false)} className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-default hover:bg-neutral-50">Cancel</button>
         </div>
       </div>
     </Modal>
 
     {/* Edit Modal */}
-    <Modal open={!!edit} onClose={closeEditModal} title="Edit location">
+    <Modal
+      open={!!edit}
+      onClose={closeEditModal}
+      title="Edit location"
+      footer={
+        <>
+          <button onClick={closeEditModal} className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-border hover:bg-muted">Cancel</button>
+          <button onClick={saveEdit} disabled={isPending} className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground shadow-sm disabled:opacity-50 hover:opacity-90">Save changes</button>
+        </>
+      }
+    >
       <div className="grid gap-4">
         <div className="grid gap-1">
           <label className="text-sm font-medium">Name</label>
           <input
             value={editForm.name}
             onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
-            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-default focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm"
+            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm"
           />
         </div>
         <div className="grid gap-1">
@@ -242,7 +266,7 @@ export default function LocationsPage() {
           <input
             value={editForm.phone}
             onChange={(e) => setEditForm((f) => ({ ...f, phone: e.target.value }))}
-            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-default focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm"
+            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm"
           />
         </div>
         <div className="grid gap-1">
@@ -250,7 +274,7 @@ export default function LocationsPage() {
           <input
             value={editForm.address}
             onChange={(e) => setEditForm((f) => ({ ...f, address: e.target.value }))}
-            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-default focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm"
+            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm"
           />
         </div>
         <div className="grid gap-1">
@@ -258,14 +282,10 @@ export default function LocationsPage() {
           <input
             value={editForm.city}
             onChange={(e) => setEditForm((f) => ({ ...f, city: e.target.value }))}
-            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-default focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm"
+            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm"
           />
         </div>
-        <div className="flex justify-between">
-          <button onClick={saveEdit} disabled={isPending} className="inline-flex items-center rounded-md bg-black px-3 py-1.5 text-sm font-medium text-white shadow-sm disabled:opacity-50">Save changes</button>
-          <button onClick={closeEditModal} className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-default hover:bg-neutral-50">Cancel</button>
-          {editMessage ? <p className="mt-2 text-sm text-red-700">{editMessage}</p> : null}
-        </div>
+        {editMessage ? <p className="text-sm text-destructive">{editMessage}</p> : null}
       </div>
     </Modal>
       </div>

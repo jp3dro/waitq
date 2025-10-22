@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Modal from "@/components/modal";
 import { createPortal } from "react-dom";
+import { toastManager } from "@/hooks/use-toast";
 
 type Entry = {
   id: string;
@@ -285,7 +286,18 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
         body: JSON.stringify({ id, action: "archive" }),
       });
       if (res.ok) {
+        toastManager.add({
+          title: "Success",
+          description: "Customer archived successfully",
+          type: "success",
+        });
         await load(true);
+      } else {
+        toastManager.add({
+          title: "Error",
+          description: "Failed to archive customer",
+          type: "error",
+        });
       }
     });
   };
@@ -324,15 +336,39 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
       });
 
       if (res.ok) {
+        toastManager.add({
+          title: "Success",
+          description: "Customer updated successfully",
+          type: "success",
+        });
         setEditingId(null);
         await load(true);
+      } else {
+        toastManager.add({
+          title: "Error",
+          description: "Failed to update customer",
+          type: "error",
+        });
       }
     });
   };
 
   const remove = (id: string) => {
     startTransition(async () => {
-      await fetch(`/api/waitlist?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      const res = await fetch(`/api/waitlist?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      if (res.ok) {
+        toastManager.add({
+          title: "Success",
+          description: "Customer removed from waitlist",
+          type: "success",
+        });
+      } else {
+        toastManager.add({
+          title: "Error",
+          description: "Failed to remove customer",
+          type: "error",
+        });
+      }
       await load(true);
     });
   };
@@ -364,6 +400,11 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
         body: JSON.stringify({ id, action: "call" }),
       });
       if (res.ok) {
+        toastManager.add({
+          title: "Success",
+          description: "Customer called successfully",
+          type: "success",
+        });
         // Local and cross-tab refresh
         try { window.dispatchEvent(new CustomEvent('wl:refresh', { detail: { waitlistId } })); } catch {}
         try {
@@ -386,42 +427,48 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
           }
         } catch {}
         await load(true);
+      } else {
+        toastManager.add({
+          title: "Error",
+          description: "Failed to call customer",
+          type: "error",
+        });
       }
     });
   };
 
   if (loading) return (
-    <div className="bg-white ring-1 ring-black/5 rounded-xl p-6">
-      <p className="text-sm text-neutral-600">Loading…</p>
+    <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-6">
+      <p className="text-sm text-muted-foreground">Loading…</p>
     </div>
   );
 
   if (!loading && entries.length === 0) return (
-    <div className="bg-white ring-1 ring-black/5 rounded-xl p-10 text-center">
+    <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-10 text-center">
       <h2 className="text-base font-semibold">No entries yet</h2>
-      <p className="mt-1 text-sm text-neutral-600">Add your first guest to start the queue.</p>
+      <p className="mt-1 text-sm text-muted-foreground">Add your first guest to start the queue.</p>
     </div>
   );
 
   return (
-    <div className="bg-white ring-1 ring-black/5 rounded-xl" ref={tableRef}>
+    <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl" ref={tableRef}>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-neutral-50 sticky top-0 z-10">
+          <thead className="bg-muted sticky top-0 z-10">
             <tr>
-              <th className="text-left font-medium text-neutral-700 px-4 py-2">#</th>
-              <th className="text-left font-medium text-neutral-700 px-4 py-2">Name</th>
-              <th className="text-left font-medium text-neutral-700 px-4 py-2">Phone</th>
-              <th className="text-left font-medium text-neutral-700 px-4 py-2">Party</th>
-              <th className="text-left font-medium text-neutral-700 px-4 py-2">Seating</th>
-              <th className="text-left font-medium text-neutral-700 px-4 py-2">Notifications</th>
-              <th className="text-left font-medium text-neutral-700 px-4 py-2">Created</th>
-              <th className="text-left font-medium text-neutral-700 px-4 py-2"></th>
+              <th className="text-left font-medium text-foreground px-4 py-2">#</th>
+              <th className="text-left font-medium text-foreground px-4 py-2">Name</th>
+              <th className="text-left font-medium text-foreground px-4 py-2">Phone</th>
+              <th className="text-left font-medium text-foreground px-4 py-2">Party</th>
+              <th className="text-left font-medium text-foreground px-4 py-2">Seating</th>
+              <th className="text-left font-medium text-foreground px-4 py-2">Notifications</th>
+              <th className="text-left font-medium text-foreground px-4 py-2">Created</th>
+              <th className="text-left font-medium text-foreground px-4 py-2"></th>
             </tr>
           </thead>
           <tbody>
             {entries.map((e) => (
-              <tr key={e.id} className={`border-t hover:bg-neutral-50 odd:bg-neutral-50/30 ${highlightIds.has(e.id) ? "row-flash" : ""}`}>
+              <tr key={e.id} className={`border-t border-border hover:bg-muted odd:bg-muted/50 ${highlightIds.has(e.id) ? "row-flash" : ""}`}>
                 <td className="px-4 py-2">{e.ticket_number ?? e.queue_position ?? "-"}</td>
                 <td className="px-4 py-2">{e.customer_name ?? "—"}</td>
                 <td className="px-4 py-2">{e.phone}</td>
@@ -435,19 +482,19 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                   <div className="inline-flex items-center gap-2">
                     <button
                       onClick={() => copyPersonalUrl(e.token)}
-                      className="inline-flex items-center rounded-md px-2 py-1.5 text-sm font-medium ring-1 ring-inset ring-neutral-300 bg-white hover:bg-neutral-50 shadow-sm"
+                      className="inline-flex items-center rounded-md px-2 py-1.5 text-sm font-medium ring-1 ring-inset ring-border bg-card hover:bg-muted shadow-sm"
                       title="Copy personal page URL"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                       </svg>
                     </button>
-                    <button disabled={isPending} onClick={() => call(e.id)} className="inline-flex items-center rounded-md bg-black px-3 py-1.5 text-sm font-medium text-white shadow-sm disabled:opacity-50">
+                    <button disabled={isPending} onClick={() => call(e.id)} className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground shadow-sm disabled:opacity-50 hover:opacity-90">
                       Call
                     </button>
                     <button
                       onClick={(ev) => openMenuFor(e.id, ev.currentTarget as HTMLElement)}
-                      className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-neutral-300 bg-white hover:bg-neutral-50 shadow-sm"
+                      className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-border bg-card hover:bg-muted shadow-sm"
                     >
                       ⋯
                     </button>
@@ -465,7 +512,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
         return createPortal(
           <div className="fixed inset-0 z-50" onClick={closeMenu}>
             <div
-              className="absolute w-48 rounded-md bg-white text-sm shadow-lg ring-1 ring-black/5 py-1"
+              className="absolute w-48 rounded-md bg-card text-card-foreground text-sm shadow-lg ring-1 ring-border py-1"
               style={{ top: menuState.top, left: menuState.left }}
               onClick={(e) => e.stopPropagation()}
             >
@@ -475,7 +522,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                     <button
                       disabled={isPending}
                       onClick={() => { closeMenu(); retryMessage(me.id, 'sms'); }}
-                      className="w-full text-left px-3 py-2 hover:bg-neutral-50 text-orange-600 flex items-center gap-2"
+                      className="w-full text-left px-3 py-2 hover:bg-muted text-orange-600 flex items-center gap-2"
                     >
                       <span>🔄</span> Retry SMS
                     </button>
@@ -484,7 +531,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                     <button
                       disabled={isPending}
                       onClick={() => { closeMenu(); retryMessage(me.id, 'whatsapp'); }}
-                      className="w-full text-left px-3 py-2 hover:bg-neutral-50 text-orange-600 flex items-center gap-2"
+                      className="w-full text-left px-3 py-2 hover:bg-muted text-orange-600 flex items-center gap-2"
                     >
                       <span>🔄</span> Retry WhatsApp
                     </button>
@@ -492,14 +539,14 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                   <div className="border-t my-1"></div>
                 </>
               )}
-              <button disabled={isPending} onClick={() => { closeMenu(); archive(me.id); }} className="w-full text-left px-3 py-2 hover:bg-neutral-50 text-amber-700 flex items-center gap-2">
+              <button disabled={isPending} onClick={() => { closeMenu(); archive(me.id); }} className="w-full text-left px-3 py-2 hover:bg-muted text-amber-700 flex items-center gap-2">
                 <span>📦</span> Archive
               </button>
-              <button disabled={isPending} onClick={() => { closeMenu(); edit(me.id); }} className="w-full text-left px-3 py-2 hover:bg-neutral-50 text-blue-700 flex items-center gap-2">
+              <button disabled={isPending} onClick={() => { closeMenu(); edit(me.id); }} className="w-full text-left px-3 py-2 hover:bg-muted text-blue-700 flex items-center gap-2">
                 <span>✏️</span> Edit
               </button>
               <div className="border-t my-1"></div>
-              <button disabled={isPending} onClick={() => { closeMenu(); remove(me.id); }} className="w-full text-left px-3 py-2 hover:bg-neutral-50 text-red-700">Delete</button>
+              <button disabled={isPending} onClick={() => { closeMenu(); remove(me.id); }} className="w-full text-left px-3 py-2 hover:bg-muted text-red-700">Delete</button>
             </div>
           </div>,
           document.body
@@ -507,7 +554,28 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
       })()}
 
       {/* Edit Modal */}
-      <Modal open={!!editingId} onClose={() => setEditingId(null)} title="Edit Entry">
+      <Modal
+        open={!!editingId}
+        onClose={() => setEditingId(null)}
+        title="Edit Entry"
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setEditingId(null)}
+              className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-border hover:bg-muted"
+            >
+              Cancel
+            </button>
+            <button
+              disabled={isPending}
+              className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-90 disabled:opacity-50"
+            >
+              {isPending ? "Saving…" : "Save"}
+            </button>
+          </>
+        }
+      >
         <form className="grid gap-4">
           <div className="grid gap-1">
             <label className="text-sm font-medium">Customer name</label>
@@ -515,7 +583,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
               type="text"
               value={editForm.customerName}
               onChange={(e) => setEditForm(prev => ({ ...prev, customerName: e.target.value }))}
-              className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm"
+              className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm"
               placeholder="Full name"
             />
           </div>
@@ -526,7 +594,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
               type="tel"
               value={editForm.phone}
               onChange={(e) => setEditForm(prev => ({ ...prev, phone: e.target.value }))}
-              className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm"
+              className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm"
               placeholder="Phone number"
             />
           </div>
@@ -540,7 +608,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                   min={1}
                   value={editForm.partySize}
                   onChange={(e) => setEditForm(prev => ({ ...prev, partySize: e.target.value }))}
-                  className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm"
+                  className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm"
                   placeholder="e.g., 2"
                 />
               </div>
@@ -556,7 +624,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                           type="button"
                           key={s}
                           onClick={() => setEditForm(prev => ({ ...prev, seatingPreference: s }))}
-                          className={`inline-flex items-center rounded-full px-3 py-1 text-xs ring-1 ring-inset transition ${selected ? "bg-black text-white ring-black" : "bg-white text-neutral-900 ring-neutral-300 hover:bg-neutral-50"}`}
+                          className={`inline-flex items-center rounded-full px-3 py-1 text-xs ring-1 ring-inset transition ${selected ? "bg-primary text-primary-foreground ring-primary" : "bg-card text-foreground ring-border hover:bg-muted"}`}
                         >
                           {s}
                         </button>
@@ -567,23 +635,6 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
               )}
             </>
           )}
-
-          <div className="flex items-center gap-3 pt-2">
-            <button
-              onClick={saveEdit}
-              disabled={isPending}
-              className="inline-flex items-center rounded-md bg-black px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-neutral-800 disabled:opacity-50"
-            >
-              {isPending ? "Saving…" : "Save"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setEditingId(null)}
-              className="inline-flex items-center rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm hover:bg-neutral-50"
-            >
-              Cancel
-            </button>
-          </div>
         </form>
       </Modal>
     </div>

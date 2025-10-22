@@ -102,15 +102,15 @@ export default function WeeklyStats({ waitlistId }: { waitlistId: string }) {
   }, [waitlistId]);
 
   return (
-    <div className="bg-white ring-1 ring-black/5 rounded-xl p-4">
-      <h3 className="text-sm font-medium text-neutral-900 mb-3">This Week</h3>
+    <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-4">
+      <h3 className="text-sm font-medium mb-3">This Week</h3>
       <div className="space-y-3">
         <div>
-          <p className="text-xs text-neutral-600">Total served</p>
+          <p className="text-xs text-muted-foreground">Total served</p>
           <p className="text-lg font-semibold">{weeklyServed}</p>
         </div>
         <div>
-          <p className="text-xs text-neutral-600">Busiest day</p>
+          <p className="text-xs text-muted-foreground">Busiest day</p>
           <p className="text-sm font-medium">{busiestDay}</p>
         </div>
       </div>

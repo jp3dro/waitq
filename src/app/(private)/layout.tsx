@@ -11,7 +11,7 @@ export default async function PrivateLayout({ children }: { children: React.Reac
   return (
     <div className="min-h-dvh flex">
       <PrivateSidebar />
-      <div className="flex-1 min-w-0 bg-[#F6F8FA]">{children}</div>
+      <div className="flex-1 min-w-0 bg-background">{children}</div>
     </div>
   );
 }

@@ -13,7 +13,7 @@ type AnalyticsData = {
   avgWaitByHour: { hour: number; avgMin: number }[];
 };
 
-function SimpleLineChart({ data, height = 180, color = "#ea580c", valueFormatter = (v: number) => v.toString() }: { data: { label: string; value: number }[]; height?: number; color?: string; valueFormatter?: (v: number) => string }) {
+function SimpleLineChart({ data, height = 180, color = "var(--primary)", valueFormatter = (v: number) => v.toString() }: { data: { label: string; value: number }[]; height?: number; color?: string; valueFormatter?: (v: number) => string }) {
   const [tooltip, setTooltip] = useState<{ x: number; y: number; label: string; value: number } | null>(null);
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
   const max = Math.max(1, ...data.map(d => d.value));
@@ -44,17 +44,17 @@ function SimpleLineChart({ data, height = 180, color = "#ea580c", valueFormatter
       <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-48">
         {/* grid lines */}
         {[0.25, 0.5, 0.75].map((g) => (
-          <line key={g} x1={hPad} x2={width - hPad} y1={vPad + innerH * g} y2={vPad + innerH * g} stroke="#d1d5db" strokeDasharray="4 4" />
+          <line key={g} x1={hPad} x2={width - hPad} y1={vPad + innerH * g} y2={vPad + innerH * g} stroke="var(--border)" strokeDasharray="4 4" />
         ))}
         {/* axes */}
-        <line x1={hPad} x2={hPad} y1={vPad} y2={vPad + innerH} stroke="#6b7280" strokeWidth={1} />
-        <line x1={hPad} x2={width - hPad} y1={vPad + innerH} y2={vPad + innerH} stroke="#6b7280" strokeWidth={1} />
+        <line x1={hPad} x2={hPad} y1={vPad} y2={vPad + innerH} stroke="var(--ring)" strokeWidth={1} />
+        <line x1={hPad} x2={width - hPad} y1={vPad + innerH} y2={vPad + innerH} stroke="var(--ring)" strokeWidth={1} />
         {/* y-axis labels */}
         {yTickValues.map((val, i) => {
           const y = vPad + innerH - (innerH * (val / max));
           return (
             <g key={`yt-${i}`}>
-              <text x={hPad - 8} y={y} textAnchor="end" alignmentBaseline="middle" fontSize={12} fill="#374151">{val}</text>
+              <text x={hPad - 8} y={y} textAnchor="end" alignmentBaseline="middle" fontSize={12} fill="var(--muted-foreground)">{val}</text>
             </g>
           );
         })}
@@ -62,7 +62,7 @@ function SimpleLineChart({ data, height = 180, color = "#ea580c", valueFormatter
         {xTickIdxs.map((idx) => {
           const x = hPad + (innerW * (data.length <= 1 ? 0 : idx / (data.length - 1)));
           return (
-            <text key={`xt-${idx}`} x={x} y={vPad + innerH + 16} textAnchor="middle" fontSize={12} fill="#374151">{data[idx]?.label}</text>
+            <text key={`xt-${idx}`} x={x} y={vPad + innerH + 16} textAnchor="middle" fontSize={12} fill="var(--muted-foreground)">{data[idx]?.label}</text>
           );
         })}
         <path d={path} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
@@ -94,11 +94,11 @@ function SimpleLineChart({ data, height = 180, color = "#ea580c", valueFormatter
           onMouseLeave={() => { setHoverIdx(null); setTooltip(null); }}
         />
         {hoverIdx !== null && (
-          <line x1={pts[hoverIdx].x} x2={pts[hoverIdx].x} y1={vPad} y2={vPad + innerH} stroke="#9ca3af" strokeDasharray="2 2" />
+          <line x1={pts[hoverIdx].x} x2={pts[hoverIdx].x} y1={vPad} y2={vPad + innerH} stroke="var(--ring)" strokeDasharray="2 2" />
         )}
       </svg>
       {tooltip && (
-        <div className="pointer-events-none absolute -translate-x-1/2 -translate-y-3 rounded bg-black px-2 py-1 text-xs text-white shadow" style={{ left: tooltip.x, top: tooltip.y }}>
+        <div className="pointer-events-none absolute -translate-x-1/2 -translate-y-3 rounded bg-popover px-2 py-1 text-xs text-popover-foreground shadow ring-1 ring-border" style={{ left: tooltip.x, top: tooltip.y }}>
           <div className="font-medium">{tooltip.label}</div>
           <div>{valueFormatter(tooltip.value)}</div>
         </div>
@@ -251,10 +251,10 @@ export default function AnalyticsPage() {
       <main className="py-5">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-gray-200 rounded w-48"></div>
+          <div className="h-8 bg-muted rounded w-48"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-32 bg-gray-200 rounded-xl"></div>
+              <div key={i} className="h-32 bg-muted rounded-xl"></div>
             ))}
           </div>
         </div>
@@ -267,9 +267,9 @@ export default function AnalyticsPage() {
     return (
       <main className="py-5">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="bg-white ring-1 ring-black/5 rounded-xl p-10 text-center">
+          <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-10 text-center">
             <h3 className="text-base font-semibold">No analytics</h3>
-            <p className="mt-1 text-sm text-neutral-600">Unable to load analytics data</p>
+            <p className="mt-1 text-sm text-muted-foreground">Unable to load analytics data</p>
           </div>
         </div>
       </main>
@@ -286,15 +286,15 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Analytics content container */}
-        <div className="bg-white rounded-xl p-6 ring-1 ring-black/5 space-y-6">
+        <div className="bg-card text-card-foreground rounded-xl p-6 ring-1 ring-border space-y-6">
           <div className="flex justify-center">
-            <div className="inline-flex overflow-hidden rounded-md ring-1 ring-inset ring-neutral-300 bg-white shadow-sm divide-x divide-neutral-200">
+            <div className="inline-flex overflow-hidden rounded-md ring-1 ring-inset ring-border bg-card shadow-sm divide-x divide-border">
               {[7, 15, 30].map((d) => (
                 <button
                   key={d}
                   onClick={() => setRangeDays(d as 7 | 15 | 30)}
                   type="button"
-                  className={`px-3 py-1.5 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF9500] ${rangeDays === d ? 'bg-neutral-900 text-white' : 'text-neutral-700 hover:bg-neutral-50'}`}
+                  className={`px-3 py-1.5 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${rangeDays === d ? 'bg-primary text-primary-foreground' : 'text-foreground/80 hover:bg-muted'}`}
                 >
                   Last {d} days
                 </button>
@@ -304,20 +304,20 @@ export default function AnalyticsPage() {
 
           {/* Key Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-white ring-1 ring-black/5 rounded-xl p-4">
-              <p className="text-sm text-neutral-600">Total visitors</p>
+            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-4">
+              <p className="text-sm text-muted-foreground">Total visitors</p>
               <p className="mt-1 text-xl font-semibold">{analytics.totalVisitors.toLocaleString()}</p>
             </div>
-            <div className="bg-white ring-1 ring-black/5 rounded-xl p-4">
-              <p className="text-sm text-neutral-600">Daily average</p>
+            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-4">
+              <p className="text-sm text-muted-foreground">Daily average</p>
               <p className="mt-1 text-xl font-semibold">{analytics.dailyAvg}</p>
             </div>
-            <div className="bg-white ring-1 ring-black/5 rounded-xl p-4">
-              <p className="text-sm text-neutral-600">Avg wait time</p>
+            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-4">
+              <p className="text-sm text-muted-foreground">Avg wait time</p>
               <p className="mt-1 text-xl font-semibold">{(() => { const m = analytics.avgWaitTimeMin; const h = Math.floor(m/60); const mm = m % 60; return h > 0 ? `${h}h ${mm}m` : `${mm}m`; })()}</p>
             </div>
-            <div className="bg-white ring-1 ring-black/5 rounded-xl p-4">
-              <p className="text-sm text-neutral-600">Avg service time</p>
+            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-4">
+              <p className="text-sm text-muted-foreground">Avg service time</p>
               <p className="mt-1 text-xl font-semibold">{(() => { const m = analytics.avgServiceTimeMin; const h = Math.floor(m/60); const mm = m % 60; return h > 0 ? `${h}h ${mm}m` : `${mm}m`; })()}</p>
             </div>
           </div>
@@ -326,28 +326,28 @@ export default function AnalyticsPage() {
 
           {/* Charts 2x2 grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white rounded-xl p-6 ring-1 ring-black/5">
+            <div className="bg-card text-card-foreground rounded-xl p-6 ring-1 ring-border">
               <h3 className="text-lg font-semibold mb-4">Average hourly visits</h3>
               <SimpleLineChart
                 data={analytics.avgHourlyVisits.map(h => ({ label: `${h.hour.toString().padStart(2,'0')}:00`, value: h.avg }))}
                 valueFormatter={(v) => `${v} / hr`}
               />
             </div>
-            <div className="bg-white rounded-xl p-6 ring-1 ring-black/5">
+            <div className="bg-card text-card-foreground rounded-xl p-6 ring-1 ring-border">
               <h3 className="text-lg font-semibold mb-4">Average visitors by day of week</h3>
               <SimpleLineChart
                 data={analytics.avgByWeekday.map(w => ({ label: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][w.weekday], value: w.avg }))}
                 valueFormatter={(v) => `${v} / day`}
               />
             </div>
-            <div className="bg-white rounded-xl p-6 ring-1 ring-black/5">
+            <div className="bg-card text-card-foreground rounded-xl p-6 ring-1 ring-border">
               <h3 className="text-lg font-semibold mb-4">Average wait time by time of day</h3>
               <SimpleLineChart
                 data={analytics.avgWaitByHour.map(h => ({ label: `${h.hour.toString().padStart(2,'0')}:00`, value: h.avgMin }))}
                 valueFormatter={(v) => `${v} min`}
                 />
             </div>
-            <div className="bg-white rounded-xl p-6 ring-1 ring-black/5">
+            <div className="bg-card text-card-foreground rounded-xl p-6 ring-1 ring-border">
               <h3 className="text-lg font-semibold mb-4">Daily visitors (last {rangeDays} days)</h3>
               <SimpleLineChart
                 data={analytics.dailyVisitors.map(d => ({ label: new Date(d.date).toLocaleDateString(), value: d.count }))}

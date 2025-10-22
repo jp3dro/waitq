@@ -23,36 +23,36 @@ export default function HomePage() {
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <h2 className="text-2xl">Accept walk‑ins anywhere</h2>
           <div className="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-            <div className="rounded-xl bg-white ring-1 ring-black/5 p-6">
+            <div className="rounded-xl bg-white dark:bg-neutral-800 ring-1 ring-black/5 dark:ring-neutral-700 p-6">
               <p className="font-medium">Front desk</p>
-              <p className="mt-1 text-neutral-600">Add guests in seconds, quote times, and keep the line visible to staff.</p>
+              <p className="mt-1 text-neutral-600 dark:text-neutral-400">Add guests in seconds, quote times, and keep the line visible to staff.</p>
               <div className="mt-4 overflow-hidden rounded-lg">
                 <div className="relative w-full pt-[56.25%] bg-neutral-100">
                   <Image src="/window.svg" alt="Front desk" fill className="object-cover" />
                 </div>
               </div>
             </div>
-            <div className="rounded-xl bg-white ring-1 ring-black/5 p-6">
+            <div className="rounded-xl bg-white dark:bg-neutral-800 ring-1 ring-black/5 dark:ring-neutral-700 p-6">
               <p className="font-medium">On the floor</p>
-              <p className="mt-1 text-neutral-600">See who’s next from any device. Call, seat, or cancel with one tap.</p>
+              <p className="mt-1 text-neutral-600 dark:text-neutral-400">See who’s next from any device. Call, seat, or cancel with one tap.</p>
               <div className="mt-4 overflow-hidden rounded-lg">
                 <div className="relative w-full pt-[56.25%] bg-neutral-100">
                   <Image src="/globe.svg" alt="On the floor" fill className="object-cover" />
                 </div>
               </div>
             </div>
-            <div className="rounded-xl bg-white ring-1 ring-black/5 p-6">
+            <div className="rounded-xl bg-white dark:bg-neutral-800 ring-1 ring-black/5 dark:ring-neutral-700 p-6">
               <p className="font-medium">At the door</p>
-              <p className="mt-1 text-neutral-600">Show a public display so guests can check their place in line.</p>
+              <p className="mt-1 text-neutral-600 dark:text-neutral-400">Show a public display so guests can check their place in line.</p>
               <div className="mt-4 overflow-hidden rounded-lg">
                 <div className="relative w-full pt-[56.25%] bg-neutral-100">
                   <Image src="/file.svg" alt="At the door" fill className="object-cover" />
                 </div>
               </div>
             </div>
-            <div className="rounded-xl bg-white ring-1 ring-black/5 p-6">
+            <div className="rounded-xl bg-white dark:bg-neutral-800 ring-1 ring-black/5 dark:ring-neutral-700 p-6">
               <p className="font-medium">On the go</p>
-              <p className="mt-1 text-neutral-600">Guests get SMS updates and a live status page. No apps needed.</p>
+              <p className="mt-1 text-neutral-600 dark:text-neutral-400">Guests get SMS updates and a live status page. No apps needed.</p>
               <div className="mt-4 overflow-hidden rounded-lg">
                 <div className="relative w-full pt-[56.25%] bg-neutral-100">
                   <Image src="/next.svg" alt="On the go" fill className="object-cover" />
@@ -75,8 +75,8 @@ export default function HomePage() {
               <li>Multi-location support</li>
             </ul>
           </div>
-          <div className="rounded-2xl bg-white ring-1 ring-black/5 p-10 text-center">
-            <div className="mx-auto h-56 w-full max-w-sm rounded-xl bg-neutral-100" />
+          <div className="rounded-2xl bg-white dark:bg-neutral-800 ring-1 ring-black/5 dark:ring-neutral-700 p-10 text-center">
+            <div className="mx-auto h-56 w-full max-w-sm rounded-xl bg-neutral-100 dark:bg-neutral-700" />
           </div>
         </div>
       </section>
@@ -86,10 +86,10 @@ export default function HomePage() {
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <h2 className="text-2xl">Peace of mind in every waitlist</h2>
           <div className="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-            <div className="rounded-xl bg-white ring-1 ring-black/5 p-6"><p className="font-medium">Accurate ETAs</p><p className="mt-1 text-neutral-600">Quote realistic times with historical insights.</p></div>
-            <div className="rounded-xl bg-white ring-1 ring-black/5 p-6"><p className="font-medium">Reduce walk‑aways</p><p className="mt-1 text-neutral-600">Keep guests in the loop so they stick around.</p></div>
-            <div className="rounded-xl bg-white ring-1 ring-black/5 p-6"><p className="font-medium">Team visibility</p><p className="mt-1 text-neutral-600">Everyone sees who’s next and what’s happening.</p></div>
-            <div className="rounded-xl bg-white ring-1 ring-black/5 p-6"><p className="font-medium">No new hardware</p><p className="mt-1 text-neutral-600">Runs on the devices you already have.</p></div>
+            <div className="rounded-xl bg-white dark:bg-neutral-800 ring-1 ring-black/5 dark:ring-neutral-700 p-6"><p className="font-medium">Accurate ETAs</p><p className="mt-1 text-neutral-600 dark:text-neutral-400">Quote realistic times with historical insights.</p></div>
+            <div className="rounded-xl bg-white dark:bg-neutral-800 ring-1 ring-black/5 dark:ring-neutral-700 p-6"><p className="font-medium">Reduce walk‑aways</p><p className="mt-1 text-neutral-600 dark:text-neutral-400">Keep guests in the loop so they stick around.</p></div>
+            <div className="rounded-xl bg-white dark:bg-neutral-800 ring-1 ring-black/5 dark:ring-neutral-700 p-6"><p className="font-medium">Team visibility</p><p className="mt-1 text-neutral-600 dark:text-neutral-400">Everyone sees who’s next and what’s happening.</p></div>
+            <div className="rounded-xl bg-white dark:bg-neutral-800 ring-1 ring-black/5 dark:ring-neutral-700 p-6"><p className="font-medium">No new hardware</p><p className="mt-1 text-neutral-600 dark:text-neutral-400">Runs on the devices you already have.</p></div>
           </div>
         </div>
       </section>
@@ -98,9 +98,9 @@ export default function HomePage() {
       <section className="py-16 border-t">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <h2 className="text-2xl">Know what you’ll pay</h2>
-          <div className="rounded-xl mt-6 bg-white ring-1 ring-black/5 p-6 flex items-center justify-between">
+          <div className="rounded-xl mt-6 bg-white dark:bg-neutral-800 ring-1 ring-black/5 dark:ring-neutral-700 p-6 flex items-center justify-between">
             <div>
-              <p className="mt-1 text-sm text-neutral-600">Simple plans that grow with your business.</p>
+              <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">Simple plans that grow with your business.</p>
             </div>
             <a href="/pricing" className="inline-flex items-center rounded-md bg-black px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-neutral-800">See pricing</a>
           </div>
@@ -111,7 +111,7 @@ export default function HomePage() {
       <section className="py-16 border-t">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <h2 className="text-2xl">FAQ</h2>
-          <div className="mt-4 divide-y rounded-xl bg-white ring-1 ring-black/5">
+          <div className="mt-4 divide-y rounded-xl bg-white dark:bg-neutral-800 ring-1 ring-black/5 dark:ring-neutral-700 divide-neutral-200 dark:divide-neutral-700">
             {[
               { q: "How long to get started?", a: "Most teams are up and running in minutes." },
               { q: "Do guests need an app?", a: "No, they receive SMS with a link to a live status page." },
@@ -121,9 +121,9 @@ export default function HomePage() {
               <details key={item.q} className="group p-4">
                 <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-medium">
                   {item.q}
-                  <span className="ml-2 text-neutral-500 group-open:rotate-180 transition">⌄</span>
+                  <span className="ml-2 text-neutral-500 dark:text-neutral-400 group-open:rotate-180 transition">⌄</span>
                 </summary>
-                <p className="mt-2 text-sm text-neutral-600">{item.a}</p>
+                <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">{item.a}</p>
               </details>
             ))}
           </div>

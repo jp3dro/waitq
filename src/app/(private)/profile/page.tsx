@@ -27,15 +27,15 @@ export default async function ProfilePage() {
           </div>
         </div>
 
-        <div className="bg-white ring-1 ring-black/5 rounded-xl p-6">
+        <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-6">
           <ToastOnQuery />
           <div className="grid gap-3 text-sm">
         <div>
-          <div className="text-neutral-600">Email</div>
+          <div className="text-muted-foreground">Email</div>
           <div className="font-medium">{user?.email}</div>
         </div>
         <div>
-          <div className="text-neutral-600">User ID</div>
+          <div className="text-muted-foreground">User ID</div>
           <div className="font-mono text-xs">{user?.id}</div>
         </div>
         <SaveBusinessForm
@@ -43,17 +43,17 @@ export default async function ProfilePage() {
           initialCountry={(business as Business)?.country_code || "PT"}
         />
         <div className="grid md:grid-cols-[96px_1fr] items-start gap-4 mt-6">
-          <div className="h-24 w-24 rounded-md ring-1 ring-neutral-200 overflow-hidden bg-neutral-50 flex items-center justify-center">
+          <div className="h-24 w-24 rounded-md ring-1 ring-border overflow-hidden bg-muted flex items-center justify-center">
             {business?.logo_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={business.logo_url || ""} alt="Logo" className="h-full w-full object-cover" />
             ) : (
-              <span className="text-xs text-neutral-500">No logo</span>
+              <span className="text-xs text-muted-foreground">No logo</span>
             )}
           </div>
           <div>
             <UploadLogo />
-            <div className="mt-2 text-xs text-neutral-600">PNG/JPG, square recommended. Max 5 MB.</div>
+            <div className="mt-2 text-xs text-muted-foreground">PNG/JPG, square recommended. Max 5 MB.</div>
           </div>
         </div>
         </div>
@@ -128,31 +128,31 @@ function SaveBusinessForm({ initialName, initialCountry }: { initialName: string
   return (
     <form action={action} className="mt-4 grid gap-4">
       <div>
-        <label className="text-sm font-medium text-neutral-700" htmlFor="name">Business name</label>
+        <label className="text-sm font-medium text-foreground" htmlFor="name">Business name</label>
         <input
           id="name"
           name="name"
           defaultValue={initialName}
-          className="mt-1 block w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF9500]"
+          className="mt-1 block w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           placeholder="e.g., Acme Barbers"
         />
       </div>
       <div>
-        <label className="text-sm font-medium text-neutral-700" htmlFor="country">Business country</label>
+        <label className="text-sm font-medium text-foreground" htmlFor="country">Business country</label>
         <select
           id="country"
           name="country"
           defaultValue={initialCountry || "PT"}
-          className="mt-1 block w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF9500]"
+          className="mt-1 block w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         >
           {countries.map((c) => (
             <option key={c.code} value={c.code}>{c.name}</option>
           ))}
         </select>
-        <div className="mt-1 text-xs text-neutral-600">Used to set the default phone prefix in kiosk.</div>
+        <div className="mt-1 text-xs text-muted-foreground">Used to set the default phone prefix in kiosk.</div>
       </div>
       <div className="pt-2">
-        <button className="inline-flex items-center rounded-md bg-black px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-neutral-800">Save changes</button>
+        <button className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-90">Save changes</button>
       </div>
     </form>
   );
@@ -200,9 +200,9 @@ function UploadLogo() {
         type="file"
         name="file"
         accept="image/*"
-        className="block w-full max-w-sm text-sm text-neutral-600 file:mr-3 file:rounded-md file:border-0 file:bg-neutral-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-neutral-700 hover:file:bg-neutral-200"
+        className="block w-full max-w-sm text-sm text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-muted file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-foreground hover:file:opacity-90"
       />
-      <button className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-neutral-300 hover:bg-neutral-50">Upload</button>
+      <button className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-border hover:bg-muted">Upload</button>
     </form>
   );
 }

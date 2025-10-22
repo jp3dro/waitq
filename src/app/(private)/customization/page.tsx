@@ -28,7 +28,7 @@ export default async function CustomizationPage() {
           </div>
         </div>
 
-        <div className="bg-white ring-1 ring-black/5 rounded-xl p-6">
+        <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-6">
           <ClientWrapper initial={initial} />
         </div>
       </div>

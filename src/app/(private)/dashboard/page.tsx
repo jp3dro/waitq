@@ -147,7 +147,7 @@ export default async function DashboardPage() {
             <div className="flex items-center gap-3">
             {businessHeader?.logo_url ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={businessHeader.logo_url || ""} alt="Logo" className="h-8 w-8 rounded object-cover ring-1 ring-neutral-200" />
+              <img src={businessHeader.logo_url || ""} alt="Logo" className="h-8 w-8 rounded object-cover ring-1 ring-border" />
             ) : null}
             <div>
               <h1 className="text-3xl font-bold tracking-tight">{businessHeader?.name || "Dashboard"}</h1>
@@ -160,9 +160,9 @@ export default async function DashboardPage() {
         {/* Lists grouped by location with waiting counts and ETA */}
         <div className="space-y-6">
           {locations.length === 0 ? (
-            <div className="bg-white ring-1 ring-black/5 rounded-xl shadow-sm p-10 text-center">
+            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-10 text-center">
               <h3 className="text-base font-semibold">No locations yet</h3>
-              <p className="mt-1 text-sm text-neutral-600">Create a location to start adding lists.</p>
+              <p className="mt-1 text-sm text-muted-foreground">Create a location to start adding lists.</p>
             </div>
           ) : (
             locations.map((loc) => {
@@ -183,11 +183,11 @@ export default async function DashboardPage() {
                       const etaDisplay = totalMin > 0 ? (hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`) : '—';
                       return (
                         <li key={l.id}>
-                          <Link href={`/lists/${l.id}`} className="block bg-white ring-1 ring-black/5 rounded-xl shadow-sm p-5 hover:shadow hover:bg-neutral-50 transition cursor-pointer">
+                          <Link href={`/lists/${l.id}`} className="block bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-5 hover:shadow hover:bg-muted transition cursor-pointer">
                             <div className="flex items-start justify-between gap-2">
                               <div>
                                 <p className="font-medium">{l.name}</p>
-                                <div className="mt-1 flex items-center gap-3 text-xs text-neutral-600">
+                                <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
                                   <span>Waiting: {waiting}</span>
                                   <span>ETA: {etaDisplay}</span>
                                 </div>
@@ -208,12 +208,12 @@ export default async function DashboardPage() {
         <section className="space-y-4">
           <h2 className="text-base font-semibold">Today’s analytics</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="bg-white ring-1 ring-black/5 rounded-xl shadow-sm p-6">
-              <p className="text-sm text-neutral-600">Total visitors (today)</p>
+            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-6">
+              <p className="text-sm text-muted-foreground">Total visitors (today)</p>
               <p className="mt-2 text-3xl font-semibold">{todayVisitors}</p>
             </div>
-            <div className="bg-white ring-1 ring-black/5 rounded-xl shadow-sm p-6">
-              <p className="text-sm text-neutral-600">Avg wait time (today)</p>
+            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-6">
+              <p className="text-sm text-muted-foreground">Avg wait time (today)</p>
               <p className="mt-2 text-3xl font-semibold">
                 {(() => {
                   const totalMin = todayAvgWaitMs ? Math.max(1, Math.round(todayAvgWaitMs / 60000)) : 0;
@@ -227,12 +227,12 @@ export default async function DashboardPage() {
 
           {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="bg-white ring-1 ring-black/5 rounded-xl shadow-sm p-6">
-              <p className="text-sm text-neutral-600">Hourly visits (today)</p>
+            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-6">
+              <p className="text-sm text-muted-foreground">Hourly visits (today)</p>
               <BarChart labels={[...Array(24).keys()].map((h) => `${String(h).padStart(2, '0')}`)} values={hourlyVisits} maxBars={24} color="#111827" />
             </div>
-            <div className="bg-white ring-1 ring-black/5 rounded-xl shadow-sm p-6">
-              <p className="text-sm text-neutral-600">Avg wait time by hour (today)</p>
+            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-6">
+              <p className="text-sm text-muted-foreground">Avg wait time by hour (today)</p>
               <BarChart labels={[...Array(24).keys()].map((h) => `${String(h).padStart(2, '0')}`)} values={hourlyWaitAvgMin} maxBars={24} color="#FF9500" suffix="m" />
             </div>
           </div>
@@ -242,7 +242,7 @@ export default async function DashboardPage() {
   );
 }
 
-function BarChart({ labels, values, maxBars = 24, color = "#111827", suffix = "" }: { labels: string[]; values: number[]; maxBars?: number; color?: string; suffix?: string }) {
+function BarChart({ labels, values, maxBars = 24, color = "var(--foreground)", suffix = "" }: { labels: string[]; values: number[]; maxBars?: number; color?: string; suffix?: string }) {
   const max = Math.max(1, ...values);
   return (
     <div className="mt-3">
@@ -254,7 +254,7 @@ function BarChart({ labels, values, maxBars = 24, color = "#111827", suffix = ""
                 {labels[i]}: {v}{suffix}
               </div>
             </div>
-            <div className="text-[10px] text-neutral-500">{labels[i]}</div>
+            <div className="text-[10px] text-muted-foreground">{labels[i]}</div>
           </div>
         ))}
       </div>

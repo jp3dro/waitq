@@ -85,8 +85,8 @@ export default function DisplayClient({ token }: { token: string }) {
   const bg = data?.backgroundColor || "#000000";
   const accent = data?.accentColor || "#FFFFFF";
   if (loading || !data) return (
-    <main className="min-h-screen text-white flex items-center justify-center" style={{ backgroundColor: bg }}>
-      <p className="text-neutral-400">Loading…</p>
+    <main className="min-h-screen bg-background text-foreground flex items-center justify-center">
+      <p className="text-muted-foreground">Loading…</p>
     </main>
   );
 
@@ -104,9 +104,14 @@ export default function DisplayClient({ token }: { token: string }) {
   const waiting = data.entries.filter((e) => e.status === "waiting").slice(0, 10);
 
   return (
-    <main className="min-h-screen text-white" style={{ backgroundColor: bg }}>
+    <main className="min-h-screen bg-background text-foreground">
       <div className="mx-auto max-w-6xl px-6 py-10">
-        <h1 className="text-3xl font-bold tracking-tight">{data.listName}</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold tracking-tight">{data.listName}</h1>
+          <button type="button" aria-label="Toggle theme" className="inline-flex items-center justify-center rounded-md p-2 text-foreground hover:bg-muted">
+            <span className="sr-only">Toggle theme</span>
+          </button>
+        </div>
         {typeof data.estimatedMs === 'number' && data.estimatedMs > 0 ? (
           <p className="mt-2 text-neutral-300">Estimated wait time: {formatDuration(data.estimatedMs)}</p>
         ) : null}
@@ -116,23 +121,23 @@ export default function DisplayClient({ token }: { token: string }) {
           </div>
         ) : null}
         <div className="mt-8 grid md:grid-cols-[1fr_1.2fr] gap-8">
-          <section className="rounded-2xl bg-white/5 ring-1 ring-white/10 p-6">
-            <h2 className="text-base text-neutral-300">Now serving</h2>
+          <section className="rounded-2xl bg-card text-card-foreground ring-1 ring-border p-6">
+            <h2 className="text-base text-muted-foreground">Now serving</h2>
             {nowServing ? (
               <div className="mt-2 text-6xl font-extrabold">{nowServing.ticket_number ?? nowServing.queue_position ?? "-"}</div>
             ) : (
-              <div className="mt-2 text-neutral-400">No one is being served</div>
+              <div className="mt-2 text-muted-foreground">No one is being served</div>
             )}
           </section>
-          <section className="rounded-2xl bg-white/5 ring-1 ring-white/10 p-6">
-            <h2 className="text-base text-neutral-300">Up next</h2>
-            <ul className="mt-2 divide-y divide-white/10">
+          <section className="rounded-2xl bg-card text-card-foreground ring-1 ring-border p-6">
+            <h2 className="text-base text-muted-foreground">Up next</h2>
+            <ul className="mt-2 divide-y divide-border">
               {waiting.map((e) => (
                 <li key={e.id} className="py-3 flex items-center justify-between">
                   <div className="text-left">
                     <div className="text-lg font-medium">{e.seating_preference || ""}</div>
                     {typeof e.party_size === 'number' ? (
-                      <div className="text-sm text-neutral-400">Party: {e.party_size}</div>
+                      <div className="text-sm text-muted-foreground">Party: {e.party_size}</div>
                     ) : null}
                   </div>
                   <span className="text-2xl font-semibold">{e.ticket_number ?? e.queue_position ?? "-"}</span>

@@ -32,7 +32,7 @@ export default async function UsersPage() {
     return (
       <main className="py-5">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="bg-white ring-1 ring-black/5 rounded-xl shadow-sm p-10 text-center">
+          <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-10 text-center">
             <h3 className="text-base font-semibold">No business found</h3>
           </div>
         </div>
@@ -71,7 +71,7 @@ export default async function UsersPage() {
           </div>
         </div>
 
-        <div className="bg-white ring-1 ring-black/5 rounded-xl p-6 space-y-6">
+        <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-6 space-y-6">
           <Suspense>
             <ClientWrapper />
           </Suspense>

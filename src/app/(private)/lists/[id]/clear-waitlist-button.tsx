@@ -1,6 +1,6 @@
 "use client";
 import { useTransition } from "react";
-import { toast } from "react-hot-toast";
+import { toastManager } from "@/hooks/use-toast";
 import { createClient } from "@/lib/supabase/client";
 
 export default function ClearWaitlistButton({ waitlistId, displayToken }: { waitlistId: string; displayToken?: string | null }) {
@@ -46,13 +46,25 @@ export default function ClearWaitlistButton({ waitlistId, displayToken }: { wait
             console.warn('Local refresh failed:', localRefreshError);
           }
 
-          toast.success("Waitlist cleared (entries archived for analytics)");
+          toastManager.add({
+            title: "Success",
+            description: "Waitlist cleared (entries archived for analytics)",
+            type: "success",
+          });
         } else {
           const error = await res.json();
-          toast.error(error.error || "Failed to clear waitlist");
+          toastManager.add({
+            title: "Error",
+            description: error.error || "Failed to clear waitlist",
+            type: "error",
+          });
         }
       } catch {
-        toast.error("Failed to clear waitlist");
+        toastManager.add({
+          title: "Error",
+          description: "Failed to clear waitlist",
+          type: "error",
+        });
       }
     });
   };
@@ -61,7 +73,7 @@ export default function ClearWaitlistButton({ waitlistId, displayToken }: { wait
     <button
       onClick={clearWaitlist}
       disabled={isPending}
-      className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-red-600 text-red-600 hover:bg-red-50 disabled:opacity-50"
+      className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-destructive text-destructive hover:bg-destructive/10 disabled:opacity-50"
     >
       {isPending ? "Clearing..." : "Clear Waitlist"}
     </button>

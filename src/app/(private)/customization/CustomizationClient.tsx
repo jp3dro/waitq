@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { applyAccent } from "@/lib/utils";
 
 type Customization = {
   id: string;
@@ -80,13 +81,24 @@ export default function CustomizationClient({ initial }: { initial?: { accent_co
 
   const effectiveAccent = useMemo(() => (useCustomAccent ? customAccent : accent), [useCustomAccent, customAccent, accent]);
 
+  // Live preview: apply accent and persist to localStorage
+  useEffect(() => {
+    const acc = effectiveAccent;
+    applyAccent(acc);
+    try {
+      localStorage.setItem("waitq:accent", acc);
+    } catch {
+      // ignore
+    }
+  }, [effectiveAccent]);
+
   async function saveCustomization() {
     setSaving(true);
     try {
       const res = await fetch("/api/customization", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+          body: JSON.stringify({
           accentColor: effectiveAccent,
           backgroundColor: background,
           coverUrl: coverUrl,
@@ -137,8 +149,8 @@ export default function CustomizationClient({ initial }: { initial?: { accent_co
                 setAccent(c.value);
               }}
               className={classNames(
-                "h-10 w-10 rounded-lg ring-1 ring-black/10 shadow-sm",
-                !useCustomAccent && accent.toLowerCase() === c.value.toLowerCase() ? "ring-2 ring-offset-2 ring-black" : "hover:ring-2 hover:ring-black/30"
+                "h-10 w-10 rounded-lg ring-1 ring-border shadow-sm",
+                !useCustomAccent && accent.toLowerCase() === c.value.toLowerCase() ? "ring-2 ring-offset-2 ring-ring" : "hover:ring-2 hover:ring-ring/60"
               )}
               style={{ backgroundColor: c.value }}
               aria-label={c.name}
@@ -150,8 +162,8 @@ export default function CustomizationClient({ initial }: { initial?: { accent_co
               type="button"
               onClick={() => setUseCustomAccent(true)}
               className={classNames(
-                "h-10 w-10 rounded-lg ring-1 ring-black/10 bg-[image:linear-gradient(45deg,_#ccc_25%,_transparent_25%),linear-gradient(-45deg,_#ccc_25%,_transparent_25%),linear-gradient(45deg,_transparent_75%,_#ccc_75%),linear-gradient(-45deg,_transparent_75%,_#ccc_75%)] bg-[length:10px_10px] bg-[position:0_0,0_5px,5px_-5px,-5px_0]",
-                useCustomAccent ? "ring-2 ring-offset-2 ring-black" : "hover:ring-2 hover:ring-black/30"
+                "h-10 w-10 rounded-lg ring-1 ring-border bg-[linear-gradient(45deg,#ccc_25%,transparent_25%),linear-gradient(-45deg,#ccc_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#ccc_75%),linear-gradient(-45deg,transparent_75%,#ccc_75%)] bg-size-[10px_10px] bg-position-[0_0,0_5px,5px_-5px,-5px_0]",
+                useCustomAccent ? "ring-2 ring-offset-2 ring-ring" : "hover:ring-2 hover:ring-ring/60"
               )}
               aria-label="Custom color"
             />
@@ -162,7 +174,7 @@ export default function CustomizationClient({ initial }: { initial?: { accent_co
                 setUseCustomAccent(true);
                 setCustomAccent(e.target.value);
               }}
-              className="h-9 w-12 rounded-md border border-neutral-200"
+              className="h-9 w-12 rounded-md border border-border"
             />
             <input
               type="text"
@@ -176,7 +188,7 @@ export default function CustomizationClient({ initial }: { initial?: { accent_co
               }}
               maxLength={7}
               placeholder="#000000"
-              className="h-9 w-28 rounded-md border border-neutral-200 px-2 text-xs font-mono"
+              className="h-9 w-28 rounded-md border border-border px-2 text-xs font-mono"
             />
           </div>
         </div>
@@ -190,7 +202,7 @@ export default function CustomizationClient({ initial }: { initial?: { accent_co
             type="color"
             value={background}
             onChange={(e) => setBackground(e.target.value)}
-            className="h-8 w-12 rounded-md border border-neutral-200"
+            className="h-8 w-12 rounded-md border border-border"
           />
           <input
             type="text"
@@ -204,7 +216,7 @@ export default function CustomizationClient({ initial }: { initial?: { accent_co
             }}
             maxLength={7}
             placeholder="#FFFFFF"
-            className="h-8 w-28 rounded-md border border-neutral-200 px-2 text-xs font-mono"
+            className="h-8 w-28 rounded-md border border-border px-2 text-xs font-mono"
           />
         </div>
       </section>
@@ -213,7 +225,7 @@ export default function CustomizationClient({ initial }: { initial?: { accent_co
       <section>
         <div className="text-sm font-medium">Cover image</div>
         <div className="mt-2 grid md:grid-cols-[160px_1fr] items-start gap-4">
-          <div className="h-24 w-40 rounded-md ring-1 ring-neutral-200 overflow-hidden bg-neutral-50 flex items-center justify-center">
+          <div className="h-24 w-40 rounded-md ring-1 ring-border overflow-hidden bg-muted flex items-center justify-center">
             {coverUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={coverUrl} alt="Cover" className="h-full w-full object-cover" />
@@ -236,7 +248,7 @@ export default function CustomizationClient({ initial }: { initial?: { accent_co
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              className="text-sm px-3 h-8 rounded-md bg-black text-white disabled:opacity-60"
+              className="text-sm px-3 h-8 rounded-md bg-primary text-primary-foreground disabled:opacity-60"
             >
               {uploading ? "Uploading..." : "Upload image"}
             </button>
@@ -247,12 +259,12 @@ export default function CustomizationClient({ initial }: { initial?: { accent_co
                   const res = await fetch("/api/profile/upload", { method: "DELETE" });
                   if (res.ok) setCoverUrl(null);
                 }}
-                className="text-sm px-3 h-8 rounded-md border border-neutral-200"
+                className="text-sm px-3 h-8 rounded-md border border-border"
               >
                 Remove
               </button>
             )}
-            <div className="text-xs text-neutral-600">PNG/JPG. Max 5 MB.</div>
+            <div className="text-xs text-muted-foreground">PNG/JPG. Max 5 MB.</div>
           </div>
         </div>
       </section>
@@ -262,7 +274,7 @@ export default function CustomizationClient({ initial }: { initial?: { accent_co
           type="button"
           onClick={() => void saveCustomization()}
           disabled={loading || saving}
-          className="text-sm px-4 h-9 rounded-md bg-black text-white disabled:opacity-60"
+          className="text-sm px-4 h-9 rounded-md bg-primary text-primary-foreground disabled:opacity-60"
         >
           {saving ? "Saving..." : "Save changes"}
         </button>

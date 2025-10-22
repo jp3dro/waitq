@@ -60,11 +60,11 @@ export default async function ListsIndexPage() {
           <CreateListButton />
         </div>
 
-        <div className="bg-white ring-1 ring-black/5 rounded-xl p-6 space-y-6">
+        <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-6 space-y-6">
           {locs.length === 0 ? (
             <div className="p-10 text-center">
               <h3 className="text-base font-semibold">No locations yet</h3>
-              <p className="mt-1 text-sm text-neutral-600">Create a location to start adding lists.</p>
+              <p className="mt-1 text-sm text-muted-foreground">Create a location to start adding lists.</p>
             </div>
           ) : (
             locs.map((loc) => {

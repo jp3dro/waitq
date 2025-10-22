@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { EB_Garamond, Inter } from "next/font/google";
 import "./globals.css";
-import { Toaster } from "react-hot-toast";
+import { Toaster } from "sonner";
+import { ThemeProvider } from "next-themes";
+import { AccentProvider } from "@/components/theme/AccentProvider";
 
 const serif = EB_Garamond({ variable: "--font-serif", subsets: ["latin"], display: "swap" });
 const sans = Inter({ variable: "--font-sans", subsets: ["latin"], display: "swap" });
@@ -34,10 +36,25 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${serif.variable} ${sans.variable} antialiased`}>
-        {children}
-        <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
+        {/* Inline bootstrap to avoid accent FOUC */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{var a=localStorage.getItem('waitq:accent');if(a){var r=document.documentElement.style;r.setProperty('--accent',a);r.setProperty('--primary',a);}}catch(e){}",
+          }}
+        />
+        <ThemeProvider
+          attribute="data-theme"
+          defaultTheme="light"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AccentProvider />
+          {children}
+          <Toaster position="top-right" />
+        </ThemeProvider>
       </body>
     </html>
   );

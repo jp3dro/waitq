@@ -1,9 +1,12 @@
 "use client";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Info } from "lucide-react";
 import Modal from "@/components/modal";
+import { Switch } from "@/components/ui/switch";
+import { Tooltip } from "@/components/ui/tooltip";
 import Dropdown from "@/components/dropdown";
-import toast from "react-hot-toast";
+import { toastManager } from "@/hooks/use-toast";
 
 type Location = { id: string; name: string };
 
@@ -61,7 +64,11 @@ export default function EditListButton({
       // If no fields changed, just close modal and show success
       if (Object.keys(payload).length === 1) {
         closeModal();
-        toast.success("List updated successfully!");
+        toastManager.add({
+          title: "Success",
+          description: "List updated successfully!",
+          type: "success",
+        });
         return;
       }
 
@@ -73,7 +80,11 @@ export default function EditListButton({
       if (res.ok) {
         closeModal();
         router.refresh();
-        toast.success("List updated successfully!");
+        toastManager.add({
+          title: "Success",
+          description: "List updated successfully!",
+          type: "success",
+        });
       } else {
         try {
           const j = await res.json();
@@ -88,17 +99,38 @@ export default function EditListButton({
 
   return (
     <>
-      <button onClick={openModal} className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-neutral-300 hover:bg-neutral-50">
+      <button onClick={openModal} className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-border hover:bg-muted">
         Edit
       </button>
-      <Modal open={open} onClose={closeModal} title="Edit list">
+      <Modal
+        open={open}
+        onClose={closeModal}
+        title="Edit list"
+        footer={
+          <>
+            <button
+              onClick={closeModal}
+              className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-border hover:bg-muted"
+            >
+              Cancel
+            </button>
+            <button
+              disabled={isPending}
+              onClick={save}
+              className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-90 disabled:opacity-50"
+            >
+              {isPending ? "Saving…" : "Save"}
+            </button>
+          </>
+        }
+      >
         <div className="grid gap-4">
           <div className="grid gap-1">
             <label className="text-sm font-medium">Name</label>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-[#FF9500] px-3 py-2 text-sm"
+              className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm"
             />
           </div>
           <div className="grid gap-1">
@@ -110,31 +142,16 @@ export default function EditListButton({
               disabled={isPending}
             />
           </div>
-          <div className="grid gap-1">
-            <label className="text-sm font-medium">Self-checkin kiosk</label>
-            <div className="flex items-start gap-3">
-              <input
-                id="kiosk-enabled"
-                type="checkbox"
-                checked={kioskEnabled}
-                onChange={(e) => setKioskEnabled(e.target.checked)}
-                className="mt-1 h-4 w-4 rounded border-neutral-300 text-black focus:ring-[#FF9500]"
-              />
-              <label htmlFor="kiosk-enabled" className="text-sm text-neutral-700">
-                Users will be able to add themselves to the waiting list using your welcome Kiosk screen
-              </label>
+          <div className="flex items-center gap-3">
+            <Switch id="kiosk-enabled" checked={kioskEnabled} onCheckedChange={setKioskEnabled} />
+            <div className="flex items-center gap-2">
+              <label htmlFor="kiosk-enabled" className="text-sm font-medium">Self-checkin kiosk</label>
+              <Tooltip content="Users will be able to add themselves to the waiting list using your welcome Kiosk screen">
+                <Info className="h-4 w-4 text-neutral-400 hover:text-neutral-600 cursor-help" />
+              </Tooltip>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <button
-              disabled={isPending}
-              onClick={save}
-              className="inline-flex items-center rounded-md bg-black px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-neutral-800 disabled:opacity-50"
-            >
-              {isPending ? "Saving…" : "Save"}
-            </button>
-            {message ? <p className="text-sm text-red-700">{message}</p> : null}
-          </div>
+          {message ? <p className="text-sm text-red-700">{message}</p> : null}
         </div>
       </Modal>
     </>

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect } from "react";
-import { toast } from "react-hot-toast";
+import { toastManager } from "@/hooks/use-toast";
 
 export default function ToastOnQuery() {
   useEffect(() => {
@@ -8,12 +8,20 @@ export default function ToastOnQuery() {
     const ok = url.searchParams.get("ok");
     const err = url.searchParams.get("err");
     if (ok) {
-      toast.success("Saved successfully");
+      toastManager.add({
+        title: "Success",
+        description: "Saved successfully",
+        type: "success",
+      });
       url.searchParams.delete("ok");
       window.history.replaceState({}, "", url.toString());
     }
     if (err) {
-      toast.error(err || "Something went wrong");
+      toastManager.add({
+        title: "Error",
+        description: err || "Something went wrong",
+        type: "error",
+      });
       url.searchParams.delete("err");
       window.history.replaceState({}, "", url.toString());
     }

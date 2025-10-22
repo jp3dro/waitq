@@ -31,9 +31,9 @@ export default async function CustomersPage() {
     return (
       <main className="py-5">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="bg-white ring-1 ring-black/5 rounded-xl shadow-sm p-10 text-center">
+          <div className="bg-white dark:bg-neutral-800 ring-1 ring-black/5 dark:ring-neutral-700 rounded-xl shadow-sm p-10 text-center">
             <h3 className="text-base font-semibold">No business found</h3>
-            <p className="mt-1 text-sm text-neutral-600">Create a business to view customers.</p>
+            <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">Create a business to view customers.</p>
           </div>
         </div>
       </main>

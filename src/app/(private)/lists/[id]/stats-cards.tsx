@@ -155,24 +155,24 @@ export default function StatsCards({ waitlistId }: { waitlistId: string }) {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-      <div className="bg-white ring-1 ring-black/5 rounded-xl p-4">
-        <p className="text-sm text-neutral-600">Now serving</p>
+      <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-4">
+        <p className="text-sm text-muted-foreground">Now serving</p>
         <p className="mt-1 text-xl font-semibold">{lastCalledNumber ?? "—"}</p>
       </div>
-      <div className="bg-white ring-1 ring-black/5 rounded-xl p-4">
-        <p className="text-sm text-neutral-600">Estimated wait time</p>
+      <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-4">
+        <p className="text-sm text-muted-foreground">Estimated wait time</p>
         <p className="mt-1 text-xl font-semibold">{etaDisplay || "—"}</p>
       </div>
-      <div className="bg-white ring-1 ring-black/5 rounded-xl p-4">
-        <p className="text-sm text-neutral-600">People waiting</p>
+      <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-4">
+        <p className="text-sm text-muted-foreground">People waiting</p>
         <p className="mt-1 text-xl font-semibold">{queueLength}</p>
       </div>
-      <div className="bg-white ring-1 ring-black/5 rounded-xl p-4">
-        <p className="text-sm text-neutral-600">Served today</p>
+      <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-4">
+        <p className="text-sm text-muted-foreground">Served today</p>
         <p className="mt-1 text-xl font-semibold">{servedToday}</p>
       </div>
-      <div className="bg-white ring-1 ring-black/5 rounded-xl p-4">
-        <p className="text-sm text-neutral-600">Avg service time</p>
+      <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-4">
+        <p className="text-sm text-muted-foreground">Avg service time</p>
         <p className="mt-1 text-xl font-semibold">{avgServiceTime || "—"}</p>
       </div>
     </div>
