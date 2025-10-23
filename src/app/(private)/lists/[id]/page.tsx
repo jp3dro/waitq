@@ -7,6 +7,7 @@ import AddButton from "@/app/(private)/dashboard/waitlist-add-button";
 import EditListButton from "./edit-list-button";
 import StatsCards from "./stats-cards";
 import ClearWaitlistButton from "./clear-waitlist-button";
+import QRCodeButton from "./qr-code-button";
 import type { Country } from "react-phone-number-input";
 import Link from "next/link";
 
@@ -99,6 +100,7 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
         <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-6 space-y-6">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
+              <AddButton defaultWaitlistId={wl.id} lockWaitlist businessCountry={businessCountry} />
               <EditListButton
                 waitlistId={wl.id}
                 initialName={wl.name}
@@ -107,17 +109,19 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
                 locations={typedLocations}
               />
               {wl.display_token && (
-                <a
-                  href={`/display/${encodeURIComponent(wl.display_token)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="action-btn"
-                >
-                  Open Public Display
-                </a>
+                <>
+                  <a
+                    href={`/display/${encodeURIComponent(wl.display_token)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="action-btn"
+                  >
+                    Open Public Display
+                  </a>
+                  <QRCodeButton listName={wl.name} displayToken={wl.display_token} />
+                </>
               )}
               <ClearWaitlistButton waitlistId={wl.id} displayToken={wl.display_token} variant="button" />
-              <AddButton defaultWaitlistId={wl.id} lockWaitlist businessCountry={businessCountry} />
             </div>
           </div>
 

@@ -12,7 +12,7 @@ export default function StatsCards({ waitlistId }: { waitlistId: string }) {
   const [etaDisplay, setEtaDisplay] = useState<string>("");
   const [queueLength, setQueueLength] = useState<number>(0);
   const [servedToday, setServedToday] = useState<number>(0);
-  const [avgServiceTime, setAvgServiceTime] = useState<string>("");
+  // Removed avg service time per requirements
   const supabase = createClient();
 
   const calculateStats = async () => {
@@ -25,8 +25,7 @@ export default function StatsCards({ waitlistId }: { waitlistId: string }) {
         etaRes,
         lastCalledRes,
         queueRes,
-        servedTodayRes,
-        serviceTimeRes
+        servedTodayRes
       ] = await Promise.all([
         // ETA calculation (exclude archived)
         supabase
@@ -61,16 +60,6 @@ export default function StatsCards({ waitlistId }: { waitlistId: string }) {
           .neq("status", "archived")
           .in("status", ["notified", "seated"])
           .gte("notified_at", todayStr),
-        // Service time calculation (recent completed entries, exclude archived)
-        supabase
-          .from("waitlist_entries")
-          .select("created_at, notified_at")
-          .eq("waitlist_id", waitlistId)
-          .neq("status", "archived")
-          .in("status", ["notified", "seated"])
-          .not("notified_at", "is", null)
-          .order("notified_at", { ascending: false })
-          .limit(50)
       ]);
 
       // Calculate ETA
@@ -94,22 +83,12 @@ export default function StatsCards({ waitlistId }: { waitlistId: string }) {
       // Served today
       const newServedToday = servedTodayRes.count || 0;
 
-      // Average service time
-      const serviceRows = (serviceTimeRes.data || []) as { created_at: string; notified_at: string | null }[];
-      const serviceDurations = serviceRows
-        .map((r) => (r.notified_at ? new Date(r.notified_at).getTime() - new Date(r.created_at).getTime() : null))
-        .filter((v): v is number => typeof v === "number" && isFinite(v) && v > 0 && v < 8 * 60 * 60 * 1000); // Filter out unrealistic durations (>8 hours)
-      const avgServiceMs = serviceDurations.length ? Math.round(serviceDurations.reduce((a, b) => a + b, 0) / serviceDurations.length) : 0;
-      const serviceMin = avgServiceMs ? Math.max(1, Math.round(avgServiceMs / 60000)) : 0;
-      const serviceHours = Math.floor(serviceMin / 60);
-      const serviceMinutes = serviceMin % 60;
-      const newAvgServiceTime = serviceMin > 0 ? (serviceHours > 0 ? `${serviceHours}h ${serviceMinutes}m` : `${serviceMinutes}m`) : "";
 
       setLastCalledNumber(newLastCalledNumber);
       setEtaDisplay(newEtaDisplay);
       setQueueLength(newQueueLength);
       setServedToday(newServedToday);
-      setAvgServiceTime(newAvgServiceTime);
+      // avg service time removed
     } catch (error) {
       console.error("Error calculating stats:", error);
     }
@@ -154,10 +133,10 @@ export default function StatsCards({ waitlistId }: { waitlistId: string }) {
   }, [waitlistId]);
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-      <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-4">
-        <p className="text-sm text-muted-foreground">Now serving</p>
-        <p className="mt-1 text-xl font-semibold">{lastCalledNumber ?? "—"}</p>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="bg-primary/10 text-card-foreground ring-1 ring-primary rounded-xl p-4">
+        <p className="text-sm font-medium text-primary">Now serving</p>
+        <p className="mt-1 text-2xl font-bold text-primary">{lastCalledNumber ?? "—"}</p>
       </div>
       <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-4">
         <p className="text-sm text-muted-foreground">Estimated wait time</p>
@@ -171,10 +150,7 @@ export default function StatsCards({ waitlistId }: { waitlistId: string }) {
         <p className="text-sm text-muted-foreground">Served today</p>
         <p className="mt-1 text-xl font-semibold">{servedToday}</p>
       </div>
-      <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-4">
-        <p className="text-sm text-muted-foreground">Avg service time</p>
-        <p className="mt-1 text-xl font-semibold">{avgServiceTime || "—"}</p>
-      </div>
+      {/* Avg service time removed */}
     </div>
   );
 }

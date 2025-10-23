@@ -1,5 +1,5 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Info } from "lucide-react";
 import Modal from "@/components/modal";
@@ -16,20 +16,47 @@ export default function EditListButton({
   initialLocationId,
   locations,
   initialKioskEnabled = false,
+  triggerId,
+  hideTrigger = false,
+  controlledOpen,
+  onOpenChange,
 }: {
   waitlistId: string;
   initialName: string;
   initialLocationId?: string;
   locations: Location[];
   initialKioskEnabled?: boolean;
+  triggerId?: string;
+  hideTrigger?: boolean;
+  controlledOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
   const [name, setName] = useState(initialName);
   const [locationId, setLocationId] = useState(initialLocationId || locations[0]?.id || "");
   const [kioskEnabled, setKioskEnabled] = useState<boolean>(initialKioskEnabled);
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const router = useRouter();
+
+  // If parent controls open state, reset fields when opening
+  useEffect(() => {
+    if (typeof controlledOpen === 'boolean') {
+      if (controlledOpen) {
+        setName(initialName);
+        setLocationId(initialLocationId || locations[0]?.id || "");
+        setKioskEnabled(initialKioskEnabled);
+        setMessage(null);
+      }
+    }
+  }, [controlledOpen, initialName, initialLocationId, initialKioskEnabled, locations]);
+
+  const setOpen = (v: boolean) => {
+    if (typeof controlledOpen === 'boolean' && onOpenChange) onOpenChange(v);
+    else setInternalOpen(v);
+  };
+
+  const getOpen = () => (typeof controlledOpen === 'boolean' ? controlledOpen : internalOpen);
 
   const openModal = () => {
     setOpen(true);
@@ -99,11 +126,11 @@ export default function EditListButton({
 
   return (
     <>
-      <button onClick={openModal} className="action-btn">
+      <button id={triggerId} onClick={openModal} className="action-btn" style={hideTrigger ? { display: 'none' } : undefined}>
         Edit
       </button>
       <Modal
-        open={open}
+        open={getOpen()}
         onClose={closeModal}
         title="Edit list"
         footer={

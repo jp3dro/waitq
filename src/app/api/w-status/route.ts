@@ -73,6 +73,7 @@ export async function GET(req: NextRequest) {
 
   let nowServing: number | null = null;
   let business: { name: string | null; logo_url: string | null; accent_color?: string | null; background_color?: string | null } | null = null;
+  let displayToken: string | null = null;
   if (entry?.waitlist_id) {
     const { data } = await admin
       .from("waitlist_entries")
@@ -84,6 +85,14 @@ export async function GET(req: NextRequest) {
       .limit(1)
       .maybeSingle();
     nowServing = data?.ticket_number ?? null;
+
+    // Fetch the public display token for this waitlist to support redirects
+    const { data: wl } = await admin
+      .from("waitlists")
+      .select("display_token")
+      .eq("id", entry.waitlist_id)
+      .maybeSingle();
+    displayToken = (wl?.display_token as string | null) || null;
   }
 
   if (entry?.business_id) {
@@ -101,7 +110,7 @@ export async function GET(req: NextRequest) {
     };
   }
 
-  return NextResponse.json({ entry, nowServing, business });
+  return NextResponse.json({ entry, nowServing, business, displayToken });
 }
 
 

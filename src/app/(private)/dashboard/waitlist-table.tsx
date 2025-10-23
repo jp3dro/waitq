@@ -456,7 +456,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
   );
 
   return (
-    <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl" ref={tableRef}>
+    <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl overflow-hidden" ref={tableRef}>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-muted sticky top-0 z-10">

@@ -1,12 +1,11 @@
 import { createClient, createRouteClient } from "@/lib/supabase/server";
-import { getAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import ToastOnQuery from "@/components/toast-on-query";
 
-export const metadata = { title: "Profile" };
+export const metadata = { title: "Business" };
 
-export default async function ProfilePage() {
+export default async function BusinessPage() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -23,7 +22,7 @@ export default async function ProfilePage() {
       <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Profile</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Business</h1>
           </div>
         </div>
 
@@ -84,8 +83,8 @@ function SaveBusinessForm({ initialName, initialCountry }: { initialName: string
       }
     }
 
-    revalidatePath("/profile");
-    redirect("/profile?ok=1");
+    revalidatePath("/business");
+    redirect("/business?ok=1");
   }
 
   const countries: { code: string; name: string }[] = [
@@ -139,12 +138,12 @@ function SaveBusinessForm({ initialName, initialCountry }: { initialName: string
         <div className="mt-1 text-xs text-muted-foreground">Used to set the default phone prefix in kiosk.</div>
       </div>
       <div className="pt-2">
-        <button className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-90">Save changes</button>
+        <button className="action-btn action-btn--primary">Save changes</button>
       </div>
     </form>
   );
 }
 
-// UploadLogo moved to Customization page
+// legacy re-exports removed
 
 

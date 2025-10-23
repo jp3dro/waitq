@@ -3,12 +3,14 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { applyAccent } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 
 type Entry = { status: string; created_at: string; eta_minutes: number | null; queue_position: number | null; waitlist_id?: string; ticket_number?: number | null; notified_at?: string | null; seating_preference?: string | null; party_size?: number | null };
 type Business = { name: string | null; logo_url: string | null; accent_color?: string | null; background_color?: string | null } | null;
 
 export default function ClientStatus({ token }: { token: string }) {
   const supabase = createClient();
+  const router = useRouter();
   const [data, setData] = useState<Entry | null>(null);
   const [loading, setLoading] = useState(true);
   const pollTimer = useRef<number | null>(null);
@@ -16,15 +18,26 @@ export default function ClientStatus({ token }: { token: string }) {
   const [nowServing, setNowServing] = useState<number | null>(null);
   const bcRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const [business, setBusiness] = useState<Business>(null);
+  const [displayToken, setDisplayToken] = useState<string | null>(null);
 
   async function load(silent: boolean = false) {
     if (!silent && !data) setLoading(true);
     const res = await fetch(`/api/w-status?token=${encodeURIComponent(token)}`, { cache: "no-store" });
+    if (!res.ok) {
+      // Invalid token or not found. Clear data so redirect logic can handle fallback.
+      setData(null);
+      setNowServing(null);
+      setBusiness(null);
+      setDisplayToken(null);
+      if (!silent || !data) setLoading(false);
+      return;
+    }
     const j = await res.json();
     const entry = (j.entry as Entry) || null;
     setData((prev) => ({ ...(prev || entry || null), ...(entry || {}) } as Entry));
     setNowServing(j.nowServing ?? null);
     setBusiness(j.business || null);
+    setDisplayToken((j.displayToken as string | null) || null);
     if (!silent || !data) setLoading(false);
   }
 
@@ -89,6 +102,24 @@ export default function ClientStatus({ token }: { token: string }) {
       applyAccent(business.accent_color);
     }
   }, [business?.accent_color]);
+
+  // Redirect to public display for invalid/expired sessions:
+  // Conditions: missing entry; or status is one of terminal states; or entry created before today.
+  useEffect(() => {
+    if (loading) return;
+    const isTerminal = (s: string | undefined) => s === "seated" || s === "cancelled" || s === "archived";
+    const createdAt = data?.created_at ? new Date(data.created_at) : null;
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const isOld = createdAt ? createdAt < startOfToday : false;
+    const hasDisplay = typeof displayToken === 'string' && displayToken.length > 0;
+    if ((!data || isTerminal(data?.status) || isOld) && hasDisplay) {
+      router.replace(`/display/${encodeURIComponent(displayToken as string)}`);
+    } else if (!data && !hasDisplay) {
+      // Fallback if we cannot resolve a display token (e.g., invalid entry token)
+      router.replace(`/`);
+    }
+  }, [loading, data, displayToken, router]);
 
   if (loading || !data) return (
     <div className="min-h-dvh bg-background text-foreground">

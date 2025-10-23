@@ -303,7 +303,7 @@ export default function CustomizationClient({ initial }: { initial?: { accent_co
           type="button"
           onClick={() => void saveCustomization()}
           disabled={loading || saving}
-          className="text-sm px-4 h-9 rounded-md bg-primary text-primary-foreground disabled:opacity-60"
+          className="action-btn action-btn--primary disabled:opacity-60"
         >
           {saving ? "Saving..." : "Save changes"}
         </button>

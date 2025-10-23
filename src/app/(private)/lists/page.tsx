@@ -13,9 +13,10 @@ export default async function ListsIndexPage() {
   if (!user) redirect("/login");
 
   const { data: locations } = await supabase.from("business_locations").select("id, name").order("created_at", { ascending: true });
-  const { data: lists } = await supabase.from("waitlists").select("id, name, location_id, display_token").order("created_at", { ascending: true });
+  const { data: lists } = await supabase.from("waitlists").select("id, name, location_id, display_token, kiosk_enabled").order("created_at", { ascending: true });
+  const { data: biz } = await supabase.from("businesses").select("name").order("created_at", { ascending: true }).limit(1).maybeSingle();
   const locs = (locations || []) as { id: string; name: string }[];
-  const allLists = (lists || []) as { id: string; name: string; location_id: string | null; display_token?: string | null }[];
+  const allLists = (lists || []) as { id: string; name: string; location_id: string | null; display_token?: string | null; kiosk_enabled?: boolean | null }[];
 
   // Per-list waiting counts and estimated times (reuse dashboard logic)
   const [waitingCounts, estimatedTimes] = await Promise.all([
@@ -85,7 +86,17 @@ export default async function ListsIndexPage() {
                       const etaDisplay = totalMin > 0 ? (hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`) : '—';
                       return (
                         <li key={l.id}>
-                          <ListCard id={l.id} name={l.name} waiting={waiting} etaDisplay={etaDisplay} displayToken={l.display_token} />
+                          <ListCard
+                            id={l.id}
+                            name={l.name}
+                            waiting={waiting}
+                            etaDisplay={etaDisplay}
+                            displayToken={l.display_token}
+                            businessName={(biz?.name as string | null) || undefined}
+                            initialLocationId={l.location_id}
+                            kioskEnabled={!!l.kiosk_enabled}
+                            locations={locs}
+                          />
                         </li>
                       );
                     })}

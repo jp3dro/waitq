@@ -181,7 +181,7 @@ export default async function DashboardPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-6">
               <p className="text-sm text-muted-foreground">Hourly visits (today)</p>
-              <BarChart labels={[...Array(24).keys()].map((h) => `${String(h).padStart(2, '0')}`)} values={hourlyVisits} maxBars={24} color="var(--ring)" />
+              <BarChart labels={[...Array(24).keys()].map((h) => `${String(h).padStart(2, '0')}`)} values={hourlyVisits} maxBars={24} color="var(--primary)" />
             </div>
             <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-6">
               <p className="text-sm text-muted-foreground">Avg wait time by hour (today)</p>
