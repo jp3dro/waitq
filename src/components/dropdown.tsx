@@ -59,7 +59,7 @@ export default function Dropdown({
       </button>
 
       {isOpen && (
-        <div className="absolute z-10 mt-1 w-full bg-card text-card-foreground shadow-lg ring-1 ring-border rounded-md">
+        <div className="absolute z-20 mt-1 w-full bg-card text-card-foreground shadow-lg ring-1 ring-border rounded-md">
           <ul className="py-1 max-h-60 overflow-auto">
             {options.map((option) => (
               <li key={option.value}>

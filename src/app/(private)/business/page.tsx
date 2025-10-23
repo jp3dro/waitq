@@ -1,22 +1,11 @@
-import { createClient, createRouteClient } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+"use client";
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
 import ToastOnQuery from "@/components/toast-on-query";
+import Dropdown from "@/components/dropdown";
+import { toastManager } from "@/hooks/use-toast";
 
-export const metadata = { title: "Business" };
-
-export default async function BusinessPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  type Business = { id: string; name: string | null; logo_url: string | null; country_code: string | null } | null;
-  const { data: business } = await supabase
-    .from("businesses")
-    .select("id, name, logo_url, country_code")
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .single();
+export default function BusinessPage() {
   return (
     <main className="py-5">
       <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
@@ -29,116 +18,174 @@ export default async function BusinessPage() {
         <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-6">
           <ToastOnQuery />
           <div className="grid gap-3 text-sm">
-        <div>
-          <div className="text-muted-foreground">Email</div>
-          <div className="font-medium">{user?.email}</div>
-        </div>
-        <div>
-          <div className="text-muted-foreground">User ID</div>
-          <div className="font-mono text-xs">{user?.id}</div>
-        </div>
-        <SaveBusinessForm
-          initialName={(business as Business)?.name || ""}
-          initialCountry={(business as Business)?.country_code || "PT"}
-        />
-        {/* Brand logo moved to Customization page */}
-        </div>
+            <UserInfo />
+            <SaveBusinessForm />
+            {/* Brand logo moved to Customization page */}
+          </div>
         </div>
       </div>
     </main>
   );
 }
 
-// ToastOnQuery moved to a dedicated client component
+function UserInfo() {
+  const [user, setUser] = useState<{ email: string; id: string } | null>(null);
 
-function SaveBusinessForm({ initialName, initialCountry }: { initialName: string; initialCountry: string }) {
-  async function action(formData: FormData) {
-    "use server";
-    const updates: { name?: string; country_code?: string } = {};
+  useEffect(() => {
+    const fetchUser = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUser({ email: user.email || "", id: user.id });
+      }
+    };
+    fetchUser();
+  }, []);
 
-    // Handle business name
-    const nameRaw = (formData.get("name") as string) || "";
-    const name = nameRaw.trim();
-    if (name.length > 0) {
-      updates.name = name;
-    }
+  if (!user) return null;
 
-    // Handle country code
-    const code = ((formData.get("country") as string) || "PT").trim().toUpperCase();
-    const allowed = ["PT","US","GB","ES","FR","DE","BR","CA","AU","IN","IT","NL","SE","NO","DK","IE","FI","MX","AR","CL","CO"];
-    const final = allowed.includes(code) ? code : "PT";
-    updates.country_code = final;
+  return (
+    <>
+      <div>
+        <div className="text-muted-foreground">Email</div>
+        <div className="font-medium">{user.email}</div>
+      </div>
+      <div>
+        <div className="text-muted-foreground">User ID</div>
+        <div className="font-mono text-xs">{user.id}</div>
+      </div>
+    </>
+  );
+}
 
-    // Only update if there are changes
-    if (Object.keys(updates).length > 0) {
-      const supa = await createRouteClient();
-      const { data: biz } = await supa
+function SaveBusinessForm() {
+  const [name, setName] = useState("");
+  const [country, setCountry] = useState("PT");
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchBusiness = async () => {
+      const supabase = createClient();
+      const { data: business } = await supabase
         .from("businesses")
-        .select("id")
+        .select("name, country_code")
         .order("created_at", { ascending: true })
         .limit(1)
         .single();
-      if (biz?.id) {
-        await supa.from("businesses").update(updates).eq("id", biz.id);
+
+      if (business) {
+        setName(business.name || "");
+        setCountry(business.country_code || "PT");
       }
+    };
+    fetchBusiness();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const updates: { name?: string; country_code?: string } = {};
+
+      const trimmedName = name.trim();
+      if (trimmedName.length > 0) {
+        updates.name = trimmedName;
+      }
+
+      const allowed = ["PT","US","GB","ES","FR","DE","BR","CA","AU","IN","IT","NL","SE","NO","DK","IE","FI","MX","AR","CL","CO"];
+      const finalCountry = allowed.includes(country) ? country : "PT";
+      updates.country_code = finalCountry;
+
+      if (Object.keys(updates).length > 0) {
+        const supabase = createClient();
+        const { data: biz } = await supabase
+          .from("businesses")
+          .select("id")
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .single();
+
+        if (biz?.id) {
+          await supabase.from("businesses").update(updates).eq("id", biz.id);
+        }
+      }
+
+      // Show success toast
+      toastManager.add({
+        title: "Success",
+        description: "Business settings saved successfully",
+        type: "success",
+      });
+    } catch (error) {
+      console.error("Failed to save business:", error);
+      toastManager.add({
+        title: "Failed to save",
+        description: "Please try again.",
+        type: "error",
+      });
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    revalidatePath("/business");
-    redirect("/business?ok=1");
-  }
-
-  const countries: { code: string; name: string }[] = [
-    { code: "US", name: "United States" },
-    { code: "GB", name: "United Kingdom" },
-    { code: "PT", name: "Portugal" },
-    { code: "ES", name: "Spain" },
-    { code: "FR", name: "France" },
-    { code: "DE", name: "Germany" },
-    { code: "BR", name: "Brazil" },
-    { code: "CA", name: "Canada" },
-    { code: "AU", name: "Australia" },
-    { code: "IN", name: "India" },
-    { code: "IT", name: "Italy" },
-    { code: "NL", name: "Netherlands" },
-    { code: "SE", name: "Sweden" },
-    { code: "NO", name: "Norway" },
-    { code: "DK", name: "Denmark" },
-    { code: "IE", name: "Ireland" },
-    { code: "FI", name: "Finland" },
-    { code: "MX", name: "Mexico" },
-    { code: "AR", name: "Argentina" },
-    { code: "CL", name: "Chile" },
-    { code: "CO", name: "Colombia" },
+  const countries: { value: string; label: string }[] = [
+    { value: "US", label: "United States" },
+    { value: "GB", label: "United Kingdom" },
+    { value: "PT", label: "Portugal" },
+    { value: "ES", label: "Spain" },
+    { value: "FR", label: "France" },
+    { value: "DE", label: "Germany" },
+    { value: "BR", label: "Brazil" },
+    { value: "CA", label: "Canada" },
+    { value: "AU", label: "Australia" },
+    { value: "IN", label: "India" },
+    { value: "IT", label: "Italy" },
+    { value: "NL", label: "Netherlands" },
+    { value: "SE", label: "Sweden" },
+    { value: "NO", label: "Norway" },
+    { value: "DK", label: "Denmark" },
+    { value: "IE", label: "Ireland" },
+    { value: "FI", label: "Finland" },
+    { value: "MX", label: "Mexico" },
+    { value: "AR", label: "Argentina" },
+    { value: "CL", label: "Chile" },
+    { value: "CO", label: "Colombia" },
   ];
 
   return (
-    <form action={action} className="mt-4 grid gap-4">
+    <form onSubmit={handleSubmit} className="mt-4 grid gap-4">
       <div>
         <label className="text-sm font-medium text-foreground" htmlFor="name">Business name</label>
         <input
           id="name"
           name="name"
-          defaultValue={initialName}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
           className="mt-1 block w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           placeholder="e.g., Acme Barbers"
         />
       </div>
       <div>
-        <label className="text-sm font-medium text-foreground" htmlFor="country">Business country</label>
-        <select
-          id="country"
-          name="country"
-          defaultValue={initialCountry || "PT"}
-          className="mt-1 block w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-        >
-          {countries.map((c) => (
-            <option key={c.code} value={c.code}>{c.name}</option>
-          ))}
-        </select>
+        <label className="text-sm font-medium text-foreground">Business country</label>
+        <div className="mt-1">
+          <Dropdown
+            value={country}
+            onChange={setCountry}
+            options={countries}
+            placeholder="Select a country"
+          />
+        </div>
         <div className="mt-1 text-xs text-muted-foreground">Used to set the default phone prefix in kiosk.</div>
       </div>
       <div className="pt-2">
-        <button className="action-btn action-btn--primary">Save changes</button>
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="action-btn action-btn--primary disabled:opacity-50"
+        >
+          {isLoading ? "Saving…" : "Save changes"}
+        </button>
       </div>
     </form>
   );
