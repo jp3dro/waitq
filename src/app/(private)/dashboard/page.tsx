@@ -155,7 +155,41 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* Removed old insights cards */}
+
+        {/* Today's Analytics */}
+        <section className="space-y-4">
+          <h2 className="text-base font-semibold">Today’s analytics</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-6">
+              <p className="text-sm text-muted-foreground">Total visitors (today)</p>
+              <p className="mt-2 text-3xl font-semibold">{todayVisitors}</p>
+            </div>
+            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-6">
+              <p className="text-sm text-muted-foreground">Avg wait time (today)</p>
+              <p className="mt-2 text-3xl font-semibold">
+                {(() => {
+                  const totalMin = todayAvgWaitMs ? Math.max(1, Math.round(todayAvgWaitMs / 60000)) : 0;
+                  const hours = Math.floor(totalMin / 60);
+                  const minutes = totalMin % 60;
+                  return totalMin > 0 ? (hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`) : '—';
+                })()}
+              </p>
+            </div>
+          </div>
+
+          {/* Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-6">
+              <p className="text-sm text-muted-foreground">Hourly visits (today)</p>
+              <BarChart labels={[...Array(24).keys()].map((h) => `${String(h).padStart(2, '0')}`)} values={hourlyVisits} maxBars={24} color="var(--ring)" />
+            </div>
+            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-6">
+              <p className="text-sm text-muted-foreground">Avg wait time by hour (today)</p>
+              <BarChart labels={[...Array(24).keys()].map((h) => `${String(h).padStart(2, '0')}`)} values={hourlyWaitAvgMin} maxBars={24} color="var(--primary)" suffix="m" />
+            </div>
+          </div>
+        </section>
+
 
         {/* Lists grouped by location with waiting counts and ETA */}
         <div className="space-y-6">
@@ -204,39 +238,6 @@ export default async function DashboardPage() {
           )}
         </div>
 
-        {/* Today's Analytics */}
-        <section className="space-y-4">
-          <h2 className="text-base font-semibold">Today’s analytics</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-6">
-              <p className="text-sm text-muted-foreground">Total visitors (today)</p>
-              <p className="mt-2 text-3xl font-semibold">{todayVisitors}</p>
-            </div>
-            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-6">
-              <p className="text-sm text-muted-foreground">Avg wait time (today)</p>
-              <p className="mt-2 text-3xl font-semibold">
-                {(() => {
-                  const totalMin = todayAvgWaitMs ? Math.max(1, Math.round(todayAvgWaitMs / 60000)) : 0;
-                  const hours = Math.floor(totalMin / 60);
-                  const minutes = totalMin % 60;
-                  return totalMin > 0 ? (hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`) : '—';
-                })()}
-              </p>
-            </div>
-          </div>
-
-          {/* Charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-6">
-              <p className="text-sm text-muted-foreground">Hourly visits (today)</p>
-              <BarChart labels={[...Array(24).keys()].map((h) => `${String(h).padStart(2, '0')}`)} values={hourlyVisits} maxBars={24} color="#111827" />
-            </div>
-            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-6">
-              <p className="text-sm text-muted-foreground">Avg wait time by hour (today)</p>
-              <BarChart labels={[...Array(24).keys()].map((h) => `${String(h).padStart(2, '0')}`)} values={hourlyWaitAvgMin} maxBars={24} color="#FF9500" suffix="m" />
-            </div>
-          </div>
-        </section>
       </div>
     </main>
   );
@@ -250,7 +251,7 @@ function BarChart({ labels, values, maxBars = 24, color = "var(--foreground)", s
         {values.slice(0, maxBars).map((v, i) => (
           <div key={i} className="flex flex-col items-center justify-end gap-2">
             <div className="w-full rounded-md relative group" style={{ height: `${(v / max) * 120 + 2}px`, backgroundColor: color }}>
-              <div className="pointer-events-none absolute -top-6 left-1/2 -translate-x-1/2 rounded bg-black text-white text-[10px] px-2 py-1 opacity-0 group-hover:opacity-100 transition whitespace-nowrap">
+              <div className="pointer-events-none absolute -top-6 left-1/2 -translate-x-1/2 rounded bg-popover text-popover-foreground text-[10px] px-2 py-1 opacity-0 group-hover:opacity-100 transition whitespace-nowrap ring-1 ring-border">
                 {labels[i]}: {v}{suffix}
               </div>
             </div>

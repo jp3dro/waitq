@@ -7,13 +7,13 @@ export default async function CustomizationPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  let initial: { accent_color: string | null; background_color: string | null; cover_url: string | null } | null = null;
+  let initial: { accent_color: string | null; background_color: string | null; cover_url: string | null; logo_url: string | null } | null = null;
   if (user) {
     const { getAdminClient } = await import("@/lib/supabase/admin");
     const admin = getAdminClient();
     const { data } = await admin
       .from("businesses")
-      .select("accent_color, background_color, cover_url")
+      .select("accent_color, background_color, cover_url, logo_url")
       .eq("owner_user_id", user.id)
       .maybeSingle();
     initial = (data as typeof initial) || null;

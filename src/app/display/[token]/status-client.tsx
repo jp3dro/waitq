@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { applyAccent } from "@/lib/utils";
 import Modal from "@/components/modal";
 import PhoneInput, { type Country } from "react-phone-number-input";
 import 'react-phone-number-input/style.css';
@@ -84,6 +85,10 @@ export default function DisplayClient({ token }: { token: string }) {
 
   const bg = data?.backgroundColor || "#000000";
   const accent = data?.accentColor || "#FFFFFF";
+
+  useEffect(() => {
+    if (accent) applyAccent(accent);
+  }, [accent]);
   if (loading || !data) return (
     <main className="min-h-screen bg-background text-foreground flex items-center justify-center">
       <p className="text-muted-foreground">Loading…</p>
@@ -112,8 +117,14 @@ export default function DisplayClient({ token }: { token: string }) {
             <span className="sr-only">Toggle theme</span>
           </button>
         </div>
+        <div className="mt-4 flex items-center justify-end">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/waitq.svg" alt="WaitQ" className="h-5 w-auto logo-light" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/waitq-variant.svg" alt="WaitQ" className="h-5 w-auto logo-dark" />
+        </div>
         {typeof data.estimatedMs === 'number' && data.estimatedMs > 0 ? (
-          <p className="mt-2 text-neutral-300">Estimated wait time: {formatDuration(data.estimatedMs)}</p>
+          <p className="mt-2 text-muted-foreground">Estimated wait time: {formatDuration(data.estimatedMs)}</p>
         ) : null}
         {data.kioskEnabled ? (
           <div className="mt-4">
@@ -212,12 +223,12 @@ function KioskButton({ token, defaultCountry, listType, seatingPreferences, acce
       </button>
       <Modal open={open} onClose={close} title={step === "confirm" ? "You&apos;re on the list" : "Add to waiting list"}>
         {step === "intro" ? (
-          <div className="grid gap-5 text-neutral-900">
+          <div className="grid gap-5 text-foreground">
             {listType === "restaurants" ? (
               <div className="grid gap-6">
                 <div className="grid gap-2">
                   <label className="text-base font-medium">Number of people</label>
-                  <div className="text-4xl font-bold px-4 py-3 rounded-xl ring-1 ring-inset ring-neutral-300 bg-white min-h-[64px] flex items-center">
+                  <div className="text-4xl font-bold px-4 py-3 rounded-xl ring-1 ring-inset ring-border bg-card min-h-[64px] flex items-center">
                     {typeof partySize === 'number' ? partySize : ''}
                   </div>
                   <KeypadNumeric
@@ -244,7 +255,7 @@ function KioskButton({ token, defaultCountry, listType, seatingPreferences, acce
                             type="button"
                             key={s}
                             onClick={() => setPref(s)}
-                            className={`px-6 py-4 rounded-2xl ring-1 ring-inset text-lg ${active ? "bg-black text-white ring-black" : "bg-white text-neutral-900 ring-neutral-300 hover:bg-neutral-100"}`}
+                            className={`px-6 py-4 rounded-2xl ring-1 ring-inset text-lg ${active ? "bg-primary text-primary-foreground ring-primary" : "bg-card text-foreground ring-border hover:bg-muted"}`}
                           >
                             {s}
                           </button>
@@ -263,7 +274,7 @@ function KioskButton({ token, defaultCountry, listType, seatingPreferences, acce
             </button>
           </div>
         ) : step === "form" ? (
-          <div className="grid gap-5 text-neutral-900">
+          <div className="grid gap-5 text-foreground">
             <div className="grid gap-2">
               <label className="text-base font-medium" htmlFor="kiosk-phone">Phone number</label>
               <PhoneInput
@@ -272,7 +283,7 @@ function KioskButton({ token, defaultCountry, listType, seatingPreferences, acce
                 defaultCountry={defaultCountry as Country}
                 value={phone}
                 onChange={(value) => { setPhone(value || undefined); setPhoneError(null); }}
-                className={`block w-full rounded-xl border-0 shadow-sm ring-1 ring-inset px-4 py-3 text-2xl text-neutral-900 focus:ring-2 ${phoneError ? "ring-red-500 focus:ring-red-600" : "ring-neutral-300 focus:ring-[#FF9500]"}`}
+                className={`block w-full rounded-xl border-0 shadow-sm ring-1 ring-inset px-4 py-3 text-2xl text-foreground focus:ring-2 ${phoneError ? "ring-red-500 focus:ring-red-600" : "ring-border focus:ring-primary"}`}
                 aria-invalid={phoneError ? true : false}
                 aria-describedby={phoneError ? "kiosk-phone-error" : undefined}
               />
@@ -288,11 +299,11 @@ function KioskButton({ token, defaultCountry, listType, seatingPreferences, acce
             {message ? <p className="text-sm text-red-600">{message}</p> : null}
           </div>
         ) : (
-          <div className="grid gap-5 text-center text-neutral-900">
+          <div className="grid gap-5 text-center text-foreground">
             <p className="text-lg">Thanks! You&apos;re on the waiting list.</p>
             <div>
-              <p className="text-sm text-neutral-600">Your ticket</p>
-              <div className="mt-2 text-6xl font-extrabold text-neutral-900">{ticketNumber ?? "-"}</div>
+              <p className="text-sm text-muted-foreground">Your ticket</p>
+              <div className="mt-2 text-6xl font-extrabold text-foreground">{ticketNumber ?? "-"}</div>
             </div>
             <button onClick={close} className="w-full inline-flex items-center justify-center rounded-xl px-5 py-4 text-lg font-semibold shadow-sm"
               style={{ backgroundColor: accent, color: getReadableTextColor(accent) }}>
@@ -322,7 +333,7 @@ function Keypad({ value, onChange }: { value: string | undefined; onChange: (v: 
         <button
           key={k}
           onClick={() => press(k)}
-          className="h-16 text-2xl font-semibold rounded-xl ring-1 ring-inset ring-neutral-300 bg-white hover:bg-neutral-100"
+          className="h-16 text-2xl font-semibold rounded-xl ring-1 ring-inset ring-border bg-card hover:bg-muted"
         >
           {k}
         </button>
@@ -355,7 +366,7 @@ function KeypadNumeric({ value, onChange }: { value: string; onChange: (v: strin
         <button
           key={k}
           onClick={() => press(k)}
-          className="h-16 text-2xl font-semibold rounded-xl ring-1 ring-inset ring-neutral-300 bg-white hover:bg-neutral-100"
+          className="h-16 text-2xl font-semibold rounded-xl ring-1 ring-inset ring-border bg-card hover:bg-muted"
         >
           {k}
         </button>

@@ -7,7 +7,7 @@ export function AccentProvider({ initial }: { initial?: string }) {
   useEffect(() => {
     try {
       const stored = typeof window !== "undefined" ? localStorage.getItem("waitq:accent") : null;
-      const hex = initial || stored || "#3b82f6";
+      const hex = initial || stored || "#FF9500";
       applyAccent(hex);
     } catch {
       // ignore

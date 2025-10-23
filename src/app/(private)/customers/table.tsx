@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
+import { Pencil, Trash2 } from "lucide-react";
 import { createPortal } from "react-dom";
 import Modal from "@/components/modal";
 
@@ -25,7 +26,7 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
 
   const openMenu = (customer: Customer, trigger: HTMLElement) => {
     const rect = trigger.getBoundingClientRect();
-    const menuWidth = 192;
+    const menuWidth = 200;
     const estHeight = 140;
     const vw = window.innerWidth;
     const vh = window.innerHeight;
@@ -164,7 +165,7 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
                     {(c.phone || "").replace(/\D+/g, "") ? (
                       <button
                         onClick={(ev) => openMenu(c, ev.currentTarget as HTMLElement)}
-                        className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-border bg-card hover:bg-muted shadow-sm"
+                        className="action-btn"
                       >
                         ⋯
                       </button>
@@ -186,15 +187,19 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
           return createPortal(
             <div className="fixed inset-0 z-50" onClick={closeMenu}>
               <div
-                className="absolute w-48 rounded-md bg-card text-card-foreground text-sm shadow-lg ring-1 ring-border py-1"
+                className="absolute menu-container"
                 style={{ top: menuState.top, left: menuState.left }}
                 onClick={(e) => e.stopPropagation()}
               >
-                <button onClick={() => onEdit(me)} className="w-full text-left px-3 py-2 hover:bg-muted text-blue-700 flex items-center gap-2">
-                  <span>✏️</span> Edit details
+                <button onClick={() => onEdit(me)} className="menu-item">
+                  <Pencil className="menu-icon" />
+                  <span>Edit details</span>
                 </button>
-                <div className="border-t border-border my-1"></div>
-                <button onClick={() => onDelete(me)} className="w-full text-left px-3 py-2 hover:bg-muted text-red-700">Delete customer</button>
+                <div className="menu-separator"></div>
+                <button onClick={() => onDelete(me)} className="menu-item menu-item--danger">
+                  <Trash2 className="menu-icon" />
+                  <span>Delete customer</span>
+                </button>
               </div>
             </div>,
             document.body
@@ -210,14 +215,14 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
             <button
               type="button"
               onClick={() => setEditing(null)}
-              className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-border hover:bg-muted"
+              className="action-btn"
             >
               Cancel
             </button>
             <button
               onClick={saveEdit}
               disabled={isPending}
-              className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-90 disabled:opacity-50"
+              className="action-btn action-btn--primary disabled:opacity-50"
             >
               {isPending ? "Saving…" : "Save"}
             </button>

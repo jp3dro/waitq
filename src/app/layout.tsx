@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "next-themes";
 import { AccentProvider } from "@/components/theme/AccentProvider";
+ 
 
 const serif = EB_Garamond({ variable: "--font-serif", subsets: ["latin"], display: "swap" });
 const sans = Inter({ variable: "--font-sans", subsets: ["latin"], display: "swap" });
@@ -38,13 +39,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${serif.variable} ${sans.variable} antialiased`}>
-        {/* Inline bootstrap to avoid accent FOUC */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html:
-              "try{var a=localStorage.getItem('waitq:accent');if(a){var r=document.documentElement.style;r.setProperty('--accent',a);r.setProperty('--primary',a);}}catch(e){}",
-          }}
-        />
         <ThemeProvider
           attribute="data-theme"
           defaultTheme="light"

@@ -141,10 +141,10 @@ export default function LocationsPage() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Locations</h1>
           </div>
-          <button onClick={() => setOpenCreate(true)} className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-90">New location</button>
+          <button onClick={() => setOpenCreate(true)} className="action-btn action-btn--primary">New location</button>
         </div>
 
-        <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-6 space-y-4">
+        <div className="space-y-4">
           {msg ? <p className="text-sm text-destructive">{msg}</p> : null}
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -178,7 +178,7 @@ export default function LocationsPage() {
                   )}
                 </div>
                 <div className="mt-4 flex items-center justify-between pt-3 border-t border-border">
-                  <button onClick={() => openEditModal(l)} className="inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium ring-1 ring-inset ring-border hover:bg-muted transition-colors">
+                  <button onClick={() => openEditModal(l)} className="action-btn text-xs transition-colors">
                     Edit
                   </button>
                   {canDelete && (
@@ -199,8 +199,8 @@ export default function LocationsPage() {
       title="New location"
       footer={
         <>
-          <button onClick={() => setOpenCreate(false)} className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-border hover:bg-muted">Cancel</button>
-          <button onClick={create} disabled={isPending || !form.name.trim()} className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground shadow-sm disabled:opacity-50 hover:opacity-90">Create</button>
+          <button onClick={() => setOpenCreate(false)} className="action-btn">Cancel</button>
+          <button onClick={create} disabled={isPending || !form.name.trim()} className="action-btn action-btn--primary disabled:opacity-50">Create</button>
         </>
       }
     >
@@ -247,8 +247,8 @@ export default function LocationsPage() {
       title="Edit location"
       footer={
         <>
-          <button onClick={closeEditModal} className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-border hover:bg-muted">Cancel</button>
-          <button onClick={saveEdit} disabled={isPending} className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground shadow-sm disabled:opacity-50 hover:opacity-90">Save changes</button>
+          <button onClick={closeEditModal} className="action-btn">Cancel</button>
+          <button onClick={saveEdit} disabled={isPending} className="action-btn action-btn--primary disabled:opacity-50">Save changes</button>
         </>
       }
     >

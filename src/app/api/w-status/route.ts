@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
   }
 
   let nowServing: number | null = null;
-  let business: { name: string | null; logo_url: string | null } | null = null;
+  let business: { name: string | null; logo_url: string | null; accent_color?: string | null; background_color?: string | null } | null = null;
   if (entry?.waitlist_id) {
     const { data } = await admin
       .from("waitlist_entries")
@@ -89,11 +89,16 @@ export async function GET(req: NextRequest) {
   if (entry?.business_id) {
     const { data: biz } = await admin
       .from("businesses")
-      .select("name, logo_url")
+      .select("name, logo_url, accent_color, background_color")
       .eq("id", entry.business_id)
       .limit(1)
       .maybeSingle();
-    if (biz) business = { name: (biz as { name: string | null; logo_url: string | null }).name ?? null, logo_url: (biz as { name: string | null; logo_url: string | null }).logo_url ?? null };
+    if (biz) business = {
+      name: (biz as { name: string | null }).name ?? null,
+      logo_url: (biz as { logo_url: string | null }).logo_url ?? null,
+      accent_color: (biz as { accent_color: string | null }).accent_color ?? null,
+      background_color: (biz as { background_color: string | null }).background_color ?? null,
+    };
   }
 
   return NextResponse.json({ entry, nowServing, business });

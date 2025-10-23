@@ -55,15 +55,15 @@ export default function CreateListButton() {
 
   return (
     <>
-      <button onClick={() => setOpen(true)} className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground shadow-sm hover:opacity-90">Create list</button>
+      <button onClick={() => setOpen(true)} className="action-btn action-btn--primary text-xs">Create list</button>
       <Modal
         open={open}
         onClose={() => { setOpen(false); reset(); }}
         title="Create list"
         footer={
           <>
-            <button onClick={() => { setOpen(false); reset(); }} className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-border hover:bg-muted">Cancel</button>
-            <button disabled={isPending} onClick={onCreate} className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-90 disabled:opacity-50">{isPending ? "Creating…" : "Create"}</button>
+            <button onClick={() => { setOpen(false); reset(); }} className="action-btn">Cancel</button>
+            <button disabled={isPending} onClick={onCreate} className="action-btn action-btn--primary disabled:opacity-50">{isPending ? "Creating…" : "Create"}</button>
           </>
         }
       >
@@ -121,7 +121,7 @@ function SeatingPrefsEditor({ value, onChange }: { value: string[]; onChange: (v
     <div className="grid gap-2">
       <div className="flex gap-2">
         <input value={input} onChange={(e) => setInput(e.target.value)} className="flex-1 block rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm" placeholder="Add seating preference" />
-        <button type="button" onClick={add} className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90">Add</button>
+        <button type="button" onClick={add} className="action-btn action-btn--primary text-xs">Add</button>
       </div>
       {value.length ? (
         <ul className="flex flex-wrap gap-2">

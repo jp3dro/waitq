@@ -13,7 +13,7 @@ export async function GET() {
   const admin = getAdminClient();
   const { data, error } = await admin
     .from("businesses")
-    .select("id, accent_color, background_color, cover_url")
+    .select("id, accent_color, background_color, cover_url, logo_url")
     .eq("owner_user_id", user.id)
     .maybeSingle();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
@@ -22,6 +22,7 @@ export async function GET() {
 
 const patchSchema = z.object({
   accentColor: z.string().regex(/^#([0-9a-fA-F]{6})$/, { message: "Invalid HEX color" }).optional(),
+  // Background color remains stored, but no longer editable in internal UI
   backgroundColor: z.string().regex(/^#([0-9a-fA-F]{6})$/, { message: "Invalid HEX color" }).optional(),
   coverUrl: z.string().url().optional().nullable(),
 });
@@ -56,7 +57,7 @@ export async function PATCH(req: NextRequest) {
     .from("businesses")
     .update(fields)
     .eq("id", biz.id)
-    .select("id, accent_color, background_color, cover_url")
+    .select("id, accent_color, background_color, cover_url, logo_url")
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ customization: data });

@@ -14,7 +14,8 @@ export default async function Nav() {
       <div className="mx-auto max-w-7xl px-6 lg:px-8 h-16 flex items-center justify-between">
         <div className="flex items-center gap-8 min-w-0">
           <Link href="/" className="flex items-center" aria-label="WaitQ home">
-            <Image src="/waitq.svg" alt="WaitQ" className="h-8 w-auto" width={108} height={32} />
+            <Image src="/waitq.svg" alt="WaitQ" className="h-8 w-auto logo-light" width={108} height={32} />
+            <Image src="/waitq-variant.svg" alt="WaitQ" className="h-8 w-auto logo-dark" width={108} height={32} />
           </Link>
         </div>
         <div className="hidden md:flex items-center gap-6 text-sm text-foreground/80">

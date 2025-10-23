@@ -64,7 +64,7 @@ export default function UsersClient() {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <button type="button" className="h-9 rounded-md bg-primary text-primary-foreground text-sm px-3 hover:opacity-90" onClick={() => setInvOpen(true)}>Invite user</button>
+        <button type="button" className="action-btn action-btn--primary h-9 text-sm" onClick={() => setInvOpen(true)}>Invite user</button>
       </div>
       <ul className="mt-3 divide-y divide-border">
         {grouped.map((m) => (
@@ -77,7 +77,7 @@ export default function UsersClient() {
               {m.role === 'admin' || (ownerId && m.user_id === ownerId) ? (
                 <span className="text-xs text-muted-foreground">Cannot remove</span>
               ) : (
-                <button className="text-sm px-2 h-8 rounded-md border border-border" onClick={() => removeMember(m.id, m.user_id, m.role)}>More actions ▾</button>
+                <button className="action-btn text-sm h-8 px-2" onClick={() => removeMember(m.id, m.user_id, m.role)}>More actions ▾</button>
               )}
             </div>
           </li>
@@ -90,8 +90,8 @@ export default function UsersClient() {
         title="Invite user"
         footer={
           <>
-            <button type="button" className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-border hover:bg-muted" onClick={() => setInvOpen(false)}>Cancel</button>
-            <button type="button" className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-90" onClick={invite}>Invite</button>
+            <button type="button" className="action-btn" onClick={() => setInvOpen(false)}>Cancel</button>
+            <button type="button" className="action-btn action-btn--primary" onClick={invite}>Invite</button>
           </>
         }
       >

@@ -286,7 +286,7 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Analytics content container */}
-        <div className="bg-card text-card-foreground rounded-xl p-6 ring-1 ring-border space-y-6">
+        <div className="space-y-6">
           <div className="flex justify-center">
             <div className="inline-flex overflow-hidden rounded-md ring-1 ring-inset ring-border bg-card shadow-sm divide-x divide-border">
               {[7, 15, 30].map((d) => (
@@ -294,7 +294,7 @@ export default function AnalyticsPage() {
                   key={d}
                   onClick={() => setRangeDays(d as 7 | 15 | 30)}
                   type="button"
-                  className={`px-3 py-1.5 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${rangeDays === d ? 'bg-primary text-primary-foreground' : 'text-foreground/80 hover:bg-muted'}`}
+                  className={`action-btn ${rangeDays === d ? 'action-btn--primary' : ''}`}
                 >
                   Last {d} days
                 </button>

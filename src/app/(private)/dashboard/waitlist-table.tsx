@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/client";
 import Modal from "@/components/modal";
 import { createPortal } from "react-dom";
 import { toastManager } from "@/hooks/use-toast";
+import { RefreshCw, Archive, Pencil, Trash2 } from "lucide-react";
 
 type Entry = {
   id: string;
@@ -53,7 +54,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
 
   const openMenuFor = (entryId: string, trigger: HTMLElement) => {
     const rect = trigger.getBoundingClientRect();
-    const menuWidth = 192;
+    const menuWidth = 200;
     const estHeight = 200;
     const vw = window.innerWidth;
     const vh = window.innerHeight;
@@ -482,19 +483,19 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                   <div className="inline-flex items-center gap-2">
                     <button
                       onClick={() => copyPersonalUrl(e.token)}
-                      className="inline-flex items-center rounded-md px-2 py-1.5 text-sm font-medium ring-1 ring-inset ring-border bg-card hover:bg-muted shadow-sm"
+                      className="action-btn px-2 py-1.5"
                       title="Copy personal page URL"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                       </svg>
                     </button>
-                    <button disabled={isPending} onClick={() => call(e.id)} className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground shadow-sm disabled:opacity-50 hover:opacity-90">
+                    <button disabled={isPending} onClick={() => call(e.id)} className="action-btn action-btn--primary disabled:opacity-50">
                       Call
                     </button>
                     <button
                       onClick={(ev) => openMenuFor(e.id, ev.currentTarget as HTMLElement)}
-                      className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-border bg-card hover:bg-muted shadow-sm"
+                      className="action-btn"
                     >
                       ⋯
                     </button>
@@ -512,7 +513,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
         return createPortal(
           <div className="fixed inset-0 z-50" onClick={closeMenu}>
             <div
-              className="absolute w-48 rounded-md bg-card text-card-foreground text-sm shadow-lg ring-1 ring-border py-1"
+              className="absolute menu-container"
               style={{ top: menuState.top, left: menuState.left }}
               onClick={(e) => e.stopPropagation()}
             >
@@ -522,31 +523,38 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                     <button
                       disabled={isPending}
                       onClick={() => { closeMenu(); retryMessage(me.id, 'sms'); }}
-                      className="w-full text-left px-3 py-2 hover:bg-muted text-orange-600 flex items-center gap-2"
+                      className="menu-item"
                     >
-                      <span>🔄</span> Retry SMS
+                      <RefreshCw className="menu-icon" />
+                      <span>Retry SMS</span>
                     </button>
                   )}
                   {me.whatsapp_status === 'failed' && (
                     <button
                       disabled={isPending}
                       onClick={() => { closeMenu(); retryMessage(me.id, 'whatsapp'); }}
-                      className="w-full text-left px-3 py-2 hover:bg-muted text-orange-600 flex items-center gap-2"
+                      className="menu-item"
                     >
-                      <span>🔄</span> Retry WhatsApp
+                      <RefreshCw className="menu-icon" />
+                      <span>Retry WhatsApp</span>
                     </button>
                   )}
-                  <div className="border-t my-1"></div>
+                  <div className="menu-separator"></div>
                 </>
               )}
-              <button disabled={isPending} onClick={() => { closeMenu(); archive(me.id); }} className="w-full text-left px-3 py-2 hover:bg-muted text-amber-700 flex items-center gap-2">
-                <span>📦</span> Archive
+              <button disabled={isPending} onClick={() => { closeMenu(); archive(me.id); }} className="menu-item">
+                <Archive className="menu-icon" />
+                <span>Archive</span>
               </button>
-              <button disabled={isPending} onClick={() => { closeMenu(); edit(me.id); }} className="w-full text-left px-3 py-2 hover:bg-muted text-blue-700 flex items-center gap-2">
-                <span>✏️</span> Edit
+              <button disabled={isPending} onClick={() => { closeMenu(); edit(me.id); }} className="menu-item">
+                <Pencil className="menu-icon" />
+                <span>Edit</span>
               </button>
-              <div className="border-t my-1"></div>
-              <button disabled={isPending} onClick={() => { closeMenu(); remove(me.id); }} className="w-full text-left px-3 py-2 hover:bg-muted text-red-700">Delete</button>
+              <div className="menu-separator"></div>
+              <button disabled={isPending} onClick={() => { closeMenu(); remove(me.id); }} className="menu-item menu-item--danger">
+                <Trash2 className="menu-icon" />
+                <span>Delete</span>
+              </button>
             </div>
           </div>,
           document.body
@@ -563,13 +571,13 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
             <button
               type="button"
               onClick={() => setEditingId(null)}
-              className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-border hover:bg-muted"
+              className="action-btn"
             >
               Cancel
             </button>
             <button
               disabled={isPending}
-              className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-90 disabled:opacity-50"
+              className="action-btn action-btn--primary disabled:opacity-50"
             >
               {isPending ? "Saving…" : "Save"}
             </button>

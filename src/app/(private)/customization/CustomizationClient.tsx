@@ -1,12 +1,12 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { applyAccent } from "@/lib/utils";
 
 type Customization = {
   id: string;
   accent_color: string | null;
   background_color: string | null;
   cover_url: string | null;
+  logo_url: string | null;
 };
 
 const IOS_COLORS = [
@@ -24,7 +24,7 @@ function classNames(...classes: (string | false | undefined)[]) {
   return classes.filter(Boolean).join(" ");
 }
 
-export default function CustomizationClient({ initial }: { initial?: { accent_color: string | null; background_color: string | null; cover_url: string | null } }) {
+export default function CustomizationClient({ initial }: { initial?: { accent_color: string | null; background_color: string | null; cover_url: string | null; logo_url?: string | null } }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -32,22 +32,23 @@ export default function CustomizationClient({ initial }: { initial?: { accent_co
   const [useCustomAccent, setUseCustomAccent] = useState(false);
   const [customAccent, setCustomAccent] = useState<string>("#000000");
 
-  const [background, setBackground] = useState<string>("#000000");
+  // Background color controls removed from internal UI per brand-scoping change
 
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const logoFileRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     // Hydrate from server-provided initial to avoid flicker
     if (initial) {
       const ac = initial.accent_color || IOS_COLORS[0].value;
-      const bg = initial.background_color || "#FFFFFF";
       setAccent(ac);
       setUseCustomAccent(!IOS_COLORS.some((c) => c.value.toLowerCase() === ac.toLowerCase()));
       if (!IOS_COLORS.some((c) => c.value.toLowerCase() === ac.toLowerCase())) setCustomAccent(ac);
-      setBackground(bg);
       setCoverUrl(initial.cover_url || null);
+      setLogoUrl(initial.logo_url || null);
     }
     let active = true;
     (async () => {
@@ -58,15 +59,13 @@ export default function CustomizationClient({ initial }: { initial?: { accent_co
         if (!active) return;
         if (json?.customization) {
           const ac = json.customization.accent_color || IOS_COLORS[0].value;
-          const bg = json.customization.background_color || "#000000";
           setAccent(ac);
           setUseCustomAccent(!IOS_COLORS.some((c) => c.value.toLowerCase() === ac.toLowerCase()));
           if (!IOS_COLORS.some((c) => c.value.toLowerCase() === ac.toLowerCase())) setCustomAccent(ac);
-          setBackground(bg);
           setCoverUrl(json.customization.cover_url || null);
+          setLogoUrl(json.customization.logo_url || null);
         } else {
           setAccent("#FFFFFF");
-          setBackground("#000000");
         }
       } catch (e) {
         // noop toast-on-query pattern elsewhere
@@ -81,17 +80,6 @@ export default function CustomizationClient({ initial }: { initial?: { accent_co
 
   const effectiveAccent = useMemo(() => (useCustomAccent ? customAccent : accent), [useCustomAccent, customAccent, accent]);
 
-  // Live preview: apply accent and persist to localStorage
-  useEffect(() => {
-    const acc = effectiveAccent;
-    applyAccent(acc);
-    try {
-      localStorage.setItem("waitq:accent", acc);
-    } catch {
-      // ignore
-    }
-  }, [effectiveAccent]);
-
   async function saveCustomization() {
     setSaving(true);
     try {
@@ -100,7 +88,6 @@ export default function CustomizationClient({ initial }: { initial?: { accent_co
         headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
           accentColor: effectiveAccent,
-          backgroundColor: background,
           coverUrl: coverUrl,
         }),
       });
@@ -134,11 +121,32 @@ export default function CustomizationClient({ initial }: { initial?: { accent_co
     }
   }
 
+  async function handleLogoUpload(file: File) {
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File too large (max 5MB)");
+      return;
+    }
+    const fd = new FormData();
+    fd.append("file", file);
+    setUploading(true);
+    try {
+      const res = await fetch("/api/customization/logo", { method: "POST", body: fd });
+      const j = await res.json();
+      if (!res.ok) throw new Error(j?.error || "Upload failed");
+      setLogoUrl(j.url || null);
+    } catch (e) {
+      alert((e as Error).message);
+    } finally {
+      setUploading(false);
+    }
+  }
+
   return (
     <div className="space-y-8">
-      {/* Accent color */}
+      {/* Brand color */}
       <section>
-        <div className="text-sm font-medium">Accent color</div>
+        <div className="text-sm font-medium">Brand color</div>
         <div className="mt-2 grid grid-cols-9 gap-3">
           {IOS_COLORS.map((c) => (
             <button
@@ -194,33 +202,6 @@ export default function CustomizationClient({ initial }: { initial?: { accent_co
         </div>
       </section>
 
-      {/* Background color */}
-      <section>
-        <div className="text-sm font-medium">Background color</div>
-        <div className="mt-2 flex items-center gap-2">
-          <input
-            type="color"
-            value={background}
-            onChange={(e) => setBackground(e.target.value)}
-            className="h-8 w-12 rounded-md border border-border"
-          />
-          <input
-            type="text"
-            value={background}
-            onChange={(e) => {
-              const v = e.target.value;
-              if (/^#?[0-9a-fA-F]{0,6}$/.test(v.replace("#", ""))) {
-                const vv = v.startsWith("#") ? v : `#${v}`;
-                setBackground(vv);
-              }
-            }}
-            maxLength={7}
-            placeholder="#FFFFFF"
-            className="h-8 w-28 rounded-md border border-border px-2 text-xs font-mono"
-          />
-        </div>
-      </section>
-
       {/* Cover image */}
       <section>
         <div className="text-sm font-medium">Cover image</div>
@@ -265,6 +246,54 @@ export default function CustomizationClient({ initial }: { initial?: { accent_co
               </button>
             )}
             <div className="text-xs text-muted-foreground">PNG/JPG. Max 5 MB.</div>
+          </div>
+        </div>
+      </section>
+
+      {/* Brand logo */}
+      <section>
+        <div className="text-sm font-medium">Brand logo</div>
+        <div className="mt-2 grid md:grid-cols-[96px_1fr] items-start gap-4">
+          <div className="h-24 w-24 rounded-md ring-1 ring-border overflow-hidden bg-muted flex items-center justify-center">
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logoUrl} alt="Logo" className="h-full w-full object-cover" />
+            ) : (
+              <span className="text-xs text-muted-foreground">No logo</span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              ref={logoFileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) void handleLogoUpload(f);
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => logoFileRef.current?.click()}
+              disabled={uploading}
+              className="text-sm px-3 h-8 rounded-md bg-primary text-primary-foreground disabled:opacity-60"
+            >
+              {uploading ? "Uploading..." : "Upload logo"}
+            </button>
+            {logoUrl && (
+              <button
+                type="button"
+                onClick={async () => {
+                  const res = await fetch("/api/customization/logo", { method: "DELETE" });
+                  if (res.ok) setLogoUrl(null);
+                }}
+                className="text-sm px-3 h-8 rounded-md border border-border"
+              >
+                Remove
+              </button>
+            )}
+            <div className="text-xs text-muted-foreground">PNG/JPG, square recommended. Max 5 MB.</div>
           </div>
         </div>
       </section>

@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { applyAccent } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 
 type Entry = { status: string; created_at: string; eta_minutes: number | null; queue_position: number | null; waitlist_id?: string; ticket_number?: number | null; notified_at?: string | null; seating_preference?: string | null; party_size?: number | null };
-type Business = { name: string | null; logo_url: string | null } | null;
+type Business = { name: string | null; logo_url: string | null; accent_color?: string | null; background_color?: string | null } | null;
 
 export default function ClientStatus({ token }: { token: string }) {
   const supabase = createClient();
@@ -82,6 +83,13 @@ export default function ClientStatus({ token }: { token: string }) {
     };
   }, [supabase, data?.waitlist_id, load]);
 
+  // Apply business accent/background for public status pages if provided
+  useEffect(() => {
+    if (business?.accent_color) {
+      applyAccent(business.accent_color);
+    }
+  }, [business?.accent_color]);
+
   if (loading || !data) return (
     <div className="min-h-dvh bg-background text-foreground">
       <header className="border-b border-border bg-card">
@@ -98,6 +106,10 @@ export default function ClientStatus({ token }: { token: string }) {
       </main>
     </div>
   );
+
+  // Apply brand color only in personal status page (public facing)
+  // We use the primary color from business settings via server payload (not available here),
+  // so we skip dynamic application unless extended in the API. For now, keep theme tokens.
 
   const isUserTurn = data.ticket_number !== null && data.ticket_number === nowServing;
 
@@ -166,7 +178,9 @@ export default function ClientStatus({ token }: { token: string }) {
             <Link href="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground">
               <span className="text-sm">Powered by</span>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/waitq.svg" alt="WaitQ" className="h-4 w-auto" />
+              <img src="/waitq.svg" alt="WaitQ" className="h-4 w-auto logo-light" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/waitq-variant.svg" alt="WaitQ" className="h-4 w-auto logo-dark" />
             </Link>
           </div>
         </div>

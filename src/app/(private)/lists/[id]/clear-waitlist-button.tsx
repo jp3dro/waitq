@@ -2,8 +2,9 @@
 import { useTransition } from "react";
 import { toastManager } from "@/hooks/use-toast";
 import { createClient } from "@/lib/supabase/client";
+import { Eraser } from "lucide-react";
 
-export default function ClearWaitlistButton({ waitlistId, displayToken }: { waitlistId: string; displayToken?: string | null }) {
+export default function ClearWaitlistButton({ waitlistId, displayToken, variant = "button", className = "" }: { waitlistId: string; displayToken?: string | null; variant?: "button" | "menu"; className?: string }) {
   const [isPending, startTransition] = useTransition();
   const supabase = createClient();
 
@@ -69,13 +70,18 @@ export default function ClearWaitlistButton({ waitlistId, displayToken }: { wait
     });
   };
 
+  if (variant === "menu") {
+    return (
+      <button onClick={clearWaitlist} disabled={isPending} className={`menu-item menu-item--danger ${className}`}>
+        <Eraser className="menu-icon" />
+        <span>{isPending ? "Clearing..." : "Clear waitlist"}</span>
+      </button>
+    );
+  }
+
   return (
-    <button
-      onClick={clearWaitlist}
-      disabled={isPending}
-      className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-destructive text-destructive hover:bg-destructive/10 disabled:opacity-50"
-    >
-      {isPending ? "Clearing..." : "Clear Waitlist"}
+    <button onClick={clearWaitlist} disabled={isPending} className={`action-btn disabled:opacity-50 ${className}`}>
+      {isPending ? "Clearing..." : "Clear waitlist"}
     </button>
   );
 }

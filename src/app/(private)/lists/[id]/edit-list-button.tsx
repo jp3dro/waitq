@@ -99,7 +99,7 @@ export default function EditListButton({
 
   return (
     <>
-      <button onClick={openModal} className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-border hover:bg-muted">
+      <button onClick={openModal} className="action-btn">
         Edit
       </button>
       <Modal
@@ -110,14 +110,14 @@ export default function EditListButton({
           <>
             <button
               onClick={closeModal}
-              className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-border hover:bg-muted"
+              className="action-btn"
             >
               Cancel
             </button>
             <button
               disabled={isPending}
               onClick={save}
-              className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-90 disabled:opacity-50"
+              className="action-btn action-btn--primary disabled:opacity-50"
             >
               {isPending ? "Saving…" : "Save"}
             </button>

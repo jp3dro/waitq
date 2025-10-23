@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
     listName: list.name,
     kioskEnabled: !!list.kiosk_enabled,
     businessCountry,
-    accentColor: accentColor || "#FFFFFF",
+    accentColor: accentColor || "#533AFD",
     backgroundColor: backgroundColor || "#000000",
     listType: list.list_type,
     seatingPreferences: (list.seating_preferences as string[] | null) || [],

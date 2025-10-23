@@ -8,13 +8,17 @@ import { toastManager } from "@/hooks/use-toast";
 
 type FormValues = { phone: string; customerName: string; waitlistId: string; sendSms: boolean; sendWhatsapp: boolean; partySize?: number; seatingPreference?: string };
 
-export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, businessCountry }: { onDone?: () => void; defaultWaitlistId?: string; lockWaitlist?: boolean; businessCountry?: Country }) {
+export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, businessCountry, formId = "add-waitlist-form", onPendingChange }: { onDone?: () => void; defaultWaitlistId?: string; lockWaitlist?: boolean; businessCountry?: Country; formId?: string; onPendingChange?: (pending: boolean) => void }) {
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const { register, handleSubmit, reset, watch, setValue } = useForm<FormValues>({
     defaultValues: { phone: "", customerName: "", waitlistId: "", sendSms: false, sendWhatsapp: false },
   });
   const [waitlists, setWaitlists] = useState<{ id: string; name: string; display_token?: string; list_type?: string; seating_preferences?: string[] }[]>([]);
+
+  useEffect(() => {
+    onPendingChange?.(isPending);
+  }, [isPending, onPendingChange]);
 
   useEffect(() => {
     (async () => {
@@ -90,7 +94,7 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
 
   return (
     <div>
-      <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
+      <form id={formId} onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
         {lockWaitlist ? null : (
           <div className="grid gap-1">
             <label className="text-sm font-medium">Waitlist</label>
@@ -156,12 +160,7 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
             <label htmlFor="send-wa" className="text-sm">WhatsApp</label>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <button disabled={isPending} className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-90 disabled:opacity-50">
-            {isPending ? "Adding…" : "Add"}
-          </button>
-          {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
-        </div>
+        {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
       </form>
     </div>
   );

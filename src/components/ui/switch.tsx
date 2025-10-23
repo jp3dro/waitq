@@ -39,8 +39,8 @@ export function Switch({
       onClick={() => !disabled && onCheckedChange(!checked)}
       onKeyDown={onKeyDown}
       className={[
-        "relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#FF9500]",
-        checked ? "bg-[#FF9500]" : "bg-gray-200",
+        "relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border border-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        checked ? "bg-[var(--primary)]" : "bg-[var(--muted)]",
         disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer",
         className || "",
       ].join(" ")}

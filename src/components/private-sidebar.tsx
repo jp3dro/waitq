@@ -24,9 +24,10 @@ export default async function PrivateSidebar() {
   return (
     <aside className="h-dvh sticky top-0 w-[200px] shrink-0 border-r border-border bg-card text-card-foreground">
       <div className="h-full flex flex-col">
-        <div className="px-4 py-4 border-b border-border bg-gradient-to-b from-muted to-card">
+        <div className="px-4 py-4 border-b border-border bg-card">
           <a href="/dashboard" className="flex items-center" aria-label="WaitQ dashboard">
-            <Image src="/waitq.svg" alt="WaitQ" className="h-8 w-auto" width={108} height={32} />
+            <Image src="/waitq.svg" alt="WaitQ" className="h-8 w-auto logo-light" width={108} height={32} />
+            <Image src="/waitq-variant.svg" alt="WaitQ" className="h-8 w-auto logo-dark" width={108} height={32} />
           </a>
         </div>
         <nav className="flex-1 overflow-y-auto px-2 py-3 text-sm">

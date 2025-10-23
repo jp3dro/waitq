@@ -90,7 +90,7 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
         <div className="flex items-center gap-3">
           <Link
             href="/lists"
-            className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-border hover:bg-muted"
+            className="action-btn"
           >
             ← Back to Lists
           </Link>
@@ -112,12 +112,12 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
                   href={`/display/${encodeURIComponent(wl.display_token)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset ring-border hover:bg-muted"
+                  className="action-btn"
                 >
                   Open Public Display
                 </a>
               )}
-              <ClearWaitlistButton waitlistId={wl.id} displayToken={wl.display_token} />
+              <ClearWaitlistButton waitlistId={wl.id} displayToken={wl.display_token} variant="button" />
               <AddButton defaultWaitlistId={wl.id} lockWaitlist businessCountry={businessCountry} />
             </div>
           </div>
