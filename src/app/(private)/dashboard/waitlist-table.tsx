@@ -4,8 +4,11 @@ import { createClient } from "@/lib/supabase/client";
 import Modal from "@/components/modal";
 import { createPortal } from "react-dom";
 import { toastManager } from "@/hooks/use-toast";
-import { RefreshCw, Archive, Pencil, Trash2 } from "lucide-react";
+import { RefreshCw, Archive, Pencil, Trash2, MoreHorizontal } from "lucide-react";
 import { Stepper } from "@/components/ui/stepper";
+import PhoneInput from "react-phone-number-input";
+import 'react-phone-number-input/style.css';
+import type { Country } from "react-phone-number-input";
 
 type Entry = {
   id: string;
@@ -496,9 +499,9 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                     </button>
                     <button
                       onClick={(ev) => openMenuFor(e.id, ev.currentTarget as HTMLElement)}
-                      className="action-btn"
+                      className="menu-trigger"
                     >
-                      ⋯
+                      <MoreHorizontal className="h-4 w-4" />
                     </button>
                   </div>
                 </td>
@@ -518,6 +521,10 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
               style={{ top: menuState.top, left: menuState.left }}
               onClick={(e) => e.stopPropagation()}
             >
+              <button disabled={isPending} onClick={() => { closeMenu(); edit(me.id); }} className="menu-item">
+                <Pencil className="menu-icon" />
+                <span>Edit</span>
+              </button>
               {(me.sms_status === 'failed' || me.whatsapp_status === 'failed') && (
                 <>
                   {me.sms_status === 'failed' && (
@@ -540,16 +547,11 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                       <span>Retry WhatsApp</span>
                     </button>
                   )}
-                  <div className="menu-separator"></div>
                 </>
               )}
               <button disabled={isPending} onClick={() => { closeMenu(); archive(me.id); }} className="menu-item">
                 <Archive className="menu-icon" />
                 <span>Archive</span>
-              </button>
-              <button disabled={isPending} onClick={() => { closeMenu(); edit(me.id); }} className="menu-item">
-                <Pencil className="menu-icon" />
-                <span>Edit</span>
               </button>
               <div className="menu-separator"></div>
               <button disabled={isPending} onClick={() => { closeMenu(); remove(me.id); }} className="menu-item menu-item--danger">
@@ -578,9 +580,10 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
             </button>
             <button
               disabled={isPending}
+              onClick={saveEdit}
               className="action-btn action-btn--primary disabled:opacity-50"
             >
-              {isPending ? "Saving…" : "Save"}
+              {isPending ? "Saving…" : "Save changes"}
             </button>
           </>
         }
@@ -597,20 +600,9 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
             />
           </div>
 
-          <div className="grid gap-2">
-            <label className="text-sm font-medium">Phone</label>
-            <input
-              type="tel"
-              value={editForm.phone}
-              onChange={(e) => setEditForm(prev => ({ ...prev, phone: e.target.value }))}
-              className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm"
-              placeholder="Phone number"
-            />
-          </div>
-
-          {(waitlists.find(w => w.id === waitlistId)?.list_type || "restaurants") === "restaurants" && (
-            <>
-              <div className="grid gap-2">
+          {(waitlists.find(w => w.id === waitlistId)?.list_type || "restaurants") === "restaurants" ? (
+            <div className="flex gap-6">
+              <div className="flex-none grid gap-2">
                 <label className="text-sm font-medium">Number of people</label>
                 <Stepper
                   value={editForm.partySize ? parseInt(editForm.partySize, 10) : undefined}
@@ -619,28 +611,49 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                   max={20}
                 />
               </div>
+              <div className="flex-1 grid gap-2">
+                <label className="text-sm font-medium">Phone</label>
+                <PhoneInput
+                  international
+                  defaultCountry="PT"
+                  value={editForm.phone}
+                  onChange={(value) => setEditForm(prev => ({ ...prev, phone: value || "" }))}
+                  className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Phone</label>
+              <PhoneInput
+                international
+                defaultCountry="PT"
+                value={editForm.phone}
+                onChange={(value) => setEditForm(prev => ({ ...prev, phone: value || "" }))}
+                className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm"
+              />
+            </div>
+          )}
 
-              {(waitlists.find(w => w.id === waitlistId)?.seating_preferences || []).length > 0 && (
-                <div className="grid gap-2">
-                  <label className="text-sm font-medium">Seating preference</label>
-                  <div className="flex flex-wrap gap-2">
-                    {(waitlists.find(w => w.id === waitlistId)?.seating_preferences || []).map((s) => {
-                      const selected = editForm.seatingPreference === s;
-                      return (
-                        <button
-                          type="button"
-                          key={s}
-                          onClick={() => setEditForm(prev => ({ ...prev, seatingPreference: s }))}
-                          className={`inline-flex items-center rounded-full px-3 py-1 text-xs ring-1 ring-inset transition ${selected ? "bg-primary text-primary-foreground ring-primary" : "bg-card text-foreground ring-border hover:bg-muted"}`}
-                        >
-                          {s}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </>
+          {(waitlists.find(w => w.id === waitlistId)?.seating_preferences || []).length > 0 && (
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Seating preference</label>
+              <div className="flex flex-wrap gap-2">
+                {(waitlists.find(w => w.id === waitlistId)?.seating_preferences || []).map((s) => {
+                  const selected = editForm.seatingPreference === s;
+                  return (
+                    <button
+                      type="button"
+                      key={s}
+                      onClick={() => setEditForm(prev => ({ ...prev, seatingPreference: s }))}
+                      className={`inline-flex items-center rounded-full px-3 py-1 text-xs ring-1 ring-inset transition ${selected ? "bg-primary text-primary-foreground ring-primary" : "bg-card text-foreground ring-border hover:bg-muted"}`}
+                    >
+                      {s}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           )}
         </form>
       </Modal>

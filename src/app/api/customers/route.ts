@@ -41,12 +41,23 @@ export async function PATCH(req: NextRequest) {
   if (typeof name !== "undefined") updates.customer_name = name;
   if (typeof newPhone !== "undefined") updates.phone = newPhone;
 
-  // Update all waitlist entries for this business and normalized phone
+  // Fetch candidate rows, match by normalized phone in app, and update by IDs
+  const { data: rows, error: fetchErr } = await admin
+    .from("waitlist_entries")
+    .select("id, phone")
+    .eq("business_id", biz.id);
+  if (fetchErr) return NextResponse.json({ error: fetchErr.message }, { status: 400 });
+
+  const targetIds = (rows || [])
+    .filter((r) => (r.phone || "").replace(/\D+/g, "") === phoneKey)
+    .map((r) => r.id);
+
+  if (targetIds.length === 0) return NextResponse.json({ updated: 0 });
+
   const { data: updated, error } = await admin
     .from("waitlist_entries")
     .update(updates)
-    .eq("business_id", biz.id)
-    .filter("regexp_replace(phone, \\D, '', 'g')", "eq", phoneKey)
+    .in("id", targetIds)
     .select("id");
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
@@ -73,11 +84,23 @@ export async function DELETE(req: NextRequest) {
   if (!biz?.id) return NextResponse.json({ error: "No business found" }, { status: 400 });
 
   const admin = getAdminClient();
+  // Fetch candidate rows, match by normalized phone in app, and delete by IDs
+  const { data: rows, error: fetchErr } = await admin
+    .from("waitlist_entries")
+    .select("id, phone")
+    .eq("business_id", biz.id);
+  if (fetchErr) return NextResponse.json({ error: fetchErr.message }, { status: 400 });
+
+  const targetIds = (rows || [])
+    .filter((r) => (r.phone || "").replace(/\D+/g, "") === phoneKey)
+    .map((r) => r.id);
+
+  if (targetIds.length === 0) return NextResponse.json({ ok: true });
+
   const { error } = await admin
     .from("waitlist_entries")
     .delete()
-    .eq("business_id", biz.id)
-    .filter("regexp_replace(phone, \\D, '', 'g')", "eq", phoneKey);
+    .in("id", targetIds);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ ok: true });

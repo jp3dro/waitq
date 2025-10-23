@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { Monitor, Pencil, Trash2 } from "lucide-react";
+import { Monitor, Pencil, Trash2, MoreHorizontal } from "lucide-react";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import ClearWaitlistButton from "../lists/[id]/clear-waitlist-button";
@@ -32,16 +32,19 @@ export default function ListCard({ id, name, waiting, etaDisplay, displayToken }
         </div>
       </Link>
       <details className="absolute top-2 right-2">
-        <summary className="list-none inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ring-border bg-card hover:bg-muted cursor-pointer shadow-sm">⋯</summary>
+        <summary className="menu-trigger list-none">
+          <MoreHorizontal className="h-4 w-4" />
+        </summary>
         <div className="absolute right-0 mt-1 menu-container z-10">
-          <a href={`/display/${id}`} className="menu-item">
-            <Monitor className="menu-icon" />
-            <span>Open public display</span>
-          </a>
           <a href={`/lists/${id}`} className="menu-item">
             <Pencil className="menu-icon" />
             <span>Edit</span>
           </a>
+          <a href={`/display/${id}`} className="menu-item">
+            <Monitor className="menu-icon" />
+            <span>Open public display</span>
+          </a>
+          <div className="menu-separator"></div>
           <ClearWaitlistButton waitlistId={id} displayToken={displayToken} variant="menu" />
           <button
             disabled={isPending}

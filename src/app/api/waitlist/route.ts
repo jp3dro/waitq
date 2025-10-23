@@ -158,7 +158,7 @@ export async function POST(req: NextRequest) {
       const message = `${brand}You're on the list${ticket}! Track your spot: ${statusUrl}`;
       const variables = { brand: brand.trim().replace(/:$/, ""), ticket: (data.ticket_number || "").toString(), link: statusUrl };
       const templateParams = [brand.trim().replace(/:$/, ""), (data.ticket_number || "").toString(), statusUrl];
-      if (shouldSendSms) {
+      if (shouldSendSms && phone) {
         try {
           const resp = await sendSms(phone, message, { variables });
           console.log("[Waitlist] SMS sent", resp);
@@ -215,7 +215,7 @@ export async function POST(req: NextRequest) {
             });
         }
       }
-      if (shouldSendWhatsapp) {
+      if (shouldSendWhatsapp && phone) {
         try {
           const resp = await sendWhatsapp(phone, message, { templateParams, variables });
           console.log("[Waitlist] WhatsApp sent", resp);

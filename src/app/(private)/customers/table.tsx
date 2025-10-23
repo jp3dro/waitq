@@ -1,8 +1,11 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, MoreHorizontal } from "lucide-react";
 import { createPortal } from "react-dom";
 import Modal from "@/components/modal";
+import PhoneInput from "react-phone-number-input";
+import 'react-phone-number-input/style.css';
+import type { Country } from "react-phone-number-input";
 
 type Customer = {
   key: string;
@@ -85,16 +88,22 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phoneKey: editing.phoneKey, name: editing.name || null, newPhone: editing.phone || null })
       });
-      if (res.ok) {
-        setCustomers((prev) => prev.map((c) => {
-          const pk = (c.phone || "").replace(/\D+/g, "");
-          if (pk === editing.phoneKey) {
-            return { ...c, name: editing.name || null, phone: editing.phone || null } as Customer;
-          }
-          return c;
-        }));
-        setEditing(null);
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(text || `HTTP ${res.status}`);
       }
+      await res.json().catch(() => ({}));
+      setCustomers((prev) => prev.map((c) => {
+        const pk = (c.phone || "").replace(/\D+/g, "");
+        if (pk === editing.phoneKey) {
+          return { ...c, name: editing.name || null, phone: editing.phone || null } as Customer;
+        }
+        return c;
+      }));
+      setEditing({ ...editing, open: false });
+    } catch (err) {
+      console.error("Failed to save customer", err);
+      alert(`Save failed: ${(err as Error)?.message || String(err)}`);
     } finally {
       setIsPending(false);
     }
@@ -165,9 +174,9 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
                     {(c.phone || "").replace(/\D+/g, "") ? (
                       <button
                         onClick={(ev) => openMenu(c, ev.currentTarget as HTMLElement)}
-                        className="action-btn"
+                        className="menu-trigger"
                       >
-                        ⋯
+                        <MoreHorizontal className="h-4 w-4" />
                       </button>
                     ) : null}
                   </td>
@@ -224,7 +233,7 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
               disabled={isPending}
               className="action-btn action-btn--primary disabled:opacity-50"
             >
-              {isPending ? "Saving…" : "Save"}
+              {isPending ? "Saving…" : "Save changes"}
             </button>
           </>
         }
@@ -240,10 +249,12 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
           </div>
           <div className="grid gap-2">
             <label className="text-sm font-medium">Phone</label>
-            <input
+            <PhoneInput
+              international
+              defaultCountry="PT"
               value={editing?.phone || ""}
-              onChange={(e) => setEditing((prev) => (prev ? { ...prev, phone: e.target.value } : prev))}
-              className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm bg-card"
+              onChange={(value) => setEditing((prev) => (prev ? { ...prev, phone: value || "" } : prev))}
+              className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm"
             />
           </div>
         </div>
