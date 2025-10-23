@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Popover } from "@/components/ui/tooltip";
 
 type Customization = {
   id: string;
@@ -147,7 +148,7 @@ export default function CustomizationClient({ initial }: { initial?: { accent_co
       {/* Brand color */}
       <section>
         <div className="text-sm font-medium">Brand color</div>
-        <div className="mt-2 grid grid-cols-9 gap-3">
+        <div className="mt-2 flex gap-2">
           {IOS_COLORS.map((c) => (
             <button
               key={c.value}
@@ -157,48 +158,54 @@ export default function CustomizationClient({ initial }: { initial?: { accent_co
                 setAccent(c.value);
               }}
               className={classNames(
-                "h-10 w-10 rounded-lg ring-1 ring-border shadow-sm",
+                "h-8 w-8 rounded-lg ring-1 ring-border shadow-sm",
                 !useCustomAccent && accent.toLowerCase() === c.value.toLowerCase() ? "ring-2 ring-offset-2 ring-ring" : "hover:ring-2 hover:ring-ring/60"
               )}
               style={{ backgroundColor: c.value }}
               aria-label={c.name}
             />
           ))}
-          {/* 9th: custom */}
-          <div className="col-span-9 flex items-center gap-3">
+          {/* Custom color */}
+          {useCustomAccent ? (
+            <Popover
+              content={
+                <div className="p-2">
+                  <input
+                    type="text"
+                    value={customAccent}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      if (/^#?[0-9a-fA-F]{0,6}$/.test(v.replace("#", ""))) {
+                        setCustomAccent(v.startsWith("#") ? v : `#${v}`);
+                      }
+                    }}
+                    maxLength={7}
+                    placeholder="#000000"
+                    className="h-8 w-28 rounded-md border border-border px-2 text-xs font-mono bg-white"
+                  />
+                </div>
+              }
+              side="bottom"
+            >
+              <button
+                type="button"
+                className="h-8 w-8 rounded-lg ring-2 ring-offset-2 ring-ring shadow-sm"
+                style={{ backgroundColor: customAccent }}
+                aria-label="Custom color"
+              />
+            </Popover>
+          ) : (
             <button
               type="button"
               onClick={() => setUseCustomAccent(true)}
-              className={classNames(
-                "h-10 w-10 rounded-lg ring-1 ring-border bg-[linear-gradient(45deg,#ccc_25%,transparent_25%),linear-gradient(-45deg,#ccc_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#ccc_75%),linear-gradient(-45deg,transparent_75%,#ccc_75%)] bg-size-[10px_10px] bg-position-[0_0,0_5px,5px_-5px,-5px_0]",
-                useCustomAccent ? "ring-2 ring-offset-2 ring-ring" : "hover:ring-2 hover:ring-ring/60"
-              )}
-              aria-label="Custom color"
-            />
-            <input
-              type="color"
-              value={customAccent}
-              onChange={(e) => {
-                setUseCustomAccent(true);
-                setCustomAccent(e.target.value);
-              }}
-              className="h-9 w-12 rounded-md border border-border"
-            />
-            <input
-              type="text"
-              value={customAccent}
-              onChange={(e) => {
-                const v = e.target.value;
-                if (/^#?[0-9a-fA-F]{0,6}$/.test(v.replace("#", ""))) {
-                  setUseCustomAccent(true);
-                  setCustomAccent(v.startsWith("#") ? v : `#${v}`);
-                }
-              }}
-              maxLength={7}
-              placeholder="#000000"
-              className="h-9 w-28 rounded-md border border-border px-2 text-xs font-mono"
-            />
-          </div>
+              className="h-8 w-8 rounded-lg ring-1 ring-border shadow-sm hover:ring-2 hover:ring-ring/60 flex items-center justify-center bg-muted"
+              aria-label="Add custom color"
+            >
+              <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            </button>
+          )}
         </div>
       </section>
 

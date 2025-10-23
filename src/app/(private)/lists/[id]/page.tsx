@@ -10,6 +10,7 @@ import ClearWaitlistButton from "./clear-waitlist-button";
 import QRCodeButton from "./qr-code-button";
 import type { Country } from "react-phone-number-input";
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const supabase = await createClient();
@@ -87,12 +88,13 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
     <main className="py-5">
       <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
         <ToastOnQuery />
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-6">
           <Link
             href="/lists"
             className="action-btn"
           >
-            ← Back to Lists
+            <ArrowLeft className="h-4 w-4" />
+            Back to Lists
           </Link>
           <h1 className="text-3xl font-bold tracking-tight">{wl.name}</h1>
         </div>

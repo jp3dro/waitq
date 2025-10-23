@@ -87,7 +87,7 @@ export default function ListCard({ id, name, waiting, etaDisplay, displayToken, 
             <Pencil className="menu-icon" />
             <span>Edit</span>
           </button>
-          <a href={displayToken ? `/display/${encodeURIComponent(displayToken)}` : `/lists/${id}`} className="menu-item">
+          <a href={displayToken ? `/display/${encodeURIComponent(displayToken)}` : `/lists/${id}`} className="menu-item" target="_blank" rel="noopener noreferrer">
             <Monitor className="menu-icon" />
             <span>Open public display</span>
           </a>
