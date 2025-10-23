@@ -93,14 +93,32 @@ export async function PATCH(req: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  // Archive all waiting entries for this waitlist (keep for analytics and customer history)
+  // Archive all waiting and notified entries for this waitlist
+  // Waiting entries are treated as called-now no-shows: stamp notified_at
   const admin = getAdminClient();
-  const { error: updateErr } = await admin
+  const nowIso = new Date().toISOString();
+
+  const { error: updateWaitingErr } = await admin
+    .from("waitlist_entries")
+    .update({ status: "archived", notified_at: nowIso })
+    .eq("waitlist_id", id)
+    .eq("status", "waiting");
+  if (updateWaitingErr) return NextResponse.json({ error: updateWaitingErr.message }, { status: 400 });
+
+  const { error: updateNotifiedErr } = await admin
     .from("waitlist_entries")
     .update({ status: "archived" })
     .eq("waitlist_id", id)
-    .eq("status", "waiting");
-  if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 400 });
+    .eq("status", "notified");
+  if (updateNotifiedErr) return NextResponse.json({ error: updateNotifiedErr.message }, { status: 400 });
+
+  // Reset ticket numbers by nullifying ticket_number in all entries for this waitlist
+  const { error: resetErr } = await admin
+    .from("waitlist_entries")
+    .update({ ticket_number: null })
+    .eq("waitlist_id", id);
+  if (resetErr) return NextResponse.json({ error: resetErr.message }, { status: 400 });
+
   return NextResponse.json({ ok: true });
 }
 

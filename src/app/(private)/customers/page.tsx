@@ -57,6 +57,7 @@ export default async function CustomersPage() {
     firstSeen: string;
     lastSeen: string;
     servedCount: number;
+    noShowCount: number;
   };
 
   const normalize = (v: string | null) => (v ? v.replace(/\D+/g, "") : "");
@@ -75,6 +76,7 @@ export default async function CustomersPage() {
         firstSeen: r.created_at,
         lastSeen: r.created_at,
         servedCount: r.notified_at ? 1 : 0,
+        noShowCount: 0,
       });
     } else {
       existing.visits += 1;
@@ -86,6 +88,19 @@ export default async function CustomersPage() {
         if (r.phone) existing.phone = r.phone;
       }
     }
+  }
+
+  // Fetch no-show counts per key
+  const { data: nsRows } = await supabase
+    .from("waitlist_entries")
+    .select("id, phone, customer_name, status, notified_at")
+    .eq("business_id", business.id)
+    .eq("status", "archived");
+  for (const r of (nsRows || [])) {
+    const phoneKey = normalize((r as any).phone || null);
+    const k = phoneKey || ((r as any).customer_name ? `name:${(r as any).customer_name.toLowerCase()}` : `id:${(r as any).id}`);
+    const entry = map.get(k);
+    if (entry) entry.noShowCount += 1;
   }
 
   const customers = Array.from(map.values()).sort(

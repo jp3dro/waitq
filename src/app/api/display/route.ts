@@ -21,13 +21,14 @@ export async function GET(req: NextRequest) {
     .order("ticket_number", { ascending: true });
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
-  // Compute estimated wait time (average duration from created_at to notified_at of recent entries)
+  // Compute estimated wait time based on seated entries; apply 5-minute floor when queue is empty
   let estimatedMs = 0;
   try {
     const { data: served } = await admin
       .from("waitlist_entries")
       .select("created_at, notified_at")
       .eq("waitlist_id", list.id)
+      .eq("status", "seated")
       .not("notified_at", "is", null)
       .order("notified_at", { ascending: false })
       .limit(100);
@@ -35,7 +36,14 @@ export async function GET(req: NextRequest) {
     const durationsMs = rows
       .map((r) => (r.notified_at ? new Date(r.notified_at).getTime() - new Date(r.created_at).getTime() : null))
       .filter((v): v is number => typeof v === "number" && isFinite(v) && v > 0);
-    estimatedMs = durationsMs.length ? Math.round(durationsMs.reduce((a, b) => a + b, 0) / durationsMs.length) : 0;
+    const avg = durationsMs.length ? Math.round(durationsMs.reduce((a, b) => a + b, 0) / durationsMs.length) : 0;
+    // If queue is empty, set 5 minutes baseline
+    const { count: waitingCount } = await admin
+      .from("waitlist_entries")
+      .select("id", { count: "exact", head: true })
+      .eq("waitlist_id", list.id)
+      .eq("status", "waiting");
+    estimatedMs = (waitingCount || 0) === 0 ? 5 * 60 * 1000 : avg;
   } catch {}
 
   let businessCountry: string | null = null;

@@ -36,6 +36,7 @@ export default async function ListsIndexPage() {
           .from("waitlist_entries")
           .select("created_at, notified_at")
           .eq("waitlist_id", l.id)
+          .eq("status", "seated")
           .not("notified_at", "is", null)
           .order("notified_at", { ascending: false })
           .limit(100);
@@ -43,7 +44,14 @@ export default async function ListsIndexPage() {
         const durationsMs = rows
           .map((r) => (r.notified_at ? new Date(r.notified_at).getTime() - new Date(r.created_at).getTime() : null))
           .filter((v): v is number => typeof v === "number" && isFinite(v) && v > 0);
-        const avgMs = durationsMs.length ? Math.round(durationsMs.reduce((a, b) => a + b, 0) / durationsMs.length) : 0;
+        let avgMs = durationsMs.length ? Math.round(durationsMs.reduce((a, b) => a + b, 0) / durationsMs.length) : 0;
+        // Apply 5-minute minimum when the list is empty
+        const { count } = await supabase
+          .from("waitlist_entries")
+          .select("id", { count: "exact", head: true })
+          .eq("waitlist_id", l.id)
+          .eq("status", "waiting");
+        if ((count || 0) === 0) avgMs = 5 * 60 * 1000;
         return { id: l.id, avgMs } as { id: string; avgMs: number };
       })
     ),
@@ -55,10 +63,8 @@ export default async function ListsIndexPage() {
     <main className="py-5">
       <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
         <div className="flex items-end justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Lists</h1>
-          </div>
-          <CreateListButton />
+          <h1 className="text-3xl font-bold tracking-tight">Lists</h1>
+          <div className="flex items-center gap-2"><CreateListButton /></div>
         </div>
 
         <div className="space-y-6">

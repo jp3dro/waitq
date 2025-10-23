@@ -12,7 +12,7 @@ type FormValues = { phone: string; customerName: string; waitlistId: string; sen
 export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, businessCountry, formId = "add-waitlist-form", onPendingChange }: { onDone?: () => void; defaultWaitlistId?: string; lockWaitlist?: boolean; businessCountry?: Country; formId?: string; onPendingChange?: (pending: boolean) => void }) {
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
-  const { register, handleSubmit, reset, watch, setValue, setError, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, reset, watch, setValue, setError, setFocus, formState: { errors } } = useForm<FormValues>({
     defaultValues: { phone: "", customerName: "", waitlistId: "", sendSms: false, sendWhatsapp: false, partySize: 2 },
   });
   const [waitlists, setWaitlists] = useState<{ id: string; name: string; display_token?: string; list_type?: string; seating_preferences?: string[] }[]>([]);
@@ -31,6 +31,8 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
       } else if ((j.waitlists || []).length > 0) {
         reset((v) => ({ ...v, waitlistId: j.waitlists[0].id }));
       }
+      // Focus the name field when modal opens
+      try { setFocus("customerName"); } catch {}
     })();
   }, [reset, defaultWaitlistId]);
 

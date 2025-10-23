@@ -6,6 +6,7 @@ import Modal from "@/components/modal";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip } from "@/components/ui/tooltip";
 import { toastManager } from "@/hooks/use-toast";
+import Dropdown from "@/components/dropdown";
 
 export default function CreateListButton() {
   const router = useRouter();
@@ -74,16 +75,20 @@ export default function CreateListButton() {
           </div>
           <div className="grid gap-2">
             <label className="text-sm font-medium">Type</label>
-            <select value={listType} onChange={(e) => setListType(e.target.value)} className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring pl-3 pr-10 py-2 text-sm">
-              <option value="restaurants">Restaurants</option>
-              <option value="barber_shops" disabled>Barber shops (coming soon)</option>
-              <option value="beauty_salons" disabled>Beauty salons (coming soon)</option>
-              <option value="massages" disabled>Massages (coming soon)</option>
-              <option value="clinics" disabled>Clinics and medical (coming soon)</option>
-              <option value="warehouse_transport" disabled>Warehouse & transport (coming soon)</option>
-              <option value="hotels" disabled>Hotels & accommodations (coming soon)</option>
-              <option value="public_services" disabled>Public services (coming soon)</option>
-            </select>
+            <Dropdown
+              value={listType}
+              onChange={setListType}
+              options={[
+                { value: "restaurants", label: "Restaurants" },
+                { value: "barber_shops", label: "Barber shops (coming soon)" },
+                { value: "beauty_salons", label: "Beauty salons (coming soon)" },
+                { value: "massages", label: "Massages (coming soon)" },
+                { value: "clinics", label: "Clinics and medical (coming soon)" },
+                { value: "warehouse_transport", label: "Warehouse & transport (coming soon)" },
+                { value: "hotels", label: "Hotels & accommodations (coming soon)" },
+                { value: "public_services", label: "Public services (coming soon)" },
+              ]}
+            />
           </div>
           {listType === "restaurants" ? (
             <div className="grid gap-2">

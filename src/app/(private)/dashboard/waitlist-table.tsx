@@ -80,7 +80,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
     // Compute new ids for highlight animation
     const incoming = (data.entries || [])
       .filter((e) => e.ticket_number != null)
-      .filter((e) => e.status !== "notified" && e.status !== "archived");
+      .filter((e) => e.status !== "archived" && e.status !== "seated");
     const incomingIds = new Set(incoming.map((e) => e.id));
     const prevIds = prevIdsRef.current;
     const newIds = new Set<string>();
@@ -397,6 +397,56 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
     });
   };
 
+  const checkIn = (id: string) => {
+    startTransition(async () => {
+      const res = await fetch("/api/waitlist", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status: "seated" }),
+      });
+      if (res.ok) {
+        toastManager.add({
+          title: "Checked in",
+          description: "Customer marked as served",
+          type: "success",
+        });
+        try { window.dispatchEvent(new CustomEvent('wl:refresh', { detail: { waitlistId } })); } catch {}
+        await load(true);
+      } else {
+        toastManager.add({
+          title: "Error",
+          description: "Failed to check-in customer",
+          type: "error",
+        });
+      }
+    });
+  };
+
+  const noShow = (id: string) => {
+    startTransition(async () => {
+      const res = await fetch("/api/waitlist", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, action: "archive" }),
+      });
+      if (res.ok) {
+        toastManager.add({
+          title: "No show",
+          description: "Customer archived",
+          type: "success",
+        });
+        try { window.dispatchEvent(new CustomEvent('wl:refresh', { detail: { waitlistId } })); } catch {}
+        await load(true);
+      } else {
+        toastManager.add({
+          title: "Error",
+          description: "Failed to archive customer",
+          type: "error",
+        });
+      }
+    });
+  };
+
   const call = (id: string) => {
     startTransition(async () => {
       const res = await fetch("/api/waitlist", {
@@ -461,6 +511,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
         <table className="w-full text-sm">
           <thead className="bg-muted sticky top-0 z-10">
             <tr>
+              <th className="text-left font-medium text-foreground px-4 py-2">Actions</th>
               <th className="text-left font-medium text-foreground px-4 py-2">#</th>
               <th className="text-left font-medium text-foreground px-4 py-2">Name</th>
               <th className="text-left font-medium text-foreground px-4 py-2">Phone</th>
@@ -474,6 +525,17 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
           <tbody>
             {entries.map((e) => (
               <tr key={e.id} className={`border-t border-border hover:bg-muted odd:bg-muted/50 ${highlightIds.has(e.id) ? "row-flash" : ""}`}>
+                <td className="px-4 py-2">
+                  {e.status === 'waiting' && (
+                    <button disabled={isPending} onClick={() => call(e.id)} className="action-btn action-btn--primary disabled:opacity-50">Call</button>
+                  )}
+                  {e.status === 'notified' && (
+                    <div className="flex items-center gap-2">
+                      <button disabled={isPending} onClick={() => checkIn(e.id)} className="action-btn disabled:opacity-50" style={{ backgroundColor: '#34C759', borderColor: '#2A9E48', borderWidth: '1px', color: '#1a1a1a' }}>Check-in</button>
+                      <button disabled={isPending} onClick={() => noShow(e.id)} className="action-btn disabled:opacity-50" style={{ backgroundColor: '#FF3B30', borderColor: '#CC2F26', borderWidth: '1px', color: '#1a1a1a' }}>No show</button>
+                    </div>
+                  )}
+                </td>
                 <td className="px-4 py-2">{e.ticket_number ?? e.queue_position ?? "-"}</td>
                 <td className="px-4 py-2">{e.customer_name ?? "—"}</td>
                 <td className="px-4 py-2">{e.phone}</td>
@@ -493,9 +555,6 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                       </svg>
-                    </button>
-                    <button disabled={isPending} onClick={() => call(e.id)} className="action-btn action-btn--primary disabled:opacity-50">
-                      Call
                     </button>
                     <button
                       onClick={(ev) => openMenuFor(e.id, ev.currentTarget as HTMLElement)}

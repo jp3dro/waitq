@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import Modal from "@/components/modal";
+import Dropdown from "@/components/dropdown";
 
 export default function UsersClient() {
   const [members, setMembers] = useState<Array<{ id: string; user_id: string; role: string }>>([]);
@@ -102,10 +103,14 @@ export default function UsersClient() {
           </div>
           <div>
             <label className="text-sm font-medium">Role</label>
-            <select value={role} onChange={(e) => setRole(e.target.value as any)} className="mt-1 block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring pl-3 pr-10 py-2 text-sm">
-              <option value="manager">Manager</option>
-              <option value="staff">Staff</option>
-            </select>
+            <Dropdown
+              value={role}
+              onChange={(v) => setRole(v as any)}
+              options={[
+                { value: "manager", label: "Manager" },
+                { value: "staff", label: "Staff" },
+              ]}
+            />
           </div>
         </div>
       </Modal>

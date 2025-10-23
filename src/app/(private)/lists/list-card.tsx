@@ -12,6 +12,7 @@ export default function ListCard({ id, name, waiting, etaDisplay, displayToken, 
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [qrOpen, setQrOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const detailsRef = useRef<HTMLDetailsElement | null>(null);
 
   const remove = () => {
@@ -54,8 +55,7 @@ export default function ListCard({ id, name, waiting, etaDisplay, displayToken, 
     const handler = (e: Event) => {
       const detail = (e as CustomEvent).detail as { id?: string } | undefined;
       if (detail?.id === id) {
-        const el = document.getElementById(`edit-list-inline-${id}`);
-        if (el) (el as HTMLButtonElement).click();
+        setEditOpen(true);
       }
     };
     window.addEventListener('wl:open-edit', handler as EventListener);
@@ -81,8 +81,7 @@ export default function ListCard({ id, name, waiting, etaDisplay, displayToken, 
         </summary>
         <div className="absolute right-0 mt-1 menu-container z-10">
           <button onClick={() => {
-            const el = document.getElementById(`edit-list-inline-${id}`);
-            if (el) (el as HTMLButtonElement).click();
+            setEditOpen(true);
             if (detailsRef.current) detailsRef.current.open = false;
           }} className="menu-item">
             <Pencil className="menu-icon" />
@@ -109,32 +108,17 @@ export default function ListCard({ id, name, waiting, etaDisplay, displayToken, 
         </div>
       </details>
       <QRCodeModal open={qrOpen} onClose={() => setQrOpen(false)} listName={name} displayToken={displayToken || undefined} businessName={businessName} />
-      {/* Hidden edit modal to be triggered from menu */}
-      <EditListTrigger
-        id={id}
-        name={name}
-        initialLocationId={initialLocationId || undefined}
-        kioskEnabled={!!kioskEnabled}
-        locations={locations || []}
-      />
-    </div>
-  );
-}
-
-function EditListTrigger({ id, name, initialLocationId, kioskEnabled, locations }: { id: string; name: string; initialLocationId?: string; kioskEnabled?: boolean; locations: { id: string; name: string }[] }) {
-  return (
-    <div className="sr-only" aria-hidden>
       <EditListButton
         waitlistId={id}
         initialName={name}
-        initialLocationId={initialLocationId}
+        initialLocationId={initialLocationId || undefined}
         initialKioskEnabled={!!kioskEnabled}
-        locations={locations}
-        triggerId={`edit-list-inline-${id}`}
+        locations={locations || []}
+        controlledOpen={editOpen}
+        onOpenChange={setEditOpen}
         hideTrigger
       />
     </div>
   );
 }
-
 

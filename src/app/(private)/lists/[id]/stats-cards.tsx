@@ -12,6 +12,7 @@ export default function StatsCards({ waitlistId }: { waitlistId: string }) {
   const [etaDisplay, setEtaDisplay] = useState<string>("");
   const [queueLength, setQueueLength] = useState<number>(0);
   const [servedToday, setServedToday] = useState<number>(0);
+  const [noShowToday, setNoShowToday] = useState<number>(0);
   // Removed avg service time per requirements
   const supabase = createClient();
 
@@ -25,24 +26,25 @@ export default function StatsCards({ waitlistId }: { waitlistId: string }) {
         etaRes,
         lastCalledRes,
         queueRes,
-        servedTodayRes
+        servedTodayRes,
+        noShowTodayRes
       ] = await Promise.all([
-        // ETA calculation (exclude archived)
+        // ETA calculation: base on served (seated) entries only
         supabase
           .from("waitlist_entries")
           .select("created_at, notified_at")
           .eq("waitlist_id", waitlistId)
-          .neq("status", "archived")
+          .eq("status", "seated")
           .not("notified_at", "is", null)
           .order("notified_at", { ascending: false })
           .limit(100),
-        // Last called number (exclude archived)
+        // Last called number: any entry that has been notified (called), regardless of current status
         supabase
           .from("waitlist_entries")
           .select("ticket_number, queue_position, notified_at")
           .eq("waitlist_id", waitlistId)
-          .neq("status", "archived")
-          .eq("status", "notified")
+          .in("status", ["notified", "seated"]) 
+          .not("notified_at", "is", null)
           .order("notified_at", { ascending: false })
           .order("ticket_number", { ascending: false })
           .limit(1),
@@ -52,13 +54,19 @@ export default function StatsCards({ waitlistId }: { waitlistId: string }) {
           .select("id", { count: "exact", head: true })
           .eq("waitlist_id", waitlistId)
           .eq("status", "waiting"),
-        // Served today (seated entries today, exclude archived)
+        // Served today (seated entries today)
         supabase
           .from("waitlist_entries")
           .select("id", { count: "exact", head: true })
           .eq("waitlist_id", waitlistId)
-          .neq("status", "archived")
-          .in("status", ["notified", "seated"])
+          .eq("status", "seated")
+          .gte("notified_at", todayStr),
+        // No show today (archived after being called today)
+        supabase
+          .from("waitlist_entries")
+          .select("id", { count: "exact", head: true })
+          .eq("waitlist_id", waitlistId)
+          .eq("status", "archived")
           .gte("notified_at", todayStr),
       ]);
 
@@ -68,7 +76,10 @@ export default function StatsCards({ waitlistId }: { waitlistId: string }) {
         .map((r) => (r.notified_at ? new Date(r.notified_at).getTime() - new Date(r.created_at).getTime() : null))
         .filter((v): v is number => typeof v === "number" && isFinite(v) && v > 0);
       const avgMs = durationsMs.length ? Math.round(durationsMs.reduce((a, b) => a + b, 0) / durationsMs.length) : 0;
-      const totalMin = avgMs ? Math.max(1, Math.round(avgMs / 60000)) : 0;
+      // Apply 5-minute minimum when queue is empty
+      const queueCount = queueRes.count || 0;
+      const baseMin = avgMs ? Math.max(1, Math.round(avgMs / 60000)) : 0;
+      const totalMin = queueCount === 0 ? 5 : baseMin;
       const hours = Math.floor(totalMin / 60);
       const minutes = totalMin % 60;
       const newEtaDisplay = totalMin > 0 ? (hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`) : "";
@@ -80,14 +91,16 @@ export default function StatsCards({ waitlistId }: { waitlistId: string }) {
       // Queue length
       const newQueueLength = queueRes.count || 0;
 
-      // Served today
+      // Served and no show today
       const newServedToday = servedTodayRes.count || 0;
+      const newNoShowToday = noShowTodayRes.count || 0;
 
 
       setLastCalledNumber(newLastCalledNumber);
       setEtaDisplay(newEtaDisplay);
       setQueueLength(newQueueLength);
       setServedToday(newServedToday);
+      setNoShowToday(newNoShowToday);
       // avg service time removed
     } catch (error) {
       console.error("Error calculating stats:", error);
@@ -133,10 +146,10 @@ export default function StatsCards({ waitlistId }: { waitlistId: string }) {
   }, [waitlistId]);
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
       <div className="bg-primary/10 text-card-foreground ring-1 ring-primary rounded-xl p-4">
         <p className="text-sm font-medium text-primary">Now serving</p>
-        <p className="mt-1 text-2xl font-bold text-primary">{lastCalledNumber ?? "—"}</p>
+        <p className="mt-1 text-2xl font-bold text-foreground">{lastCalledNumber ?? "—"}</p>
       </div>
       <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-4">
         <p className="text-sm text-muted-foreground">Estimated wait time</p>
@@ -149,6 +162,10 @@ export default function StatsCards({ waitlistId }: { waitlistId: string }) {
       <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-4">
         <p className="text-sm text-muted-foreground">Served today</p>
         <p className="mt-1 text-xl font-semibold">{servedToday}</p>
+      </div>
+      <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-4">
+        <p className="text-sm text-muted-foreground">No show today</p>
+        <p className="mt-1 text-xl font-semibold">{noShowToday}</p>
       </div>
       {/* Avg service time removed */}
     </div>

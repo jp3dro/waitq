@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Pencil, Trash2, MoreHorizontal } from "lucide-react";
 import { createPortal } from "react-dom";
 import Modal from "@/components/modal";
+import Dropdown from "@/components/dropdown";
 import PhoneInput from "react-phone-number-input";
 import 'react-phone-number-input/style.css';
 import type { Country } from "react-phone-number-input";
@@ -15,6 +16,7 @@ type Customer = {
   firstSeen: string;
   lastSeen: string;
   servedCount: number;
+  noShowCount?: number;
 };
 
 export default function CustomersTable({ initialCustomers }: { initialCustomers: Customer[] }) {
@@ -23,9 +25,9 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
   const [customers, setCustomers] = useState<Customer[]>(initialCustomers);
   useEffect(() => { setCustomers(initialCustomers); }, [initialCustomers]);
 
-  const [menuState, setMenuState] = useState<{ key: string; phoneKey: string; top: number; left: number } | null>(null);
+  const [menuState, setMenuState] = useState<{ key: string; top: number; left: number } | null>(null);
   const [isPending, setIsPending] = useState(false);
-  const [editing, setEditing] = useState<{ open: boolean; phoneKey: string; name: string; phone: string } | null>(null);
+  const [editing, setEditing] = useState<{ open: boolean; key: string; name: string; phone: string } | null>(null);
 
   const openMenu = (customer: Customer, trigger: HTMLElement) => {
     const rect = trigger.getBoundingClientRect();
@@ -37,9 +39,7 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
     let top = rect.bottom + 4;
     if (left + menuWidth > vw - 8) left = Math.max(8, rect.right - menuWidth);
     if (top + estHeight > vh - 8 && rect.top - estHeight > 8) top = Math.max(8, rect.top - estHeight - 4);
-    const phoneKey = (customer.phone || "").replace(/\D+/g, "");
-    if (!phoneKey) return;
-    setMenuState({ key: customer.key, phoneKey, top, left });
+    setMenuState({ key: customer.key, top, left });
   };
   const closeMenu = () => setMenuState(null);
 
@@ -73,9 +73,7 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
   }, [customers, query, sortKey]);
 
   const onEdit = (c: Customer) => {
-    const phoneKey = (c.phone || "").replace(/\D+/g, "");
-    if (!phoneKey) return;
-    setEditing({ open: true, phoneKey, name: c.name || "", phone: c.phone || "" });
+    setEditing({ open: true, key: c.key, name: c.name || "", phone: c.phone || "" });
     closeMenu();
   };
 
@@ -86,20 +84,14 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
       const res = await fetch("/api/customers", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phoneKey: editing.phoneKey, name: editing.name || null, newPhone: editing.phone || null })
+        body: JSON.stringify({ key: editing.key, name: editing.name || null, newPhone: editing.phone || null })
       });
       if (!res.ok) {
         const text = await res.text().catch(() => "");
         throw new Error(text || `HTTP ${res.status}`);
       }
       await res.json().catch(() => ({}));
-      setCustomers((prev) => prev.map((c) => {
-        const pk = (c.phone || "").replace(/\D+/g, "");
-        if (pk === editing.phoneKey) {
-          return { ...c, name: editing.name || null, phone: editing.phone || null } as Customer;
-        }
-        return c;
-      }));
+      setCustomers((prev) => prev.map((c) => (c.key === editing.key ? ({ ...c, name: editing.name || null, phone: editing.phone || null } as Customer) : c)));
       setEditing({ ...editing, open: false });
     } catch (err) {
       console.error("Failed to save customer", err);
@@ -110,14 +102,12 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
   };
 
   const onDelete = async (c: Customer) => {
-    const phoneKey = (c.phone || "").replace(/\D+/g, "");
-    if (!phoneKey) return;
     closeMenu();
     setIsPending(true);
     try {
-      const res = await fetch(`/api/customers?phoneKey=${encodeURIComponent(phoneKey)}`, { method: "DELETE" });
+      const res = await fetch(`/api/customers?key=${encodeURIComponent(c.key)}` , { method: "DELETE" });
       if (res.ok) {
-        setCustomers((prev) => prev.filter((cc) => (cc.phone || "").replace(/\D+/g, "") !== phoneKey));
+        setCustomers((prev) => prev.filter((cc) => cc.key !== c.key));
       }
     } finally {
       setIsPending(false);
@@ -125,7 +115,7 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
   };
 
   return (
-    <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl">
+    <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl overflow-hidden">
       <div className="p-6 space-y-4">
         <div className="flex items-center justify-between gap-3">
           <input
@@ -136,15 +126,17 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
           />
           <div className="flex items-center gap-2 text-sm">
             <span className="text-muted-foreground">Sort:</span>
-            <select
-              value={sortKey}
-              onChange={(e) => setSortKey(e.target.value as "lastSeen" | "visits" | "served")}
-              className="rounded-md border border-border px-2 py-1.5 ring-1 ring-inset ring-border bg-card"
-            >
-              <option value="lastSeen">Last seen</option>
-              <option value="visits">Visits</option>
-              <option value="served">Served</option>
-            </select>
+            <div className="w-40">
+              <Dropdown
+                value={sortKey}
+                onChange={(v) => setSortKey(v as "lastSeen" | "visits" | "served")}
+                options={[
+                  { value: "lastSeen", label: "Last seen" },
+                  { value: "visits", label: "Visits" },
+                  { value: "served", label: "Served" },
+                ]}
+              />
+            </div>
           </div>
         </div>
 
@@ -156,6 +148,7 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
                 <th className="text-left font-medium text-foreground px-4 py-2">Phone</th>
                 <th className="text-left font-medium text-foreground px-4 py-2">Visits</th>
                 <th className="text-left font-medium text-foreground px-4 py-2">Served</th>
+                <th className="text-left font-medium text-foreground px-4 py-2">No show</th>
                 <th className="text-left font-medium text-foreground px-4 py-2">First seen</th>
                 <th className="text-left font-medium text-foreground px-4 py-2">Last seen</th>
                 <th className="text-left font-medium text-foreground px-4 py-2"></th>
@@ -168,17 +161,16 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
                   <td className="px-4 py-2">{c.phone || "—"}</td>
                   <td className="px-4 py-2">{c.visits}</td>
                   <td className="px-4 py-2">{c.servedCount}</td>
+                  <td className="px-4 py-2">{c.noShowCount ?? 0}</td>
                   <td className="px-4 py-2">{new Date(c.firstSeen).toLocaleString()}</td>
                   <td className="px-4 py-2">{new Date(c.lastSeen).toLocaleString()}</td>
                   <td className="px-4 py-2 text-right">
-                    {(c.phone || "").replace(/\D+/g, "") ? (
-                      <button
-                        onClick={(ev) => openMenu(c, ev.currentTarget as HTMLElement)}
-                        className="menu-trigger"
-                      >
-                        <MoreHorizontal className="h-4 w-4" />
-                      </button>
-                    ) : null}
+                    <button
+                      onClick={(ev) => openMenu(c, ev.currentTarget as HTMLElement)}
+                      className="menu-trigger"
+                    >
+                      <MoreHorizontal className="h-4 w-4" />
+                    </button>
                   </td>
                 </tr>
               ))}

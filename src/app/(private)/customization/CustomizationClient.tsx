@@ -229,7 +229,7 @@ export default function CustomizationClient({ initial }: { initial?: { accent_co
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              className="text-sm px-3 h-8 rounded-md bg-primary text-primary-foreground disabled:opacity-60"
+              className="text-sm px-3 h-8 rounded-md border border-border bg-card hover:bg-muted disabled:opacity-60"
             >
               {uploading ? "Uploading..." : "Upload image"}
             </button>
@@ -277,7 +277,7 @@ export default function CustomizationClient({ initial }: { initial?: { accent_co
               type="button"
               onClick={() => logoFileRef.current?.click()}
               disabled={uploading}
-              className="text-sm px-3 h-8 rounded-md bg-primary text-primary-foreground disabled:opacity-60"
+              className="text-sm px-3 h-8 rounded-md border border-border bg-card hover:bg-muted disabled:opacity-60"
             >
               {uploading ? "Uploading..." : "Upload logo"}
             </button>

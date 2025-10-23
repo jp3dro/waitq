@@ -280,27 +280,24 @@ export default function AnalyticsPage() {
     <main className="py-5">
       <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
         <div className="flex items-end justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
+          <div className="inline-flex overflow-hidden rounded-md ring-1 ring-inset ring-border bg-card shadow-sm divide-x divide-border">
+            {[7, 15, 30].map((d) => (
+              <button
+                key={d}
+                onClick={() => setRangeDays(d as 7 | 15 | 30)}
+                type="button"
+                className={`action-btn ${rangeDays === d ? 'action-btn--primary' : ''}`}
+              >
+                Last {d} days
+              </button>
+            ))}
           </div>
         </div>
 
         {/* Analytics content container */}
         <div className="space-y-6">
-          <div className="flex justify-center">
-            <div className="inline-flex overflow-hidden rounded-md ring-1 ring-inset ring-border bg-card shadow-sm divide-x divide-border">
-              {[7, 15, 30].map((d) => (
-                <button
-                  key={d}
-                  onClick={() => setRangeDays(d as 7 | 15 | 30)}
-                  type="button"
-                  className={`action-btn ${rangeDays === d ? 'action-btn--primary' : ''}`}
-                >
-                  Last {d} days
-                </button>
-              ))}
-            </div>
-          </div>
+          
 
           {/* Key Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

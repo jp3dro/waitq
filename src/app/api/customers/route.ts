@@ -6,7 +6,7 @@ import { getAdminClient } from "@/lib/supabase/admin";
 // Normalize to digits-only in SQL: regexp_replace(phone, '\\D', '', 'g')
 
 const patchSchema = z.object({
-  phoneKey: z.string().min(1),
+  key: z.string().min(1), // normalized phone or synthetic key like name:... or id:...
   name: z.string().nullable().optional(),
   newPhone: z.string().nullable().optional(),
 });
@@ -16,7 +16,7 @@ export async function PATCH(req: NextRequest) {
   const parse = patchSchema.safeParse(json);
   if (!parse.success) return NextResponse.json({ error: parse.error.flatten() }, { status: 400 });
 
-  const { phoneKey, name, newPhone } = parse.data;
+  const { key, name, newPhone } = parse.data;
   if (typeof name === "undefined" && typeof newPhone === "undefined") {
     return NextResponse.json({ error: "No updates provided" }, { status: 400 });
   }
@@ -41,16 +41,30 @@ export async function PATCH(req: NextRequest) {
   if (typeof name !== "undefined") updates.customer_name = name;
   if (typeof newPhone !== "undefined") updates.phone = newPhone;
 
-  // Fetch candidate rows, match by normalized phone in app, and update by IDs
+  // Fetch candidate rows for this business
   const { data: rows, error: fetchErr } = await admin
     .from("waitlist_entries")
-    .select("id, phone")
+    .select("id, phone, customer_name, created_at")
     .eq("business_id", biz.id);
   if (fetchErr) return NextResponse.json({ error: fetchErr.message }, { status: 400 });
 
-  const targetIds = (rows || [])
-    .filter((r) => (r.phone || "").replace(/\D+/g, "") === phoneKey)
-    .map((r) => r.id);
+  let targetIds: string[] = [];
+  if (key.startsWith("name:")) {
+    const nameKey = key.slice(5).toLowerCase();
+    targetIds = (rows || [])
+      .filter((r) => ((r.customer_name || "").toLowerCase() === nameKey))
+      .map((r) => r.id);
+  } else if (key.startsWith("id:")) {
+    const idKey = key.slice(3);
+    targetIds = (rows || [])
+      .filter((r) => r.id === idKey)
+      .map((r) => r.id);
+  } else {
+    const phoneKey = key.replace(/\D+/g, "");
+    targetIds = (rows || [])
+      .filter((r) => (r.phone || "").replace(/\D+/g, "") === phoneKey)
+      .map((r) => r.id);
+  }
 
   if (targetIds.length === 0) return NextResponse.json({ updated: 0 });
 
@@ -66,8 +80,8 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const phoneKey = searchParams.get("phoneKey");
-  if (!phoneKey) return NextResponse.json({ error: "Missing phoneKey" }, { status: 400 });
+  const key = searchParams.get("key");
+  if (!key) return NextResponse.json({ error: "Missing key" }, { status: 400 });
 
   const supabase = await createRouteClient();
   const {
@@ -84,16 +98,30 @@ export async function DELETE(req: NextRequest) {
   if (!biz?.id) return NextResponse.json({ error: "No business found" }, { status: 400 });
 
   const admin = getAdminClient();
-  // Fetch candidate rows, match by normalized phone in app, and delete by IDs
+  // Fetch candidate rows, match by key strategy, and delete by IDs
   const { data: rows, error: fetchErr } = await admin
     .from("waitlist_entries")
-    .select("id, phone")
+    .select("id, phone, customer_name")
     .eq("business_id", biz.id);
   if (fetchErr) return NextResponse.json({ error: fetchErr.message }, { status: 400 });
 
-  const targetIds = (rows || [])
-    .filter((r) => (r.phone || "").replace(/\D+/g, "") === phoneKey)
-    .map((r) => r.id);
+  let targetIds: string[] = [];
+  if (key.startsWith("name:")) {
+    const nameKey = key.slice(5).toLowerCase();
+    targetIds = (rows || [])
+      .filter((r) => ((r.customer_name || "").toLowerCase() === nameKey))
+      .map((r) => r.id);
+  } else if (key.startsWith("id:")) {
+    const idKey = key.slice(3);
+    targetIds = (rows || [])
+      .filter((r) => r.id === idKey)
+      .map((r) => r.id);
+  } else {
+    const phoneKey = key.replace(/\D+/g, "");
+    targetIds = (rows || [])
+      .filter((r) => (r.phone || "").replace(/\D+/g, "") === phoneKey)
+      .map((r) => r.id);
+  }
 
   if (targetIds.length === 0) return NextResponse.json({ ok: true });
 

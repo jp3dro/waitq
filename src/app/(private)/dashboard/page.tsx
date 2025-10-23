@@ -41,6 +41,7 @@ export default async function DashboardPage() {
           .from("waitlist_entries")
           .select("created_at, notified_at")
           .eq("waitlist_id", l.id)
+          .eq("status", "seated")
           .not("notified_at", "is", null)
           .order("notified_at", { ascending: false })
           .limit(100);
@@ -48,7 +49,13 @@ export default async function DashboardPage() {
         const durationsMs = rows
           .map((r) => (r.notified_at ? new Date(r.notified_at).getTime() - new Date(r.created_at).getTime() : null))
           .filter((v): v is number => typeof v === "number" && isFinite(v) && v > 0);
-        const avgMs = durationsMs.length ? Math.round(durationsMs.reduce((a, b) => a + b, 0) / durationsMs.length) : 0;
+        let avgMs = durationsMs.length ? Math.round(durationsMs.reduce((a, b) => a + b, 0) / durationsMs.length) : 0;
+        const { count } = await supabase
+          .from("waitlist_entries")
+          .select("id", { count: "exact", head: true })
+          .eq("waitlist_id", l.id)
+          .eq("status", "waiting");
+        if ((count || 0) === 0) avgMs = 5 * 60 * 1000;
         return { id: l.id, avgMs } as { id: string; avgMs: number };
       })
     ),
@@ -72,8 +79,10 @@ export default async function DashboardPage() {
   let hourlyVisits = Array.from({ length: 24 }, () => 0);
   let hourlyWaitMs = Array.from({ length: 24 }, () => 0);
   let hourlyWaitCounts = Array.from({ length: 24 }, () => 0);
+  let servedTodayCount = 0;
+  let noShowTodayCount = 0;
   if (listIds.length > 0) {
-    const [visitorsHead, waitRows, visitRows] = await Promise.all([
+    const [visitorsHead, waitRows, visitRows, servedHead, noShowHead] = await Promise.all([
       supabase
         .from("waitlist_entries")
         .select("id", { count: "exact", head: true })
@@ -94,6 +103,20 @@ export default async function DashboardPage() {
         .gte("created_at", startISO)
         .lt("created_at", endISO)
         .limit(10000),
+      supabase
+        .from("waitlist_entries")
+        .select("id", { count: "exact", head: true })
+        .in("waitlist_id", listIds)
+        .eq("status", "seated")
+        .gte("notified_at", startISO)
+        .lt("notified_at", endISO),
+      supabase
+        .from("waitlist_entries")
+        .select("id", { count: "exact", head: true })
+        .in("waitlist_id", listIds)
+        .eq("status", "archived")
+        .gte("notified_at", startISO)
+        .lt("notified_at", endISO),
     ]);
 
     todayVisitors = visitorsHead.count || 0;
@@ -121,6 +144,9 @@ export default async function DashboardPage() {
         hourlyWaitCounts[h] = (hourlyWaitCounts[h] || 0) + 1;
       }
     });
+
+    servedTodayCount = servedHead.count || 0;
+    noShowTodayCount = noShowHead.count || 0;
   }
 
   const hourlyWaitAvgMin = hourlyWaitMs.map((ms, i) => {
@@ -159,7 +185,7 @@ export default async function DashboardPage() {
         {/* Today's Analytics */}
         <section className="space-y-4">
           <h2 className="text-base font-semibold">Today’s analytics</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-6">
               <p className="text-sm text-muted-foreground">Total visitors (today)</p>
               <p className="mt-2 text-3xl font-semibold">{todayVisitors}</p>
@@ -174,6 +200,14 @@ export default async function DashboardPage() {
                   return totalMin > 0 ? (hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`) : '—';
                 })()}
               </p>
+            </div>
+            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-6">
+              <p className="text-sm text-muted-foreground">Served today</p>
+              <p className="mt-2 text-3xl font-semibold">{servedTodayCount}</p>
+            </div>
+            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-6">
+              <p className="text-sm text-muted-foreground">No show today</p>
+              <p className="mt-2 text-3xl font-semibold">{noShowTodayCount}</p>
             </div>
           </div>
 
