@@ -29,7 +29,7 @@ export default function Modal({ open, onClose, title, children, footer }: {
               <X className="h-4 w-4" />
             </button>
           </div>
-          <div className="p-4">
+          <div className="p-4 bg-card text-card-background">
             {children}
           </div>
           {footer && (

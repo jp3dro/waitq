@@ -230,7 +230,7 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
         }
       >
         <div className="grid gap-4">
-          <div className="grid gap-1">
+          <div className="grid gap-2">
             <label className="text-sm font-medium">Name</label>
             <input
               value={editing?.name || ""}
@@ -238,7 +238,7 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
               className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm bg-card"
             />
           </div>
-          <div className="grid gap-1">
+          <div className="grid gap-2">
             <label className="text-sm font-medium">Phone</label>
             <input
               value={editing?.phone || ""}

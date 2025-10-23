@@ -5,6 +5,7 @@ import Modal from "@/components/modal";
 import { createPortal } from "react-dom";
 import { toastManager } from "@/hooks/use-toast";
 import { RefreshCw, Archive, Pencil, Trash2 } from "lucide-react";
+import { Stepper } from "@/components/ui/stepper";
 
 type Entry = {
   id: string;
@@ -585,7 +586,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
         }
       >
         <form className="grid gap-4">
-          <div className="grid gap-1">
+          <div className="grid gap-2">
             <label className="text-sm font-medium">Customer name</label>
             <input
               type="text"
@@ -596,7 +597,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
             />
           </div>
 
-          <div className="grid gap-1">
+          <div className="grid gap-2">
             <label className="text-sm font-medium">Phone</label>
             <input
               type="tel"
@@ -609,20 +610,18 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
 
           {(waitlists.find(w => w.id === waitlistId)?.list_type || "restaurants") === "restaurants" && (
             <>
-              <div className="grid gap-1">
+              <div className="grid gap-2">
                 <label className="text-sm font-medium">Number of people</label>
-                <input
-                  type="number"
+                <Stepper
+                  value={editForm.partySize ? parseInt(editForm.partySize, 10) : undefined}
+                  onChange={(value) => setEditForm(prev => ({ ...prev, partySize: value?.toString() || "" }))}
                   min={1}
-                  value={editForm.partySize}
-                  onChange={(e) => setEditForm(prev => ({ ...prev, partySize: e.target.value }))}
-                  className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm"
-                  placeholder="e.g., 2"
+                  max={20}
                 />
               </div>
 
               {(waitlists.find(w => w.id === waitlistId)?.seating_preferences || []).length > 0 && (
-                <div className="grid gap-1">
+                <div className="grid gap-2">
                   <label className="text-sm font-medium">Seating preference</label>
                   <div className="flex flex-wrap gap-2">
                     {(waitlists.find(w => w.id === waitlistId)?.seating_preferences || []).map((s) => {

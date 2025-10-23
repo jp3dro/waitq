@@ -50,7 +50,7 @@ async function calculateAndUpdateETA(admin: ReturnType<typeof getAdminClient>, w
 
 const schema = z.object({
   waitlistId: z.string().uuid(),
-  phone: z.string().min(8),
+  phone: z.string().optional().refine((val) => !val || val.length >= 8, "Phone must be at least 8 characters"),
   customerName: z.string().min(1),
   sendSms: z.boolean().optional().default(false),
   sendWhatsapp: z.boolean().optional().default(false),

@@ -6,7 +6,6 @@ import ToastOnQuery from "@/components/toast-on-query";
 import AddButton from "@/app/(private)/dashboard/waitlist-add-button";
 import EditListButton from "./edit-list-button";
 import StatsCards from "./stats-cards";
-import WeeklyStats from "./weekly-stats";
 import ClearWaitlistButton from "./clear-waitlist-button";
 import type { Country } from "react-phone-number-input";
 import Link from "next/link";
@@ -122,16 +121,9 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <div>
             {/* Reactive stats cards */}
-            <div className="lg:col-span-3">
-              <StatsCards waitlistId={wl.id} />
-            </div>
-
-            {/* Weekly stats sidebar */}
-            <div className="lg:col-span-1">
-              <WeeklyStats waitlistId={wl.id} />
-            </div>
+            <StatsCards waitlistId={wl.id} />
           </div>
 
           <WaitlistTable fixedWaitlistId={wl.id} />
