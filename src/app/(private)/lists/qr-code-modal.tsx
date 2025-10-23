@@ -104,7 +104,7 @@ export default function QRCodeModal({ open, onClose, listName, displayToken, bus
         ) : (
           <>
             <div ref={printRef} className="wrap">
-              <div className="title">{businessName ? `${businessName} – ${listName}` : listName}</div>
+              <div className="title print:block hidden">{businessName ? `${businessName} – ${listName}` : listName}</div>
               {imgUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img id="qr-img" src={imgUrl} alt="QR code" className="qr"

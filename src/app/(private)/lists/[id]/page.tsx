@@ -74,15 +74,16 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
     name: loc.name as string
   })) || [];
 
-  // Fetch business country for phone input default
+  // Fetch business data for phone input default and QR code
   const { data: business } = await supabase
     .from("businesses")
-    .select("country_code")
+    .select("name, country_code")
     .order("created_at", { ascending: true })
     .limit(1)
     .single();
 
   const businessCountry = (business?.country_code || "PT") as Country;
+  const businessName = business?.name;
 
   return (
     <main className="py-5">
@@ -120,7 +121,7 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
                   >
                     Open Public Display
                   </a>
-                  <QRCodeButton listName={wl.name} displayToken={wl.display_token} />
+                  <QRCodeButton listName={wl.name} displayToken={wl.display_token} businessName={businessName} />
                 </>
               )}
               <ClearWaitlistButton waitlistId={wl.id} displayToken={wl.display_token} variant="button" />
