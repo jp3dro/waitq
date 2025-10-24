@@ -15,6 +15,8 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   let resolvedPriceId = priceId as string | undefined;
+  let existingStripeCustomerId: string | null = null;
+  let businessId: string | null = null;
 
   // Resolve via lookup key if provided
   if (!resolvedPriceId && lookupKey) {
@@ -53,18 +55,59 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // If we already have a Stripe customer for this user, reuse it to avoid duplicates
+  try {
+    const { data: row } = await supabase
+      .from("subscriptions")
+      .select("stripe_customer_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    existingStripeCustomerId = (row?.stripe_customer_id as string | null) || null;
+  } catch {}
+
+  // Resolve business_id for this user: owned first, then membership
+  try {
+    const { data: owned } = await supabase
+      .from("businesses")
+      .select("id")
+      .eq("owner_user_id", user.id)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    businessId = (owned?.id as string | undefined) || null;
+    if (!businessId) {
+      const { data: memberOf } = await supabase
+        .from("memberships")
+        .select("business_id")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      businessId = (memberOf?.business_id as string | undefined) || null;
+    }
+  } catch {}
+
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
     line_items: [{ price: resolvedPriceId, quantity: 1 }],
-    success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard?checkout=success`,
-    cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/pricing`,
-    customer_email: customerEmail || user.email || undefined,
+    success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/subscriptions?checkout=success`,
+    cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/subscriptions`,
+    customer: existingStripeCustomerId || undefined,
+    customer_email: existingStripeCustomerId ? undefined : (customerEmail || user.email || undefined),
     allow_promotion_codes: true,
+    client_reference_id: user.id,
+    metadata: {
+      user_id: user.id,
+      plan_id: planId || "",
+      lookup_key: lookupKey || "",
+      business_id: businessId || "",
+    },
     subscription_data: {
       metadata: {
         user_id: user.id,
         plan_id: planId || "",
         lookup_key: lookupKey || "",
+        business_id: businessId || "",
       },
     },
   });

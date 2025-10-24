@@ -22,7 +22,7 @@ export interface PlanDefinition {
 export const plans: Record<PlanId, PlanDefinition> = {
   free: {
     id: "free",
-    name: "Free Plan",
+    name: "Free",
     priceMonthlyEUR: 0,
     limits: {
       locations: 1,
@@ -43,7 +43,7 @@ export const plans: Record<PlanId, PlanDefinition> = {
   },
   base: {
     id: "base",
-    name: "Base Plan",
+    name: "Base",
     priceMonthlyEUR: 39,
     limits: {
       locations: 5,
@@ -64,7 +64,7 @@ export const plans: Record<PlanId, PlanDefinition> = {
   },
   premium: {
     id: "premium",
-    name: "Premium Plan",
+    name: "Premium",
     priceMonthlyEUR: 99,
     limits: {
       locations: 100,
