@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
 import { getAdminClient } from "@/lib/supabase/admin";
 import type { Stripe } from "stripe";
+import { plans } from "@/lib/plans";
 
 export const runtime = "nodejs";
 
@@ -60,6 +61,19 @@ export async function POST(req: NextRequest) {
             const sub = await stripe.subscriptions.retrieve(subscriptionId);
             const price = sub.items?.data?.[0]?.price || null;
             const actualLookupKey = (price?.lookup_key as string | null) || null;
+            let derivedPlanId = planId;
+            if (!derivedPlanId) {
+              // Try productId mapping first
+              if (price?.product && typeof price.product === "string") {
+                const productId = price.product as string;
+                const byProduct = (Object.values(plans)).find((p) => p.stripe.productId === productId);
+                if (byProduct) derivedPlanId = byProduct.id;
+              }
+              // Fallback to lookup key pattern
+              if (!derivedPlanId && actualLookupKey) {
+                derivedPlanId = actualLookupKey.replace(/_monthly_eur$/, "").replace(/^waitq_/, "");
+              }
+            }
 
             // Get current period from subscription items (Stripe moved these fields to item level in March 2025)
             const firstItem = sub.items?.data?.[0];
@@ -82,11 +96,11 @@ export async function POST(req: NextRequest) {
                   business_id: businessId || null,
                   stripe_customer_id: (sub.customer as string) || customerId,
                   stripe_subscription_id: sub.id as string,
-                  plan_id: planId,
+                  plan_id: derivedPlanId,
                   price_lookup_key: finalLookupKey,
                   price_id: (price?.id as string | undefined) || null,
                   latest_invoice_id: (sub.latest_invoice as string | undefined) || null,
-                  discount_json: (sub.discount as any) || null,
+                  discount_json: (sub.discounts as any) || null,
                   collection_method: (sub.collection_method as string | undefined) || null,
                   billing_cycle_anchor: billingCycleAnchorIso,
                   cancel_at_period_end: typeof sub.cancel_at_period_end === "boolean" ? sub.cancel_at_period_end : null,
@@ -110,8 +124,21 @@ export async function POST(req: NextRequest) {
               const actualLookupKey = (price?.lookup_key as string | null) || null;
               // Use actual lookup key from price object
               lookupKey = actualLookupKey;
+              let derivedPlanId = planId;
+              if (!derivedPlanId) {
+                // Try productId mapping first
+                if (price?.product && typeof price.product === "string") {
+                  const productId = price.product as string;
+                  const byProduct = (Object.values(plans)).find((p) => p.stripe.productId === productId);
+                  if (byProduct) derivedPlanId = byProduct.id;
+                }
+                // Fallback to lookup key pattern
+                if (!derivedPlanId && lookupKey) {
+                  derivedPlanId = lookupKey.replace(/_monthly_eur$/, "").replace(/^waitq_/, "");
+                }
+              }
               if (!planId) {
-                if (lookupKey) planId = lookupKey.replace(/_monthly_eur$/, "").replace(/^waitq_/, "");
+                planId = derivedPlanId || null;
               }
 
               // Get current period from subscription items (Stripe moved these fields to item level in March 2025)
@@ -157,7 +184,7 @@ export async function POST(req: NextRequest) {
                     price_lookup_key: lookupKey,
                     price_id: (price?.id as string | undefined) || null,
                     latest_invoice_id: (sub.latest_invoice as string | undefined) || null,
-                    discount_json: (sub.discount as any) || null,
+                    discount_json: (sub.discounts as any) || null,
                     collection_method: (sub.collection_method as string | undefined) || null,
                     billing_cycle_anchor: (sub as any).billing_cycle_anchor ? new Date((sub as any).billing_cycle_anchor * 1000).toISOString() : null,
                     cancel_at_period_end: typeof sub.cancel_at_period_end === "boolean" ? sub.cancel_at_period_end : null,
@@ -208,6 +235,15 @@ export async function POST(req: NextRequest) {
 
           const price = sub.items?.data?.[0]?.price || null;
           const actualLookupKey = (price?.lookup_key as string | null) || null;
+          let derivedPlanId: string | null = null;
+          if (price?.product && typeof price.product === "string") {
+            const productId = price.product as string;
+            const byProduct = (Object.values(plans)).find((p) => p.stripe.productId === productId);
+            if (byProduct) derivedPlanId = byProduct.id;
+          }
+          if (!derivedPlanId && actualLookupKey) {
+            derivedPlanId = actualLookupKey.replace(/_monthly_eur$/, "").replace(/^waitq_/, "");
+          }
 
           // Get current period from subscription items (Stripe moved these fields to item level in March 2025)
           const firstItem = sub.items?.data?.[0];
@@ -227,11 +263,11 @@ export async function POST(req: NextRequest) {
                 business_id: businessId || null,
                 stripe_customer_id: sub.customer as string | null,
                 stripe_subscription_id: sub.id as string,
-                plan_id: actualLookupKey?.replace(/_monthly_eur$/, "").replace(/^waitq_/, "") || null,
+                plan_id: derivedPlanId,
                 price_lookup_key: actualLookupKey,
                 price_id: (price?.id as string | undefined) || null,
                 latest_invoice_id: (sub.latest_invoice as string | undefined) || null,
-                discount_json: (sub.discount as any) || null,
+                discount_json: (sub.discounts as any) || null,
                 collection_method: (sub.collection_method as string | undefined) || null,
                 billing_cycle_anchor: billingCycleAnchorIso,
                 cancel_at_period_end: typeof sub.cancel_at_period_end === "boolean" ? sub.cancel_at_period_end : null,

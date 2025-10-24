@@ -2,7 +2,7 @@ export const metadata = { title: "Subscription" };
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
-import { orderedPlans } from "@/lib/plans";
+import { orderedPlans, plans } from "@/lib/plans";
 import { createClient } from "@/lib/supabase/server";
 import SubscribeButton from "./subscribe-button";
 import { getStripe } from "@/lib/stripe";
@@ -52,13 +52,13 @@ export default async function SubscriptionPage() {
       .eq("user_id", user.id)
       .maybeSingle();
 
-    console.log("🔍 SUPABASE DATA - Existing subscription row:", {
-      user_id: user.id,
-      stripe_customer_id: existingRow?.stripe_customer_id,
-      plan_id: existingRow?.plan_id,
-      status: existingRow?.status,
-      price_lookup_key: existingRow?.price_lookup_key
-    });
+    // console.log("🔍 SUPABASE DATA - Existing subscription row:", {
+    //   user_id: user.id,
+    //   stripe_customer_id: existingRow?.stripe_customer_id,
+    //   plan_id: existingRow?.plan_id,
+    //   status: existingRow?.status,
+    //   price_lookup_key: existingRow?.price_lookup_key
+    // });
 
     // Refresh subscription from Stripe on page load
     try {
@@ -73,22 +73,24 @@ export default async function SubscriptionPage() {
         const sorted = subs.data
           .slice()
           .sort((a: Stripe.Subscription, b: Stripe.Subscription) => (b.created || 0) - (a.created || 0));
-        let sub = sorted.find((s) => activeLike.has(s.status as string)) || sorted[0] || null;
+        let sub = sorted.find((s) => activeLike.has(s.status as string)) || null;
 
-        // If we found a subscription from the list, try to retrieve it individually for complete data
+        // If we found an active-like subscription from the list, try to retrieve it individually for complete data
         if (sub?.id) {
           try {
-            console.log("🔍 STRIPE DATA - Attempting to retrieve full subscription details for:", sub.id);
+            // console.log("🔍 STRIPE DATA - Attempting to retrieve full subscription details for:", sub.id);
             const fullSub = await stripe.subscriptions.retrieve(sub.id);
-            console.log("🔍 STRIPE DATA - Full retrieved subscription:", fullSub);
+            // console.log("🔍 STRIPE DATA - Full retrieved subscription:", fullSub);
             sub = fullSub;
           } catch (error) {
-            console.log("🔍 STRIPE DATA - Failed to retrieve full subscription:", error);
+            // console.log("🔍 STRIPE DATA - Failed to retrieve full subscription:", error);
           }
         }
 
+        // Always record the customer id
+        uiCustomerId = customerId;
+
         if (sub) {
-          uiCustomerId = customerId;
           uiSubscription = sub;
           const price = sub.items?.data?.[0]?.price || null;
           const priceLookupKey = (price?.lookup_key as string | null) || null;
@@ -99,81 +101,87 @@ export default async function SubscriptionPage() {
           const metadataPlanId = sub.metadata?.plan_id || sub.metadata?.planId || null;
 
           // Log the complete subscription object to see all available fields
-          console.log("🔍 STRIPE DATA - Complete subscription object:", sub);
+          // console.log("🔍 STRIPE DATA - Complete subscription object:", sub);
 
           // Get current period from subscription items (Stripe moved these fields to item level in March 2025)
           const firstItem = sub.items?.data?.[0];
           const itemCurrentPeriodStart = firstItem?.current_period_start;
           const itemCurrentPeriodEnd = firstItem?.current_period_end;
 
-          console.log("🔍 STRIPE DATA - Active subscription summary:", {
-            id: sub.id,
-            customer: sub.customer,
-            status: sub.status,
-            metadata: sub.metadata,
-            metadata_plan_id: metadataPlanId,
-            // Subscription-level period fields (deprecated since March 2025)
-            subscription_current_period_start: (sub as any).current_period_start,
-            subscription_current_period_end: (sub as any).current_period_end,
-            // Item-level period fields (current approach)
-            item_current_period_start: itemCurrentPeriodStart,
-            item_current_period_end: itemCurrentPeriodEnd,
-            start_date: sub.start_date,
-            // Additional fields that might contain period info
-            billing_cycle_anchor: (sub as any).billing_cycle_anchor,
-            next_pending_invoice_item_invoice: sub.next_pending_invoice_item_invoice,
-            pending_invoice_item_interval: sub.pending_invoice_item_interval,
-            pending_update: sub.pending_update,
-            schedule: sub.schedule,
-            trial_end: (sub as any).trial_end,
-            trial_start: sub.trial_start,
-            cancel_at_period_end: (sub as any).cancel_at_period_end,
-            canceled_at: sub.canceled_at,
-            cancel_at: sub.cancel_at,
-            ended_at: sub.ended_at,
-            latest_invoice: sub.latest_invoice,
-            collection_method: sub.collection_method,
-            price_id: price?.id,
-            price_amount: price?.unit_amount,
-            price_currency: price?.currency,
-            price_lookup_key: priceLookupKey,
-            metadata_lookup_key: metadataLookupKey,
-            final_lookup_key: lookupKey,
-            // Subscription items data
-            subscription_items: sub.items?.data?.map(item => ({
-              id: item.id,
-              price_id: item.price?.id,
-              current_period_start: item.current_period_start,
-              current_period_end: item.current_period_end,
-              quantity: item.quantity
-            }))
-          });
+          // console.log("🔍 STRIPE DATA - Active subscription summary:", {
+          //   id: sub.id,
+          //   customer: sub.customer,
+          //   status: sub.status,
+          //   metadata: sub.metadata,
+          //   metadata_plan_id: metadataPlanId,
+          //   // Subscription-level period fields (deprecated since March 2025)
+          //   subscription_current_period_start: (sub as any).current_period_start,
+          //   subscription_current_period_end: (sub as any).current_period_end,
+          //   // Item-level period fields (current approach)
+          //   item_current_period_start: itemCurrentPeriodStart,
+          //   item_current_period_end: itemCurrentPeriodEnd,
+          //   start_date: sub.start_date,
+          //   // Additional fields that might contain period info
+          //   billing_cycle_anchor: (sub as any).billing_cycle_anchor,
+          //   next_pending_invoice_item_invoice: sub.next_pending_invoice_item_invoice,
+          //   pending_invoice_item_interval: sub.pending_invoice_item_interval,
+          //   pending_update: sub.pending_update,
+          //   schedule: sub.schedule,
+          //   trial_end: (sub as any).trial_end,
+          //   trial_start: sub.trial_start,
+          //   cancel_at_period_end: (sub as any).cancel_at_period_end,
+          //   canceled_at: sub.canceled_at,
+          //   cancel_at: sub.cancel_at,
+          //   ended_at: sub.ended_at,
+          //   latest_invoice: sub.latest_invoice,
+          //   collection_method: sub.collection_method,
+          //   price_id: price?.id,
+          //   price_amount: price?.unit_amount,
+          //   price_currency: price?.currency,
+          //   price_lookup_key: priceLookupKey,
+          //   metadata_lookup_key: metadataLookupKey,
+          //   final_lookup_key: lookupKey,
+          //   // Subscription items data
+          //   subscription_items: sub.items?.data?.map(item => ({
+          //     id: item.id,
+          //     price_id: item.price?.id,
+          //     current_period_start: item.current_period_start,
+          //     current_period_end: item.current_period_end,
+          //     quantity: item.quantity
+          //   }))
+          // });
 
-          // Derive plan id - prefer metadata, then price amount matching, then lookup key
+          // Derive plan id - prefer metadata, then productId mapping, then price amount matching, then lookup key
           let planId: string | null = null;
 
           // First priority: plan_id from subscription metadata
           if (metadataPlanId) {
             planId = metadataPlanId;
           }
-          // Second priority: derive from price amount
+          // Second priority: map by Stripe product id
+          else if (price?.product && typeof price.product === "string") {
+            const productId = price.product as string;
+            const byProduct = (Object.values(plans) as typeof orderedPlans).find((p) => p.stripe.productId === productId);
+            planId = byProduct ? byProduct.id : null;
+          }
+          // Third priority: derive from price amount
           else if (typeof price?.unit_amount === "number") {
             const amountEur = Math.round(price.unit_amount) / 100;
             const match = orderedPlans.find((p) => Math.round(p.priceMonthlyEUR * 100) === Math.round(amountEur * 100));
             planId = match ? match.id : null;
           }
-          // Third priority: derive from lookup key
+          // Fourth priority: derive from lookup key
           else if (lookupKey) {
             planId = lookupKey.replace(/_monthly_eur$/, "").replace(/^waitq_/, "");
           }
 
-          console.log("🔍 DERIVED DATA - Plan identification:", {
-            derived_plan_id: planId,
-            metadata_plan_id: metadataPlanId,
-            price_amount_eur: typeof price?.unit_amount === "number" ? Math.round(price.unit_amount) / 100 : null,
-            lookup_key_used: lookupKey,
-            plan_determined_by: metadataPlanId ? "metadata" : (typeof price?.unit_amount === "number" && planId !== null) ? "price_amount" : lookupKey ? "lookup_key" : "none"
-          });
+          // console.log("🔍 DERIVED DATA - Plan identification:", {
+          //   derived_plan_id: planId,
+          //   metadata_plan_id: metadataPlanId,
+          //   price_amount_eur: typeof price?.unit_amount === "number" ? Math.round(price.unit_amount) / 100 : null,
+          //   lookup_key_used: lookupKey,
+          //   plan_determined_by: metadataPlanId ? "metadata" : (typeof price?.unit_amount === "number" && planId !== null) ? "price_amount" : lookupKey ? "lookup_key" : "none"
+          // });
 
           const admin = getAdminClient();
           // Resolve business for this user
@@ -240,23 +248,23 @@ export default async function SubscriptionPage() {
               { onConflict: "user_id" }
             );
 
-          console.log("💾 SUPABASE UPSERT - Data saved to database:", {
-            user_id: user.id,
-            business_id: businessId || null,
-            stripe_customer_id: customerId,
-            stripe_subscription_id: sub.id,
-            plan_id: planId,
-            price_lookup_key: lookupKey,
-            price_id: price?.id || null,
-            status: sub.status,
-            latest_invoice_id: sub.latest_invoice || null,
-            collection_method: sub.collection_method || null,
-            billing_cycle_anchor: billingCycleAnchorIso,
-            cancel_at_period_end: (sub as any).cancel_at_period_end ?? null,
-            current_period_start: currentPeriodStartIso,
-            current_period_end: currentPeriodEndIso,
-            trial_end: trialEndIso
-          });
+          // console.log("💾 SUPABASE UPSERT - Data saved to database:", {
+          //   user_id: user.id,
+          //   business_id: businessId || null,
+          //   stripe_customer_id: customerId,
+          //   stripe_subscription_id: sub.id,
+          //   plan_id: planId,
+          //   price_lookup_key: lookupKey,
+          //   price_id: price?.id || null,
+          //   status: sub.status,
+          //   latest_invoice_id: sub.latest_invoice || null,
+          //   collection_method: sub.collection_method || null,
+          //   billing_cycle_anchor: billingCycleAnchorIso,
+          //   cancel_at_period_end: (sub as any).cancel_at_period_end ?? null,
+          //   current_period_start: currentPeriodStartIso,
+          //   current_period_end: currentPeriodEndIso,
+          //   trial_end: trialEndIso
+          // });
 
           // Use this immediately for rendering
           current = {
@@ -272,27 +280,27 @@ export default async function SubscriptionPage() {
             collection_method: (sub.collection_method as string | undefined) || null,
           };
 
-          console.log("🎨 RENDER DATA - Data used for UI rendering:", {
-            plan_id: current.plan_id,
-            status: current.status,
-            price_lookup_key: current.price_lookup_key,
-            price_id: current.price_id,
-            latest_invoice_id: current.latest_invoice_id,
-            current_period_start: current.current_period_start,
-            current_period_end: current.current_period_end,
-            trial_end: current.trial_end,
-            cancel_at_period_end: current.cancel_at_period_end,
-            collection_method: current.collection_method
-          });
+          // console.log("🎨 RENDER DATA - Data used for UI rendering:", {
+          //   plan_id: current.plan_id,
+          //   status: current.status,
+          //   price_lookup_key: current.price_lookup_key,
+          //   price_id: current.price_id,
+          //   latest_invoice_id: current.latest_invoice_id,
+          //   current_period_start: current.current_period_start,
+          //   current_period_end: current.current_period_end,
+          //   trial_end: current.trial_end,
+          //   cancel_at_period_end: current.cancel_at_period_end,
+          //   collection_method: current.collection_method
+          // });
 
-          // Fetch recent invoices for payment history and last payment display
-          try {
-            const invoices = await stripe.invoices.list({ customer: customerId, limit: 12 });
-            uiInvoices = invoices.data
-              .slice()
-              .sort((a: Stripe.Invoice, b: Stripe.Invoice) => (b.created || 0) - (a.created || 0));
-          } catch {}
         }
+        // Fetch recent invoices for payment history and last payment display even if no active subscription
+        try {
+          const invoices = await stripe.invoices.list({ customer: customerId, limit: 12 });
+          uiInvoices = invoices.data
+            .slice()
+            .sort((a: Stripe.Invoice, b: Stripe.Invoice) => (b.created || 0) - (a.created || 0));
+        } catch {}
       } else {
         // If we don't have a stored customer ID, try to find it through other means
         // Try Stripe search API on subscriptions by metadata user_id
@@ -310,16 +318,19 @@ export default async function SubscriptionPage() {
               const sorted = subs.data
                 .slice()
                 .sort((a: Stripe.Subscription, b: Stripe.Subscription) => (b.created || 0) - (a.created || 0));
-              let sub = sorted.find((s) => activeLike.has(s.status as string)) || sorted[0] || null;
+              let sub = sorted.find((s) => activeLike.has(s.status as string)) || null;
 
               // Try to retrieve full subscription details
               if (sub?.id) {
                 try {
                   sub = await stripe.subscriptions.retrieve(sub.id);
                 } catch (error) {
-                  console.log("🔍 STRIPE DATA - Failed to retrieve full subscription in fallback:", error);
+                  // console.log("🔍 STRIPE DATA - Failed to retrieve full subscription in fallback:", error);
                 }
               }
+
+              // Always record the customer id
+              uiCustomerId = customerId;
 
               if (sub) {
                 uiCustomerId = customerId;
@@ -337,20 +348,26 @@ export default async function SubscriptionPage() {
                 const itemCurrentPeriodStart = firstItem?.current_period_start;
                 const itemCurrentPeriodEnd = firstItem?.current_period_end;
 
-                // Derive plan id - prefer metadata, then price amount matching, then lookup key
+                // Derive plan id - prefer metadata, then productId mapping, then price amount matching, then lookup key
                 let planId: string | null = null;
 
                 // First priority: plan_id from subscription metadata
                 if (metadataPlanId) {
                   planId = metadataPlanId;
                 }
-                // Second priority: derive from price amount
+                // Second priority: map by Stripe product id
+                else if (price?.product && typeof price.product === "string") {
+                  const productId = price.product as string;
+                  const byProduct = (Object.values(plans) as typeof orderedPlans).find((p) => p.stripe.productId === productId);
+                  planId = byProduct ? byProduct.id : null;
+                }
+                // Third priority: derive from price amount
                 else if (typeof price?.unit_amount === "number") {
                   const amountEur = Math.round(price.unit_amount) / 100;
                   const match = orderedPlans.find((p) => Math.round(p.priceMonthlyEUR * 100) === Math.round(amountEur * 100));
                   planId = match ? match.id : null;
                 }
-                // Third priority: derive from lookup key
+                // Fourth priority: derive from lookup key
                 else if (lookupKey) {
                   planId = lookupKey.replace(/_monthly_eur$/, "").replace(/^waitq_/, "");
                 }
@@ -435,14 +452,14 @@ export default async function SubscriptionPage() {
                   collection_method: (sub.collection_method as string | undefined) || null,
                 };
 
-                // Fetch recent invoices for payment history and last payment display
-                try {
-                  const invoices = await stripe.invoices.list({ customer: customerId, limit: 12 });
-                  uiInvoices = invoices.data
-                    .slice()
-                    .sort((a: Stripe.Invoice, b: Stripe.Invoice) => (b.created || 0) - (a.created || 0));
-                } catch {}
               }
+              // Fetch recent invoices for payment history and last payment display
+              try {
+                const invoices = await stripe.invoices.list({ customer: customerId, limit: 12 });
+                uiInvoices = invoices.data
+                  .slice()
+                  .sort((a: Stripe.Invoice, b: Stripe.Invoice) => (b.created || 0) - (a.created || 0));
+              } catch {}
             }
           }
         } catch {}
@@ -465,7 +482,7 @@ export default async function SubscriptionPage() {
               try {
                 sub = await stripe.subscriptions.retrieve(sub.id);
               } catch (error) {
-                console.log("🔍 STRIPE DATA - Failed to retrieve full subscription in email fallback:", error);
+                // console.log("🔍 STRIPE DATA - Failed to retrieve full subscription in email fallback:", error);
               }
             }
 
@@ -485,20 +502,26 @@ export default async function SubscriptionPage() {
               const itemCurrentPeriodStart = firstItem?.current_period_start;
               const itemCurrentPeriodEnd = firstItem?.current_period_end;
 
-              // Derive plan id - prefer metadata, then price amount matching, then lookup key
+              // Derive plan id - prefer metadata, then productId mapping, then price amount matching, then lookup key
               let planId: string | null = null;
 
               // First priority: plan_id from subscription metadata
               if (metadataPlanId) {
                 planId = metadataPlanId;
               }
-              // Second priority: derive from price amount
+              // Second priority: map by Stripe product id
+              else if (price?.product && typeof price.product === "string") {
+                const productId = price.product as string;
+                const byProduct = (Object.values(plans) as typeof orderedPlans).find((p) => p.stripe.productId === productId);
+                planId = byProduct ? byProduct.id : null;
+              }
+              // Third priority: derive from price amount
               else if (typeof price?.unit_amount === "number") {
                 const amountEur = Math.round(price.unit_amount) / 100;
                 const match = orderedPlans.find((p) => Math.round(p.priceMonthlyEUR * 100) === Math.round(amountEur * 100));
                 planId = match ? match.id : null;
               }
-              // Third priority: derive from lookup key
+              // Fourth priority: derive from lookup key
               else if (lookupKey) {
                 planId = lookupKey.replace(/_monthly_eur$/, "").replace(/^waitq_/, "");
               }
@@ -604,19 +627,19 @@ export default async function SubscriptionPage() {
         .maybeSingle();
       current = (data as SubscriptionData) || null;
 
-      console.log("📚 FALLBACK SUPABASE DATA - Using cached data from database:", {
-        user_id: user.id,
-        plan_id: current?.plan_id,
-        status: current?.status,
-        price_lookup_key: current?.price_lookup_key,
-        price_id: current?.price_id,
-        latest_invoice_id: current?.latest_invoice_id,
-        current_period_start: current?.current_period_start,
-        current_period_end: current?.current_period_end,
-        trial_end: current?.trial_end,
-        cancel_at_period_end: current?.cancel_at_period_end,
-        collection_method: current?.collection_method
-      });
+      // console.log("📚 FALLBACK SUPABASE DATA - Using cached data from database:", {
+      //   user_id: user.id,
+      //   plan_id: current?.plan_id,
+      //   status: current?.status,
+      //   price_lookup_key: current?.price_lookup_key,
+      //   price_id: current?.price_id,
+      //   latest_invoice_id: current?.latest_invoice_id,
+      //   current_period_start: current?.current_period_start,
+      //   current_period_end: current?.current_period_end,
+      //   trial_end: current?.trial_end,
+      //   cancel_at_period_end: current?.cancel_at_period_end,
+      //   collection_method: current?.collection_method
+      // });
     }
   }
 
@@ -636,14 +659,16 @@ export default async function SubscriptionPage() {
     }
   }
 
-  console.log("🎯 FINAL PLAN DETERMINATION:", {
-    user_id: user?.id,
-    has_active_subscription: current && current.status && activeLikeStatuses.has(current.status),
-    current_subscription_status: current?.status,
-    derived_plan_id: current?.plan_id,
-    final_current_plan: currentPlanId,
-    plan_determined_by: current?.plan_id ? "metadata_or_price_derivation" : "default_free"
-  });
+  // console.log("🎯 FINAL PLAN DETERMINATION:", {
+  //   user_id: user?.id,
+  //   has_active_subscription: current && current.status && activeLikeStatuses.has(current.status),
+  //   current_subscription_status: current?.status,
+  //   derived_plan_id: current?.plan_id,
+  //   final_current_plan: currentPlanId,
+  //   plan_determined_by: current?.plan_id ? "metadata_or_price_derivation" : "default_free"
+  // });
+
+  const hasActiveSubscription = !!(uiSubscription && uiSubscription.status && activeLikeStatuses.has(uiSubscription.status as string));
 
   return (
     <main className="py-5">
@@ -719,85 +744,74 @@ export default async function SubscriptionPage() {
           })}
         </div>
 
-        {uiSubscription && (
+        {(hasActiveSubscription || uiInvoices.length > 0) && (
           <div className="grid grid-cols-1 gap-4">
-            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="text-xl font-semibold">Active Subscription</div>
-                <span className="text-sm px-2 py-1 rounded bg-muted text-muted-foreground capitalize">{uiSubscription.status as string}</span>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                <div>
-                  <div className="text-muted-foreground">Stripe Customer</div>
-                  <div className="font-medium break-all">{uiCustomerId}</div>
+            {hasActiveSubscription && uiSubscription && (
+              <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="text-xl font-semibold">Active Subscription</div>
+                  <span className="text-sm px-2 py-1 rounded bg-muted text-muted-foreground capitalize">{uiSubscription.status as string}</span>
                 </div>
-                <div>
-                  <div className="text-muted-foreground">Current period</div>
-                  <div className="font-medium">
-                    {(() => {
-                      // Use item-level current period (Stripe moved these fields in March 2025)
-                      const firstItem = (uiSubscription as any).items?.data?.[0];
-                      const startSec = firstItem?.current_period_start;
-                      const endSec = firstItem?.current_period_end;
-
-                      if (typeof startSec !== "number" || typeof endSec !== "number") return "Not set";
-
-                      const startDate = new Date(startSec * 1000);
-                      const endDate = new Date(endSec * 1000);
-
-                      const formatDate = (date: Date) => {
-                        return date.toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric'
-                        });
-                      };
-
-                      return `${formatDate(startDate)} to ${formatDate(endDate)}`;
-                    })()}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <div className="text-muted-foreground">Stripe Customer</div>
+                    <div className="font-medium break-all">{uiCustomerId}</div>
                   </div>
-                </div>
-                <div>
-                  <div className="text-muted-foreground">Days Left</div>
-                  <div className="font-medium">
-                    {(() => {
-                      // Use item-level current period end (Stripe moved these fields in March 2025)
-                      const firstItem = (uiSubscription as any).items?.data?.[0];
-                      const endSec = firstItem?.current_period_end;
-                      if (typeof endSec !== "number") return "Not set";
-                      const msLeft = endSec * 1000 - Date.now();
-                      const days = Math.max(0, Math.ceil(msLeft / (1000 * 60 * 60 * 24)));
-                      return `${days} day${days === 1 ? "" : "s"}`;
-                    })()}
+                  <div>
+                    <div className="text-muted-foreground">Current period</div>
+                    <div className="font-medium">
+                      {(() => {
+                        const firstItem = (uiSubscription as any).items?.data?.[0];
+                        const startSec = firstItem?.current_period_start;
+                        const endSec = firstItem?.current_period_end;
+                        if (typeof startSec !== "number" || typeof endSec !== "number") return "Not set";
+                        const startDate = new Date(startSec * 1000);
+                        const endDate = new Date(endSec * 1000);
+                        const formatDate = (date: Date) => date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        return `${formatDate(startDate)} to ${formatDate(endDate)}`;
+                      })()}
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <div className="text-muted-foreground">Auto-renew</div>
-                  <div className="font-medium">
-                    {(() => {
-                      const val = (uiSubscription as any).cancel_at_period_end;
-                      if (typeof val !== 'boolean') return 'Not set';
-                      return val ? 'Off' : 'On';
-                    })()}
+                  <div>
+                    <div className="text-muted-foreground">Days Left</div>
+                    <div className="font-medium">
+                      {(() => {
+                        const firstItem = (uiSubscription as any).items?.data?.[0];
+                        const endSec = firstItem?.current_period_end;
+                        if (typeof endSec !== "number") return "Not set";
+                        const msLeft = endSec * 1000 - Date.now();
+                        const days = Math.max(0, Math.ceil(msLeft / (1000 * 60 * 60 * 24)));
+                        return `${days} day${days === 1 ? "" : "s"}`;
+                      })()}
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <div className="text-muted-foreground">Last Payment</div>
-                  <div className="font-medium">
-                    {(() => {
-                      const lastPaid = uiInvoices.find((inv) => inv.status === "paid");
-                      const paidAt = (lastPaid?.status_transitions?.paid_at as number | undefined) || (lastPaid?.created as number | undefined);
-                      return paidAt ? new Date(paidAt * 1000).toLocaleString() : "No payments yet";
-                    })()}
+                  <div>
+                    <div className="text-muted-foreground">Auto-renew</div>
+                    <div className="font-medium">
+                      {(() => {
+                        const val = (uiSubscription as any).cancel_at_period_end;
+                        if (typeof val !== 'boolean') return 'Not set';
+                        return val ? 'Off' : 'On';
+                      })()}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-muted-foreground">Last Payment</div>
+                    <div className="font-medium">
+                      {(() => {
+                        const lastPaid = uiInvoices.find((inv) => inv.status === "paid");
+                        const paidAt = (lastPaid?.status_transitions?.paid_at as number | undefined) || (lastPaid?.created as number | undefined);
+                        return paidAt ? new Date(paidAt * 1000).toLocaleString() : "No payments yet";
+                      })()}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
 
-            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-6">
-              <div className="text-lg font-semibold mb-3">Payment History</div>
-              {uiInvoices.length === 0 ? (
-                <div className="text-sm text-muted-foreground">No invoices yet.</div>
-              ) : (
+            {uiInvoices.length > 0 && (
+              <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-6">
+                <div className="text-lg font-semibold mb-3">Payment History</div>
                 <div className="overflow-x-auto">
                   <table className="min-w-full text-sm">
                     <thead>
@@ -826,8 +840,8 @@ export default async function SubscriptionPage() {
                     </tbody>
                   </table>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         )}
       </div>

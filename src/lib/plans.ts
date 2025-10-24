@@ -14,6 +14,8 @@ export interface PlanDefinition {
   limits: Record<PlanLimitKeys, number>;
   // Stripe lookup keys allow us to resolve prices without hardcoding IDs
   stripe: {
+    // Product IDs are used as the primary mapping from Stripe subscriptions to plans
+    productId?: string;
     productLookupKey: string;
     priceLookupKeyMonthly: string;
   };
@@ -44,7 +46,7 @@ export const plans: Record<PlanId, PlanDefinition> = {
   base: {
     id: "base",
     name: "Base",
-    priceMonthlyEUR: 39,
+    priceMonthlyEUR: 49,
     limits: {
       locations: 5,
       users: 5,
@@ -58,6 +60,10 @@ export const plans: Record<PlanId, PlanDefinition> = {
       "Email support",
     ],
     stripe: {
+      productId:
+        process.env.NEXT_PUBLIC_STRIPE_BASE_PRODUCT_ID ||
+        (process.env as unknown as Record<string, string | undefined>).NEXT_PUBLIC_STRIPE_BASE_PRODUCTI_ID ||
+        "prod_TIQgJJ6PYihM3J",
       productLookupKey: "waitq_base",
       priceLookupKeyMonthly: "waitq_base_monthly_eur",
     },
@@ -78,6 +84,10 @@ export const plans: Record<PlanId, PlanDefinition> = {
       "Priority email and phone support",
     ],
     stripe: {
+      productId:
+        process.env.NEXT_PUBLIC_STRIPE_PREMIUM_PRODUCT_ID ||
+        (process.env as unknown as Record<string, string | undefined>).NEXT_PUBLIC_STRIPE_PREMIUM_PRODUCTI_ID ||
+        "prod_TIQgj1LEbwLSaR",
       productLookupKey: "waitq_premium",
       priceLookupKeyMonthly: "waitq_premium_monthly_eur",
     },
