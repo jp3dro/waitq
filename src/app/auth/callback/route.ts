@@ -37,9 +37,27 @@ export async function GET(req: NextRequest) {
         if (biz?.id) {
           await admin
             .from("memberships")
-            .insert({ business_id: biz.id as string, user_id: user.id, role: 'admin' })
+            .insert({ business_id: biz.id as string, user_id: user.id, role: 'admin', status: 'active' })
             .select("id")
             .maybeSingle();
+        }
+      }
+
+      // Accept pending invites
+      if (user.email) {
+        const { data: pendingInvites } = await admin
+          .from("memberships")
+          .select("id")
+          .eq("invitation_email", user.email)
+          .eq("status", "pending");
+
+        if (pendingInvites && pendingInvites.length > 0) {
+          for (const inv of pendingInvites) {
+            await admin
+              .from("memberships")
+              .update({ user_id: user.id, status: 'active', invitation_email: null })
+              .eq("id", inv.id);
+          }
         }
       }
 

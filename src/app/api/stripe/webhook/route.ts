@@ -196,6 +196,42 @@ export async function POST(req: NextRequest) {
                   },
                   { onConflict: "user_id" }
                 );
+
+              // If this subscription is now active, cancel any other active subscriptions for this user/business
+              if (sub.status === "active") {
+                try {
+                  // Find other active subscriptions for this user/business (excluding the current one)
+                  const { data: otherActiveSubs } = await admin
+                    .from("subscriptions")
+                    .select("stripe_subscription_id")
+                    .eq("user_id", userId)
+                    .eq("status", "active")
+                    .neq("stripe_subscription_id", sub.id);
+
+                  for (const otherSub of otherActiveSubs || []) {
+                    try {
+                      // Cancel the subscription in Stripe
+                      await stripe.subscriptions.update(otherSub.stripe_subscription_id, {
+                        cancel_at_period_end: true, // Cancel at the end of the billing period
+                      });
+
+                      // Update the database record
+                      await admin
+                        .from("subscriptions")
+                        .update({
+                          cancel_at_period_end: true,
+                          updated_at: new Date().toISOString()
+                        })
+                        .eq("stripe_subscription_id", otherSub.stripe_subscription_id);
+
+                    } catch (cancelError) {
+                      console.error("Failed to cancel old subscription:", otherSub.stripe_subscription_id, cancelError);
+                    }
+                  }
+                } catch (error) {
+                  console.error("Error checking for other active subscriptions:", error);
+                }
+              }
             }
           } catch {}
         }
@@ -279,6 +315,42 @@ export async function POST(req: NextRequest) {
               },
               { onConflict: "user_id" }
             );
+
+          // If this subscription is now active, cancel any other active subscriptions for this user/business
+          if (sub.status === "active") {
+            try {
+              // Find other active subscriptions for this user/business (excluding the current one)
+              const { data: otherActiveSubs } = await admin
+                .from("subscriptions")
+                .select("stripe_subscription_id")
+                .eq("user_id", userId)
+                .eq("status", "active")
+                .neq("stripe_subscription_id", sub.id);
+
+              for (const otherSub of otherActiveSubs || []) {
+                try {
+                  // Cancel the subscription in Stripe
+                  await stripe.subscriptions.update(otherSub.stripe_subscription_id, {
+                    cancel_at_period_end: true, // Cancel at the end of the billing period
+                  });
+
+                  // Update the database record
+                  await admin
+                    .from("subscriptions")
+                    .update({
+                      cancel_at_period_end: true,
+                      updated_at: new Date().toISOString()
+                    })
+                    .eq("stripe_subscription_id", otherSub.stripe_subscription_id);
+
+                } catch (cancelError) {
+                  console.error("Failed to cancel old subscription:", otherSub.stripe_subscription_id, cancelError);
+                }
+              }
+            } catch (error) {
+              console.error("Error checking for other active subscriptions:", error);
+            }
+          }
         }
       } catch {}
       break;

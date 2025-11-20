@@ -33,7 +33,7 @@ export default function Modal({ open, onClose, title, children, footer }: {
             {children}
           </div>
           {footer && (
-            <div className="flex items-center justify-end gap-3 px-4 h-12 border-t border-border">
+            <div className="flex items-center justify-between flex-row-reverse px-4 h-12 border-t border-border">
               {footer}
             </div>
           )}
