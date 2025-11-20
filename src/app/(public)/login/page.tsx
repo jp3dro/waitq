@@ -1,10 +1,10 @@
 "use client";
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toastManager } from "@/hooks/use-toast";
 
-export default function LoginPage() {
+function LoginPageContent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -121,5 +121,28 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-dvh flex items-center justify-center p-6 bg-background text-foreground">
+          <div className="w-full max-w-sm">
+            <div className="rounded-2xl bg-card text-card-foreground ring-1 ring-border shadow-sm p-6 space-y-6">
+              <div className="animate-pulse space-y-4">
+                <div className="h-6 bg-muted rounded" />
+                <div className="h-4 bg-muted rounded" />
+                <div className="h-10 bg-muted rounded" />
+                <div className="h-10 bg-muted rounded" />
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <LoginPageContent />
+    </Suspense>
   );
 }

@@ -84,6 +84,8 @@ export async function GET() {
         role: "admin",
         status: "active",
         invitation_email: null,
+        invitation_name: null,
+        created_at: new Date().toISOString(),
         email: u.user?.email || "Owner",
         name: u.user?.user_metadata?.full_name || u.user?.user_metadata?.name || "Owner",
       });
