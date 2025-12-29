@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { Button } from "@/components/ui/button";
 
 type AnalyticsData = {
   totalVisitors: number;
@@ -283,14 +284,16 @@ export default function AnalyticsPage() {
           <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
           <div className="inline-flex overflow-hidden rounded-md ring-1 ring-inset ring-border bg-card shadow-sm divide-x divide-border">
             {[7, 15, 30].map((d) => (
-              <button
+              <Button
                 key={d}
                 onClick={() => setRangeDays(d as 7 | 15 | 30)}
                 type="button"
-                className={`action-btn ${rangeDays === d ? 'action-btn--primary' : ''}`}
+                variant={rangeDays === d ? "default" : "ghost"}
+                size="sm"
+                className="rounded-none"
               >
                 Last {d} days
-              </button>
+              </Button>
             ))}
           </div>
         </div>

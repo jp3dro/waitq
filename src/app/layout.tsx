@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
-import { EB_Garamond, Inter } from "next/font/google";
+import { Figtree } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "next-themes";
-import { AccentProvider } from "@/components/theme/AccentProvider";
  
 
-const serif = EB_Garamond({ variable: "--font-serif", subsets: ["latin"], display: "swap" });
-const sans = Inter({ variable: "--font-sans", subsets: ["latin"], display: "swap" });
+const figtree = Figtree({ variable: "--font-sans", subsets: ["latin"], display: "swap" });
 
 export const metadata: Metadata = {
   title: {
@@ -74,14 +72,13 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
       </head>
-      <body className={`${serif.variable} ${sans.variable} antialiased`}>
+      <body className={`${figtree.variable} antialiased`}>
         <ThemeProvider
           attribute="data-theme"
           defaultTheme="light"
           enableSystem
           disableTransitionOnChange
         >
-          <AccentProvider />
           {children}
           <Toaster position="top-right" />
         </ThemeProvider>

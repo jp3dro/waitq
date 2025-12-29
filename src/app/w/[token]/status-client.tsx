@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { applyAccent } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
@@ -96,12 +95,7 @@ export default function ClientStatus({ token }: { token: string }) {
     };
   }, [supabase, data?.waitlist_id, load]);
 
-  // Apply business accent/background for public status pages if provided
-  useEffect(() => {
-    if (business?.accent_color) {
-      applyAccent(business.accent_color);
-    }
-  }, [business?.accent_color]);
+  // Accent customization removed: brand is now locked to the preset theme.
 
   // Redirect to public display for invalid/expired sessions:
   // Conditions: missing entry; or status is one of terminal states; or entry created before today.

@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { applyAccent } from "@/lib/utils";
 import Modal from "@/components/modal";
 import PhoneInput, { type Country } from "react-phone-number-input";
 import 'react-phone-number-input/style.css';
@@ -84,11 +83,7 @@ export default function DisplayClient({ token }: { token: string }) {
   }, [supabase, token]);
 
   const bg = data?.backgroundColor || "#000000";
-  const accent = data?.accentColor || "#FFFFFF";
-
-  useEffect(() => {
-    if (accent) applyAccent(accent);
-  }, [accent]);
+  // Accent customization removed: brand is now locked to the preset theme.
   if (loading || !data) return (
     <main className="min-h-screen bg-background text-foreground flex items-center justify-center">
       <p className="text-muted-foreground">Loading…</p>
@@ -128,7 +123,7 @@ export default function DisplayClient({ token }: { token: string }) {
         ) : null}
         {data.kioskEnabled ? (
           <div className="mt-4">
-            <KioskButton token={token} defaultCountry={data.businessCountry || "PT"} listType={data.listType || "restaurants"} seatingPreferences={data.seatingPreferences || []} accent={accent} />
+            <KioskButton token={token} defaultCountry={data.businessCountry || "PT"} listType={data.listType || "restaurants"} seatingPreferences={data.seatingPreferences || []} accent="#FFFFFF" />
           </div>
         ) : null}
         <div className="mt-8 grid md:grid-cols-[1fr_1.2fr] gap-8">

@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+
 type Props = {
   lookupKey?: string;
   planId?: string;
@@ -24,9 +26,9 @@ export default function SubscribeButton({ lookupKey, planId, children, className
   }
 
   return (
-    <button onClick={onClick} disabled={disabled} className={className} type="button">
+    <Button onClick={onClick} disabled={disabled} className={className} type="button">
       {children}
-    </button>
+    </Button>
   );
 }
 

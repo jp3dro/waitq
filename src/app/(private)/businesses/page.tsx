@@ -8,7 +8,8 @@ export default async function AdminBusinessesPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user || user.email !== "jp3dro@gmail.com") redirect("/businesses");
+  // Platform-admin view only; everyone else should go to their own business page.
+  if (!user || user.email !== "jp3dro@gmail.com") redirect("/business");
 
   // For now, list all businesses with name, owner email and placeholder subscription status
   const { data: businesses } = await supabase

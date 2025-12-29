@@ -2,10 +2,25 @@
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Info } from "lucide-react";
-import Modal from "@/components/modal";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Tooltip } from "@/components/ui/tooltip";
-import Dropdown from "@/components/dropdown";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toastManager } from "@/hooks/use-toast";
 
 type Location = { id: string; name: string };
@@ -126,61 +141,71 @@ export default function EditListButton({
 
   return (
     <>
-      <button id={triggerId} onClick={openModal} className="action-btn" style={hideTrigger ? { display: 'none' } : undefined}>
-        Edit
-      </button>
-      <Modal
-        open={getOpen()}
-        onClose={closeModal}
-        title="Edit list"
-        footer={
-          <>
-            <button
-              onClick={closeModal}
-              className="action-btn"
-            >
-              Cancel
-            </button>
-            <button
-              disabled={isPending}
-              onClick={save}
-              className="action-btn action-btn--primary disabled:opacity-50"
-            >
-              {isPending ? "Saving…" : "Save"}
-            </button>
-          </>
-        }
+      <Button
+        id={triggerId}
+        onClick={openModal}
+        variant="outline"
+        size="sm"
+        style={hideTrigger ? { display: "none" } : undefined}
       >
-        <div className="grid gap-4">
-          <div className="grid gap-2">
-            <label className="text-sm font-medium">Name</label>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm"
-            />
-          </div>
-          <div className="grid gap-2">
-            <label className="text-sm font-medium">Location</label>
-            <Dropdown
-              value={locationId}
-              onChange={setLocationId}
-              options={locations.map((l) => ({ value: l.id, label: l.name }))}
-              disabled={isPending}
-            />
-          </div>
-          <div className="flex items-center gap-3">
-            <Switch id="kiosk-enabled" checked={kioskEnabled} onCheckedChange={setKioskEnabled} />
-            <div className="flex items-center gap-2">
-              <label htmlFor="kiosk-enabled" className="text-sm font-medium">Self-checkin kiosk</label>
-              <Tooltip content="Users will be able to add themselves to the waiting list using your welcome Kiosk screen">
-                <Info className="h-4 w-4 text-neutral-400 hover:text-neutral-600 cursor-help" />
-              </Tooltip>
+        Edit
+      </Button>
+
+      <Dialog open={getOpen()} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit list</DialogTitle>
+          </DialogHeader>
+
+          <div className="grid gap-4">
+            <div className="grid gap-2">
+              <Label>Name</Label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} />
             </div>
+
+            <div className="grid gap-2">
+              <Label>Location</Label>
+              <Select value={locationId} onValueChange={setLocationId} disabled={isPending}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select location" />
+                </SelectTrigger>
+                <SelectContent>
+                  {locations.map((l) => (
+                    <SelectItem key={l.id} value={l.id}>
+                      {l.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Switch id="kiosk-enabled" checked={kioskEnabled} onCheckedChange={setKioskEnabled} />
+              <div className="flex items-center gap-2">
+                <Label htmlFor="kiosk-enabled">Self-checkin kiosk</Label>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    Users will be able to add themselves to the waiting list using your welcome Kiosk screen.
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </div>
+            {message ? <p className="text-sm text-destructive">{message}</p> : null}
           </div>
-          {message ? <p className="text-sm text-red-700">{message}</p> : null}
-        </div>
-      </Modal>
+
+          <DialogFooter>
+            <Button onClick={closeModal} variant="outline">
+              Cancel
+            </Button>
+            <Button disabled={isPending} onClick={save}>
+              {isPending ? "Saving…" : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

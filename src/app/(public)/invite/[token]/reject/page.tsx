@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getAdminClient } from "@/lib/supabase/admin";
+import { Button } from "@/components/ui/button";
 
 export default async function RejectInvitePage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
@@ -44,8 +45,10 @@ export default async function RejectInvitePage({ params }: { params: Promise<{ t
             await admin.from("memberships").delete().eq("token", token);
             redirect("/");
         }} className="mt-6 flex gap-3 justify-center">
-            <a href={`/invite/${token}`} className="action-btn">Cancel</a>
-            <button type="submit" className="action-btn bg-red-600 text-white hover:bg-red-700 border-transparent">Reject Invite</button>
+            <Button asChild variant="outline">
+              <a href={`/invite/${token}`}>Cancel</a>
+            </Button>
+            <Button type="submit" variant="destructive">Reject invite</Button>
         </form>
       </div>
     </main>

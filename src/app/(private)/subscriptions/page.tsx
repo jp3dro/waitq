@@ -5,6 +5,7 @@ import Link from "next/link";
 import { orderedPlans, plans } from "@/lib/plans";
 import { createClient } from "@/lib/supabase/server";
 import SubscribeButton from "./subscribe-button";
+import { Button } from "@/components/ui/button";
 import { getStripe } from "@/lib/stripe";
 import { getAdminClient } from "@/lib/supabase/admin";
 import type Stripe from "stripe";
@@ -721,19 +722,16 @@ export default async function SubscriptionPage() {
                   // Hide "Included" button when user has an active subscription (any paid plan)
                   currentPlanId !== "free" ? null : (
                     isCurrentPlan ? null : (
-                      <Link
-                        href="/dashboard"
-                        className="action-btn action-btn--primary w-full justify-center"
-                      >
-                        Included
-                      </Link>
+                      <Button asChild className="w-full">
+                        <Link href="/dashboard">Included</Link>
+                      </Button>
                     )
                   )
                 ) : (
                   <SubscribeButton
                     lookupKey={plan.stripe.priceLookupKeyMonthly}
                     planId={plan.id}
-                    className={`action-btn action-btn--primary w-full justify-center`}
+                    className="w-full"
                   >
                     {isCurrentPlan ? 'Manage' : (isUpgradeable ? 'Upgrade' : 'Subscribe')}
                   </SubscribeButton>

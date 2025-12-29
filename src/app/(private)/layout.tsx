@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import PrivateSidebar from "@/components/private-sidebar";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 export default async function PrivateLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -9,10 +10,12 @@ export default async function PrivateLayout({ children }: { children: React.Reac
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
   return (
-    <div className="min-h-dvh flex">
+    <SidebarProvider defaultOpen>
       <PrivateSidebar />
-      <div className="flex-1 min-w-0 bg-background">{children}</div>
-    </div>
+      <SidebarInset className="min-h-dvh bg-background">
+        {children}
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
 

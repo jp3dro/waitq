@@ -11,6 +11,7 @@ import QRCodeButton from "./qr-code-button";
 import type { Country } from "react-phone-number-input";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const supabase = await createClient();
@@ -90,13 +91,12 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
       <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
         <ToastOnQuery />
         <div className="flex items-center gap-6">
-          <Link
-            href="/lists"
-            className="action-btn"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Lists
-          </Link>
+          <Button asChild variant="outline" size="sm" className="gap-2">
+            <Link href="/lists">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Lists
+            </Link>
+          </Button>
           <h1 className="text-3xl font-bold tracking-tight">{wl.name}</h1>
         </div>
 
@@ -113,14 +113,15 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
               />
               {wl.display_token && (
                 <>
-                  <a
-                    href={`/display/${encodeURIComponent(wl.display_token)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="action-btn"
-                  >
-                    Open Public Display
-                  </a>
+                  <Button asChild variant="outline" size="sm">
+                    <a
+                      href={`/display/${encodeURIComponent(wl.display_token)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Open Public Display
+                    </a>
+                  </Button>
                   <QRCodeButton listName={wl.name} displayToken={wl.display_token} businessName={businessName} />
                 </>
               )}

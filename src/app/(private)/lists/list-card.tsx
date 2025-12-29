@@ -1,19 +1,26 @@
 "use client";
 import Link from "next/link";
 import { Monitor, Pencil, Trash2, MoreHorizontal, QrCode } from "lucide-react";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import ClearWaitlistButton from "../lists/[id]/clear-waitlist-button";
 import QRCodeModal from "./qr-code-modal";
 import EditListButton from "./[id]/edit-list-button";
 import { toastManager } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function ListCard({ id, name, waiting, etaDisplay, displayToken, businessName, initialLocationId, kioskEnabled, locations }: { id: string; name: string; waiting: number; etaDisplay: string; displayToken?: string | null; businessName?: string; initialLocationId?: string | null; kioskEnabled?: boolean | null; locations?: { id: string; name: string }[] }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [qrOpen, setQrOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
-  const detailsRef = useRef<HTMLDetailsElement | null>(null);
 
   const remove = () => {
     startTransition(async () => {
@@ -29,23 +36,12 @@ export default function ListCard({ id, name, waiting, etaDisplay, displayToken, 
 
   // Close actions menu on outside click and Escape
   useEffect(() => {
-    const onDocClick = (e: MouseEvent) => {
-      const d = detailsRef.current;
-      if (!d) return;
-      const target = e.target as Node | null;
-      if (d.open && target && !d.contains(target)) {
-        d.open = false;
-      }
-    };
     const onKey = (e: KeyboardEvent) => {
-      const d = detailsRef.current;
-      if (!d) return;
-      if (d.open && e.key === 'Escape') d.open = false;
+      // DropdownMenu handles escape itself; keep for any custom listeners we add later.
+      void e;
     };
-    document.addEventListener('mousedown', onDocClick);
     document.addEventListener('keydown', onKey);
     return () => {
-      document.removeEventListener('mousedown', onDocClick);
       document.removeEventListener('keydown', onKey);
     };
   }, []);
@@ -75,38 +71,48 @@ export default function ListCard({ id, name, waiting, etaDisplay, displayToken, 
           </div>
         </div>
       </Link>
-      <details className="absolute top-2 right-2" ref={detailsRef}>
-        <summary className="menu-trigger list-none">
-          <MoreHorizontal className="h-4 w-4" />
-        </summary>
-        <div className="absolute right-0 mt-1 menu-container z-10">
-          <button onClick={() => {
-            setEditOpen(true);
-            if (detailsRef.current) detailsRef.current.open = false;
-          }} className="menu-item">
-            <Pencil className="menu-icon" />
-            <span>Edit</span>
-          </button>
-          <a href={displayToken ? `/display/${encodeURIComponent(displayToken)}` : `/lists/${id}`} className="menu-item" target="_blank" rel="noopener noreferrer">
-            <Monitor className="menu-icon" />
-            <span>Open public display</span>
-          </a>
-          <button onClick={() => setQrOpen(true)} className="menu-item">
-            <QrCode className="menu-icon" />
-            <span>Open QR code</span>
-          </button>
-          <div className="menu-separator"></div>
-          <ClearWaitlistButton waitlistId={id} displayToken={displayToken} variant="menu" />
-          <button
-            disabled={isPending}
-            onClick={remove}
-            className="menu-item menu-item--danger"
-          >
-            <Trash2 className="menu-icon" />
-            <span>Delete</span>
-          </button>
-        </div>
-      </details>
+      <div className="absolute top-2 right-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" aria-label="Open menu">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onSelect={() => setEditOpen(true)}>
+              <Pencil className="h-4 w-4" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <a
+                href={displayToken ? `/display/${encodeURIComponent(displayToken)}` : `/lists/${id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Monitor className="h-4 w-4" />
+                Open public display
+              </a>
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => setQrOpen(true)}>
+              <QrCode className="h-4 w-4" />
+              Open QR code
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <ClearWaitlistButton waitlistId={id} displayToken={displayToken} variant="menu" />
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              disabled={isPending}
+              onSelect={() => {
+                remove();
+              }}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
       <QRCodeModal open={qrOpen} onClose={() => setQrOpen(false)} listName={name} displayToken={displayToken || undefined} businessName={businessName} />
       <EditListButton
         waitlistId={id}

@@ -1,9 +1,30 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { Pencil, Trash2, MoreHorizontal } from "lucide-react";
-import { createPortal } from "react-dom";
-import Modal from "@/components/modal";
-import Dropdown from "@/components/dropdown";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import PhoneInput from "react-phone-number-input";
 import 'react-phone-number-input/style.css';
 import type { Country } from "react-phone-number-input";
@@ -25,37 +46,8 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
   const [customers, setCustomers] = useState<Customer[]>(initialCustomers);
   useEffect(() => { setCustomers(initialCustomers); }, [initialCustomers]);
 
-  const [menuState, setMenuState] = useState<{ key: string; top: number; left: number } | null>(null);
   const [isPending, setIsPending] = useState(false);
   const [editing, setEditing] = useState<{ open: boolean; key: string; name: string; phone: string } | null>(null);
-
-  const openMenu = (customer: Customer, trigger: HTMLElement) => {
-    const rect = trigger.getBoundingClientRect();
-    const menuWidth = 200;
-    const estHeight = 140;
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    let left = rect.left;
-    let top = rect.bottom + 4;
-    if (left + menuWidth > vw - 8) left = Math.max(8, rect.right - menuWidth);
-    if (top + estHeight > vh - 8 && rect.top - estHeight > 8) top = Math.max(8, rect.top - estHeight - 4);
-    setMenuState({ key: customer.key, top, left });
-  };
-  const closeMenu = () => setMenuState(null);
-
-  useEffect(() => {
-    if (!menuState) return;
-    const onClose = () => setMenuState(null);
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenuState(null); };
-    window.addEventListener('scroll', onClose, true);
-    window.addEventListener('resize', onClose);
-    document.addEventListener('keydown', onKey);
-    return () => {
-      window.removeEventListener('scroll', onClose, true);
-      window.removeEventListener('resize', onClose);
-      document.removeEventListener('keydown', onKey);
-    };
-  }, [menuState]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -74,7 +66,6 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
 
   const onEdit = (c: Customer) => {
     setEditing({ open: true, key: c.key, name: c.name || "", phone: c.phone || "" });
-    closeMenu();
   };
 
   const saveEdit = async () => {
@@ -102,7 +93,6 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
   };
 
   const onDelete = async (c: Customer) => {
-    closeMenu();
     setIsPending(true);
     try {
       const res = await fetch(`/api/customers?key=${encodeURIComponent(c.key)}` , { method: "DELETE" });
@@ -118,24 +108,25 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
     <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl overflow-hidden">
       <div className="p-6 space-y-4">
         <div className="flex items-center justify-between gap-3">
-          <input
+          <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search name or phone..."
-            className="w-full sm:w-80 rounded-md border border-border px-3 py-2 text-sm ring-1 ring-inset ring-border focus:outline-none focus:ring-2 focus:ring-ring bg-card"
+            className="w-full sm:w-80"
           />
           <div className="flex items-center gap-2 text-sm">
             <span className="text-muted-foreground">Sort:</span>
             <div className="w-40">
-              <Dropdown
-                value={sortKey}
-                onChange={(v) => setSortKey(v as "lastSeen" | "visits" | "served")}
-                options={[
-                  { value: "lastSeen", label: "Last seen" },
-                  { value: "visits", label: "Visits" },
-                  { value: "served", label: "Served" },
-                ]}
-              />
+              <Select value={sortKey} onValueChange={(v) => setSortKey(v as typeof sortKey)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="lastSeen">Last seen</SelectItem>
+                  <SelectItem value="visits">Visits</SelectItem>
+                  <SelectItem value="served">Served</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>
@@ -166,12 +157,27 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
                     <td className="px-4 py-2">{new Date(c.firstSeen).toLocaleString()}</td>
                     <td className="px-4 py-2">{new Date(c.lastSeen).toLocaleString()}</td>
                     <td className="px-4 py-2 text-right">
-                      <button
-                        onClick={(ev) => openMenu(c, ev.currentTarget as HTMLElement)}
-                        className="menu-trigger"
-                      >
-                        <MoreHorizontal className="h-4 w-4" />
-                      </button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" aria-label="Open menu">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onSelect={() => onEdit(c)}>
+                            <Pencil className="h-4 w-4" />
+                            Edit details
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onSelect={() => void onDelete(c)}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Delete customer
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </td>
                   </tr>
                 ))}
@@ -184,75 +190,44 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
             </table>
           </div>
         </div>
-        {menuState && (() => {
-          const me = customers.find(cc => cc.key === menuState.key);
-          if (!me) return null;
-          return createPortal(
-            <div className="fixed inset-0 z-50" onClick={closeMenu}>
-              <div
-                className="absolute menu-container"
-                style={{ top: menuState.top, left: menuState.left }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <button onClick={() => onEdit(me)} className="menu-item">
-                  <Pencil className="menu-icon" />
-                  <span>Edit details</span>
-                </button>
-                <div className="menu-separator"></div>
-                <button onClick={() => onDelete(me)} className="menu-item menu-item--danger">
-                  <Trash2 className="menu-icon" />
-                  <span>Delete customer</span>
-                </button>
-              </div>
-            </div>,
-            document.body
-          );
-        })()}
       </div>
-      <Modal
-        open={!!editing?.open}
-        onClose={() => setEditing(null)}
-        title="Edit customer"
-        footer={
-          <>
-            <button
-              type="button"
-              onClick={() => setEditing(null)}
-              className="action-btn"
-            >
+
+      <Dialog open={!!editing?.open} onOpenChange={(v) => (!v ? setEditing(null) : undefined)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit customer</DialogTitle>
+          </DialogHeader>
+
+          <div className="grid gap-4">
+            <div className="grid gap-2">
+              <Label>Name</Label>
+              <Input
+                value={editing?.name || ""}
+                onChange={(e) => setEditing((prev) => (prev ? { ...prev, name: e.target.value } : prev))}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label>Phone</Label>
+              <PhoneInput
+                international
+                defaultCountry={"PT" as Country}
+                value={editing?.phone || ""}
+                onChange={(value) => setEditing((prev) => (prev ? { ...prev, phone: value || "" } : prev))}
+                className="block w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setEditing(null)}>
               Cancel
-            </button>
-            <button
-              onClick={saveEdit}
-              disabled={isPending}
-              className="action-btn action-btn--primary disabled:opacity-50"
-            >
+            </Button>
+            <Button onClick={saveEdit} disabled={isPending}>
               {isPending ? "Saving…" : "Save changes"}
-            </button>
-          </>
-        }
-      >
-        <div className="grid gap-4">
-          <div className="grid gap-2">
-            <label className="text-sm font-medium">Name</label>
-            <input
-              value={editing?.name || ""}
-              onChange={(e) => setEditing((prev) => (prev ? { ...prev, name: e.target.value } : prev))}
-              className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm bg-card"
-            />
-          </div>
-          <div className="grid gap-2">
-            <label className="text-sm font-medium">Phone</label>
-            <PhoneInput
-              international
-              defaultCountry="PT"
-              value={editing?.phone || ""}
-              onChange={(value) => setEditing((prev) => (prev ? { ...prev, phone: value || "" } : prev))}
-              className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm"
-            />
-          </div>
-        </div>
-      </Modal>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

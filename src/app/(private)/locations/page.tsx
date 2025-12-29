@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState, useTransition } from "react";
 import Modal from "@/components/modal";
 import { toastManager } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 
 type Location = { id: string; name: string; phone: string | null; address: string | null; city: string | null };
 
@@ -141,7 +142,7 @@ export default function LocationsPage() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Locations</h1>
           </div>
-          <button onClick={() => setOpenCreate(true)} className="action-btn action-btn--primary">New location</button>
+          <Button onClick={() => setOpenCreate(true)}>New location</Button>
         </div>
 
         <div className="space-y-4">
@@ -178,9 +179,9 @@ export default function LocationsPage() {
                   )}
                 </div>
                 <div className="mt-4 flex items-center justify-between pt-3 border-t border-border">
-                  <button onClick={() => openEditModal(l)} className="action-btn text-xs transition-colors">
+                  <Button variant="outline" size="sm" onClick={() => openEditModal(l)}>
                     Edit
-                  </button>
+                  </Button>
                   {canDelete && (
                     <button disabled={isPending} onClick={() => remove(l.id)} className="inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium ring-1 ring-inset ring-destructive/40 text-destructive hover:bg-destructive/10 disabled:opacity-50 transition-colors">
                       Delete
@@ -199,8 +200,8 @@ export default function LocationsPage() {
       title="New location"
       footer={
         <>
-          <button onClick={() => setOpenCreate(false)} className="action-btn">Cancel</button>
-          <button onClick={create} disabled={isPending || !form.name.trim()} className="action-btn action-btn--primary disabled:opacity-50">Create</button>
+          <Button variant="outline" onClick={() => setOpenCreate(false)}>Cancel</Button>
+          <Button onClick={create} disabled={isPending || !form.name.trim()}>Create</Button>
         </>
       }
     >
@@ -247,8 +248,8 @@ export default function LocationsPage() {
       title="Edit location"
       footer={
         <>
-          <button onClick={closeEditModal} className="action-btn">Cancel</button>
-          <button onClick={saveEdit} disabled={isPending} className="action-btn action-btn--primary disabled:opacity-50">Save changes</button>
+          <Button variant="outline" onClick={closeEditModal}>Cancel</Button>
+          <Button onClick={saveEdit} disabled={isPending}>Save changes</Button>
         </>
       }
     >

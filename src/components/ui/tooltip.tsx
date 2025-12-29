@@ -1,95 +1,61 @@
-"use client";
+"use client"
 
-import { ReactNode, useState } from "react";
+import * as React from "react"
+import { Tooltip as TooltipPrimitive } from "radix-ui"
 
-type TooltipProps = {
-  content: string;
-  children: ReactNode;
-  side?: "top" | "right" | "bottom" | "left";
-};
+import { cn } from "@/lib/utils"
 
-export function Tooltip({ content, children, side = "top" }: TooltipProps) {
-  const [isVisible, setIsVisible] = useState(false);
-
-  const positionClasses = {
-    top: "bottom-full left-1/2 -translate-x-1/2 mb-2",
-    right: "left-full top-1/2 -translate-y-1/2 ml-2",
-    bottom: "top-full left-1/2 -translate-x-1/2 mt-2",
-    left: "right-full top-1/2 -translate-y-1/2 mr-2",
-  };
-
+function TooltipProvider({
+  delayDuration = 0,
+  ...props
+}: React.ComponentProps<typeof TooltipPrimitive.Provider>) {
   return (
-    <div className="relative inline-block">
-      <div
-        onMouseEnter={() => setIsVisible(true)}
-        onMouseLeave={() => setIsVisible(false)}
-        onFocus={() => setIsVisible(true)}
-        onBlur={() => setIsVisible(false)}
-      >
-        {children}
-      </div>
-      {isVisible && (
-        <div
-          className={`absolute z-50 px-2 py-1 text-xs text-white bg-black rounded shadow-lg whitespace-nowrap ${positionClasses[side]}`}
-          role="tooltip"
-        >
-          {content}
-          <div
-            className={`absolute w-2 h-2 bg-black rotate-45 ${
-              side === "top" ? "top-full left-1/2 -translate-x-1/2 -translate-y-1/2" :
-              side === "right" ? "right-full top-1/2 -translate-y-1/2 -translate-x-1/2" :
-              side === "bottom" ? "bottom-full left-1/2 -translate-x-1/2 translate-y-1/2" :
-              "left-full top-1/2 -translate-y-1/2 translate-x-1/2"
-            }`}
-          />
-        </div>
-      )}
-    </div>
-  );
+    <TooltipPrimitive.Provider
+      data-slot="tooltip-provider"
+      delayDuration={delayDuration}
+      {...props}
+    />
+  )
 }
 
-type PopoverProps = {
-  content: ReactNode;
-  children: ReactNode;
-  side?: "top" | "right" | "bottom" | "left";
-};
-
-export function Popover({ content, children, side = "top" }: PopoverProps) {
-  const [isVisible, setIsVisible] = useState(false);
-
-  const positionClasses = {
-    top: "bottom-full left-1/2 -translate-x-1/2 mb-2",
-    right: "left-full top-1/2 -translate-y-1/2 ml-2",
-    bottom: "top-full left-1/2 -translate-x-1/2 mt-2",
-    left: "right-full top-1/2 -translate-y-1/2 mr-2",
-  };
-
+function Tooltip({
+  ...props
+}: React.ComponentProps<typeof TooltipPrimitive.Root>) {
   return (
-    <div className="relative inline-block">
-      <div
-        onMouseEnter={() => setIsVisible(true)}
-        onFocus={() => setIsVisible(true)}
+    <TooltipProvider>
+      <TooltipPrimitive.Root data-slot="tooltip" {...props} />
+    </TooltipProvider>
+  )
+}
+
+function TooltipTrigger({
+  ...props
+}: React.ComponentProps<typeof TooltipPrimitive.Trigger>) {
+  return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />
+}
+
+function TooltipContent({
+  className,
+  sideOffset = 0,
+  children,
+  ...props
+}: React.ComponentProps<typeof TooltipPrimitive.Content>) {
+  return (
+    <TooltipPrimitive.Portal>
+      <TooltipPrimitive.Content
+        data-slot="tooltip-content"
+        sideOffset={sideOffset}
+        className={cn(
+          "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-[state=delayed-open]:animate-in data-[state=delayed-open]:fade-in-0 data-[state=delayed-open]:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 rounded-md px-3 py-1.5 text-xs bg-foreground text-background z-50 w-fit max-w-xs origin-(--radix-tooltip-content-transform-origin)",
+          className
+        )}
+        {...props}
       >
         {children}
-      </div>
-      {isVisible && (
-        <div
-          className={`absolute z-50 bg-white border border-border rounded-lg shadow-lg ${positionClasses[side]}`}
-          onMouseEnter={() => setIsVisible(true)}
-          onMouseLeave={() => setIsVisible(false)}
-          role="tooltip"
-        >
-          {content}
-          <div
-            className={`absolute w-2 h-2 bg-white border-l border-b border-border rotate-45 ${
-              side === "top" ? "top-full left-1/2 -translate-x-1/2 -translate-y-1/2" :
-              side === "right" ? "right-full top-1/2 -translate-y-1/2 -translate-x-1/2" :
-              side === "bottom" ? "bottom-full left-1/2 -translate-x-1/2 translate-y-1/2" :
-              "left-full top-1/2 -translate-y-1/2 translate-x-1/2"
-            }`}
-          />
-        </div>
-      )}
-    </div>
-  );
+        <TooltipPrimitive.Arrow className="size-2.5 translate-y-[calc(-50%_-_2px)] rotate-45 rounded-[2px] bg-foreground fill-foreground z-50 translate-y-[calc(-50%_-_2px)]" />
+      </TooltipPrimitive.Content>
+    </TooltipPrimitive.Portal>
+  )
 }
+
+export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger }

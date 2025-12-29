@@ -1,6 +1,13 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
-import Modal from "@/components/modal";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function QRCodeModal({ open, onClose, listName, displayToken, businessName }: {
   open: boolean;
@@ -87,17 +94,11 @@ export default function QRCodeModal({ open, onClose, listName, displayToken, bus
   };
 
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title="QR code"
-      footer={
-        <>
-          <button onClick={onClose} className="action-btn">Cancel</button>
-          <button onClick={() => onPrint()} className="action-btn action-btn--primary">Print</button>
-        </>
-      }
-    >
+    <Dialog open={open} onOpenChange={(v) => (!v ? onClose() : undefined)}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>QR code</DialogTitle>
+        </DialogHeader>
       <div className="grid gap-4">
         {!displayUrl ? (
           <p className="text-sm text-muted-foreground">No public display token is configured for this list.</p>
@@ -129,7 +130,14 @@ export default function QRCodeModal({ open, onClose, listName, displayToken, bus
           </>
         )}
       </div>
-    </Modal>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button onClick={() => onPrint()}>Print</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 

@@ -1,6 +1,6 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Popover } from "@/components/ui/tooltip";
+import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
 
 type Customization = {
   id: string;
@@ -10,28 +10,9 @@ type Customization = {
   logo_url: string | null;
 };
 
-const IOS_COLORS = [
-  { name: "White", value: "#FFFFFF" },
-  { name: "Red", value: "#FF3B30" },
-  { name: "Orange", value: "#FF9500" },
-  { name: "Yellow", value: "#FFCC00" },
-  { name: "Green", value: "#34C759" },
-  { name: "Teal", value: "#30B0C7" },
-  { name: "Blue", value: "#007AFF" },
-  { name: "Purple", value: "#AF52DE" },
-];
-
-function classNames(...classes: (string | false | undefined)[]) {
-  return classes.filter(Boolean).join(" ");
-}
-
 export default function CustomizationClient({ initial }: { initial?: { accent_color: string | null; background_color: string | null; cover_url: string | null; logo_url?: string | null } }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
-  const [accent, setAccent] = useState<string>("#FFFFFF");
-  const [useCustomAccent, setUseCustomAccent] = useState(false);
-  const [customAccent, setCustomAccent] = useState<string>("#000000");
 
   // Background color controls removed from internal UI per brand-scoping change
 
@@ -44,10 +25,6 @@ export default function CustomizationClient({ initial }: { initial?: { accent_co
   useEffect(() => {
     // Hydrate from server-provided initial to avoid flicker
     if (initial) {
-      const ac = initial.accent_color || IOS_COLORS[0].value;
-      setAccent(ac);
-      setUseCustomAccent(!IOS_COLORS.some((c) => c.value.toLowerCase() === ac.toLowerCase()));
-      if (!IOS_COLORS.some((c) => c.value.toLowerCase() === ac.toLowerCase())) setCustomAccent(ac);
       setCoverUrl(initial.cover_url || null);
       setLogoUrl(initial.logo_url || null);
     }
@@ -59,14 +36,10 @@ export default function CustomizationClient({ initial }: { initial?: { accent_co
         const json: { customization: Customization | null } = await res.json();
         if (!active) return;
         if (json?.customization) {
-          const ac = json.customization.accent_color || IOS_COLORS[0].value;
-          setAccent(ac);
-          setUseCustomAccent(!IOS_COLORS.some((c) => c.value.toLowerCase() === ac.toLowerCase()));
-          if (!IOS_COLORS.some((c) => c.value.toLowerCase() === ac.toLowerCase())) setCustomAccent(ac);
           setCoverUrl(json.customization.cover_url || null);
           setLogoUrl(json.customization.logo_url || null);
         } else {
-          setAccent("#FFFFFF");
+          // noop
         }
       } catch (e) {
         // noop toast-on-query pattern elsewhere
@@ -79,8 +52,6 @@ export default function CustomizationClient({ initial }: { initial?: { accent_co
     };
   }, []);
 
-  const effectiveAccent = useMemo(() => (useCustomAccent ? customAccent : accent), [useCustomAccent, customAccent, accent]);
-
   async function saveCustomization() {
     setSaving(true);
     try {
@@ -88,7 +59,6 @@ export default function CustomizationClient({ initial }: { initial?: { accent_co
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-          accentColor: effectiveAccent,
           coverUrl: coverUrl,
         }),
       });
@@ -145,70 +115,6 @@ export default function CustomizationClient({ initial }: { initial?: { accent_co
 
   return (
     <div className="space-y-8">
-      {/* Brand color */}
-      <section>
-        <div className="text-sm font-medium">Brand color</div>
-        <div className="mt-2 flex gap-2">
-          {IOS_COLORS.map((c) => (
-            <button
-              key={c.value}
-              type="button"
-              onClick={() => {
-                setUseCustomAccent(false);
-                setAccent(c.value);
-              }}
-              className={classNames(
-                "h-8 w-8 rounded-lg ring-1 ring-border shadow-sm",
-                !useCustomAccent && accent.toLowerCase() === c.value.toLowerCase() ? "ring-2 ring-offset-2 ring-ring" : "hover:ring-2 hover:ring-ring/60"
-              )}
-              style={{ backgroundColor: c.value }}
-              aria-label={c.name}
-            />
-          ))}
-          {/* Custom color */}
-          {useCustomAccent ? (
-            <Popover
-              content={
-                <div className="p-2">
-                  <input
-                    type="text"
-                    value={customAccent}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      if (/^#?[0-9a-fA-F]{0,6}$/.test(v.replace("#", ""))) {
-                        setCustomAccent(v.startsWith("#") ? v : `#${v}`);
-                      }
-                    }}
-                    maxLength={7}
-                    placeholder="#000000"
-                    className="h-8 w-28 rounded-md border border-border px-2 text-xs font-mono bg-white"
-                  />
-                </div>
-              }
-              side="bottom"
-            >
-              <button
-                type="button"
-                className="h-8 w-8 rounded-lg ring-2 ring-offset-2 ring-ring shadow-sm"
-                style={{ backgroundColor: customAccent }}
-                aria-label="Custom color"
-              />
-            </Popover>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setUseCustomAccent(true)}
-              className="h-8 w-8 rounded-lg ring-1 ring-border shadow-sm hover:ring-2 hover:ring-ring/60 flex items-center justify-center bg-muted"
-              aria-label="Add custom color"
-            >
-              <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-            </button>
-          )}
-        </div>
-      </section>
-
       {/* Cover image */}
       <section>
         <div className="text-sm font-medium">Cover image</div>
@@ -306,14 +212,9 @@ export default function CustomizationClient({ initial }: { initial?: { accent_co
       </section>
 
       <div className="pt-2">
-        <button
-          type="button"
-          onClick={() => void saveCustomization()}
-          disabled={loading || saving}
-          className="action-btn action-btn--primary disabled:opacity-60"
-        >
+        <Button type="button" onClick={() => void saveCustomization()} disabled={loading || saving}>
           {saving ? "Saving..." : "Save changes"}
-        </button>
+        </Button>
       </div>
     </div>
   );

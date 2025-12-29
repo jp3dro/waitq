@@ -1,9 +1,24 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import Modal from "@/components/modal";
-import Dropdown from "@/components/dropdown";
 import { Trash2, Pencil, RefreshCw } from "lucide-react";
 import { toastManager } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type Member = {
   id: string;
@@ -230,7 +245,7 @@ export default function UsersClient() {
   return (
     <div>
       <div className="flex items-center justify-start mb-4">
-        <button type="button" className="action-btn action-btn--primary h-9 text-sm" onClick={() => setInvOpen(true)}>Invite user</button>
+        <Button type="button" onClick={() => setInvOpen(true)}>Invite user</Button>
       </div>
 
       <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl overflow-hidden">
@@ -309,87 +324,92 @@ export default function UsersClient() {
       </div>
 
       {/* Invite Modal */}
-      <Modal
-        open={invOpen}
-        onClose={() => setInvOpen(false)}
-        title="Invite user"
-        footer={
-          <>
-            <button type="button" className="action-btn" onClick={() => setInvOpen(false)}>Cancel</button>
-            <button type="button" className="action-btn action-btn--primary" disabled={isPending} onClick={invite}>{isPending ? 'Sending...' : 'Invite'}</button>
-          </>
-        }
-      >
-        <div className="grid gap-3">
-          <div>
-            <label className="text-sm font-medium">Name</label>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="mt-1 block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm" placeholder="Full Name" />
+      <Dialog open={invOpen} onOpenChange={setInvOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Invite user</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-3">
+            <div className="grid gap-2">
+              <Label>Name</Label>
+              <Input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" />
+            </div>
+            <div className="grid gap-2">
+              <Label>Email</Label>
+              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="user@example.com" />
+            </div>
+            <div className="grid gap-2">
+              <Label>Role</Label>
+              <Select value={role} onValueChange={(v) => setRole(v as any)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="manager">Manager</SelectItem>
+                  <SelectItem value="staff">Staff</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div>
-            <label className="text-sm font-medium">Email</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm" placeholder="user@example.com" />
-          </div>
-          <div>
-            <label className="text-sm font-medium">Role</label>
-            <Dropdown
-              value={role}
-              onChange={(v) => setRole(v as any)}
-              options={[
-                { value: "manager", label: "Manager" },
-                { value: "staff", label: "Staff" },
-              ]}
-            />
-          </div>
-        </div>
-      </Modal>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setInvOpen(false)}>Cancel</Button>
+            <Button type="button" disabled={isPending} onClick={invite}>
+              {isPending ? "Sending..." : "Invite"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
        {/* Edit Modal */}
-       <Modal
-        open={editOpen}
-        onClose={() => setEditOpen(false)}
-        title="Edit User"
-        footer={
-          <>
-            <button type="button" className="action-btn" onClick={() => setEditOpen(false)}>Cancel</button>
-            <button type="button" className="action-btn action-btn--primary" disabled={isPending} onClick={saveEdit}>{isPending ? 'Saving...' : 'Save'}</button>
-          </>
-        }
-      >
-        <div className="grid gap-3">
-          <div>
-            <label className="text-sm font-medium">Name</label>
-            <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="mt-1 block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm" placeholder="Full Name" />
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit user</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-3">
+            <div className="grid gap-2">
+              <Label>Name</Label>
+              <Input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Full name" />
+            </div>
+            <div className="grid gap-2">
+              <Label>Email</Label>
+              <Input
+                type="email"
+                value={editingMember?.email || editingMember?.user_id || ""}
+                disabled
+              />
+              <p className="text-xs text-muted-foreground">E-mail addresses can't be modified.</p>
+            </div>
+            <div className="grid gap-2">
+              <Label>Role</Label>
+              {editingMember?.role === "admin" ? (
+                <div className="text-sm text-muted-foreground rounded-md border border-border bg-muted/50 px-3 py-2">
+                  Owner / Admin
+                </div>
+              ) : (
+                <Select value={editRole} onValueChange={(v) => setEditRole(v as any)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="manager">Manager</SelectItem>
+                    <SelectItem value="staff">Staff</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+              {editingMember?.role === "admin" ? (
+                <p className="text-xs text-muted-foreground">Owner role cannot be changed.</p>
+              ) : null}
+            </div>
           </div>
-          <div>
-            <label className="text-sm font-medium">Email</label>
-            <input
-              type="email"
-              value={editingMember?.email || editingMember?.user_id || ""}
-              disabled
-              className="mt-1 block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border bg-muted/50 px-3 py-2 text-sm text-muted-foreground"
-            />
-            <p className="mt-1 text-xs text-muted-foreground">E-mail addresses can't be modified.</p>
-          </div>
-          <div>
-            <label className="text-sm font-medium">Role</label>
-            {editingMember?.role === 'admin' ? (
-                 <div className="mt-1 text-sm text-muted-foreground px-3 py-2 border border-border rounded-md bg-muted/50">Owner / Admin</div>
-            ) : (
-                <Dropdown
-                value={editRole}
-                onChange={(v) => setEditRole(v as any)}
-                options={[
-                    { value: "manager", label: "Manager" },
-                    { value: "staff", label: "Staff" },
-                ]}
-                />
-            )}
-          </div>
-           {editingMember?.role === 'admin' && (
-              <p className="text-xs text-muted-foreground">Owner role cannot be changed.</p>
-           )}
-        </div>
-      </Modal>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
+            <Button type="button" disabled={isPending} onClick={saveEdit}>
+              {isPending ? "Saving..." : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
