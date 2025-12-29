@@ -1,7 +1,12 @@
 "use client";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
-import Modal from "@/components/modal";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import PhoneInput, { type Country } from "react-phone-number-input";
 import 'react-phone-number-input/style.css';
 
@@ -216,8 +221,21 @@ function KioskButton({ token, defaultCountry, listType, seatingPreferences, acce
         style={{ backgroundColor: accent, color: getReadableTextColor(accent) }}>
         Add to Waiting list
       </button>
-      <Modal open={open} onClose={close} title={step === "confirm" ? "You&apos;re on the list" : "Add to waiting list"}>
-        {step === "intro" ? (
+      <Dialog
+        open={open}
+        onOpenChange={(v) => {
+          if (v) setOpen(true);
+          else close();
+        }}
+      >
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              {step === "confirm" ? "You’re on the list" : "Add to waiting list"}
+            </DialogTitle>
+          </DialogHeader>
+
+          {step === "intro" ? (
           <div className="grid gap-5 text-foreground">
             {listType === "restaurants" ? (
               <div className="grid gap-6">
@@ -305,8 +323,9 @@ function KioskButton({ token, defaultCountry, listType, seatingPreferences, acce
               Done
             </button>
           </div>
-        )}
-      </Modal>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

@@ -11,7 +11,6 @@ import {
   MapPin,
   CreditCard,
   Building2,
-  Palette,
   BarChart3,
 } from "lucide-react";
 
@@ -26,7 +25,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarSeparator,
 } from "@/components/ui/sidebar";
 
 type Props = {
@@ -71,8 +69,6 @@ export default function PrivateSidebarClient({ userEmail, role }: Props) {
         </Link>
       </SidebarHeader>
 
-      <SidebarSeparator />
-
       <SidebarContent>
         <SidebarMenu>
           <NavItem href="/dashboard" icon={LayoutDashboard} label="Dashboard" />
@@ -90,7 +86,6 @@ export default function PrivateSidebarClient({ userEmail, role }: Props) {
         <SidebarMenu>
           {isAdmin ? <NavItem href="/locations" icon={MapPin} label="Locations" /> : null}
           {isAdmin ? <NavItem href="/business" icon={Building2} label="Business" /> : null}
-          {isAdmin ? <NavItem href="/customization" icon={Palette} label="Customization" /> : null}
           {isAdmin ? <NavItem href="/subscriptions" icon={CreditCard} label="Subscription" /> : null}
           {isAdmin ? <NavItem href="/users" icon={Users2} label="Users" /> : null}
         </SidebarMenu>

@@ -1,8 +1,16 @@
 "use client";
 import { useEffect, useMemo, useState, useTransition } from "react";
-import Modal from "@/components/modal";
 import { toastManager } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 type Location = { id: string; name: string; phone: string | null; address: string | null; city: string | null };
 
@@ -193,102 +201,106 @@ export default function LocationsPage() {
           </div>
         </div>
 
-    {/* Create Modal */}
-    <Modal
-      open={openCreate}
-      onClose={() => setOpenCreate(false)}
-      title="New location"
-      footer={
-        <>
-          <Button variant="outline" onClick={() => setOpenCreate(false)}>Cancel</Button>
-          <Button onClick={create} disabled={isPending || !form.name.trim()}>Create</Button>
-        </>
-      }
-    >
-      <div className="grid gap-4">
-        <div className="grid gap-2">
-          <label className="text-sm font-medium">Name</label>
-          <input
-            value={form.name}
-            onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm"
-          />
-        </div>
-        <div className="grid gap-2">
-          <label className="text-sm font-medium">Phone</label>
-          <input
-            value={form.phone}
-            onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm"
-          />
-        </div>
-        <div className="grid gap-2">
-          <label className="text-sm font-medium">Address</label>
-          <input
-            value={form.address}
-            onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
-            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm"
-          />
-        </div>
-        <div className="grid gap-2">
-          <label className="text-sm font-medium">City</label>
-          <input
-            value={form.city}
-            onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
-            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm"
-          />
-        </div>
-      </div>
-    </Modal>
+        {/* Create location (shadcn Dialog) */}
+        <Dialog open={openCreate} onOpenChange={setOpenCreate}>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>New location</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4">
+              <div className="grid gap-2">
+                <Label>Name</Label>
+                <Input
+                  value={form.name}
+                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Phone</Label>
+                <Input
+                  value={form.phone}
+                  onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Address</Label>
+                <Input
+                  value={form.address}
+                  onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>City</Label>
+                <Input
+                  value={form.city}
+                  onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
+                />
+              </div>
+              {msg ? <p className="text-sm text-destructive">{msg}</p> : null}
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setOpenCreate(false)}>
+                Cancel
+              </Button>
+              <Button type="button" onClick={create} disabled={isPending || !form.name.trim()}>
+                Create
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
-    {/* Edit Modal */}
-    <Modal
-      open={!!edit}
-      onClose={closeEditModal}
-      title="Edit location"
-      footer={
-        <>
-          <Button variant="outline" onClick={closeEditModal}>Cancel</Button>
-          <Button onClick={saveEdit} disabled={isPending}>Save changes</Button>
-        </>
-      }
-    >
-      <div className="grid gap-4">
-        <div className="grid gap-2">
-          <label className="text-sm font-medium">Name</label>
-          <input
-            value={editForm.name}
-            onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
-            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm"
-          />
-        </div>
-        <div className="grid gap-2">
-          <label className="text-sm font-medium">Phone</label>
-          <input
-            value={editForm.phone}
-            onChange={(e) => setEditForm((f) => ({ ...f, phone: e.target.value }))}
-            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm"
-          />
-        </div>
-        <div className="grid gap-2">
-          <label className="text-sm font-medium">Address</label>
-          <input
-            value={editForm.address}
-            onChange={(e) => setEditForm((f) => ({ ...f, address: e.target.value }))}
-            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm"
-          />
-        </div>
-        <div className="grid gap-2">
-          <label className="text-sm font-medium">City</label>
-          <input
-            value={editForm.city}
-            onChange={(e) => setEditForm((f) => ({ ...f, city: e.target.value }))}
-            className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm"
-          />
-        </div>
-        {editMessage ? <p className="text-sm text-destructive">{editMessage}</p> : null}
-      </div>
-    </Modal>
+        {/* Edit location (shadcn Dialog) */}
+        <Dialog
+          open={!!edit}
+          onOpenChange={(open) => {
+            if (!open) closeEditModal();
+          }}
+        >
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Edit location</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4">
+              <div className="grid gap-2">
+                <Label>Name</Label>
+                <Input
+                  value={editForm.name}
+                  onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Phone</Label>
+                <Input
+                  value={editForm.phone}
+                  onChange={(e) => setEditForm((f) => ({ ...f, phone: e.target.value }))}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Address</Label>
+                <Input
+                  value={editForm.address}
+                  onChange={(e) => setEditForm((f) => ({ ...f, address: e.target.value }))}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>City</Label>
+                <Input
+                  value={editForm.city}
+                  onChange={(e) => setEditForm((f) => ({ ...f, city: e.target.value }))}
+                />
+              </div>
+              {editMessage ? <p className="text-sm text-destructive">{editMessage}</p> : null}
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={closeEditModal}>
+                Cancel
+              </Button>
+              <Button type="button" onClick={saveEdit} disabled={isPending}>
+                Save changes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </main>
   );
