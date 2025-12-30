@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { User } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
@@ -18,6 +20,7 @@ export default function ClientStatus({ token }: { token: string }) {
   const bcRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const [business, setBusiness] = useState<Business>(null);
   const [displayToken, setDisplayToken] = useState<string | null>(null);
+  const [waitlistName, setWaitlistName] = useState<string | null>(null);
 
   async function load(silent: boolean = false) {
     if (!silent && !data) setLoading(true);
@@ -37,6 +40,7 @@ export default function ClientStatus({ token }: { token: string }) {
     setNowServing(j.nowServing ?? null);
     setBusiness(j.business || null);
     setDisplayToken((j.displayToken as string | null) || null);
+    setWaitlistName((j.waitlistName as string | null) || null);
     if (!silent || !data) setLoading(false);
   }
 
@@ -142,13 +146,24 @@ export default function ClientStatus({ token }: { token: string }) {
 
   return (
     <div className="min-h-dvh bg-background text-foreground">
-      <header className="border-b border-border bg-card">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8 h-14 flex items-center gap-3 justify-between">
-          {business?.logo_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={business.logo_url} alt="Logo" className="h-8 w-8 rounded object-cover ring-1 ring-border" />
-          ) : null}
-          <span className="font-semibold text-lg tracking-tight">{business?.name || ""}</span>
+      <header className="border-b border-border bg-card py-4">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            {business?.logo_url ? (
+              <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-border bg-muted">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={business.logo_url} alt="Logo" className="h-full w-full object-cover" />
+              </div>
+            ) : null}
+            <div className="flex flex-col">
+              {business?.name ? (
+                <p className="text-sm font-medium text-muted-foreground leading-none mb-1">{business.name}</p>
+              ) : null}
+              {waitlistName ? (
+                <h1 className="text-xl font-bold tracking-tight leading-none">{waitlistName}</h1>
+              ) : null}
+            </div>
+          </div>
           <div>
             <Link href="#" aria-label="Toggle theme" className="inline-flex items-center justify-center rounded-md p-2 text-foreground hover:bg-muted">
               {/* We reuse the theme toggle component visuals here: */}
@@ -159,45 +174,53 @@ export default function ClientStatus({ token }: { token: string }) {
       </header>
       <main className="p-8">
         <div className="max-w-xl mx-auto">
-          <div className={`rounded-2xl ring-1 shadow-sm p-6 ${
-            isUserTurn
-              ? "bg-accent/10 ring-primary/50"
-              : "bg-card text-card-foreground ring-border"
-          }`}>
-            {isUserTurn ? (
-              <div className="text-center">
-                <h2 className="text-2xl font-bold text-primary">It&apos;s your turn!</h2>
-                <p className="mt-2 text-foreground">Please proceed to {business?.name || "the venue"}</p>
-                {typeof yourNumber === 'number' ? (
-                  <div className="mt-6">
-                    <div className="text-sm text-foreground">Your number</div>
-                    <div className="mt-1 text-6xl font-extrabold text-foreground">{yourNumber}</div>
+          {isUserTurn ? (
+            <div className="rounded-2xl ring-1 shadow-sm p-6 bg-accent/10 ring-primary/50 text-center">
+              <h2 className="text-2xl font-bold text-primary">It&apos;s your turn!</h2>
+              <p className="mt-2 text-foreground">Please proceed to {business?.name || "the venue"}</p>
+              {typeof yourNumber === 'number' ? (
+                <div className="mt-6">
+                  <div className="text-sm text-foreground">Your number</div>
+                  <div className="mt-1 text-6xl font-extrabold text-foreground">{yourNumber}</div>
+                </div>
+              ) : null}
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="rounded-2xl bg-card text-card-foreground ring-1 ring-border shadow-sm p-6 text-center">
+                <div className="text-sm text-muted-foreground">Now serving</div>
+                <div className="mt-1 text-5xl font-bold text-foreground">{typeof nowServing === 'number' ? nowServing : '-'}</div>
+              </div>
+
+              <div className="rounded-2xl bg-card text-card-foreground ring-1 ring-border shadow-sm p-6 text-center">
+                {typeof yourNumber === 'number' && typeof nowServing === 'number' && (yourNumber - nowServing === 1) ? (
+                  <div className="mb-8 p-4 bg-yellow-100/10 border border-yellow-500/50 rounded-xl">
+                    <h3 className="text-lg font-bold text-yellow-600 dark:text-yellow-500 mb-1">Almost your turn!</h3>
+                    <p className="text-foreground">Please head back to the restaurant.</p>
                   </div>
                 ) : null}
-              </div>
-            ) : (
-              <div className="text-center">
-                <div className="text-sm text-muted-foreground">Your number</div>
+
+                <div className="text-lg font-bold text-foreground">Your number</div>
                 <div className="mt-1 text-7xl font-extrabold text-foreground">{typeof yourNumber === 'number' ? yourNumber : '-'}</div>
-                <div className="mt-4 flex items-center justify-center gap-3 flex-wrap">
-                  {data.seating_preference ? (
-                    <span className="inline-flex items-center rounded-full bg-muted px-3 py-1 text-sm font-medium">{data.seating_preference}</span>
-                  ) : null}
+
+                <div className="mt-6 flex items-center justify-center gap-4 flex-wrap">
                   {typeof data.party_size === 'number' ? (
-                    <span className="inline-flex items-center rounded-full bg-muted px-3 py-1 text-sm font-medium">Party: {data.party_size}</span>
+                    <div className="flex items-center gap-1.5 text-lg font-medium">
+                      <User className="h-5 w-5" />
+                      <span>{data.party_size}</span>
+                    </div>
                   ) : null}
-                  <span className="inline-flex items-center rounded-full bg-muted px-3 py-1 text-sm font-medium capitalize">{data.status}</span>
+                  {data.seating_preference ? (
+                    <Badge variant="secondary" className="text-sm px-2.5 py-0.5">{data.seating_preference}</Badge>
+                  ) : null}
                 </div>
-                <div className="mt-8">
-                  <div className="text-sm text-muted-foreground">Now serving</div>
-                  <div className="mt-1 text-5xl font-bold text-foreground">{typeof nowServing === 'number' ? nowServing : '-'}</div>
-                </div>
-                {typeof data.eta_minutes === 'number' ? (
-                  <div className="mt-4 text-sm text-foreground">Estimated wait: <span className="font-medium">{data.eta_minutes} min</span></div>
+
+                {typeof data.eta_minutes === 'number' && (!(typeof yourNumber === 'number' && typeof nowServing === 'number' && (yourNumber - nowServing <= 1))) ? (
+                  <div className="mt-8 text-sm text-foreground">Estimated wait: <span className="font-medium">{data.eta_minutes} min</span></div>
                 ) : null}
               </div>
-            )}
-          </div>
+            </div>
+          )}
           <p className="mt-4 text-center text-sm text-muted-foreground">This page updates automatically as the venue advances the queue.</p>
           <div className="mt-6 flex items-center justify-center">
             <Link href="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground">
