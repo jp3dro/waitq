@@ -48,7 +48,7 @@ export async function GET() {
   const admin = getAdminClient();
   const { data, error } = await admin
     .from("businesses")
-    .select("id, name, logo_url, cover_url, accent_color, background_color, country_code, owner_user_id, created_at")
+    .select("id, name, logo_url, accent_color, background_color, country_code, owner_user_id, created_at")
     .eq("id", resolved.businessId)
     .maybeSingle();
 
@@ -63,7 +63,6 @@ const patchSchema = z
     name: z.string().min(1).optional(),
     countryCode: z.string().regex(/^[A-Z]{2}$/, { message: "countryCode must be a 2-letter ISO code (e.g. PT)" }).optional(),
     logoUrl: z.string().url().optional().nullable(),
-    coverUrl: z.string().url().optional().nullable(),
     accentColor: z.string().regex(/^#([0-9a-fA-F]{6})$/, { message: "accentColor must be a HEX color (#RRGGBB)" }).optional(),
     backgroundColor: z
       .string()
@@ -91,7 +90,6 @@ export async function PATCH(req: NextRequest) {
   if (typeof parse.data.name !== "undefined") fields.name = parse.data.name;
   if (typeof parse.data.countryCode !== "undefined") fields.country_code = parse.data.countryCode;
   if (typeof parse.data.logoUrl !== "undefined") fields.logo_url = parse.data.logoUrl;
-  if (typeof parse.data.coverUrl !== "undefined") fields.cover_url = parse.data.coverUrl;
   if (typeof parse.data.accentColor !== "undefined") fields.accent_color = parse.data.accentColor;
   if (typeof parse.data.backgroundColor !== "undefined") fields.background_color = parse.data.backgroundColor;
 
@@ -102,7 +100,7 @@ export async function PATCH(req: NextRequest) {
     .from("businesses")
     .update(fields)
     .eq("id", resolved.businessId)
-    .select("id, name, logo_url, cover_url, accent_color, background_color, country_code, owner_user_id, created_at")
+    .select("id, name, logo_url, accent_color, background_color, country_code, owner_user_id, created_at")
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });

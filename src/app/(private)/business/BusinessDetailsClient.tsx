@@ -5,7 +5,6 @@ import { getCountries } from "react-phone-number-input";
 import { toastManager } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -13,21 +12,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Field,
-  FieldContent,
-  FieldDescription,
-  FieldGroup,
-  FieldLegend,
-  FieldSet,
-  FieldTitle,
-} from "@/components/ui/field";
 
 type Business = {
   id: string;
   name: string | null;
   logo_url: string | null;
-  cover_url: string | null;
   accent_color: string | null;
   background_color: string | null;
   country_code: string | null;
@@ -55,7 +44,6 @@ function toBaseline(biz: Business): Baseline {
 export default function BusinessDetailsClient({ initial, canEdit }: Props) {
   const [isPending, startTransition] = useTransition();
   const [uploading, setUploading] = useState(false);
-  const coverFileRef = useRef<HTMLInputElement | null>(null);
   const logoFileRef = useRef<HTMLInputElement | null>(null);
 
   const [baseline, setBaseline] = useState<Baseline>(() => toBaseline(initial));
@@ -63,7 +51,6 @@ export default function BusinessDetailsClient({ initial, canEdit }: Props) {
   const [name, setName] = useState(baseline.name);
   const [countryCode, setCountryCode] = useState(baseline.country_code);
   const [logoUrl, setLogoUrl] = useState(initial.logo_url || "");
-  const [coverUrl, setCoverUrl] = useState(initial.cover_url || "");
 
   const dirty = useMemo(() => {
     const next: Baseline = {
@@ -94,54 +81,6 @@ export default function BusinessDetailsClient({ initial, canEdit }: Props) {
         : null;
     return displayNames?.of(countryCode) || countryCode;
   }, [countryCode]);
-
-  async function uploadCover(file: File) {
-    if (!canEdit) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toastManager.add({ title: "Upload failed", description: "File too large (max 5MB).", type: "error" });
-      return;
-    }
-    if (!file.type.startsWith("image/")) {
-      toastManager.add({ title: "Upload failed", description: "File must be an image.", type: "error" });
-      return;
-    }
-
-    const fd = new FormData();
-    fd.append("file", file);
-    setUploading(true);
-    try {
-      const res = await fetch("/api/profile/upload", { method: "POST", body: fd });
-      const j = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(j?.error || "Upload failed");
-
-      const url = typeof j?.url === "string" ? j.url : null;
-      if (!url) throw new Error("Upload failed");
-
-      setCoverUrl(url);
-      toastManager.add({ title: "Uploaded", description: "Cover image updated.", type: "success" });
-    } catch (e) {
-      toastManager.add({ title: "Upload failed", description: (e as Error).message, type: "error" });
-    } finally {
-      setUploading(false);
-    }
-  }
-
-  async function removeCover() {
-    if (!canEdit) return;
-    setUploading(true);
-    try {
-      const res = await fetch("/api/profile/upload", { method: "DELETE" });
-      const j = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(j?.error || "Failed to remove cover");
-
-      setCoverUrl("");
-      toastManager.add({ title: "Removed", description: "Cover image removed.", type: "success" });
-    } catch (e) {
-      toastManager.add({ title: "Error", description: (e as Error).message, type: "error" });
-    } finally {
-      setUploading(false);
-    }
-  }
 
   async function uploadLogo(file: File) {
     if (!canEdit) return;
@@ -230,126 +169,80 @@ export default function BusinessDetailsClient({ initial, canEdit }: Props) {
   }
 
   return (
-    <div className="space-y-6">
-      <Card className="p-6">
-        <FieldSet>
-          <FieldLegend>Business details</FieldLegend>
-          <FieldGroup>
-            <Field>
-              <FieldTitle>Name</FieldTitle>
-              <FieldContent>
-                <Input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  disabled={!canEdit}
-                  placeholder="Your business name"
+    <div className="space-y-8 max-w-2xl">
+      <div className="space-y-4">
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              Name
+            </label>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              disabled={!canEdit}
+              placeholder="Your business name"
+            />
+            <p className="text-sm text-muted-foreground">This name appears on your public waitlist pages and QR code.</p>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              Country
+            </label>
+            <Select value={countryCode} onValueChange={(v) => setCountryCode(v)} disabled={!canEdit}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a country">
+                  {selectedCountryLabel}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {countryOptions.map((c) => (
+                  <SelectItem key={c.code} value={c.code}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-sm text-muted-foreground">Used as the default region for phone number formatting.</p>
+          </div>
+
+          <div className="space-y-4 pt-4">
+            <div className="text-sm font-medium">Brand logo</div>
+            <div className="grid items-start gap-4 md:grid-cols-[96px_1fr]">
+              <div className="h-24 w-24 rounded-md ring-1 ring-border overflow-hidden bg-muted flex items-center justify-center">
+                {logoUrl.trim() ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={logoUrl.trim()} alt="Logo" className="h-full w-full object-cover" />
+                ) : (
+                  <span className="text-xs text-muted-foreground">No logo</span>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <input
+                  ref={logoFileRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) void uploadLogo(f);
+                    if (logoFileRef.current) logoFileRef.current.value = "";
+                  }}
                 />
-                <FieldDescription>This name appears on your public waitlist pages and QR code.</FieldDescription>
-              </FieldContent>
-            </Field>
-
-            <Field>
-              <FieldTitle>Country</FieldTitle>
-              <FieldContent>
-                <Select value={countryCode} onValueChange={(v) => setCountryCode(v)} disabled={!canEdit}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a country">
-                      {selectedCountryLabel}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {countryOptions.map((c) => (
-                      <SelectItem key={c.code} value={c.code}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FieldDescription>Used as the default region for phone number formatting.</FieldDescription>
-              </FieldContent>
-            </Field>
-          </FieldGroup>
-        </FieldSet>
-      </Card>
-
-      <Card className="p-6">
-        <FieldSet>
-          <FieldLegend>Branding</FieldLegend>
-          <FieldGroup>
-            <div className="space-y-4">
-              <div className="text-sm font-medium">Cover image</div>
-              <div className="grid items-start gap-4 md:grid-cols-[160px_1fr]">
-                <div className="h-24 w-40 rounded-md ring-1 ring-border overflow-hidden bg-muted flex items-center justify-center">
-                  {coverUrl.trim() ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={coverUrl.trim()} alt="Cover" className="h-full w-full object-cover" />
-                  ) : (
-                    <span className="text-xs text-muted-foreground">No cover</span>
-                  )}
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <input
-                    ref={coverFileRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const f = e.target.files?.[0];
-                      if (f) void uploadCover(f);
-                      if (coverFileRef.current) coverFileRef.current.value = "";
-                    }}
-                  />
-                  <Button type="button" variant="outline" onClick={() => coverFileRef.current?.click()} disabled={!canEdit || uploading}>
-                    {uploading ? "Uploading..." : "Upload image"}
+                <Button type="button" variant="outline" onClick={() => logoFileRef.current?.click()} disabled={!canEdit || uploading}>
+                  {uploading ? "Uploading..." : "Upload logo"}
+                </Button>
+                {logoUrl.trim() ? (
+                  <Button type="button" variant="outline" onClick={() => void removeLogo()} disabled={!canEdit || uploading}>
+                    Remove
                   </Button>
-                  {coverUrl.trim() ? (
-                    <Button type="button" variant="outline" onClick={() => void removeCover()} disabled={!canEdit || uploading}>
-                      Remove
-                    </Button>
-                  ) : null}
-                  <div className="text-xs text-muted-foreground">PNG/JPG. Max 5 MB.</div>
-                </div>
+                ) : null}
+                <div className="text-xs text-muted-foreground">PNG/JPG, square recommended. Max 5 MB.</div>
               </div>
             </div>
-
-            <div className="space-y-4">
-              <div className="text-sm font-medium">Brand logo</div>
-              <div className="grid items-start gap-4 md:grid-cols-[96px_1fr]">
-                <div className="h-24 w-24 rounded-md ring-1 ring-border overflow-hidden bg-muted flex items-center justify-center">
-                  {logoUrl.trim() ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={logoUrl.trim()} alt="Logo" className="h-full w-full object-cover" />
-                  ) : (
-                    <span className="text-xs text-muted-foreground">No logo</span>
-                  )}
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <input
-                    ref={logoFileRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const f = e.target.files?.[0];
-                      if (f) void uploadLogo(f);
-                      if (logoFileRef.current) logoFileRef.current.value = "";
-                    }}
-                  />
-                  <Button type="button" variant="outline" onClick={() => logoFileRef.current?.click()} disabled={!canEdit || uploading}>
-                    {uploading ? "Uploading..." : "Upload logo"}
-                  </Button>
-                  {logoUrl.trim() ? (
-                    <Button type="button" variant="outline" onClick={() => void removeLogo()} disabled={!canEdit || uploading}>
-                      Remove
-                    </Button>
-                  ) : null}
-                  <div className="text-xs text-muted-foreground">PNG/JPG, square recommended. Max 5 MB.</div>
-                </div>
-              </div>
-            </div>
-          </FieldGroup>
-        </FieldSet>
-      </Card>
+          </div>
+        </div>
+      </div>
 
       {/* Fixed Save button (bottom-left of content area) */}
       <div

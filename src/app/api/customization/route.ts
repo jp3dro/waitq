@@ -13,7 +13,7 @@ export async function GET() {
   const admin = getAdminClient();
   const { data, error } = await admin
     .from("businesses")
-    .select("id, accent_color, background_color, cover_url, logo_url")
+    .select("id, accent_color, background_color, logo_url")
     .eq("owner_user_id", user.id)
     .maybeSingle();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });

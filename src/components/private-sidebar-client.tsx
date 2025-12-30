@@ -98,23 +98,25 @@ export default function PrivateSidebarClient({ userEmail, role }: Props) {
               <div className={cn("truncate text-sm font-medium")} title={userEmail}>
                 {userEmail}
               </div>
+            </div>
+            <div className="flex w-full items-center gap-2">
+              <form action="/auth/logout" method="post" className="flex-1">
+                <Button type="submit" variant="outline" className="w-full justify-start gap-2">
+                  <LogOut className="h-4 w-4" />
+                  Logout
+                </Button>
+              </form>
               <ThemeToggle />
             </div>
-            <form action="/auth/logout" method="post" className="w-full">
-              <Button type="submit" variant="outline" className="w-full justify-start gap-2">
-                <LogOut className="h-4 w-4" />
-                Logout
-              </Button>
-            </form>
           </>
         ) : (
           <>
-            <div className="flex justify-end px-1">
+            <div className="flex items-center gap-2">
+              <Button asChild className="flex-1">
+                <Link href="/login">Sign in</Link>
+              </Button>
               <ThemeToggle />
             </div>
-            <Button asChild className="w-full">
-              <Link href="/login">Sign in</Link>
-            </Button>
           </>
         )}
       </SidebarFooter>
