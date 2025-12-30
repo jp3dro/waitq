@@ -9,11 +9,13 @@ import {
 } from "@/components/ui/dialog";
 import { Stepper } from "@/components/ui/stepper";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import PhoneInput, { getCountryCallingCode, type Country } from "react-phone-number-input";
 import 'react-phone-number-input/style.css';
+import { User, Plus } from "lucide-react";
 
 type Entry = { id: string; ticket_number: number | null; queue_position: number | null; status: string; notified_at?: string | null; party_size?: number | null; seating_preference?: string | null };
-type Payload = { listId: string; listName: string; kioskEnabled?: boolean; businessCountry?: string | null; seatingPreferences?: string[]; estimatedMs?: number; entries: Entry[]; accentColor?: string; backgroundColor?: string };
+type Payload = { listId: string; listName: string; kioskEnabled?: boolean; businessCountry?: string | null; businessName?: string | null; brandLogo?: string | null; seatingPreferences?: string[]; estimatedMs?: number; entries: Entry[]; accentColor?: string; backgroundColor?: string };
 
 export default function DisplayClient({ token }: { token: string }) {
   const [data, setData] = useState<Payload | null>(null);
@@ -106,13 +108,13 @@ export default function DisplayClient({ token }: { token: string }) {
   const notified = data.entries.filter((e) => e.status === "notified");
   const nowServing = notified.length
     ? notified
-        .slice()
-        .sort((a, b) => {
-          const ad = a.notified_at ? new Date(a.notified_at).getTime() : 0;
-          const bd = b.notified_at ? new Date(b.notified_at).getTime() : 0;
-          if (ad !== bd) return bd - ad; // latest notified first
-          return (b.ticket_number ?? b.queue_position ?? 0) - (a.ticket_number ?? a.queue_position ?? 0);
-        })[0]
+      .slice()
+      .sort((a, b) => {
+        const ad = a.notified_at ? new Date(a.notified_at).getTime() : 0;
+        const bd = b.notified_at ? new Date(b.notified_at).getTime() : 0;
+        if (ad !== bd) return bd - ad; // latest notified first
+        return (b.ticket_number ?? b.queue_position ?? 0) - (a.ticket_number ?? a.queue_position ?? 0);
+      })[0]
     : null;
 
   // Keep "Now serving" stable by persisting the last called number, even if nobody is currently being served.
@@ -138,8 +140,19 @@ export default function DisplayClient({ token }: { token: string }) {
     <main className="min-h-screen bg-background text-foreground">
       <div className="mx-auto max-w-6xl px-6 py-10">
         <div className="flex w-full flex-wrap items-center">
-          <div className="mr-6 flex flex-col flex-1">
-            <h1 className="w-full text-3xl font-bold tracking-tight">{data.listName}</h1>
+          <div className="mr-6 flex items-center gap-4 flex-1">
+            {data.brandLogo ? (
+              <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-border bg-muted">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={data.brandLogo} alt="Logo" className="h-full w-full object-cover" />
+              </div>
+            ) : null}
+            <div className="flex flex-col">
+              {data.businessName ? (
+                <p className="text-sm font-medium text-muted-foreground leading-none mb-2">{data.businessName}</p>
+              ) : null}
+              <h1 className="text-3xl font-bold tracking-tight leading-none">{data.listName}</h1>
+            </div>
           </div>
           {typeof data.estimatedMs === 'number' && data.estimatedMs > 0 ? (
             <div className="mr-6 flex flex-col">
@@ -158,22 +171,27 @@ export default function DisplayClient({ token }: { token: string }) {
         </div>
         <div className="mt-8 grid md:grid-cols-[1fr_1.2fr] gap-8">
           <section className="rounded-2xl bg-card text-card-foreground ring-1 ring-border p-6">
-            <h2 className="text-base text-muted-foreground">Now serving</h2>
-            <div className="mt-2 text-6xl font-extrabold">{nowServingNumber ?? "-"}</div>
+            <h2 className="text-2xl font-semibold text-foreground">Now serving</h2>
+            <div className="mt-2 text-9xl font-extrabold">{nowServingNumber ?? "-"}</div>
           </section>
           <section className="rounded-2xl bg-card text-card-foreground ring-1 ring-border p-6">
-            <h2 className="text-base text-muted-foreground">Up next</h2>
+            <h2 className="text-2xl font-semibold text-foreground">Up next</h2>
             <ul className="mt-2 divide-y divide-border">
               {waiting.map((e) => (
                 <li key={e.id} className="py-3 flex items-center gap-4">
                   <span className="w-14 shrink-0 text-left text-3xl font-semibold tabular-nums">
                     {e.ticket_number ?? e.queue_position ?? "-"}
                   </span>
-                  <div className="min-w-0 flex-1 text-left">
-                    <div className="text-lg font-medium">{e.seating_preference || ""}</div>
+                  <div className="min-w-0 flex-1 text-left flex items-center gap-3">
                     {typeof e.party_size === 'number' ? (
-                      <div className="text-sm text-muted-foreground">Party: {e.party_size}</div>
+                      <div className="flex items-center gap-1.5 text-lg font-medium">
+                        <User className="h-4 w-4" />
+                        <span>{e.party_size}</span>
+                      </div>
                     ) : null}
+                    {e.seating_preference && (
+                      <Badge variant="secondary" className="text-base px-2.5 py-0.5">{e.seating_preference}</Badge>
+                    )}
                   </div>
                 </li>
               ))}
@@ -248,6 +266,7 @@ function KioskButton({ token, defaultCountry, seatingPreferences }: { token: str
   return (
     <>
       <Button onClick={() => setOpen(true)} size="lg" className="h-14 px-8 text-xl rounded-xl">
+        <Plus className="mr-2 h-8 w-8" />
         Add to Waiting list
       </Button>
       <Dialog
@@ -260,80 +279,80 @@ function KioskButton({ token, defaultCountry, seatingPreferences }: { token: str
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="text-2xl sm:text-3xl">
-              {step === "confirm" ? "You’re on the list" : "Add to waiting list"}
+              {step === "confirm" ? "You're all set!" : "Add to waiting list"}
             </DialogTitle>
           </DialogHeader>
 
           {step === "intro" ? (
-          <div className="grid gap-5 text-foreground">
-            <div className="grid gap-6">
-              <div className="grid gap-2">
-                <label className="text-base font-medium">Number of people</label>
-                <Stepper value={partySize} onChange={setPartySize} min={1} max={20} className="h-10" />
-              </div>
-              {Array.isArray(seatingPreferences) && seatingPreferences.length > 0 ? (
+            <div className="grid gap-5 text-foreground">
+              <div className="grid gap-6">
                 <div className="grid gap-2">
-                  <label className="text-base font-medium">Seating preference</label>
-                  <div className="flex flex-wrap gap-4">
-                    {seatingPreferences.map((s) => {
-                      const active = pref === s;
-                      return (
-                        <Button
-                          type="button"
-                          key={s}
-                          onClick={() => setPref(s)}
-                          variant={active ? "default" : "secondary"}
-                          className="h-14 px-6 rounded-2xl text-lg"
-                        >
-                          {s}
-                        </Button>
-                      );
-                    })}
-                  </div>
+                  <label className="text-base font-medium">Number of people</label>
+                  <Stepper value={partySize} onChange={setPartySize} min={1} max={20} className="h-10" />
                 </div>
-              ) : null}
+                {Array.isArray(seatingPreferences) && seatingPreferences.length > 0 ? (
+                  <div className="grid gap-2">
+                    <label className="text-base font-medium">Seating preference</label>
+                    <div className="flex flex-wrap gap-4">
+                      {seatingPreferences.map((s) => {
+                        const active = pref === s;
+                        return (
+                          <Button
+                            type="button"
+                            key={s}
+                            onClick={() => setPref(s)}
+                            variant={active ? "default" : "secondary"}
+                            className="h-14 px-6 rounded-2xl text-lg"
+                          >
+                            {s}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+              <Button onClick={() => setStep("form")} size="lg" className="w-full h-14 text-xl rounded-xl">
+                Continue
+              </Button>
             </div>
-            <Button onClick={() => setStep("form")} size="lg" className="w-full h-14 text-xl rounded-xl">
-              Continue
-            </Button>
-          </div>
-        ) : step === "form" ? (
-          <div className="grid gap-5 text-foreground">
-            <div className="grid gap-2">
-              <label className="text-base font-medium" htmlFor="kiosk-phone">Phone number</label>
-              <PhoneInput
-                id="kiosk-phone"
-                international
-                defaultCountry={defaultCountry as Country}
-                value={phone}
-                onChange={(value) => { setPhone(value || undefined); setPhoneError(null); }}
-                withCountryCallingCode
-                countryCallingCodeEditable={true}
-                className={`block w-full rounded-xl border-0 shadow-sm ring-1 ring-inset px-4 py-3 text-2xl text-foreground focus:ring-2 ${phoneError ? "ring-red-500 focus:ring-red-600" : "ring-border focus:ring-primary"}`}
-                aria-invalid={phoneError ? true : false}
-                aria-describedby={phoneError ? "kiosk-phone-error" : undefined}
-              />
-              {phoneError ? (
-                <p id="kiosk-phone-error" className="text-sm text-red-600">{phoneError}</p>
-              ) : null}
+          ) : step === "form" ? (
+            <div className="grid gap-5 text-foreground">
+              <div className="grid gap-2">
+                <label className="text-base font-medium" htmlFor="kiosk-phone">Phone number</label>
+                <PhoneInput
+                  id="kiosk-phone"
+                  international
+                  defaultCountry={defaultCountry as Country}
+                  value={phone}
+                  onChange={(value) => { setPhone(value || undefined); setPhoneError(null); }}
+                  withCountryCallingCode
+                  countryCallingCodeEditable={true}
+                  className={`block w-full rounded-xl border-0 shadow-sm ring-1 ring-inset px-4 py-3 text-2xl text-foreground focus:ring-2 ${phoneError ? "ring-red-500 focus:ring-red-600" : "ring-border focus:ring-primary"}`}
+                  aria-invalid={phoneError ? true : false}
+                  aria-describedby={phoneError ? "kiosk-phone-error" : undefined}
+                />
+                {phoneError ? (
+                  <p id="kiosk-phone-error" className="text-sm text-red-600">{phoneError}</p>
+                ) : null}
+              </div>
+              <Keypad value={phone} onChange={(v) => { setPhone(v); setPhoneError(null); }} callingCode={callingCode} />
+              <Button disabled={isPending} onClick={submit} size="lg" className="w-full h-14 text-xl rounded-xl disabled:opacity-50">
+                {isPending ? "Submitting…" : "Continue"}
+              </Button>
+              {message ? <p className="text-sm text-red-600">{message}</p> : null}
             </div>
-            <Keypad value={phone} onChange={(v) => { setPhone(v); setPhoneError(null); }} callingCode={callingCode} />
-            <Button disabled={isPending} onClick={submit} size="lg" className="w-full h-14 text-xl rounded-xl disabled:opacity-50">
-              {isPending ? "Submitting…" : "Continue"}
-            </Button>
-            {message ? <p className="text-sm text-red-600">{message}</p> : null}
-          </div>
-        ) : (
-          <div className="grid gap-5 text-center text-foreground">
-            <p className="text-lg">Thanks! You&apos;re on the waiting list.</p>
-            <div>
-              <p className="text-sm text-muted-foreground">Your ticket</p>
-              <div className="mt-2 text-6xl font-extrabold text-foreground">{ticketNumber ?? "-"}</div>
+          ) : (
+            <div className="grid gap-5 text-center text-foreground">
+              <p className="text-lg">We&apos;ll notify you when your table is ready.</p>
+              <div>
+                <p className="text-sm text-muted-foreground">Your ticket</p>
+                <div className="mt-2 text-6xl font-extrabold text-foreground">{ticketNumber ?? "-"}</div>
+              </div>
+              <Button onClick={close} size="lg" className="w-full h-14 text-xl rounded-xl">
+                Done
+              </Button>
             </div>
-            <Button onClick={close} size="lg" className="w-full h-14 text-xl rounded-xl">
-              Done
-            </Button>
-          </div>
           )}
         </DialogContent>
       </Dialog>
@@ -342,7 +361,7 @@ function KioskButton({ token, defaultCountry, seatingPreferences }: { token: str
 }
 
 function Keypad({ value, onChange, callingCode }: { value: string | undefined; onChange: (v: string | undefined) => void; callingCode: string }) {
-  const buttons = ["1","2","3","4","5","6","7","8","9","+","0","←"];
+  const buttons = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "+", "0", "←"];
   const defaultPrefix = `+${callingCode}`;
   const normalize = (v: string | undefined) => {
     if (!v) return "";

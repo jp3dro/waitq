@@ -1,13 +1,15 @@
 "use client";
 import { useEffect, useRef, useState, useTransition } from "react";
+import { differenceInMinutes } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import { toastManager } from "@/hooks/use-toast";
-import { RefreshCw, Archive, Pencil, Trash2, MoreHorizontal, Copy } from "lucide-react";
+import { RefreshCw, Archive, Pencil, Trash2, MoreHorizontal, Copy, Clock, User } from "lucide-react";
 import { Stepper } from "@/components/ui/stepper";
 import PhoneInput from "react-phone-number-input";
 import 'react-phone-number-input/style.css';
 import type { Country } from "react-phone-number-input";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +26,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type Entry = {
   id: string;
@@ -48,6 +56,22 @@ type Entry = {
   whatsapp_sent_at?: string | null;
   whatsapp_delivered_at?: string | null;
   whatsapp_error_message?: string | null;
+};
+
+const getWaitTime = (date: string) => {
+  const start = new Date(date);
+  const end = new Date();
+  const totalMinutes = differenceInMinutes(end, start);
+
+  if (totalMinutes < 1) return "Just now";
+
+  const days = Math.floor(totalMinutes / (60 * 24));
+  const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+  const minutes = totalMinutes % 60;
+
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
 };
 
 export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: string }) {
@@ -396,7 +420,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
           description: "Customer marked as served",
           type: "success",
         });
-        try { window.dispatchEvent(new CustomEvent('wl:refresh', { detail: { waitlistId } })); } catch {}
+        try { window.dispatchEvent(new CustomEvent('wl:refresh', { detail: { waitlistId } })); } catch { }
         await load(true);
       } else {
         toastManager.add({
@@ -421,7 +445,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
           description: "Customer archived",
           type: "success",
         });
-        try { window.dispatchEvent(new CustomEvent('wl:refresh', { detail: { waitlistId } })); } catch {}
+        try { window.dispatchEvent(new CustomEvent('wl:refresh', { detail: { waitlistId } })); } catch { }
         await load(true);
       } else {
         toastManager.add({
@@ -447,7 +471,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
           type: "success",
         });
         // Local and cross-tab refresh
-        try { window.dispatchEvent(new CustomEvent('wl:refresh', { detail: { waitlistId } })); } catch {}
+        try { window.dispatchEvent(new CustomEvent('wl:refresh', { detail: { waitlistId } })); } catch { }
         try {
           // Broadcast to main waitlist table
           const chan1 = supabase.channel(`waitlist-entries-${waitlistId}`);
@@ -466,7 +490,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
             await chan3.send({ type: 'broadcast', event: 'refresh', payload: {} });
             supabase.removeChannel(chan3);
           }
-        } catch {}
+        } catch { }
         await load(true);
       } else {
         toastManager.add({
@@ -504,7 +528,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
               <th className="text-left font-medium text-foreground px-4 py-2">Party</th>
               <th className="text-left font-medium text-foreground px-4 py-2">Seating</th>
               <th className="text-left font-medium text-foreground px-4 py-2">Notifications</th>
-              <th className="text-left font-medium text-foreground px-4 py-2">Created</th>
+              <th className="text-left font-medium text-foreground px-4 py-2">Waiting time</th>
               <th className="text-left font-medium text-foreground px-4 py-2"></th>
             </tr>
           </thead>
@@ -536,12 +560,33 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                 <td className="px-4 py-2">{e.ticket_number ?? e.queue_position ?? "-"}</td>
                 <td className="px-4 py-2">{e.customer_name ?? "—"}</td>
                 <td className="px-4 py-2">{e.phone}</td>
-                <td className="px-4 py-2">{typeof e.party_size === 'number' ? e.party_size : "—"}</td>
-                <td className="px-4 py-2">{e.seating_preference || "—"}</td>
+                <td className="px-4 py-2">
+                  <div className="flex items-center gap-1.5">
+                    <User className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span>{typeof e.party_size === 'number' ? e.party_size : "—"}</span>
+                  </div>
+                </td>
+                <td className="px-4 py-2">
+                  {e.seating_preference ? <Badge variant="secondary">{e.seating_preference}</Badge> : "—"}
+                </td>
                 <td className="px-4 py-2">
                   <span className="text-xs">{getNotificationDisplay(e.send_sms, e.send_whatsapp, e.sms_status, e.whatsapp_status)}</span>
                 </td>
-                <td className="px-4 py-2">{new Date(e.created_at).toLocaleString()}</td>
+                <td className="px-4 py-2">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center gap-1.5 w-fit cursor-default">
+                          <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span>{getWaitTime(e.created_at)}</span>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{new Date(e.created_at).toLocaleString()}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </td>
                 <td className="px-4 py-2 text-right">
                   <div className="inline-flex items-center gap-2">
                     <Button
@@ -624,48 +669,48 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
               />
             </div>
 
-          <div className="flex gap-6">
-            <div className="flex-none grid gap-2">
-              <label className="text-sm font-medium">Number of people</label>
-              <Stepper
-                value={editForm.partySize ? parseInt(editForm.partySize, 10) : undefined}
-                onChange={(value) => setEditForm(prev => ({ ...prev, partySize: value?.toString() || "" }))}
-                min={1}
-                max={20}
-              />
-            </div>
-            <div className="flex-1 grid gap-2">
-              <Label>Phone</Label>
-              <PhoneInput
-                international
-                defaultCountry="PT"
-                value={editForm.phone}
-                onChange={(value) => setEditForm(prev => ({ ...prev, phone: value || "" }))}
-                className="block w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-              />
-            </div>
-          </div>
-
-          {(waitlists.find(w => w.id === waitlistId)?.seating_preferences || []).length > 0 && (
-            <div className="grid gap-2">
-              <Label>Seating preference</Label>
-              <div className="flex flex-wrap gap-2">
-                {(waitlists.find(w => w.id === waitlistId)?.seating_preferences || []).map((s) => {
-                  const selected = editForm.seatingPreference === s;
-                  return (
-                    <button
-                      type="button"
-                      key={s}
-                      onClick={() => setEditForm(prev => ({ ...prev, seatingPreference: s }))}
-                      className={`inline-flex items-center rounded-full px-3 py-1 text-xs ring-1 ring-inset transition ${selected ? "bg-primary text-primary-foreground ring-primary" : "bg-card text-foreground ring-border hover:bg-muted"}`}
-                    >
-                      {s}
-                    </button>
-                  );
-                })}
+            <div className="flex gap-6">
+              <div className="flex-none grid gap-2">
+                <label className="text-sm font-medium">Number of people</label>
+                <Stepper
+                  value={editForm.partySize ? parseInt(editForm.partySize, 10) : undefined}
+                  onChange={(value) => setEditForm(prev => ({ ...prev, partySize: value?.toString() || "" }))}
+                  min={1}
+                  max={20}
+                />
+              </div>
+              <div className="flex-1 grid gap-2">
+                <Label>Phone</Label>
+                <PhoneInput
+                  international
+                  defaultCountry="PT"
+                  value={editForm.phone}
+                  onChange={(value) => setEditForm(prev => ({ ...prev, phone: value || "" }))}
+                  className="block w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                />
               </div>
             </div>
-          )}
+
+            {(waitlists.find(w => w.id === waitlistId)?.seating_preferences || []).length > 0 && (
+              <div className="grid gap-2">
+                <Label>Seating preference</Label>
+                <div className="flex flex-wrap gap-2">
+                  {(waitlists.find(w => w.id === waitlistId)?.seating_preferences || []).map((s) => {
+                    const selected = editForm.seatingPreference === s;
+                    return (
+                      <button
+                        type="button"
+                        key={s}
+                        onClick={() => setEditForm(prev => ({ ...prev, seatingPreference: s }))}
+                        className={`inline-flex items-center rounded-full px-3 py-1 text-xs ring-1 ring-inset transition ${selected ? "bg-primary text-primary-foreground ring-primary" : "bg-card text-foreground ring-border hover:bg-muted"}`}
+                      >
+                        {s}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </form>
 
           <DialogFooter>

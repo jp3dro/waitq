@@ -44,20 +44,24 @@ export async function GET(req: NextRequest) {
       .eq("waitlist_id", list.id)
       .eq("status", "waiting");
     estimatedMs = (waitingCount || 0) === 0 ? 5 * 60 * 1000 : avg;
-  } catch {}
+  } catch { }
 
   let businessCountry: string | null = null;
   let accentColor: string | null = null;
   let backgroundColor: string | null = null;
+  let businessName: string | null = null;
+  let brandLogo: string | null = null;
   if (list.business_id) {
     const { data: biz } = await admin
       .from("businesses")
-      .select("country_code, accent_color, background_color")
+      .select("name, logo_url, country_code, accent_color, background_color")
       .eq("id", list.business_id)
       .maybeSingle();
     businessCountry = (biz?.country_code as string | null) || null;
     accentColor = (biz?.accent_color as string | null) || null;
     backgroundColor = (biz?.background_color as string | null) || null;
+    businessName = (biz?.name as string | null) || null;
+    brandLogo = (biz?.logo_url as string | null) || null;
   }
 
   return NextResponse.json({
@@ -65,6 +69,8 @@ export async function GET(req: NextRequest) {
     listName: list.name,
     kioskEnabled: !!list.kiosk_enabled,
     businessCountry,
+    businessName,
+    brandLogo,
     accentColor: accentColor || "#533AFD",
     backgroundColor: backgroundColor || "#000000",
     seatingPreferences: (list.seating_preferences as string[] | null) || [],
