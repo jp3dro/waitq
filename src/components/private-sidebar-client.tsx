@@ -61,7 +61,7 @@ export default function PrivateSidebarClient({ userEmail, role }: Props) {
   const isAdmin = role === "admin";
 
   return (
-    <Sidebar variant="sidebar" collapsible="offExamples" className="border-r border-border">
+    <Sidebar variant="floating" collapsible="none" className="border-0">
       <SidebarHeader className="py-4">
         <Link href="/dashboard" className="flex items-center px-2" aria-label="WaitQ dashboard">
           <Image src="/waitq.svg" alt="WaitQ" className="h-8 w-auto logo-light" width={108} height={32} />

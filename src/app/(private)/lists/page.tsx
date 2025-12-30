@@ -62,9 +62,9 @@ export default async function ListsIndexPage() {
   return (
     <main className="py-5">
       <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
-        <div className="flex items-end justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-3xl font-bold tracking-tight">Lists</h1>
-          <div className="flex items-center gap-2"><CreateListButton /></div>
+          <CreateListButton />
         </div>
 
         <div className="space-y-6">

@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { Suspense } from "react";
 
 export const metadata = { title: "Users" };
 
@@ -64,18 +63,8 @@ export default async function UsersPage() {
 
   return (
     <main className="py-5">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Users</h1>
-          </div>
-        </div>
-
-        <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-6 space-y-6">
-          <Suspense>
-            <ClientWrapper />
-          </Suspense>
-        </div>
+      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <ClientWrapper />
       </div>
     </main>
   );

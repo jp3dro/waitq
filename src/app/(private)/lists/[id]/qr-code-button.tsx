@@ -13,7 +13,7 @@ export default function QRCodeButton({ listName, displayToken, businessName }: {
         type="button"
         onClick={() => setOpen(true)}
         variant="outline"
-        size="icon"
+        size="icon-sm"
         aria-label="Open QR code"
         title="Open QR code"
       >

@@ -17,7 +17,7 @@ export default function AddButton({ defaultWaitlistId, lockWaitlist, businessCou
   const [pending, setPending] = useState(false);
   return (
     <>
-      <Button onClick={() => setOpen(true)} className="gap-2">
+      <Button onClick={() => setOpen(true)} size="sm" className="gap-2">
         <Plus className="h-4 w-4" />
         Add to waitlist
       </Button>
@@ -37,11 +37,11 @@ export default function AddButton({ defaultWaitlistId, lockWaitlist, businessCou
           />
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Cancel
-            </Button>
             <Button type="submit" form="add-waitlist-form" disabled={pending}>
               {pending ? "Adding…" : "Add"}
+            </Button>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              Cancel
             </Button>
           </DialogFooter>
         </DialogContent>

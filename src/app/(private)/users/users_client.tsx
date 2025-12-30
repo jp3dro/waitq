@@ -243,8 +243,9 @@ export default function UsersClient() {
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-start mb-4">
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center gap-3">
+        <h1 className="text-3xl font-bold tracking-tight">Users</h1>
         <Button type="button" onClick={() => setInvOpen(true)}>Invite user</Button>
       </div>
 
@@ -352,10 +353,10 @@ export default function UsersClient() {
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setInvOpen(false)}>Cancel</Button>
             <Button type="button" disabled={isPending} onClick={invite}>
               {isPending ? "Sending..." : "Invite"}
             </Button>
+            <Button type="button" variant="outline" onClick={() => setInvOpen(false)}>Cancel</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -403,10 +404,10 @@ export default function UsersClient() {
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
             <Button type="button" disabled={isPending} onClick={saveEdit}>
               {isPending ? "Saving..." : "Save"}
             </Button>
+            <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

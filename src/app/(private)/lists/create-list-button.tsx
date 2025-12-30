@@ -15,27 +15,18 @@ import { toastManager } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 export default function CreateListButton() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [name, setName] = useState("");
-  const [listType, setListType] = useState("restaurants");
   const [kioskEnabled, setKioskEnabled] = useState(false);
   const [seatingPrefs, setSeatingPrefs] = useState<string[]>([]);
   const [message, setMessage] = useState<string | null>(null);
 
   const reset = () => {
     setName("");
-    setListType("restaurants");
     setKioskEnabled(false);
     setSeatingPrefs([]);
     setMessage(null);
@@ -49,7 +40,7 @@ export default function CreateListButton() {
       const res = await fetch("/api/waitlists", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: n, kioskEnabled, listType, seatingPreferences: seatingPrefs }),
+        body: JSON.stringify({ name: n, kioskEnabled, seatingPreferences: seatingPrefs }),
       });
       const j = await res.json().catch(() => ({}));
       if (res.ok) {
@@ -94,30 +85,9 @@ export default function CreateListButton() {
             </div>
 
             <div className="grid gap-2">
-              <Label>Type</Label>
-              <Select value={listType} onValueChange={setListType}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="restaurants">Restaurants</SelectItem>
-                  <SelectItem value="barber_shops">Barber shops (coming soon)</SelectItem>
-                  <SelectItem value="beauty_salons">Beauty salons (coming soon)</SelectItem>
-                  <SelectItem value="massages">Massages (coming soon)</SelectItem>
-                  <SelectItem value="clinics">Clinics and medical (coming soon)</SelectItem>
-                  <SelectItem value="warehouse_transport">Warehouse & transport (coming soon)</SelectItem>
-                  <SelectItem value="hotels">Hotels & accommodations (coming soon)</SelectItem>
-                  <SelectItem value="public_services">Public services (coming soon)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-          {listType === "restaurants" ? (
-            <div className="grid gap-2">
               <Label>Seating preferences</Label>
               <SeatingPrefsEditor value={seatingPrefs} onChange={setSeatingPrefs} />
             </div>
-          ) : null}
           <div className="flex items-center gap-3">
             <Switch id="kiosk-enabled" checked={kioskEnabled} onCheckedChange={setKioskEnabled} />
             <div className="flex items-center gap-2">
@@ -136,6 +106,9 @@ export default function CreateListButton() {
           </div>
 
           <DialogFooter>
+            <Button disabled={isPending} onClick={onCreate}>
+              {isPending ? "Creating…" : "Create"}
+            </Button>
             <Button
               variant="outline"
               onClick={() => {
@@ -144,9 +117,6 @@ export default function CreateListButton() {
               }}
             >
               Cancel
-            </Button>
-            <Button disabled={isPending} onClick={onCreate}>
-              {isPending ? "Creating…" : "Create"}
             </Button>
           </DialogFooter>
         </DialogContent>

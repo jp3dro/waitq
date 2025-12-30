@@ -100,7 +100,7 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
           <h1 className="text-3xl font-bold tracking-tight">{wl.name}</h1>
         </div>
 
-        <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-6 space-y-6">
+        <div className="bg-card text-card-foreground rounded-xl space-y-6">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <AddButton defaultWaitlistId={wl.id} lockWaitlist businessCountry={businessCountry} />
@@ -125,7 +125,7 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
                   <QRCodeButton listName={wl.name} displayToken={wl.display_token} businessName={businessName} />
                 </>
               )}
-              <ClearWaitlistButton waitlistId={wl.id} displayToken={wl.display_token} variant="button" />
+              <ClearWaitlistButton waitlistId={wl.id} displayToken={wl.display_token} variant="button" className="h-9" />
             </div>
           </div>
 

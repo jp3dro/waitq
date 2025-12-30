@@ -106,8 +106,8 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
 
   return (
     <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl overflow-hidden">
-      <div className="p-6 space-y-4">
-        <div className="flex items-center justify-between gap-3">
+      <div className="border-b border-border px-4 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -130,66 +130,64 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
             </div>
           </div>
         </div>
+      </div>
 
-        <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-muted sticky top-0 z-10">
-                <tr>
-                  <th className="text-left font-medium text-foreground px-4 py-2">Name</th>
-                  <th className="text-left font-medium text-foreground px-4 py-2">Phone</th>
-                  <th className="text-left font-medium text-foreground px-4 py-2">Visits</th>
-                  <th className="text-left font-medium text-foreground px-4 py-2">Served</th>
-                  <th className="text-left font-medium text-foreground px-4 py-2">No show</th>
-                  <th className="text-left font-medium text-foreground px-4 py-2">First seen</th>
-                  <th className="text-left font-medium text-foreground px-4 py-2">Last seen</th>
-                  <th className="text-left font-medium text-foreground px-4 py-2"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((c) => (
-                  <tr key={c.key} className="border-t border-border hover:bg-muted odd:bg-muted/50">
-                    <td className="px-4 py-2">{c.name || "—"}</td>
-                    <td className="px-4 py-2">{c.phone || "—"}</td>
-                    <td className="px-4 py-2">{c.visits}</td>
-                    <td className="px-4 py-2">{c.servedCount}</td>
-                    <td className="px-4 py-2">{c.noShowCount ?? 0}</td>
-                    <td className="px-4 py-2">{new Date(c.firstSeen).toLocaleString()}</td>
-                    <td className="px-4 py-2">{new Date(c.lastSeen).toLocaleString()}</td>
-                    <td className="px-4 py-2 text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" aria-label="Open menu">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onSelect={() => onEdit(c)}>
-                            <Pencil className="h-4 w-4" />
-                            Edit details
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onSelect={() => void onDelete(c)}
-                            className="text-destructive focus:text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            Delete customer
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </td>
-                  </tr>
-                ))}
-                {filtered.length === 0 ? (
-                  <tr>
-                    <td className="px-4 py-6 text-muted-foreground" colSpan={7}>No customers found</td>
-                  </tr>
-                ) : null}
-              </tbody>
-            </table>
-          </div>
-        </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-muted sticky top-0 z-10">
+            <tr>
+              <th className="text-left font-medium text-foreground px-4 py-2">Name</th>
+              <th className="text-left font-medium text-foreground px-4 py-2">Phone</th>
+              <th className="text-left font-medium text-foreground px-4 py-2">Visits</th>
+              <th className="text-left font-medium text-foreground px-4 py-2">Served</th>
+              <th className="text-left font-medium text-foreground px-4 py-2">No show</th>
+              <th className="text-left font-medium text-foreground px-4 py-2">First seen</th>
+              <th className="text-left font-medium text-foreground px-4 py-2">Last seen</th>
+              <th className="text-left font-medium text-foreground px-4 py-2"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((c) => (
+              <tr key={c.key} className="border-t border-border hover:bg-muted odd:bg-muted/50">
+                <td className="px-4 py-2">{c.name || "—"}</td>
+                <td className="px-4 py-2">{c.phone || "—"}</td>
+                <td className="px-4 py-2">{c.visits}</td>
+                <td className="px-4 py-2">{c.servedCount}</td>
+                <td className="px-4 py-2">{c.noShowCount ?? 0}</td>
+                <td className="px-4 py-2">{new Date(c.firstSeen).toLocaleString()}</td>
+                <td className="px-4 py-2">{new Date(c.lastSeen).toLocaleString()}</td>
+                <td className="px-4 py-2 text-right">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" aria-label="Open menu">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onSelect={() => onEdit(c)}>
+                        <Pencil className="h-4 w-4" />
+                        Edit details
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onSelect={() => void onDelete(c)}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Delete customer
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </td>
+              </tr>
+            ))}
+            {filtered.length === 0 ? (
+              <tr>
+                <td className="px-4 py-6 text-muted-foreground" colSpan={7}>No customers found</td>
+              </tr>
+            ) : null}
+          </tbody>
+        </table>
       </div>
 
       <Dialog open={!!editing?.open} onOpenChange={(v) => (!v ? setEditing(null) : undefined)}>
@@ -219,11 +217,11 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setEditing(null)}>
-              Cancel
-            </Button>
             <Button onClick={saveEdit} disabled={isPending}>
               {isPending ? "Saving…" : "Save changes"}
+            </Button>
+            <Button type="button" variant="outline" onClick={() => setEditing(null)}>
+              Cancel
             </Button>
           </DialogFooter>
         </DialogContent>

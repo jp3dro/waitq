@@ -106,10 +106,10 @@ export default function HomePage() {
         <div className="mx-auto max-w-7xl px-6 lg:px-8 pt-20 pb-16">
           <div className="mx-auto max-w-3xl text-center">
             <h1 className="font-serif text-4xl md:text-6xl font-medium tracking-tight">
-              Restaurant Waitlist Management Made Simple
+              Restaurant waitlist management made simple
             </h1>
             <p className="mt-4 text-base md:text-lg text-muted-foreground">
-              Modern queue management software with SMS notifications. No app required, no hardware needed. 
+              Modern queue management software with SMS notifications. 
               Perfect for busy restaurants looking to reduce wait times and improve customer experience.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -408,9 +408,7 @@ export default function HomePage() {
           </div>
           <div className="mt-8 text-center">
             <p className="text-sm text-muted-foreground">
-              Also perfect for <a href="/use-cases/barber-shop" className="underline hover:text-foreground">barber shops</a>, 
-              {" "}<a href="/use-cases/beauty-salons" className="underline hover:text-foreground">beauty salons</a>, 
-              {" "}<a href="/use-cases/clinics-and-medical" className="underline hover:text-foreground">medical clinics</a>, and more
+              Built for restaurants — and ready to scale with you.
             </p>
           </div>
         </div>

@@ -7,11 +7,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Stepper } from "@/components/ui/stepper";
 import PhoneInput, { type Country } from "react-phone-number-input";
 import 'react-phone-number-input/style.css';
 
 type Entry = { id: string; ticket_number: number | null; queue_position: number | null; status: string; notified_at?: string | null; party_size?: number | null; seating_preference?: string | null };
-type Payload = { listId: string; listName: string; kioskEnabled?: boolean; businessCountry?: string | null; listType?: string | null; seatingPreferences?: string[]; estimatedMs?: number; entries: Entry[]; accentColor?: string; backgroundColor?: string };
+type Payload = { listId: string; listName: string; kioskEnabled?: boolean; businessCountry?: string | null; seatingPreferences?: string[]; estimatedMs?: number; entries: Entry[]; accentColor?: string; backgroundColor?: string };
 
 export default function DisplayClient({ token }: { token: string }) {
   const [data, setData] = useState<Payload | null>(null);
@@ -128,7 +129,7 @@ export default function DisplayClient({ token }: { token: string }) {
         ) : null}
         {data.kioskEnabled ? (
           <div className="mt-4">
-            <KioskButton token={token} defaultCountry={data.businessCountry || "PT"} listType={data.listType || "restaurants"} seatingPreferences={data.seatingPreferences || []} accent="#FFFFFF" />
+            <KioskButton token={token} defaultCountry={data.businessCountry || "PT"} seatingPreferences={data.seatingPreferences || []} accent="#FFFFFF" />
           </div>
         ) : null}
         <div className="mt-8 grid md:grid-cols-[1fr_1.2fr] gap-8">
@@ -163,7 +164,7 @@ export default function DisplayClient({ token }: { token: string }) {
 }
 
 
-function KioskButton({ token, defaultCountry, listType, seatingPreferences, accent }: { token: string; defaultCountry: string; listType: string; seatingPreferences: string[]; accent: string }) {
+function KioskButton({ token, defaultCountry, seatingPreferences, accent }: { token: string; defaultCountry: string; seatingPreferences: string[]; accent: string }) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<"intro" | "form" | "confirm">("intro");
   const [phone, setPhone] = useState<string | undefined>(undefined);
@@ -237,50 +238,32 @@ function KioskButton({ token, defaultCountry, listType, seatingPreferences, acce
 
           {step === "intro" ? (
           <div className="grid gap-5 text-foreground">
-            {listType === "restaurants" ? (
-              <div className="grid gap-6">
-                <div className="grid gap-2">
-                  <label className="text-base font-medium">Number of people</label>
-                  <div className="text-4xl font-bold px-4 py-3 rounded-xl ring-1 ring-inset ring-border bg-card min-h-[64px] flex items-center">
-                    {typeof partySize === 'number' ? partySize : ''}
-                  </div>
-                  <KeypadNumeric
-                    value={typeof partySize === 'number' ? String(partySize) : ''}
-                    onChange={(val) => {
-                      const sanitized = String(val).replace(/[^0-9]/g, "");
-                      if (!sanitized) {
-                        setPartySize(undefined);
-                      } else {
-                        const n = parseInt(sanitized, 10);
-                        setPartySize(Number.isFinite(n) && n > 0 ? n : undefined);
-                      }
-                    }}
-                  />
-                </div>
-                {Array.isArray(seatingPreferences) && seatingPreferences.length > 0 ? (
-                  <div className="grid gap-2">
-                    <label className="text-base font-medium">Seating preference</label>
-                    <div className="flex flex-wrap gap-4">
-                      {seatingPreferences.map((s) => {
-                        const active = pref === s;
-                        return (
-                          <button
-                            type="button"
-                            key={s}
-                            onClick={() => setPref(s)}
-                            className={`px-6 py-4 rounded-2xl ring-1 ring-inset text-lg ${active ? "bg-primary text-primary-foreground ring-primary" : "bg-card text-foreground ring-border hover:bg-muted"}`}
-                          >
-                            {s}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ) : null}
+            <div className="grid gap-6">
+              <div className="grid gap-2">
+                <label className="text-base font-medium">Number of people</label>
+                <Stepper value={partySize} onChange={setPartySize} min={1} max={20} className="h-10" />
               </div>
-            ) : (
-              <div className="min-h-[120px]" />
-            )}
+              {Array.isArray(seatingPreferences) && seatingPreferences.length > 0 ? (
+                <div className="grid gap-2">
+                  <label className="text-base font-medium">Seating preference</label>
+                  <div className="flex flex-wrap gap-4">
+                    {seatingPreferences.map((s) => {
+                      const active = pref === s;
+                      return (
+                        <button
+                          type="button"
+                          key={s}
+                          onClick={() => setPref(s)}
+                          className={`px-6 py-4 rounded-2xl ring-1 ring-inset text-lg ${active ? "bg-primary text-primary-foreground ring-primary" : "bg-card text-foreground ring-border hover:bg-muted"}`}
+                        >
+                          {s}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
+            </div>
             <button onClick={() => setStep("form")} className="w-full inline-flex items-center justify-center rounded-xl px-5 py-4 text-lg font-semibold shadow-sm"
               style={{ backgroundColor: accent, color: getReadableTextColor(accent) }}>
               Continue
@@ -363,31 +346,6 @@ function formatDuration(ms: number) {
 }
 
 
-function KeypadNumeric({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const buttons = ["1","2","3","4","5","6","7","8","9","Clear","0","←"];
-  const press = (k: string) => {
-    if (k === "←") {
-      onChange(value.slice(0, -1));
-    } else if (k === "Clear") {
-      onChange("");
-    } else {
-      onChange(`${value}${k}`);
-    }
-  };
-  return (
-    <div className="grid grid-cols-3 gap-3">
-      {buttons.map((k) => (
-        <button
-          key={k}
-          onClick={() => press(k)}
-          className="h-16 text-2xl font-semibold rounded-xl ring-1 ring-inset ring-border bg-card hover:bg-muted"
-        >
-          {k}
-        </button>
-      ))}
-    </div>
-  );
-}
 
 function getReadableTextColor(hexColor: string): string {
   const hex = hexColor.replace("#", "");

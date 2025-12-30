@@ -146,10 +146,8 @@ export default function LocationsPage() {
   return (
     <main className="py-5">
       <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Locations</h1>
-          </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="text-3xl font-bold tracking-tight">Locations</h1>
           <Button onClick={() => setOpenCreate(true)}>New location</Button>
         </div>
 
@@ -239,11 +237,11 @@ export default function LocationsPage() {
               {msg ? <p className="text-sm text-destructive">{msg}</p> : null}
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setOpenCreate(false)}>
-                Cancel
-              </Button>
               <Button type="button" onClick={create} disabled={isPending || !form.name.trim()}>
                 Create
+              </Button>
+              <Button type="button" variant="outline" onClick={() => setOpenCreate(false)}>
+                Cancel
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -292,11 +290,11 @@ export default function LocationsPage() {
               {editMessage ? <p className="text-sm text-destructive">{editMessage}</p> : null}
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={closeEditModal}>
-                Cancel
-              </Button>
               <Button type="button" onClick={saveEdit} disabled={isPending}>
                 Save changes
+              </Button>
+              <Button type="button" variant="outline" onClick={closeEditModal}>
+                Cancel
               </Button>
             </DialogFooter>
           </DialogContent>

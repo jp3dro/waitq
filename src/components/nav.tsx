@@ -3,13 +3,6 @@ import { createClient } from "@/lib/supabase/server";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ChevronDown } from "lucide-react";
 
 export default async function Nav() {
   const supabase = await createClient();
@@ -27,23 +20,9 @@ export default async function Nav() {
           </Link>
         </div>
         <div className="hidden md:flex items-center gap-6 text-sm text-foreground/80">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm">
-                Use cases <ChevronDown className="ml-1 h-4 w-4 opacity-70" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-64">
-              <DropdownMenuItem asChild><Link href="/use-cases/barber-shop">Barber shops</Link></DropdownMenuItem>
-              <DropdownMenuItem asChild><Link href="/use-cases/beauty-salons">Beauty salons</Link></DropdownMenuItem>
-              <DropdownMenuItem asChild><Link href="/use-cases/restaurants">Restaurants</Link></DropdownMenuItem>
-              <DropdownMenuItem asChild><Link href="/use-cases/massages">Massages</Link></DropdownMenuItem>
-              <DropdownMenuItem asChild><Link href="/use-cases/clinics-and-medical">Clinics and medical</Link></DropdownMenuItem>
-              <DropdownMenuItem asChild><Link href="/use-cases/warehouse-and-transport">Warehouse & transport</Link></DropdownMenuItem>
-              <DropdownMenuItem asChild><Link href="/use-cases/hotels-and-accommodations">Hotels & accommodations</Link></DropdownMenuItem>
-              <DropdownMenuItem asChild><Link href="/use-cases/public-services">Public services</Link></DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Button asChild variant="ghost" size="sm">
+            <Link href="/use-cases/restaurants">Restaurants</Link>
+          </Button>
 
           <Button asChild variant="ghost" size="sm">
             <Link href="/pricing">Pricing</Link>

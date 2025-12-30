@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type AnalyticsData = {
   totalVisitors: number;
@@ -280,22 +280,15 @@ export default function AnalyticsPage() {
   return (
     <main className="py-5">
       <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
-        <div className="flex items-end justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
-          <div className="inline-flex overflow-hidden rounded-md ring-1 ring-inset ring-border bg-card shadow-sm divide-x divide-border">
-            {[7, 15, 30].map((d) => (
-              <Button
-                key={d}
-                onClick={() => setRangeDays(d as 7 | 15 | 30)}
-                type="button"
-                variant={rangeDays === d ? "default" : "ghost"}
-                size="sm"
-                className="rounded-none"
-              >
-                Last {d} days
-              </Button>
-            ))}
-          </div>
+          <Tabs value={String(rangeDays)} onValueChange={(v) => setRangeDays(parseInt(v, 10) as 7 | 15 | 30)}>
+            <TabsList variant="default">
+              <TabsTrigger value="7">Last 7 days</TabsTrigger>
+              <TabsTrigger value="15">Last 15 days</TabsTrigger>
+              <TabsTrigger value="30">Last 30 days</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
 
         {/* Analytics content container */}

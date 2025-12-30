@@ -18,7 +18,6 @@ const postSchema = z.object({
   name: z.string().min(1),
   locationId: z.string().uuid().optional(),
   kioskEnabled: z.boolean().optional().default(false),
-  listType: z.enum(["restaurants","barber_shops","beauty_salons","massages","clinics","warehouse_transport","hotels","public_services"]).optional().default("restaurants"),
   seatingPreferences: z.array(z.string()).optional().default([]),
 });
 
@@ -34,7 +33,7 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   let businessId = parse.data.businessId;
-  const { name, kioskEnabled, listType, seatingPreferences } = parse.data as { name: string; locationId?: string; kioskEnabled?: boolean; listType?: string; seatingPreferences?: string[] };
+  const { name, kioskEnabled, seatingPreferences } = parse.data as { name: string; locationId?: string; kioskEnabled?: boolean; seatingPreferences?: string[] };
   let { locationId } = parse.data as { name: string; locationId?: string };
   if (!businessId) {
     const { data: biz, error: bizErr } = await supabase
@@ -58,7 +57,7 @@ export async function POST(req: NextRequest) {
   }
   const { data, error } = await supabase
     .from("waitlists")
-    .insert({ business_id: businessId, name, location_id: locationId, kiosk_enabled: !!kioskEnabled, list_type: listType, seating_preferences: seatingPreferences || [] })
+    .insert({ business_id: businessId, name, location_id: locationId, kiosk_enabled: !!kioskEnabled, list_type: "restaurants", seating_preferences: seatingPreferences || [] })
     .select("id, name, business_id, location_id, display_token, kiosk_enabled, list_type, seating_preferences")
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
@@ -127,7 +126,6 @@ const patchSchema = z.object({
   name: z.string().min(1).optional(),
   locationId: z.string().uuid().optional(),
   kioskEnabled: z.boolean().optional(),
-  listType: z.enum(["restaurants","barber_shops","beauty_salons","massages","clinics","warehouse_transport","hotels","public_services"]).optional(),
   seatingPreferences: z.array(z.string()).optional(),
 });
 
@@ -142,12 +140,11 @@ export async function PUT(req: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { id, name, locationId, kioskEnabled, listType, seatingPreferences } = parse.data;
+  const { id, name, locationId, kioskEnabled, seatingPreferences } = parse.data;
   const payload: Record<string, unknown> = {};
   if (typeof name === "string") payload.name = name;
   if (typeof locationId === "string") payload.location_id = locationId;
   if (typeof kioskEnabled === "boolean") payload.kiosk_enabled = kioskEnabled;
-  if (typeof listType === "string") payload.list_type = listType;
   if (Array.isArray(seatingPreferences)) payload.seating_preferences = seatingPreferences;
   if (Object.keys(payload).length === 0) return NextResponse.json({ error: "No fields to update" }, { status: 400 });
 

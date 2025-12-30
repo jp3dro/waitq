@@ -624,30 +624,17 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
               />
             </div>
 
-          {(waitlists.find(w => w.id === waitlistId)?.list_type || "restaurants") === "restaurants" ? (
-            <div className="flex gap-6">
-              <div className="flex-none grid gap-2">
-                <label className="text-sm font-medium">Number of people</label>
-                <Stepper
-                  value={editForm.partySize ? parseInt(editForm.partySize, 10) : undefined}
-                  onChange={(value) => setEditForm(prev => ({ ...prev, partySize: value?.toString() || "" }))}
-                  min={1}
-                  max={20}
-                />
-              </div>
-              <div className="flex-1 grid gap-2">
-                <Label>Phone</Label>
-                <PhoneInput
-                  international
-                  defaultCountry="PT"
-                  value={editForm.phone}
-                  onChange={(value) => setEditForm(prev => ({ ...prev, phone: value || "" }))}
-                  className="block w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-                />
-              </div>
+          <div className="flex gap-6">
+            <div className="flex-none grid gap-2">
+              <label className="text-sm font-medium">Number of people</label>
+              <Stepper
+                value={editForm.partySize ? parseInt(editForm.partySize, 10) : undefined}
+                onChange={(value) => setEditForm(prev => ({ ...prev, partySize: value?.toString() || "" }))}
+                min={1}
+                max={20}
+              />
             </div>
-          ) : (
-            <div className="grid gap-2">
+            <div className="flex-1 grid gap-2">
               <Label>Phone</Label>
               <PhoneInput
                 international
@@ -657,7 +644,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                 className="block w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
               />
             </div>
-          )}
+          </div>
 
           {(waitlists.find(w => w.id === waitlistId)?.seating_preferences || []).length > 0 && (
             <div className="grid gap-2">
@@ -682,11 +669,11 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
           </form>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setEditingId(null)}>
-              Cancel
-            </Button>
             <Button type="button" disabled={isPending} onClick={saveEdit}>
               {isPending ? "Saving…" : "Save changes"}
+            </Button>
+            <Button type="button" variant="outline" onClick={() => setEditingId(null)}>
+              Cancel
             </Button>
           </DialogFooter>
         </DialogContent>

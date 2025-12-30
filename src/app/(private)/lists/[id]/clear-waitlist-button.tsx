@@ -86,7 +86,7 @@ export default function ClearWaitlistButton({ waitlistId, displayToken, variant 
   }
 
   return (
-    <Button onClick={clearWaitlist} disabled={isPending} variant="outline" className={className}>
+    <Button onClick={clearWaitlist} disabled={isPending} variant="outline" size="sm" className={className}>
       {isPending ? "Clearing..." : "Clear waitlist"}
     </Button>
   );

@@ -131,10 +131,10 @@ export default function QRCodeModal({ open, onClose, listName, displayToken, bus
         )}
       </div>
         <DialogFooter>
+          <Button onClick={() => onPrint()}>Print</Button>
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={() => onPrint()}>Print</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

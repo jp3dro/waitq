@@ -143,65 +143,52 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
             <p className="text-sm text-red-600">{errors.customerName.message}</p>
           )}
         </div>
-        {(waitlists.find(w => w.id === watch("waitlistId"))?.list_type || "restaurants") === "restaurants" ? (
-          <>
-            <div className="flex gap-6">
-              <div className="flex-none grid gap-2">
-                <label className="text-sm font-medium">Number of people</label>
-                <Stepper
-                  value={watch("partySize")}
-                  onChange={(value) => setValue("partySize", value)}
-                  min={1}
-                  max={20}
-                />
-              </div>
-              <div className="flex-1 grid gap-2">
-                <label className="text-sm font-medium">Phone</label>
-                <PhoneInput
-                  international
-                  defaultCountry={(businessCountry ?? "PT") as Country}
-                  value={watch("phone")}
-                  onChange={(value) => setValue("phone", value || "")}
-                  className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm"
-                />
-                {errors.phone && (
-                  <p className="text-sm text-red-600">{errors.phone.message}</p>
-                )}
+        <>
+          <div className="flex gap-6">
+            <div className="flex-none grid gap-2">
+              <label className="text-sm font-medium">Number of people</label>
+              <Stepper
+                value={watch("partySize")}
+                onChange={(value) => setValue("partySize", value)}
+                min={1}
+                max={20}
+              />
+            </div>
+            <div className="flex-1 grid gap-2">
+              <label className="text-sm font-medium">Phone</label>
+              <PhoneInput
+                international
+                defaultCountry={(businessCountry ?? "PT") as Country}
+                value={watch("phone")}
+                onChange={(value) => setValue("phone", value || "")}
+                className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm"
+              />
+              {errors.phone && (
+                <p className="text-sm text-red-600">{errors.phone.message}</p>
+              )}
+            </div>
+          </div>
+          {(waitlists.find(w => w.id === watch("waitlistId"))?.seating_preferences || []).length > 0 ? (
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Seating preference</label>
+              <div className="flex flex-wrap gap-2">
+                {(waitlists.find(w => w.id === watch("waitlistId"))?.seating_preferences || []).map((s) => {
+                  const selected = watch("seatingPreference") === s;
+                  return (
+                    <button
+                      type="button"
+                      key={s}
+                      onClick={() => setValue("seatingPreference", s)}
+                    className={`inline-flex items-center rounded-full px-3 py-1 text-xs ring-1 ring-inset transition ${selected ? "bg-primary text-primary-foreground ring-primary" : "bg-card text-foreground ring-border hover:bg-muted"}`}
+                    >
+                      {s}
+                    </button>
+                  );
+                })}
               </div>
             </div>
-            {(waitlists.find(w => w.id === watch("waitlistId"))?.seating_preferences || []).length > 0 ? (
-              <div className="grid gap-2">
-                <label className="text-sm font-medium">Seating preference</label>
-                <div className="flex flex-wrap gap-2">
-                  {(waitlists.find(w => w.id === watch("waitlistId"))?.seating_preferences || []).map((s) => {
-                    const selected = watch("seatingPreference") === s;
-                    return (
-                      <button
-                        type="button"
-                        key={s}
-                        onClick={() => setValue("seatingPreference", s)}
-                      className={`inline-flex items-center rounded-full px-3 py-1 text-xs ring-1 ring-inset transition ${selected ? "bg-primary text-primary-foreground ring-primary" : "bg-card text-foreground ring-border hover:bg-muted"}`}
-                      >
-                        {s}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : null}
-          </>
-        ) : (
-          <div className="grid gap-2">
-            <label className="text-sm font-medium">Phone</label>
-            <PhoneInput
-              international
-              defaultCountry={(businessCountry ?? "PT") as Country}
-              value={watch("phone")}
-              onChange={(value) => setValue("phone", value || "")}
-              className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm"
-            />
-          </div>
-        )}
+          ) : null}
+        </>
         <div className="flex items-center gap-4">
           <label className="text-sm font-medium">Notify via</label>
           <div className="flex items-center gap-2">
