@@ -15,8 +15,8 @@ function formatEUR(amount: number) {
   return amount === 0
     ? "€0"
     : new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR" }).format(
-        amount
-      );
+      amount
+    );
 }
 
 type SubscriptionData = {
@@ -51,6 +51,7 @@ export default async function SubscriptionPage() {
       .from("subscriptions")
       .select("plan_id, status, price_lookup_key, stripe_customer_id")
       .eq("user_id", user.id)
+      .neq("status", "canceled")
       .maybeSingle();
 
     // console.log("🔍 SUPABASE DATA - Existing subscription row:", {
@@ -159,21 +160,25 @@ export default async function SubscriptionPage() {
           if (metadataPlanId) {
             planId = metadataPlanId;
           }
-          // Second priority: map by Stripe product id
-          else if (price?.product && typeof price.product === "string") {
-            const productId = price.product as string;
-            const byProduct = (Object.values(plans) as typeof orderedPlans).find((p) => p.stripe.productId === productId);
-            planId = byProduct ? byProduct.id : null;
+          // Second priority: match by exact lookup key (now that we have clean keys like BASE/PREMIUM)
+          else if (lookupKey) {
+            const byLookup = (Object.values(plans) as typeof orderedPlans).find((p) => p.stripe.priceLookupKeyMonthly === lookupKey);
+            planId = byLookup ? byLookup.id : null;
           }
-          // Third priority: derive from price amount
+          // Third priority: derive from price amount (robust if prices differ)
           else if (typeof price?.unit_amount === "number") {
             const amountEur = Math.round(price.unit_amount) / 100;
             const match = orderedPlans.find((p) => Math.round(p.priceMonthlyEUR * 100) === Math.round(amountEur * 100));
             planId = match ? match.id : null;
           }
-          // Fourth priority: derive from lookup key
-          else if (lookupKey) {
-            planId = lookupKey.replace(/_monthly_eur$/, "").replace(/^waitq_/, "");
+          // Fourth priority: map by Stripe product id (least reliable if products share IDs, but good fallback for distinct products)
+          else if (price?.product && typeof price.product === "string") {
+            const productId = price.product as string;
+            // Search in reverse order (Premium first) or just find relevant using filter? 
+            // In shared product ID case, this is ambiguous. We rely on amount/key mostly. 
+            // Only use if we haven't found a match yet.
+            const byProduct = (Object.values(plans) as typeof orderedPlans).find((p) => p.stripe.productId === productId);
+            planId = byProduct ? byProduct.id : null;
           }
 
           // console.log("🔍 DERIVED DATA - Plan identification:", {
@@ -206,7 +211,7 @@ export default async function SubscriptionPage() {
                 .maybeSingle();
               businessId = (memberOf?.business_id as string | undefined) || undefined;
             }
-          } catch {}
+          } catch { }
           const currentPeriodEndIso = (() => {
             // Use item-level current period (Stripe moved these fields in March 2025)
             const sec = itemCurrentPeriodEnd;
@@ -294,14 +299,30 @@ export default async function SubscriptionPage() {
           //   collection_method: current.collection_method
           // });
 
+        } else {
+          // We found a customer but no active subscription. 
+          // We must set 'current' to an inactive state to prevent falling back to stale DB data.
+          current = {
+            plan_id: null,
+            status: "canceled",
+            price_lookup_key: null,
+            price_id: null,
+            latest_invoice_id: null,
+            current_period_start: null,
+            current_period_end: null,
+            trial_end: null,
+            cancel_at_period_end: null,
+            collection_method: null
+          };
         }
+
         // Fetch recent invoices for payment history and last payment display even if no active subscription
         try {
           const invoices = await stripe.invoices.list({ customer: customerId, limit: 12 });
           uiInvoices = invoices.data
             .slice()
             .sort((a: Stripe.Invoice, b: Stripe.Invoice) => (b.created || 0) - (a.created || 0));
-        } catch {}
+        } catch { }
       } else {
         // If we don't have a stored customer ID, try to find it through other means
         // Try Stripe search API on subscriptions by metadata user_id
@@ -395,7 +416,7 @@ export default async function SubscriptionPage() {
                       .maybeSingle();
                     businessId = (memberOf?.business_id as string | undefined) || undefined;
                   }
-                } catch {}
+                } catch { }
 
                 const currentPeriodEndIso = (() => {
                   // Use item-level current period (Stripe moved these fields in March 2025)
@@ -460,10 +481,10 @@ export default async function SubscriptionPage() {
                 uiInvoices = invoices.data
                   .slice()
                   .sort((a: Stripe.Invoice, b: Stripe.Invoice) => (b.created || 0) - (a.created || 0));
-              } catch {}
+              } catch { }
             }
           }
-        } catch {}
+        } catch { }
 
         if (!customerId) {
           // Final fallback to email lookup
@@ -549,7 +570,7 @@ export default async function SubscriptionPage() {
                     .maybeSingle();
                   businessId = (memberOf?.business_id as string | undefined) || undefined;
                 }
-              } catch {}
+              } catch { }
 
               const currentPeriodEndIso = (() => {
                 // Use item-level current period (Stripe moved these fields in March 2025)
@@ -613,18 +634,20 @@ export default async function SubscriptionPage() {
                 uiInvoices = invoices.data
                   .slice()
                   .sort((a: Stripe.Invoice, b: Stripe.Invoice) => (b.created || 0) - (a.created || 0));
-              } catch {}
+              } catch { }
             }
           }
         }
       }
-    } catch {}
+    } catch { }
 
     if (!current) {
       const { data } = await supabase
         .from("subscriptions")
         .select("plan_id, status, price_lookup_key, price_id, latest_invoice_id, current_period_start, current_period_end, trial_end, cancel_at_period_end, collection_method")
         .eq("user_id", user.id)
+        .neq("status", "canceled") // Explicitly exclude canceled
+        .in("status", ["active", "trialing", "past_due", "unpaid", "incomplete"]) // Only valid statuses
         .maybeSingle();
       current = (data as SubscriptionData) || null;
 
@@ -645,7 +668,8 @@ export default async function SubscriptionPage() {
   }
 
   // Determine current plan - consider common paid/trial statuses
-  const activeLikeStatuses = new Set(["active", "trialing", "past_due", "unpaid", "incomplete"]);
+  // Exclude 'incomplete' and 'unpaid' so users with failed/pending subs don't see them as active
+  const activeLikeStatuses = new Set(["active", "trialing", "past_due"]);
   let currentPlanId: string = "free";
   if (current && current.status && activeLikeStatuses.has(current.status)) {
     // Prefer the plan_id we derived from Stripe subscription data, fallback to lookup key matching
@@ -677,7 +701,7 @@ export default async function SubscriptionPage() {
         <div className="flex items-end justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Subscription</h1>
-            <p className="text-sm text-muted-foreground mt-1">Manage your subscription and view available plans. Your current plan is highlighted below.</p>
+
           </div>
         </div>
 
@@ -686,58 +710,59 @@ export default async function SubscriptionPage() {
             const isCurrentPlan = plan.id === currentPlanId;
             const isUpgradeable = currentPlanId !== "free" && plan.id !== currentPlanId && orderedPlans.findIndex(p => p.id === plan.id) > orderedPlans.findIndex(p => p.id === currentPlanId);
             return (
-              <div key={plan.id} className={`bg-card text-card-foreground ring-1 rounded-xl p-6 flex flex-col justify-between relative ${
-                isCurrentPlan
-                  ? 'ring-primary/80 bg-accent/10'
-                  : 'ring-border'
-              }`}>
-              <div className="grow">
-                <div className="mb-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-semibold">{plan.name}</h3>
-                    {isCurrentPlan && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary text-primary-foreground">
-                        Current Plan
-                      </span>
-                    )}
+              <div key={plan.id} className={`bg-card text-card-foreground ring-1 rounded-xl p-6 flex flex-col justify-between relative ${isCurrentPlan
+                ? 'ring-primary/80 bg-accent/10'
+                : 'ring-border'
+                }`}>
+                <div className="grow">
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xl font-semibold">{plan.name}</h3>
+                      {isCurrentPlan && (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary text-primary-foreground">
+                          Current Plan
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-2 text-2xl font-bold">
+                      {formatEUR(plan.priceMonthlyEUR)} <span className="text-sm font-normal">/ month</span>
+                    </div>
                   </div>
-                  <div className="mt-2 text-2xl font-bold">
-                    {formatEUR(plan.priceMonthlyEUR)} <span className="text-sm font-normal">/ month</span>
-                  </div>
+                  <ul className="text-sm text-foreground/80 space-y-1">
+                    <li>{plan.limits.locations} locations</li>
+                    <li>{plan.limits.users} users</li>
+                    <li>
+                      {plan.limits.reservationsPerMonth} reservations/queues per month
+                    </li>
+                    <li>{plan.limits.messagesPerMonth} SMS/emails per month</li>
+                    {plan.features.map((f, idx) => (
+                      <li key={idx}>{f}</li>
+                    ))}
+                  </ul>
                 </div>
-                <ul className="text-sm text-foreground/80 space-y-1">
-                <li>{plan.limits.locations} locations</li>
-                <li>{plan.limits.users} users</li>
-                <li>
-                  {plan.limits.reservationsPerMonth} reservations/queues per month
-                </li>
-                <li>{plan.limits.messagesPerMonth} SMS/emails per month</li>
-                {plan.features.map((f, idx) => (
-                  <li key={idx}>{f}</li>
-                ))}
-              </ul>
-              </div>
-              <div className="mt-4">
-                {plan.priceMonthlyEUR === 0 ? (
-                  // Hide "Included" button when user has an active subscription (any paid plan)
-                  currentPlanId !== "free" ? null : (
-                    isCurrentPlan ? null : (
-                      <Button asChild className="w-full">
-                        <Link href="/dashboard">Included</Link>
-                      </Button>
+                <div className="mt-4">
+                  {plan.priceMonthlyEUR === 0 ? (
+                    // Hide "Included" button when user has an active subscription (any paid plan)
+                    currentPlanId !== "free" ? null : (
+                      isCurrentPlan ? null : (
+                        <Button asChild className="w-full">
+                          <Link href="/dashboard">Included</Link>
+                        </Button>
+                      )
                     )
-                  )
-                ) : (
-                  <SubscribeButton
-                    lookupKey={plan.stripe.priceLookupKeyMonthly}
-                    planId={plan.id}
-                    className="w-full"
-                  >
-                    {isCurrentPlan ? 'Manage' : (isUpgradeable ? 'Upgrade' : 'Subscribe')}
-                  </SubscribeButton>
-                )}
+                  ) : (
+                    <SubscribeButton
+                      lookupKey={plan.stripe.priceLookupKeyMonthly}
+                      planId={plan.id}
+                      className="w-full"
+                      variant={isCurrentPlan ? 'default' : (isUpgradeable ? 'outline' : 'default')}
+                      isPortal={isCurrentPlan}
+                    >
+                      {isCurrentPlan ? 'Manage in Stripe' : (isUpgradeable ? 'Upgrade' : 'Subscribe')}
+                    </SubscribeButton>
+                  )}
+                </div>
               </div>
-            </div>
             );
           })}
         </div>
@@ -748,13 +773,9 @@ export default async function SubscriptionPage() {
               <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="text-xl font-semibold">Active Subscription</div>
-                  <span className="text-sm px-2 py-1 rounded bg-muted text-muted-foreground capitalize">{uiSubscription.status as string}</span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                  <div>
-                    <div className="text-muted-foreground">Stripe Customer</div>
-                    <div className="font-medium break-all">{uiCustomerId}</div>
-                  </div>
+
                   <div>
                     <div className="text-muted-foreground">Current period</div>
                     <div className="font-medium">

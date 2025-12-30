@@ -60,12 +60,9 @@ export const plans: Record<PlanId, PlanDefinition> = {
       "Email support",
     ],
     stripe: {
-      productId:
-        process.env.NEXT_PUBLIC_STRIPE_BASE_PRODUCT_ID ||
-        (process.env as unknown as Record<string, string | undefined>).NEXT_PUBLIC_STRIPE_BASE_PRODUCTI_ID ||
-        "prod_TIQgJJ6PYihM3J",
+      productId: "prod_ThYMSf5ia6jCDl",
       productLookupKey: "waitq_base",
-      priceLookupKeyMonthly: "waitq_base_monthly_eur",
+      priceLookupKeyMonthly: "BASE",
     },
   },
   premium: {
@@ -84,12 +81,9 @@ export const plans: Record<PlanId, PlanDefinition> = {
       "Priority email and phone support",
     ],
     stripe: {
-      productId:
-        process.env.NEXT_PUBLIC_STRIPE_PREMIUM_PRODUCT_ID ||
-        (process.env as unknown as Record<string, string | undefined>).NEXT_PUBLIC_STRIPE_PREMIUM_PRODUCTI_ID ||
-        "prod_TIQgj1LEbwLSaR",
+      productId: "prod_ThYMSf5ia6jCDl",
       productLookupKey: "waitq_premium",
-      priceLookupKeyMonthly: "waitq_premium_monthly_eur",
+      priceLookupKeyMonthly: "PREMIUM",
     },
   },
 };

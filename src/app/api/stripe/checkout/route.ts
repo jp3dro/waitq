@@ -54,15 +54,64 @@ export async function POST(req: NextRequest) {
     // Do not return error here; we will fallback to inline price_data using productId below
   }
 
-  // If we already have a Stripe customer for this user, reuse it to avoid duplicates
+  // If we already have a Stripe customer for this user, check for active subscription to upgrade/update
+  let activeSubscriptionId: string | null = null;
+
   try {
     const { data: row } = await supabase
       .from("subscriptions")
-      .select("stripe_customer_id")
+      .select("stripe_customer_id, stripe_subscription_id, status")
       .eq("user_id", user.id)
       .maybeSingle();
+
     existingStripeCustomerId = (row?.stripe_customer_id as string | null) || null;
-  } catch {}
+
+    // Check if subscription is active
+    const status = row?.status;
+    if (row?.stripe_subscription_id && (status === 'active' || status === 'trialing' || status === 'past_due')) {
+      activeSubscriptionId = row.stripe_subscription_id;
+    }
+  } catch { }
+
+  // If there is an active subscription, redirect to Portal Update flow instead of creating a new Checkout Session (which would double-subscribe)
+  if (activeSubscriptionId && existingStripeCustomerId) {
+    try {
+      const portalSession = await stripe.billingPortal.sessions.create({
+        customer: existingStripeCustomerId,
+        return_url: `${process.env.NEXT_PUBLIC_SITE_URL}/subscriptions`,
+        flow_data: {
+          type: 'subscription_update',
+          subscription_update: {
+            subscription: activeSubscriptionId,
+          },
+        },
+      });
+      return NextResponse.json({ url: portalSession.url });
+    } catch (err: any) {
+      console.error("Error creating portal session for update:", err);
+
+      // Special case: If the subscription is missing in Stripe (deleted manually or environment mismatch),
+      // we should NOT try to open the portal, but rather proceed to create a NEW checkout session.
+      // This fixes the dead-loop where a stale DB record prevents new subscriptions.
+      if (err.code === 'resource_missing' || (err.message && err.message.includes('No such subscription'))) {
+        console.warn("Stale subscription detected in DB. Proceeding to new checkout.");
+        // Fall through to checkout session creation below
+      } else {
+        // Fallback: If deep link to update flow fails (common if config is disabled), 
+        // try opening the general portal instead.
+        try {
+          const portalSession = await stripe.billingPortal.sessions.create({
+            customer: existingStripeCustomerId,
+            return_url: `${process.env.NEXT_PUBLIC_SITE_URL}/subscriptions`,
+          });
+          return NextResponse.json({ url: portalSession.url });
+        } catch (fallbackErr) {
+          console.error("Error creating fallback portal session:", fallbackErr);
+          return NextResponse.json({ error: "Unable to initiate plan update. Please check your Customer Portal settings in the Stripe Dashboard." }, { status: 400 });
+        }
+      }
+    }
+  }
 
   // Resolve business_id for this user: owned first, then membership
   try {
@@ -84,7 +133,7 @@ export async function POST(req: NextRequest) {
         .maybeSingle();
       businessId = (memberOf?.business_id as string | undefined) || null;
     }
-  } catch {}
+  } catch { }
 
   // Build line item: prefer existing recurring price; otherwise use inline price_data with monthly recurring
   let lineItem: Stripe.Checkout.SessionCreateParams.LineItem;
