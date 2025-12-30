@@ -767,102 +767,104 @@ export default async function SubscriptionPage() {
           })}
         </div>
 
-        {(hasActiveSubscription || uiInvoices.length > 0) && (
-          <div className="grid grid-cols-1 gap-4">
-            {hasActiveSubscription && uiSubscription && (
-              <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="text-xl font-semibold">Active Subscription</div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+        <div className="grid grid-cols-1 gap-4">
+          {hasActiveSubscription && uiSubscription && (
+            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-xl font-semibold">Active Subscription</div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
 
-                  <div>
-                    <div className="text-muted-foreground">Current period</div>
-                    <div className="font-medium">
-                      {(() => {
-                        const firstItem = (uiSubscription as any).items?.data?.[0];
-                        const startSec = firstItem?.current_period_start;
-                        const endSec = firstItem?.current_period_end;
-                        if (typeof startSec !== "number" || typeof endSec !== "number") return "Not set";
-                        const startDate = new Date(startSec * 1000);
-                        const endDate = new Date(endSec * 1000);
-                        const formatDate = (date: Date) => date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                        return `${formatDate(startDate)} to ${formatDate(endDate)}`;
-                      })()}
-                    </div>
+                <div>
+                  <div className="text-muted-foreground">Current period</div>
+                  <div className="font-medium">
+                    {(() => {
+                      const firstItem = (uiSubscription as any).items?.data?.[0];
+                      const startSec = firstItem?.current_period_start;
+                      const endSec = firstItem?.current_period_end;
+                      if (typeof startSec !== "number" || typeof endSec !== "number") return "Not set";
+                      const startDate = new Date(startSec * 1000);
+                      const endDate = new Date(endSec * 1000);
+                      const formatDate = (date: Date) => date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                      return `${formatDate(startDate)} to ${formatDate(endDate)}`;
+                    })()}
                   </div>
-                  <div>
-                    <div className="text-muted-foreground">Days Left</div>
-                    <div className="font-medium">
-                      {(() => {
-                        const firstItem = (uiSubscription as any).items?.data?.[0];
-                        const endSec = firstItem?.current_period_end;
-                        if (typeof endSec !== "number") return "Not set";
-                        const msLeft = endSec * 1000 - Date.now();
-                        const days = Math.max(0, Math.ceil(msLeft / (1000 * 60 * 60 * 24)));
-                        return `${days} day${days === 1 ? "" : "s"}`;
-                      })()}
-                    </div>
+                </div>
+                <div>
+                  <div className="text-muted-foreground">Days Left</div>
+                  <div className="font-medium">
+                    {(() => {
+                      const firstItem = (uiSubscription as any).items?.data?.[0];
+                      const endSec = firstItem?.current_period_end;
+                      if (typeof endSec !== "number") return "Not set";
+                      const msLeft = endSec * 1000 - Date.now();
+                      const days = Math.max(0, Math.ceil(msLeft / (1000 * 60 * 60 * 24)));
+                      return `${days} day${days === 1 ? "" : "s"}`;
+                    })()}
                   </div>
-                  <div>
-                    <div className="text-muted-foreground">Auto-renew</div>
-                    <div className="font-medium">
-                      {(() => {
-                        const val = (uiSubscription as any).cancel_at_period_end;
-                        if (typeof val !== 'boolean') return 'Not set';
-                        return val ? 'Off' : 'On';
-                      })()}
-                    </div>
+                </div>
+                <div>
+                  <div className="text-muted-foreground">Auto-renew</div>
+                  <div className="font-medium">
+                    {(() => {
+                      const val = (uiSubscription as any).cancel_at_period_end;
+                      if (typeof val !== 'boolean') return 'Not set';
+                      return val ? 'Off' : 'On';
+                    })()}
                   </div>
-                  <div>
-                    <div className="text-muted-foreground">Last Payment</div>
-                    <div className="font-medium">
-                      {(() => {
-                        const lastPaid = uiInvoices.find((inv) => inv.status === "paid");
-                        const paidAt = (lastPaid?.status_transitions?.paid_at as number | undefined) || (lastPaid?.created as number | undefined);
-                        return paidAt ? new Date(paidAt * 1000).toLocaleString() : "No payments yet";
-                      })()}
-                    </div>
+                </div>
+                <div>
+                  <div className="text-muted-foreground">Last Payment</div>
+                  <div className="font-medium">
+                    {(() => {
+                      const lastPaid = uiInvoices.find((inv) => inv.status === "paid");
+                      const paidAt = (lastPaid?.status_transitions?.paid_at as number | undefined) || (lastPaid?.created as number | undefined);
+                      return paidAt ? new Date(paidAt * 1000).toLocaleString() : "No payments yet";
+                    })()}
                   </div>
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
-            {uiInvoices.length > 0 && (
-              <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-6">
-                <div className="text-lg font-semibold mb-3">Payment History</div>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full text-sm">
-                    <thead>
-                      <tr className="text-left text-muted-foreground">
-                        <th className="py-2 pr-4">Date</th>
-                        <th className="py-2 pr-4">Amount</th>
-                        <th className="py-2 pr-4">Status</th>
-                        <th className="py-2 pr-4">Invoice</th>
+          {/* Always show Payment History section, even if empty */}
+          <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-6">
+            <div className="text-lg font-semibold mb-3">Payment History</div>
+            {uiInvoices.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-muted-foreground">
+                      <th className="py-2 pr-4">Date</th>
+                      <th className="py-2 pr-4">Amount</th>
+                      <th className="py-2 pr-4">Status</th>
+                      <th className="py-2 pr-4">Invoice</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {uiInvoices.map((inv) => (
+                      <tr key={inv.id} className="border-t border-border/60">
+                        <td className="py-2 pr-4">{new Date((inv.created || 0) * 1000).toLocaleString()}</td>
+                        <td className="py-2 pr-4">{formatEUR(((inv.amount_paid || inv.amount_due || 0) as number) / 100)}</td>
+                        <td className="py-2 pr-4 capitalize">{inv.status as string}</td>
+                        <td className="py-2 pr-4">
+                          {inv.hosted_invoice_url ? (
+                            <a className="text-primary underline" href={inv.hosted_invoice_url} target="_blank" rel="noreferrer">View</a>
+                          ) : (
+                            "-"
+                          )}
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {uiInvoices.map((inv) => (
-                        <tr key={inv.id} className="border-t border-border/60">
-                          <td className="py-2 pr-4">{new Date((inv.created || 0) * 1000).toLocaleString()}</td>
-                          <td className="py-2 pr-4">{formatEUR(((inv.amount_paid || inv.amount_due || 0) as number) / 100)}</td>
-                          <td className="py-2 pr-4 capitalize">{inv.status as string}</td>
-                          <td className="py-2 pr-4">
-                            {inv.hosted_invoice_url ? (
-                              <a className="text-primary underline" href={inv.hosted_invoice_url} target="_blank" rel="noreferrer">View</a>
-                            ) : (
-                              "-"
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                    ))}
+                  </tbody>
+                </table>
               </div>
+            ) : (
+              <div className="text-sm text-muted-foreground py-2">No payment history yet.</div>
             )}
           </div>
-        )}
+        </div>
+
       </div>
     </main>
   );
