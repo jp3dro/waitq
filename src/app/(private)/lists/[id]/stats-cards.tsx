@@ -147,25 +147,25 @@ export default function StatsCards({ waitlistId }: { waitlistId: string }) {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-      <div className="bg-primary/10 text-card-foreground ring-1 ring-primary rounded-xl p-4">
-        <p className="text-sm font-medium text-primary">Now serving</p>
-        <p className="mt-1 text-2xl font-bold text-foreground">{lastCalledNumber ?? "—"}</p>
+      <div className="bg-primary/10 text-card-foreground ring-1 ring-primary rounded-xl p-3">
+        <p className="text-xs font-medium text-primary">Now serving</p>
+        <p className="mt-0.5 text-xl font-bold text-foreground">{lastCalledNumber ?? "—"}</p>
       </div>
-      <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-4">
-        <p className="text-sm text-muted-foreground">Estimated wait time</p>
-        <p className="mt-1 text-xl font-semibold">{etaDisplay || "—"}</p>
+      <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-3">
+        <p className="text-xs text-muted-foreground">Estimated wait time</p>
+        <p className="mt-0.5 text-lg font-semibold">{etaDisplay || "—"}</p>
       </div>
-      <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-4">
-        <p className="text-sm text-muted-foreground">People waiting</p>
-        <p className="mt-1 text-xl font-semibold">{queueLength}</p>
+      <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-3">
+        <p className="text-xs text-muted-foreground">People waiting</p>
+        <p className="mt-0.5 text-lg font-semibold">{queueLength}</p>
       </div>
-      <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-4">
-        <p className="text-sm text-muted-foreground">Served today</p>
-        <p className="mt-1 text-xl font-semibold">{servedToday}</p>
+      <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-3">
+        <p className="text-xs text-muted-foreground">Served today</p>
+        <p className="mt-0.5 text-lg font-semibold">{servedToday}</p>
       </div>
-      <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-4">
-        <p className="text-sm text-muted-foreground">No show today</p>
-        <p className="mt-1 text-xl font-semibold">{noShowToday}</p>
+      <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-3">
+        <p className="text-xs text-muted-foreground">No show today</p>
+        <p className="mt-0.5 text-lg font-semibold">{noShowToday}</p>
       </div>
       {/* Avg service time removed */}
     </div>

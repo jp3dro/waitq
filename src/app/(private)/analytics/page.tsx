@@ -1,7 +1,15 @@
 "use client";
-import { useEffect, useState } from "react";
+import * as React from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from "recharts";
+
+import { Spinner } from "@/components/ui/spinner";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
+
+type CreatedRow = { created_at: string };
+type ServedRow = { created_at: string; notified_at: string | null; waitlist_id: string | null };
 
 type AnalyticsData = {
   totalVisitors: number;
@@ -12,121 +20,164 @@ type AnalyticsData = {
   avgWaitTimeMin: number;
   avgServiceTimeMin: number;
   avgWaitByHour: { hour: number; avgMin: number }[];
+  compare: {
+    dailyVisitors: { label: string; current: number; previous: number }[];
+    avgHourlyVisits: { label: string; current: number; previous: number }[];
+    avgWaitByHour: { label: string; current: number; previous: number }[];
+  };
 };
 
-function SimpleLineChart({ data, height = 180, color = "var(--primary)", valueFormatter = (v: number) => v.toString() }: { data: { label: string; value: number }[]; height?: number; color?: string; valueFormatter?: (v: number) => string }) {
-  const [tooltip, setTooltip] = useState<{ x: number; y: number; label: string; value: number } | null>(null);
-  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
-  const max = Math.max(1, ...data.map(d => d.value));
-  const width = 640; // virtual width; responsive via viewBox
-  const hPad = 48; // more space for y-axis labels
-  const vPad = 28; // more space for x-axis labels
-  const innerW = width - hPad * 2;
-  const innerH = height - vPad * 2;
-  const pts = data.map((d, i) => {
-    const x = hPad + (innerW * (data.length <= 1 ? 0 : i / (data.length - 1)));
-    const y = vPad + innerH - (innerH * (d.value / max));
-    return { x, y };
-  });
-  const path = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
-  // Y-axis tick values (0%, 25%, 50%, 75%, 100%)
-  const yTickValues = [0, 0.25, 0.5, 0.75, 1].map(f => Math.round(max * f));
-  // X-axis tick indices (up to 6 labels)
-  const xTickCount = Math.min(6, Math.max(2, data.length));
-  const xTickIdxs: number[] = [];
-  if (data.length <= xTickCount) {
-    for (let i = 0; i < data.length; i++) xTickIdxs.push(i);
-  } else {
-    const step = (data.length - 1) / (xTickCount - 1);
-    for (let i = 0; i < xTickCount; i++) xTickIdxs.push(Math.round(i * step));
-  }
+const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
+
+type InteractiveBarChartDatum = {
+  label: string;
+  current: number;
+  previous: number;
+};
+
+const interactiveChartConfig = {
+  current: {
+    label: "Current",
+    color: "var(--chart-2)",
+  },
+  previous: {
+    label: "Previous",
+    color: "var(--chart-1)",
+  },
+} satisfies ChartConfig;
+
+function formatIfISODateLabel(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+function ChartBarInteractiveMetric({
+  title,
+  data,
+  height = 250,
+  xTickFormatter,
+}: {
+  title: string;
+  data: InteractiveBarChartDatum[];
+  height?: number;
+  xTickFormatter?: (value: string) => string;
+}) {
   return (
-    <div className="relative">
-      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-48">
-        {/* grid lines */}
-        {[0.25, 0.5, 0.75].map((g) => (
-          <line key={g} x1={hPad} x2={width - hPad} y1={vPad + innerH * g} y2={vPad + innerH * g} stroke="var(--border)" strokeDasharray="4 4" />
-        ))}
-        {/* axes */}
-        <line x1={hPad} x2={hPad} y1={vPad} y2={vPad + innerH} stroke="var(--ring)" strokeWidth={1} />
-        <line x1={hPad} x2={width - hPad} y1={vPad + innerH} y2={vPad + innerH} stroke="var(--ring)" strokeWidth={1} />
-        {/* y-axis labels */}
-        {yTickValues.map((val, i) => {
-          const y = vPad + innerH - (innerH * (val / max));
-          return (
-            <g key={`yt-${i}`}>
-              <text x={hPad - 8} y={y} textAnchor="end" alignmentBaseline="middle" fontSize={12} fill="var(--muted-foreground)">{val}</text>
-            </g>
-          );
-        })}
-        {/* x-axis labels */}
-        {xTickIdxs.map((idx) => {
-          const x = hPad + (innerW * (data.length <= 1 ? 0 : idx / (data.length - 1)));
-          return (
-            <text key={`xt-${idx}`} x={x} y={vPad + innerH + 16} textAnchor="middle" fontSize={12} fill="var(--muted-foreground)">{data[idx]?.label}</text>
-          );
-        })}
-        <path d={path} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-        {pts.map((p, i) => (
-          <g key={`pt-${i}`}>
-            <circle cx={p.x} cy={p.y} r={3} fill={color} />
-          </g>
-        ))}
-        {/* hover overlay for smooth tooltip */}
-        <rect
-          x={hPad}
-          y={vPad}
-          width={innerW}
-          height={innerH}
-          fill="transparent"
-          onMouseMove={(e) => {
-            const rect = (e.target as SVGRectElement).ownerSVGElement!.getBoundingClientRect();
-            const relX = e.clientX - rect.left;
-            const svgX = (relX / rect.width) * width;
-            const xNorm = Math.min(1, Math.max(0, (svgX - hPad) / innerW));
-            const idx = Math.round(xNorm * (data.length - 1));
-            if (isFinite(idx) && idx >= 0 && idx < data.length) {
-              setHoverIdx(idx);
-              const px = pts[idx].x;
-              const py = pts[idx].y;
-              setTooltip({ x: (px / width) * rect.width, y: (py / height) * rect.height, label: data[idx].label, value: data[idx].value });
-            }
-          }}
-          onMouseLeave={() => { setHoverIdx(null); setTooltip(null); }}
-        />
-        {hoverIdx !== null && (
-          <line x1={pts[hoverIdx].x} x2={pts[hoverIdx].x} y1={vPad} y2={vPad + innerH} stroke="var(--ring)" strokeDasharray="2 2" />
-        )}
-      </svg>
-      {tooltip && (
-        <div className="pointer-events-none absolute -translate-x-1/2 -translate-y-3 rounded bg-popover px-2 py-1 text-xs text-popover-foreground shadow ring-1 ring-border" style={{ left: tooltip.x, top: tooltip.y }}>
-          <div className="font-medium">{tooltip.label}</div>
-          <div>{valueFormatter(tooltip.value)}</div>
-        </div>
-      )}
-    </div>
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <ChartContainer config={interactiveChartConfig} className="aspect-auto w-full" style={{ height }}>
+          <BarChart
+            accessibilityLayer
+            data={data}
+            margin={{
+              left: 12,
+              right: 12,
+            }}
+          >
+            <CartesianGrid vertical={false} />
+            <XAxis
+              dataKey="label"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+              minTickGap={32}
+              tickFormatter={(value) =>
+                xTickFormatter ? xTickFormatter(String(value)) : formatIfISODateLabel(String(value))
+              }
+            />
+            <ChartTooltip
+              content={<ChartTooltipContent className="w-[170px]" labelFormatter={(value) => String(value)} />}
+            />
+            <Bar dataKey="previous" fill="var(--color-previous)" radius={4} />
+            <Bar dataKey="current" fill="var(--color-current)" radius={4} />
+          </BarChart>
+        </ChartContainer>
+      </CardContent>
+    </Card>
+  );
+}
+
+const weekdayCustomLabelConfig = {
+  value: {
+    label: "Average",
+    color: "var(--chart-2)",
+  },
+  label: {
+    color: "var(--background)",
+  },
+} satisfies ChartConfig;
+
+function ChartBarCustomLabelWeekday({
+  title,
+  data,
+}: {
+  title: string;
+  data: { day: string; value: number }[];
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ChartContainer config={weekdayCustomLabelConfig}>
+          <BarChart
+            accessibilityLayer
+            data={data}
+            layout="vertical"
+            margin={{
+              right: 16,
+            }}
+          >
+            <CartesianGrid horizontal={false} />
+            <YAxis
+              dataKey="day"
+              type="category"
+              tickLine={false}
+              tickMargin={10}
+              axisLine={false}
+              tickFormatter={(value) => String(value).slice(0, 3)}
+              hide
+            />
+            <XAxis dataKey="value" type="number" hide />
+            <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
+            <Bar dataKey="value" layout="vertical" fill="var(--color-value)" radius={4}>
+              <LabelList dataKey="day" position="insideLeft" offset={8} className="fill-(--color-label)" fontSize={12} />
+              <LabelList dataKey="value" position="right" offset={8} className="fill-foreground" fontSize={12} />
+            </Bar>
+          </BarChart>
+        </ChartContainer>
+      </CardContent>
+    </Card>
   );
 }
 
 export default function AnalyticsPage() {
-  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [rangeDays, setRangeDays] = useState<7 | 15 | 30>(7);
+  const [analytics, setAnalytics] = React.useState<AnalyticsData | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
+  const [rangeDays, setRangeDays] = React.useState<7 | 15 | 30>(7);
   const supabase = createClient();
+  const hasLoadedRef = React.useRef(false);
+  const requestIdRef = React.useRef(0);
 
-  useEffect(() => {
-    loadAnalytics(rangeDays);
-  }, [rangeDays]);
-
-  const loadAnalytics = async (days: 7 | 15 | 30) => {
+  const loadAnalytics = React.useCallback(async (days: 7 | 15 | 30) => {
+    const requestId = ++requestIdRef.current;
     try {
-      setLoading(true);
+      if (!hasLoadedRef.current) setLoading(true);
+      else setIsRefreshing(true);
 
       // Date range
       const now = new Date();
       const from = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+      const prevFrom = new Date(from.getTime() - days * 24 * 60 * 60 * 1000);
+      const prevTo = new Date(from.getTime());
 
-      const [createdRowsRes, servedRowsRes] = await Promise.all([
+      const [createdRowsRes, servedRowsRes, createdRowsPrevRes, servedRowsPrevRes] = await Promise.all([
         supabase
           .from("waitlist_entries")
           .select("created_at")
@@ -141,10 +192,27 @@ export default function AnalyticsPage() {
           .gte("created_at", from.toISOString())
           .lte("created_at", now.toISOString())
           .limit(5000)
+        ,
+        supabase
+          .from("waitlist_entries")
+          .select("created_at")
+          .gte("created_at", prevFrom.toISOString())
+          .lt("created_at", prevTo.toISOString())
+          .limit(5000),
+        supabase
+          .from("waitlist_entries")
+          .select("created_at, notified_at, waitlist_id")
+          .in("status", ["notified", "seated"]) // served-like
+          .not("notified_at", "is", null)
+          .gte("created_at", prevFrom.toISOString())
+          .lt("created_at", prevTo.toISOString())
+          .limit(5000),
       ]);
 
-      const createdRows = createdRowsRes.data || [];
-      const servedRows = servedRowsRes.data || [];
+      const createdRows = (createdRowsRes.data ?? []) as CreatedRow[];
+      const servedRows = (servedRowsRes.data ?? []) as ServedRow[];
+      const createdRowsPrev = (createdRowsPrevRes.data ?? []) as CreatedRow[];
+      const servedRowsPrev = (servedRowsPrevRes.data ?? []) as ServedRow[];
 
       // Total visitors
       const totalVisitors = createdRows.length;
@@ -156,22 +224,44 @@ export default function AnalyticsPage() {
         const key = dt.toISOString().slice(0, 10);
         dayCounts.set(key, 0);
       }
-      createdRows.forEach((r: any) => {
+      createdRows.forEach((r) => {
         const key = new Date(r.created_at).toISOString().slice(0, 10);
         if (dayCounts.has(key)) dayCounts.set(key, (dayCounts.get(key) || 0) + 1);
       });
       const dailyVisitors = Array.from(dayCounts.entries()).map(([date, count]) => ({ date, count }));
+
+      const dayCountsPrev = new Map<string, number>();
+      for (let d = 0; d < days; d++) {
+        const dt = new Date(prevTo.getTime() - (days - 1 - d) * 86400000);
+        const key = dt.toISOString().slice(0, 10);
+        dayCountsPrev.set(key, 0);
+      }
+      createdRowsPrev.forEach((r) => {
+        const key = new Date(r.created_at).toISOString().slice(0, 10);
+        if (dayCountsPrev.has(key)) dayCountsPrev.set(key, (dayCountsPrev.get(key) || 0) + 1);
+      });
+      const dailyVisitorsPrev = Array.from(dayCountsPrev.entries()).map(([date, count]) => ({ date, count }));
 
       // Daily average
       const dailyAvg = days > 0 ? Math.round(totalVisitors / days) : 0;
 
       // Average hourly visits (per hour across days)
       const hourlyTotals: Record<number, number> = {};
-      createdRows.forEach((r: any) => {
+      createdRows.forEach((r) => {
         const h = new Date(r.created_at).getHours();
         hourlyTotals[h] = (hourlyTotals[h] || 0) + 1;
       });
       const avgHourlyVisits = Array.from({ length: 24 }).map((_, h) => ({ hour: h, avg: +( (hourlyTotals[h] || 0) / days ).toFixed(2) }));
+
+      const hourlyTotalsPrev: Record<number, number> = {};
+      createdRowsPrev.forEach((r) => {
+        const h = new Date(r.created_at).getHours();
+        hourlyTotalsPrev[h] = (hourlyTotalsPrev[h] || 0) + 1;
+      });
+      const avgHourlyVisitsPrev = Array.from({ length: 24 }).map((_, h) => ({
+        hour: h,
+        avg: +(((hourlyTotalsPrev[h] || 0) / days) as number).toFixed(2),
+      }));
 
       // Average visitors by day of week (0=Sun..6=Sat)
       const weekdayTotals: Record<number, number> = {};
@@ -181,7 +271,7 @@ export default function AnalyticsPage() {
         const dt = new Date(now.getTime() - d * 86400000);
         weekdayOccurrences[dt.getDay()] = (weekdayOccurrences[dt.getDay()] || 0) + 1;
       }
-      createdRows.forEach((r: any) => {
+      createdRows.forEach((r) => {
         const wd = new Date(r.created_at).getDay();
         weekdayTotals[wd] = (weekdayTotals[wd] || 0) + 1;
       });
@@ -193,13 +283,13 @@ export default function AnalyticsPage() {
 
       // Average wait time (created -> notified) in minutes
       const waitDiffs = servedRows
-        .map((r: any) => new Date(r.notified_at!).getTime() - new Date(r.created_at).getTime())
+        .map((r) => (r.notified_at ? new Date(r.notified_at).getTime() - new Date(r.created_at).getTime() : 0))
         .filter((ms: number) => ms > 0 && ms < 24 * 60 * 60 * 1000);
       const avgWaitTimeMin = waitDiffs.length ? Math.round(waitDiffs.reduce((a, b) => a + b, 0) / waitDiffs.length / 60000) : 0;
 
       // Approximate service time: average gap between consecutive notified_at (throughput)
       const notifiedTimes = servedRows
-        .map((r: any) => new Date(r.notified_at!).getTime())
+        .map((r) => (r.notified_at ? new Date(r.notified_at).getTime() : NaN))
         .filter((t: number) => !isNaN(t))
         .sort((a: number, b: number) => a - b);
       const serviceGaps: number[] = [];
@@ -212,7 +302,7 @@ export default function AnalyticsPage() {
       // Average wait time by hour of day (based on created_at hour)
       const hourWaitSums: Record<number, number> = {};
       const hourWaitCounts: Record<number, number> = {};
-      servedRows.forEach((r: any) => {
+      servedRows.forEach((r) => {
         const created = new Date(r.created_at);
         const notified = r.notified_at ? new Date(r.notified_at) : null;
         if (!notified) return;
@@ -229,6 +319,47 @@ export default function AnalyticsPage() {
         return { hour: h, avgMin };
       });
 
+      const hourWaitSumsPrev: Record<number, number> = {};
+      const hourWaitCountsPrev: Record<number, number> = {};
+      servedRowsPrev.forEach((r) => {
+        const created = new Date(r.created_at);
+        const notified = r.notified_at ? new Date(r.notified_at) : null;
+        if (!notified) return;
+        const diffMs = notified.getTime() - created.getTime();
+        if (diffMs <= 0 || diffMs > 24 * 60 * 60 * 1000) return;
+        const hour = created.getHours();
+        hourWaitSumsPrev[hour] = (hourWaitSumsPrev[hour] || 0) + diffMs;
+        hourWaitCountsPrev[hour] = (hourWaitCountsPrev[hour] || 0) + 1;
+      });
+      const avgWaitByHourPrev = Array.from({ length: 24 }).map((_, h) => {
+        const sum = hourWaitSumsPrev[h] || 0;
+        const cnt = hourWaitCountsPrev[h] || 0;
+        const avgMin = cnt ? Math.round(sum / cnt / 60000) : 0;
+        return { hour: h, avgMin };
+      });
+
+      const compareDailyVisitors = Array.from({ length: days }).map((_, i) => {
+        const cur = dailyVisitors[i];
+        const prev = dailyVisitorsPrev[i];
+        return { label: cur?.date ?? String(i + 1), current: cur?.count ?? 0, previous: prev?.count ?? 0 };
+      });
+
+      const compareAvgHourlyVisits = Array.from({ length: 24 }).map((_, i) => {
+        const cur = avgHourlyVisits[i];
+        const prev = avgHourlyVisitsPrev[i];
+        const label = `${String(i).padStart(2, "0")}:00`;
+        return { label, current: cur?.avg ?? 0, previous: prev?.avg ?? 0 };
+      });
+
+      const compareAvgWaitByHour = Array.from({ length: 24 }).map((_, i) => {
+        const cur = avgWaitByHour[i];
+        const prev = avgWaitByHourPrev[i];
+        const label = `${String(i).padStart(2, "0")}:00`;
+        return { label, current: cur?.avgMin ?? 0, previous: prev?.avgMin ?? 0 };
+      });
+
+      if (requestId !== requestIdRef.current) return;
+
       setAnalytics({
         totalVisitors,
         dailyVisitors,
@@ -238,16 +369,29 @@ export default function AnalyticsPage() {
         avgWaitTimeMin,
         avgServiceTimeMin,
         avgWaitByHour,
+        compare: {
+          dailyVisitors: compareDailyVisitors,
+          avgHourlyVisits: compareAvgHourlyVisits,
+          avgWaitByHour: compareAvgWaitByHour,
+        },
       });
+      hasLoadedRef.current = true;
 
     } catch (error) {
       console.error("Error loading analytics:", error);
     } finally {
-      setLoading(false);
+      if (requestId === requestIdRef.current) {
+        setLoading(false);
+        setIsRefreshing(false);
+      }
     }
-  };
+  }, [supabase]);
 
-  if (loading) {
+  React.useEffect(() => {
+    loadAnalytics(rangeDays);
+  }, [loadAnalytics, rangeDays]);
+
+  if (loading && !analytics) {
     return (
       <main className="py-5">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
@@ -289,6 +433,7 @@ export default function AnalyticsPage() {
               <TabsTrigger value="30">Last 30 days</TabsTrigger>
             </TabsList>
           </Tabs>
+          {isRefreshing ? <Spinner className="ml-1" /> : null}
         </div>
 
         {/* Analytics content container */}
@@ -296,22 +441,22 @@ export default function AnalyticsPage() {
           
 
           {/* Key Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-4">
-              <p className="text-sm text-muted-foreground">Total visitors</p>
-              <p className="mt-1 text-xl font-semibold">{analytics.totalVisitors.toLocaleString()}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-3">
+              <p className="text-xs text-muted-foreground">Total visitors</p>
+              <p className="mt-0.5 text-lg font-semibold">{analytics.totalVisitors.toLocaleString()}</p>
             </div>
-            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-4">
-              <p className="text-sm text-muted-foreground">Daily average</p>
-              <p className="mt-1 text-xl font-semibold">{analytics.dailyAvg}</p>
+            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-3">
+              <p className="text-xs text-muted-foreground">Daily average</p>
+              <p className="mt-0.5 text-lg font-semibold">{analytics.dailyAvg}</p>
             </div>
-            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-4">
-              <p className="text-sm text-muted-foreground">Avg wait time</p>
-              <p className="mt-1 text-xl font-semibold">{(() => { const m = analytics.avgWaitTimeMin; const h = Math.floor(m/60); const mm = m % 60; return h > 0 ? `${h}h ${mm}m` : `${mm}m`; })()}</p>
+            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-3">
+              <p className="text-xs text-muted-foreground">Avg wait time</p>
+              <p className="mt-0.5 text-lg font-semibold">{(() => { const m = analytics.avgWaitTimeMin; const h = Math.floor(m/60); const mm = m % 60; return h > 0 ? `${h}h ${mm}m` : `${mm}m`; })()}</p>
             </div>
-            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-4">
-              <p className="text-sm text-muted-foreground">Avg service time</p>
-              <p className="mt-1 text-xl font-semibold">{(() => { const m = analytics.avgServiceTimeMin; const h = Math.floor(m/60); const mm = m % 60; return h > 0 ? `${h}h ${mm}m` : `${mm}m`; })()}</p>
+            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-3">
+              <p className="text-xs text-muted-foreground">Avg service time</p>
+              <p className="mt-0.5 text-lg font-semibold">{(() => { const m = analytics.avgServiceTimeMin; const h = Math.floor(m/60); const mm = m % 60; return h > 0 ? `${h}h ${mm}m` : `${mm}m`; })()}</p>
             </div>
           </div>
 
@@ -319,34 +464,28 @@ export default function AnalyticsPage() {
 
           {/* Charts 2x2 grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-card text-card-foreground rounded-xl p-6 ring-1 ring-border">
-              <h3 className="text-lg font-semibold mb-4">Average hourly visits</h3>
-              <SimpleLineChart
-                data={analytics.avgHourlyVisits.map(h => ({ label: `${h.hour.toString().padStart(2,'0')}:00`, value: h.avg }))}
-                valueFormatter={(v) => `${v} / hr`}
-              />
-            </div>
-            <div className="bg-card text-card-foreground rounded-xl p-6 ring-1 ring-border">
-              <h3 className="text-lg font-semibold mb-4">Average visitors by day of week</h3>
-              <SimpleLineChart
-                data={analytics.avgByWeekday.map(w => ({ label: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][w.weekday], value: w.avg }))}
-                valueFormatter={(v) => `${v} / day`}
-              />
-            </div>
-            <div className="bg-card text-card-foreground rounded-xl p-6 ring-1 ring-border">
-              <h3 className="text-lg font-semibold mb-4">Average wait time by time of day</h3>
-              <SimpleLineChart
-                data={analytics.avgWaitByHour.map(h => ({ label: `${h.hour.toString().padStart(2,'0')}:00`, value: h.avgMin }))}
-                valueFormatter={(v) => `${v} min`}
-                />
-            </div>
-            <div className="bg-card text-card-foreground rounded-xl p-6 ring-1 ring-border">
-              <h3 className="text-lg font-semibold mb-4">Daily visitors (last {rangeDays} days)</h3>
-              <SimpleLineChart
-                data={analytics.dailyVisitors.map(d => ({ label: new Date(d.date).toLocaleDateString(), value: d.count }))}
-                valueFormatter={(v) => `${v} visitors`}
-              />
-            </div>
+            <ChartBarInteractiveMetric
+              title="Average hourly visits"
+              data={analytics.compare.avgHourlyVisits}
+              xTickFormatter={(v) => v}
+            />
+            <ChartBarCustomLabelWeekday
+              title="Average visitors by day of week"
+              data={analytics.avgByWeekday.map((w) => ({
+                day: DAY_LABELS[w.weekday] ?? String(w.weekday),
+                value: w.avg,
+              }))}
+            />
+            <ChartBarInteractiveMetric
+              title="Average wait time by time of day"
+              data={analytics.compare.avgWaitByHour}
+              xTickFormatter={(v) => v}
+            />
+            <ChartBarInteractiveMetric
+              title={`Daily visitors (last ${rangeDays} days)`}
+              data={analytics.compare.dailyVisitors}
+              xTickFormatter={(v) => formatIfISODateLabel(v)}
+            />
           </div>
         </div>
       </div>

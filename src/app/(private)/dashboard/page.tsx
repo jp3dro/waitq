@@ -186,13 +186,13 @@ export default async function DashboardPage() {
         <section className="space-y-4">
           <h2 className="text-base font-semibold">Today’s analytics</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-6">
-              <p className="text-sm text-muted-foreground">Total visitors (today)</p>
-              <p className="mt-2 text-3xl font-semibold">{todayVisitors}</p>
+            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-4">
+              <p className="text-xs text-muted-foreground">Total visitors (today)</p>
+              <p className="mt-1 text-2xl font-semibold">{todayVisitors}</p>
             </div>
-            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-6">
-              <p className="text-sm text-muted-foreground">Avg wait time (today)</p>
-              <p className="mt-2 text-3xl font-semibold">
+            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-4">
+              <p className="text-xs text-muted-foreground">Avg wait time (today)</p>
+              <p className="mt-1 text-2xl font-semibold">
                 {(() => {
                   const totalMin = todayAvgWaitMs ? Math.max(1, Math.round(todayAvgWaitMs / 60000)) : 0;
                   const hours = Math.floor(totalMin / 60);
@@ -201,24 +201,24 @@ export default async function DashboardPage() {
                 })()}
               </p>
             </div>
-            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-6">
-              <p className="text-sm text-muted-foreground">Served today</p>
-              <p className="mt-2 text-3xl font-semibold">{servedTodayCount}</p>
+            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-4">
+              <p className="text-xs text-muted-foreground">Served today</p>
+              <p className="mt-1 text-2xl font-semibold">{servedTodayCount}</p>
             </div>
-            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-6">
-              <p className="text-sm text-muted-foreground">No show today</p>
-              <p className="mt-2 text-3xl font-semibold">{noShowTodayCount}</p>
+            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-4">
+              <p className="text-xs text-muted-foreground">No show today</p>
+              <p className="mt-1 text-2xl font-semibold">{noShowTodayCount}</p>
             </div>
           </div>
 
           {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-6">
-              <p className="text-sm text-muted-foreground">Hourly visits (today)</p>
+            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-4">
+              <p className="text-xs text-muted-foreground">Hourly visits (today)</p>
               <BarChart labels={[...Array(24).keys()].map((h) => `${String(h).padStart(2, '0')}`)} values={hourlyVisits} maxBars={24} color="var(--primary)" />
             </div>
-            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-6">
-              <p className="text-sm text-muted-foreground">Avg wait time by hour (today)</p>
+            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-4">
+              <p className="text-xs text-muted-foreground">Avg wait time by hour (today)</p>
               <BarChart labels={[...Array(24).keys()].map((h) => `${String(h).padStart(2, '0')}`)} values={hourlyWaitAvgMin} maxBars={24} color="var(--primary)" suffix="m" />
             </div>
           </div>
@@ -280,7 +280,7 @@ export default async function DashboardPage() {
 function BarChart({ labels, values, maxBars = 24, color = "var(--foreground)", suffix = "" }: { labels: string[]; values: number[]; maxBars?: number; color?: string; suffix?: string }) {
   const max = Math.max(1, ...values);
   return (
-    <div className="mt-3">
+    <div className="mt-2">
       <div className="grid" style={{ gridTemplateColumns: `repeat(${Math.min(maxBars, labels.length)}, minmax(0, 1fr))`, gap: '8px' }}>
         {values.slice(0, maxBars).map((v, i) => (
           <div key={i} className="flex flex-col items-center justify-end gap-2">
