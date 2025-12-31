@@ -6,11 +6,17 @@ export type PlanLimitKeys =
   | "reservationsPerMonth"
   | "messagesPerMonth";
 
+export interface PlanFeature {
+  name: string;
+  included: boolean | string;
+  category: "Waitlist" | "Reservations" | "Communications" | "Analytics & Reports" | "Management";
+}
+
 export interface PlanDefinition {
   id: PlanId;
   name: string;
   priceMonthlyEUR: number; // in euros
-  features: string[];
+  features: string[]; // High-level features for the cards
   limits: Record<PlanLimitKeys, number>;
   // Stripe lookup keys allow us to resolve prices without hardcoding IDs
   stripe: {
@@ -33,10 +39,10 @@ export const plans: Record<PlanId, PlanDefinition> = {
       messagesPerMonth: 50,
     },
     features: [
-      "Basic queue and reservation management",
-      "Basic statistics",
-      "Service branding",
-      "Basic email support",
+      "Digital Waitlist & Reservations",
+      "Public Status Page",
+      "Basic Statistics",
+      "Email Support",
     ],
     stripe: {
       productLookupKey: "waitq_free",
@@ -54,10 +60,10 @@ export const plans: Record<PlanId, PlanDefinition> = {
       messagesPerMonth: 1000,
     },
     features: [
-      "Customizable messages",
-      "Basic detailed statistics and reports",
-      "Simple data export (CSV)",
-      "Email support",
+      "Customizable SMS Branding",
+      "Detailed Statistics & CSV Export",
+      "Up to 5 Locations",
+      "Standard Support",
     ],
     stripe: {
       productId: "prod_ThYMSf5ia6jCDl",
@@ -76,9 +82,10 @@ export const plans: Record<PlanId, PlanDefinition> = {
       messagesPerMonth: 5000,
     },
     features: [
-      "Detailed analytics",
-      "Customizable internal reports",
-      "Priority email and phone support",
+      "Advanced Analytics",
+      "Priority Support",
+      "Unlimited Scale",
+      "Dedicated Account Manager",
     ],
     stripe: {
       productId: "prod_ThYMSf5ia6jCDl",
@@ -87,6 +94,157 @@ export const plans: Record<PlanId, PlanDefinition> = {
     },
   },
 };
+
+export const pricingFeatures = [
+  {
+    category: "Waitlist",
+    name: "Digital Waitlist",
+    free: true,
+    base: true,
+    premium: true,
+  },
+  {
+    category: "Waitlist",
+    name: "Waitlist Position Tracking",
+    free: true,
+    base: true,
+    premium: true,
+  },
+  {
+    category: "Waitlist",
+    name: "QR Code Check-in",
+    free: true,
+    base: true,
+    premium: true,
+  },
+  {
+    category: "Waitlist",
+    name: "Public Status Page",
+    free: true,
+    base: true,
+    premium: true,
+  },
+  {
+    category: "Waitlist",
+    name: "Virtual Queue Advertising Banner",
+    free: false,
+    base: false,
+    premium: false,
+  },
+  {
+    category: "Waitlist",
+    name: "Dynamic QR Code",
+    free: false,
+    base: false,
+    premium: false,
+  },
+  {
+    category: "Reservations",
+    name: "Online Reservations",
+    free: true,
+    base: true,
+    premium: true,
+  },
+  {
+    category: "Reservations",
+    name: "Email Confirmations",
+    free: true,
+    base: true,
+    premium: true,
+  },
+  {
+    category: "Reservations",
+    name: "Ticket Sales & Pre-payments",
+    free: false,
+    base: false,
+    premium: false,
+  },
+  {
+    category: "Reservations",
+    name: "Experience Review Emails",
+    free: false,
+    base: false,
+    premium: false,
+  },
+  {
+    category: "Reservations",
+    name: "Deposits (Credit Card Guarantee)",
+    free: false,
+    base: false,
+    premium: "Coming Soon",
+  },
+  {
+    category: "Communications",
+    name: "SMS Notifications",
+    free: "50 / mo",
+    base: "1,000 / mo",
+    premium: "5,000 / mo",
+  },
+  {
+    category: "Communications",
+    name: "Bidirectional SMS",
+    free: false,
+    base: true,
+    premium: true,
+  },
+  {
+    category: "Communications",
+    name: "Customizable SMS Templates",
+    free: false,
+    base: true,
+    premium: true,
+  },
+  {
+    category: "Analytics & Reports",
+    name: "Usage Statistics",
+    free: "Basic",
+    base: "Detailed",
+    premium: "Advanced",
+  },
+  {
+    category: "Analytics & Reports",
+    name: "Data Export (CSV)",
+    free: false,
+    base: true,
+    premium: true,
+  },
+  {
+    category: "Analytics & Reports",
+    name: "UTM Parameter Tracking",
+    free: false,
+    base: false,
+    premium: false,
+  },
+  {
+    category: "Management",
+    name: "Multi-location Support",
+    free: "1 Location",
+    base: "5 Locations",
+    premium: "100 Locations",
+  },
+  {
+    category: "Management",
+    name: "Multi-device Sync & Login",
+    free: true,
+    base: true,
+    premium: true,
+  },
+  {
+    category: "Management",
+    name: "Graphic Table Map",
+    free: false,
+    base: false,
+    premium: false,
+  },
+  {
+    category: "Management",
+    name: "Reserve with Google",
+    free: false,
+    base: false,
+    premium: false,
+  },
+];
+
 
 export function getPlanById(planId: PlanId): PlanDefinition {
   return plans[planId];
