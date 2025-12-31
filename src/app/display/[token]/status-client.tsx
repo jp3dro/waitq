@@ -154,7 +154,7 @@ export default function DisplayClient({ token }: { token: string }) {
               <h1 className="text-3xl font-bold tracking-tight leading-none">{data.listName}</h1>
             </div>
           </div>
-          {typeof data.estimatedMs === 'number' && data.estimatedMs > 0 ? (
+          {typeof data.estimatedMs === 'number' ? (
             <div className="mr-6 flex flex-col">
               <p className="w-full text-sm text-right text-muted-foreground">Estimated wait time</p>
               <p className="mt-1 text-3xl font-semibold tracking-tight text-right">{formatDuration(data.estimatedMs)}</p>
@@ -176,26 +176,32 @@ export default function DisplayClient({ token }: { token: string }) {
           </section>
           <section className="rounded-2xl bg-card text-card-foreground ring-1 ring-border p-6">
             <h2 className="text-2xl font-semibold text-foreground">Up next</h2>
-            <ul className="mt-2 divide-y divide-border">
-              {waiting.map((e) => (
-                <li key={e.id} className="py-3 flex items-center gap-4">
-                  <span className="w-14 shrink-0 text-left text-3xl font-semibold tabular-nums">
-                    {e.ticket_number ?? e.queue_position ?? "-"}
-                  </span>
-                  <div className="min-w-0 flex-1 text-left flex items-center gap-3">
-                    {typeof e.party_size === 'number' ? (
-                      <div className="flex items-center gap-1.5 text-lg font-medium">
-                        <User className="h-4 w-4" />
-                        <span>{e.party_size}</span>
-                      </div>
-                    ) : null}
-                    {e.seating_preference && (
-                      <Badge variant="secondary" className="text-base px-2.5 py-0.5">{e.seating_preference}</Badge>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
+            {waiting.length === 0 ? (
+              <div className="mt-6 text-center py-8">
+                <p className="text-muted-foreground text-lg">No one waiting at the moment</p>
+              </div>
+            ) : (
+              <ul className="mt-2 divide-y divide-border">
+                {waiting.map((e) => (
+                  <li key={e.id} className="py-3 flex items-center gap-4">
+                    <span className="w-14 shrink-0 text-left text-3xl font-semibold tabular-nums">
+                      {e.ticket_number ?? e.queue_position ?? "-"}
+                    </span>
+                    <div className="min-w-0 flex-1 text-left flex items-center gap-3">
+                      {typeof e.party_size === 'number' ? (
+                        <div className="flex items-center gap-1.5 text-lg font-medium">
+                          <User className="h-4 w-4" />
+                          <span>{e.party_size}</span>
+                        </div>
+                      ) : null}
+                      {e.seating_preference && (
+                        <Badge variant="secondary" className="text-base px-2.5 py-0.5">{e.seating_preference}</Badge>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
         </div>
       </div>
@@ -408,7 +414,7 @@ function Keypad({ value, onChange, callingCode }: { value: string | undefined; o
   );
 }
 function formatDuration(ms: number) {
-  const totalMin = Math.max(1, Math.round(ms / 60000));
+  const totalMin = Math.max(0, Math.round(ms / 60000));
   const hours = Math.floor(totalMin / 60);
   const minutes = totalMin % 60;
   return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;

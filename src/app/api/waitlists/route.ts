@@ -92,7 +92,7 @@ export async function PATCH(req: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  // Archive all waiting and notified entries for this waitlist
+  // Archive all waiting, notified, and seated entries for this waitlist
   // Waiting entries are treated as called-now no-shows: stamp notified_at
   const admin = getAdminClient();
   const nowIso = new Date().toISOString();
@@ -110,6 +110,13 @@ export async function PATCH(req: NextRequest) {
     .eq("waitlist_id", id)
     .eq("status", "notified");
   if (updateNotifiedErr) return NextResponse.json({ error: updateNotifiedErr.message }, { status: 400 });
+
+  const { error: updateSeatedErr } = await admin
+    .from("waitlist_entries")
+    .update({ status: "archived" })
+    .eq("waitlist_id", id)
+    .eq("status", "seated");
+  if (updateSeatedErr) return NextResponse.json({ error: updateSeatedErr.message }, { status: 400 });
 
   // Reset ticket numbers by nullifying ticket_number in all entries for this waitlist
   const { error: resetErr } = await admin

@@ -125,7 +125,7 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
                   <QRCodeButton listName={wl.name} displayToken={wl.display_token} businessName={businessName} />
                 </>
               )}
-              <ClearWaitlistButton waitlistId={wl.id} displayToken={wl.display_token} variant="button" className="h-9" />
+              <ClearWaitlistButton waitlistId={wl.id} displayToken={wl.display_token} variant="button" className="h-8" />
             </div>
           </div>
 

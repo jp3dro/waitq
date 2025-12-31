@@ -77,13 +77,13 @@ export default function PrivateSidebarClient({ userEmail, role }: Props) {
           <NavItem href="/customers" icon={Users2} label="Customers" />
         </SidebarMenu>
 
-        <div className="px-2 pt-4">
+        <div className="mt-auto px-2 pt-4">
           <div className="px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
             Settings
           </div>
         </div>
 
-        <SidebarMenu>
+        <SidebarMenu className="pb-4">
           {isAdmin ? <NavItem href="/locations" icon={MapPin} label="Locations" /> : null}
           {isAdmin ? <NavItem href="/business" icon={Building2} label="Business" /> : null}
           {isAdmin ? <NavItem href="/subscriptions" icon={CreditCard} label="Subscription" /> : null}

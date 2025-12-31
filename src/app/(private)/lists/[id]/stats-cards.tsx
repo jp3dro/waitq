@@ -43,7 +43,7 @@ export default function StatsCards({ waitlistId }: { waitlistId: string }) {
           .from("waitlist_entries")
           .select("ticket_number, queue_position, notified_at")
           .eq("waitlist_id", waitlistId)
-          .in("status", ["notified", "seated"]) 
+          .in("status", ["notified", "seated"])
           .not("notified_at", "is", null)
           .order("notified_at", { ascending: false })
           .order("ticket_number", { ascending: false })
@@ -82,7 +82,7 @@ export default function StatsCards({ waitlistId }: { waitlistId: string }) {
       const totalMin = queueCount === 0 ? 5 : baseMin;
       const hours = Math.floor(totalMin / 60);
       const minutes = totalMin % 60;
-      const newEtaDisplay = totalMin > 0 ? (hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`) : "";
+      const newEtaDisplay = totalMin > 0 ? (hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`) : "0m";
 
       // Get last called number
       const lastCalledEntry = lastCalledRes.data?.[0] as { ticket_number: number | null; queue_position: number | null; notified_at: string | null } | undefined;
