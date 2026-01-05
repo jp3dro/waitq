@@ -25,9 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import PhoneInput from "react-phone-number-input";
-import 'react-phone-number-input/style.css';
-import type { Country } from "react-phone-number-input";
+import { PhoneInput, type Country } from "@/components/ui/phone-input";
 
 type Customer = {
   key: string;
@@ -53,8 +51,8 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
     const q = query.trim().toLowerCase();
     const list = q
       ? customers.filter((c) =>
-          (c.name || "").toLowerCase().includes(q) || (c.phone || "").toLowerCase().includes(q)
-        )
+        (c.name || "").toLowerCase().includes(q) || (c.phone || "").toLowerCase().includes(q)
+      )
       : customers;
     const sorted = [...list].sort((a, b) => {
       if (sortKey === "lastSeen") return new Date(b.lastSeen).getTime() - new Date(a.lastSeen).getTime();
@@ -95,7 +93,7 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
   const onDelete = async (c: Customer) => {
     setIsPending(true);
     try {
-      const res = await fetch(`/api/customers?key=${encodeURIComponent(c.key)}` , { method: "DELETE" });
+      const res = await fetch(`/api/customers?key=${encodeURIComponent(c.key)}`, { method: "DELETE" });
       if (res.ok) {
         setCustomers((prev) => prev.filter((cc) => cc.key !== c.key));
       }
@@ -207,11 +205,9 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
             <div className="grid gap-2">
               <Label>Phone</Label>
               <PhoneInput
-                international
                 defaultCountry={"PT" as Country}
                 value={editing?.phone || ""}
-                onChange={(value) => setEditing((prev) => (prev ? { ...prev, phone: value || "" } : prev))}
-                className="block w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                onChange={(value) => setEditing((prev) => (prev ? { ...prev, phone: value } : prev))}
               />
             </div>
           </div>

@@ -5,9 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { toastManager } from "@/hooks/use-toast";
 import { RefreshCw, Archive, Pencil, Trash2, MoreHorizontal, Copy, Clock, User } from "lucide-react";
 import { Stepper } from "@/components/ui/stepper";
-import PhoneInput from "react-phone-number-input";
-import 'react-phone-number-input/style.css';
-import type { Country } from "react-phone-number-input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -682,11 +680,9 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
               <div className="flex-1 grid gap-2">
                 <Label>Phone</Label>
                 <PhoneInput
-                  international
                   defaultCountry="PT"
                   value={editForm.phone}
-                  onChange={(value) => setEditForm(prev => ({ ...prev, phone: value || "" }))}
-                  className="block w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  onChange={(value) => setEditForm(prev => ({ ...prev, phone: value }))}
                 />
               </div>
             </div>

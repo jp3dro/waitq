@@ -4,6 +4,7 @@ import { toastManager } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PhoneInput, type Country } from "@/components/ui/phone-input";
 import {
   Dialog,
   DialogContent,
@@ -23,11 +24,18 @@ export default function LocationsPage() {
   const [edit, setEdit] = useState<Location | null>(null);
   const [editForm, setEditForm] = useState<{ name: string; phone: string; address: string; city: string }>({ name: "", phone: "", address: "", city: "" });
   const [editMessage, setEditMessage] = useState<string | null>(null);
+  const [businessCountry, setBusinessCountry] = useState<Country>("PT");
 
   async function load() {
     const res = await fetch("/api/locations", { cache: "no-store" });
     const j = await res.json();
     setLocations(j.locations || []);
+
+    const bRes = await fetch("/api/business", { cache: "no-store" });
+    const bJ = await bRes.json();
+    if (bJ.business?.country_code) {
+      setBusinessCountry(bJ.business.country_code as Country);
+    }
   }
 
   useEffect(() => {
@@ -215,9 +223,10 @@ export default function LocationsPage() {
               </div>
               <div className="grid gap-2">
                 <Label>Phone</Label>
-                <Input
+                <PhoneInput
+                  defaultCountry={businessCountry}
                   value={form.phone}
-                  onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                  onChange={(v: string) => setForm((f) => ({ ...f, phone: v }))}
                 />
               </div>
               <div className="grid gap-2">
@@ -268,9 +277,10 @@ export default function LocationsPage() {
               </div>
               <div className="grid gap-2">
                 <Label>Phone</Label>
-                <Input
+                <PhoneInput
+                  defaultCountry={businessCountry}
                   value={editForm.phone}
-                  onChange={(e) => setEditForm((f) => ({ ...f, phone: e.target.value }))}
+                  onChange={(v: string) => setEditForm((f) => ({ ...f, phone: v }))}
                 />
               </div>
               <div className="grid gap-2">

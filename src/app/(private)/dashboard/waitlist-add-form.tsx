@@ -1,9 +1,7 @@
 "use client";
 import { useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
-import PhoneInput from "react-phone-number-input";
-import 'react-phone-number-input/style.css';
-import type { Country } from "react-phone-number-input";
+import { PhoneInput, type Country } from "@/components/ui/phone-input";
 import { toastManager } from "@/hooks/use-toast";
 import { Stepper } from "@/components/ui/stepper";
 
@@ -32,7 +30,7 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
         reset((v) => ({ ...v, waitlistId: j.waitlists[0].id }));
       }
       // Focus the name field when modal opens
-      try { setFocus("customerName"); } catch {}
+      try { setFocus("customerName"); } catch { }
     })();
   }, [reset, defaultWaitlistId]);
 
@@ -55,24 +53,24 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
         // Local optimistic refresh and broadcast
         try {
           window.dispatchEvent(new CustomEvent('wl:refresh', { detail: { waitlistId: values.waitlistId } }));
-        } catch {}
+        } catch { }
         try {
           const { createClient } = await import("@/lib/supabase/client");
           const sb = createClient();
           const ch = sb.channel(`waitlist-entries-${values.waitlistId}`);
           ch.subscribe(async (status) => {
             if (status === 'SUBSCRIBED') {
-              try { await ch.send({ type: 'broadcast', event: 'refresh', payload: {} }); } catch {}
-              try { sb.removeChannel(ch); } catch {}
+              try { await ch.send({ type: 'broadcast', event: 'refresh', payload: {} }); } catch { }
+              try { sb.removeChannel(ch); } catch { }
             }
           });
-        } catch {}
+        } catch { }
         onDone?.();
       } else {
         let parsed: unknown = {};
         try {
           parsed = await res.json();
-        } catch {}
+        } catch { }
         const err = (parsed as { error?: unknown }).error;
         let msg = "Failed to add";
         let hasFieldErrors = false;
@@ -91,8 +89,8 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
               if (messages && messages.length > 0) {
                 // Map API field names to form field names
                 const formField = field === 'customerName' ? 'customerName' :
-                                 field === 'phone' ? 'phone' :
-                                 field === 'waitlistId' ? 'waitlistId' : field;
+                  field === 'phone' ? 'phone' :
+                    field === 'waitlistId' ? 'waitlistId' : field;
                 setError(formField as keyof FormValues, {
                   type: 'server',
                   message: messages[0] // Use first error message
@@ -138,7 +136,7 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
         )}
         <div className="grid gap-2">
           <label className="text-sm font-medium">Customer name</label>
-          <input className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm" placeholder="Full name" {...register("customerName", { required: true })}/>
+          <input className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm" placeholder="Full name" {...register("customerName", { required: true })} />
           {errors.customerName && (
             <p className="text-sm text-red-600">{errors.customerName.message}</p>
           )}
@@ -157,11 +155,9 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
             <div className="flex-1 grid gap-2">
               <label className="text-sm font-medium">Phone</label>
               <PhoneInput
-                international
-                defaultCountry={(businessCountry ?? "PT") as Country}
+                defaultCountry={businessCountry}
                 value={watch("phone")}
-                onChange={(value) => setValue("phone", value || "")}
-                className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm"
+                onChange={(value) => setValue("phone", value)}
               />
               {errors.phone && (
                 <p className="text-sm text-red-600">{errors.phone.message}</p>
@@ -179,7 +175,7 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
                       type="button"
                       key={s}
                       onClick={() => setValue("seatingPreference", s)}
-                    className={`inline-flex items-center rounded-full px-3 py-1 text-xs ring-1 ring-inset transition ${selected ? "bg-primary text-primary-foreground ring-primary" : "bg-card text-foreground ring-border hover:bg-muted"}`}
+                      className={`inline-flex items-center rounded-full px-3 py-1 text-xs ring-1 ring-inset transition ${selected ? "bg-primary text-primary-foreground ring-primary" : "bg-card text-foreground ring-border hover:bg-muted"}`}
                     >
                       {s}
                     </button>

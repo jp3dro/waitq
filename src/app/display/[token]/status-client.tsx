@@ -97,9 +97,9 @@ export default function DisplayClient({ token }: { token: string }) {
   const waiting = data.entries.filter((e) => e.status === "waiting").slice(0, 10);
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-6xl px-6 py-10">
-        <div className="flex w-full flex-wrap items-center">
+    <main className="h-screen bg-background text-foreground flex flex-col overflow-hidden">
+      <div className="flex flex-col flex-1 px-6 py-8 md:px-10 overflow-hidden">
+        <div className="flex w-full flex-wrap items-center shrink-0">
           <div className="mr-6 flex items-center gap-4 flex-1">
             {data.brandLogo ? (
               <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-border bg-muted">
@@ -125,53 +125,89 @@ export default function DisplayClient({ token }: { token: string }) {
               <KioskButton token={token} defaultCountry={data.businessCountry || "PT"} seatingPreferences={data.seatingPreferences || []} />
             </div>
           ) : null}
-          <button type="button" aria-label="Toggle theme" className="inline-flex items-center justify-center rounded-md p-2 text-foreground hover:bg-muted">
-            <span className="sr-only">Toggle theme</span>
-          </button>
         </div>
-        <div className="mt-8 grid md:grid-cols-[1fr_1.2fr] gap-8">
-          <section className="rounded-2xl bg-card text-card-foreground ring-1 ring-border p-6">
-            <h2 className="text-2xl font-semibold text-foreground">Now serving</h2>
-            <div className="mt-2 text-9xl font-extrabold">{nowServingNumber ?? "-"}</div>
-          </section>
-          <section className="rounded-2xl bg-card text-card-foreground ring-1 ring-border p-6">
+
+        <div className="mt-8 grid md:grid-cols-[1.2fr_1fr] gap-8 flex-1 min-h-0">
+          <section className="rounded-2xl bg-card text-card-foreground ring-1 ring-border p-6 flex flex-col min-h-0 overflow-hidden">
             <h2 className="text-2xl font-semibold text-foreground">Up next</h2>
-            {waiting.length === 0 ? (
-              <div className="mt-6 text-center py-8">
-                <p className="text-muted-foreground text-lg">No one waiting at the moment</p>
-              </div>
-            ) : (
-              <ul className="mt-2 divide-y divide-border">
-                {waiting.map((e) => (
-                  <li key={e.id} className="py-3 flex items-center gap-4">
-                    <span className="w-14 shrink-0 text-left text-3xl font-semibold tabular-nums">
-                      {e.ticket_number ?? e.queue_position ?? "-"}
-                    </span>
-                    <div className="min-w-0 flex-1 text-left flex items-center gap-3">
-                      {typeof e.party_size === 'number' ? (
-                        <div className="flex items-center gap-1.5 text-lg font-medium">
-                          <User className="h-4 w-4" />
-                          <span>{e.party_size}</span>
-                        </div>
-                      ) : null}
-                      {e.seating_preference && (
-                        <Badge variant="secondary" className="text-base px-2.5 py-0.5">{e.seating_preference}</Badge>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <div className="flex-1 overflow-y-auto min-h-0 mt-4 pr-2 custom-scrollbar">
+              {waiting.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground text-lg">No one waiting at the moment</p>
+                </div>
+              ) : (
+                <ul className="divide-y divide-border">
+                  {waiting.map((e) => (
+                    <li key={e.id} className="py-4 flex items-center gap-6">
+                      <span className="w-14 shrink-0 text-left text-4xl font-semibold tabular-nums">
+                        {e.ticket_number ?? e.queue_position ?? "-"}
+                      </span>
+                      <div className="flex items-center gap-8">
+                        {typeof e.party_size === 'number' ? (
+                          <div className="flex items-center gap-1.5 text-xl font-medium">
+                            <User className="h-5 w-5" />
+                            <span>{e.party_size}</span>
+                          </div>
+                        ) : null}
+                        {e.seating_preference && (
+                          <Badge variant="secondary" className="text-lg px-3 py-4">{e.seating_preference}</Badge>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </section>
+
+          <section className="rounded-2xl bg-emerald-50 text-emerald-950 ring-1 ring-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-50 dark:ring-emerald-800 p-6 flex flex-col min-h-0 overflow-hidden">
+            <h2 className="text-2xl font-semibold flex items-center gap-2 shrink-0">
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+              </span>
+              Now calling
+            </h2>
+            <div className="flex-1 overflow-y-auto min-h-0 mt-4 pr-2 custom-scrollbar">
+              {notified.length === 0 ? (
+                <div className="text-center py-12 opacity-60">
+                  <p className="text-xl">Waiting for next group...</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-4">
+                  {notified.map((e) => (
+                    <div key={e.id} className="flex items-center gap-8 rounded-xl p-6 bg-background/50 dark:bg-background/20">
+                      <span className="text-6xl font-extrabold tabular-nums">
+                        {e.ticket_number ?? e.queue_position ?? "-"}
+                      </span>
+                      <div className="flex items-center gap-8">
+                        {typeof e.party_size === 'number' ? (
+                          <div className="flex items-center gap-1.5 text-2xl font-medium">
+                            <User className="h-6 w-6" />
+                            <span>{e.party_size}</span>
+                          </div>
+                        ) : null}
+                        {e.seating_preference && (
+                          <Badge variant="secondary" className="text-xl px-3 py-4">{e.seating_preference}</Badge>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+        </div >
+
+        <div className="mt-6 flex items-center justify-center shrink-0 gap-1">
+          <span className="text-xs font-medium text-muted-foreground">Powered by</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/waitq.svg" alt="WaitQ" className="h-4 w-auto logo-light" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/waitq-variant.svg" alt="WaitQ" className="h-4 w-auto logo-dark" />
         </div>
-      </div>
-      <div className="mt-4 flex items-center justify-center">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/waitq.svg" alt="WaitQ" className="h-5 w-auto logo-light" />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/waitq-variant.svg" alt="WaitQ" className="h-5 w-auto logo-dark" />
-      </div>
-    </main>
+      </div >
+    </main >
   );
 }
 
@@ -254,7 +290,7 @@ function KioskButton({ token, defaultCountry, seatingPreferences }: { token: str
               <div className="grid gap-6">
                 <div className="grid gap-2">
                   <label className="text-base font-medium">Number of people</label>
-                  <Stepper value={partySize} onChange={setPartySize} min={1} max={20} className="h-10" />
+                  <Stepper value={partySize} onChange={setPartySize} min={1} max={20} />
                 </div>
                 {Array.isArray(seatingPreferences) && seatingPreferences.length > 0 ? (
                   <div className="grid gap-2">
