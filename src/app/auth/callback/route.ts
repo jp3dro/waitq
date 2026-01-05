@@ -99,7 +99,45 @@ export async function GET(req: NextRequest) {
               .maybeSingle();
             businessId = (memberOf?.business_id as string | undefined) || null;
           }
-        } catch {}
+        } catch { }
+
+        if (businessId) {
+          // Ensure at least one location exists
+          const { data: locs } = await admin
+            .from("business_locations")
+            .select("id")
+            .eq("business_id", businessId)
+            .limit(1);
+
+          let locationId = locs?.[0]?.id;
+
+          if (!locationId) {
+            const { data: newLoc } = await admin
+              .from("business_locations")
+              .insert({ business_id: businessId, name: "Main Location" })
+              .select("id")
+              .single();
+            locationId = newLoc?.id;
+          }
+
+          // Ensure at least one waitlist exists
+          if (locationId) {
+            const { count } = await admin
+              .from("waitlists")
+              .select("*", { count: "exact", head: true })
+              .eq("business_id", businessId);
+
+            if ((count || 0) === 0) {
+              await admin.from("waitlists").insert({
+                business_id: businessId,
+                location_id: locationId,
+                name: "Main List",
+                list_type: "restaurants",
+                kiosk_enabled: false
+              });
+            }
+          }
+        }
 
         // Upsert minimal subscriptions linkage row
         await admin
@@ -113,7 +151,7 @@ export async function GET(req: NextRequest) {
             },
             { onConflict: "user_id" }
           );
-      } catch {}
+      } catch { }
     }
   }
   const redirectUrl = new URL("/dashboard", process.env.NEXT_PUBLIC_SITE_URL || req.url);

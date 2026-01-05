@@ -16,20 +16,44 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export default function ListCard({ id, name, waiting, etaDisplay, displayToken, businessName, initialLocationId, kioskEnabled, locations }: { id: string; name: string; waiting: number; etaDisplay: string; displayToken?: string | null; businessName?: string; initialLocationId?: string | null; kioskEnabled?: boolean | null; locations?: { id: string; name: string }[] }) {
+export default function ListCard({
+  id,
+  name,
+  waiting,
+  etaDisplay,
+  displayToken,
+  businessName,
+  initialLocationId,
+  kioskEnabled,
+  locations,
+  disableDelete,
+}: {
+  id: string;
+  name: string;
+  waiting: number;
+  etaDisplay: string;
+  displayToken?: string | null;
+  businessName?: string;
+  initialLocationId?: string | null;
+  kioskEnabled?: boolean | null;
+  locations?: { id: string; name: string }[];
+  disableDelete?: boolean;
+}) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [qrOpen, setQrOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
 
   const remove = () => {
+    if (disableDelete) return;
     startTransition(async () => {
       const res = await fetch(`/api/waitlists?id=${encodeURIComponent(id)}`, { method: "DELETE" });
       if (res.ok) {
         toastManager.add({ title: "List deleted", description: `${name} was removed.`, type: "success" });
         router.refresh();
       } else {
-        toastManager.add({ title: "Failed to delete", description: "Please try again.", type: "error" });
+        const json = await res.json().catch(() => ({}));
+        toastManager.add({ title: "Failed to delete", description: json.error || "Please try again.", type: "error" });
       }
     });
   };
@@ -101,11 +125,12 @@ export default function ListCard({ id, name, waiting, etaDisplay, displayToken, 
             <ClearWaitlistButton waitlistId={id} displayToken={displayToken} variant="menu" />
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              disabled={isPending}
+              disabled={isPending || disableDelete}
               onSelect={() => {
-                remove();
+                if (!disableDelete) remove();
               }}
               className="text-destructive focus:text-destructive"
+              title={disableDelete ? "You must have at least one list" : "Delete list"}
             >
               <Trash2 className="h-4 w-4" />
               Delete

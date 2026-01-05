@@ -102,6 +102,7 @@ export default async function ListsIndexPage() {
                             initialLocationId={l.location_id}
                             kioskEnabled={!!l.kiosk_enabled}
                             locations={locs}
+                            disableDelete={allLists.length <= 1}
                           />
                         </li>
                       );

@@ -18,7 +18,16 @@ export default async function PrivateSidebar() {
     : { data: null as any };
   const role = (me?.role as string | undefined) || (user?.email === "jp3dro@gmail.com" ? "admin" : undefined);
 
-  return <PrivateSidebarClient userEmail={user?.email ?? null} role={role} />;
+  // Fetch waitlists for the sidebar
+  const { data: lists } = biz?.id
+    ? await supabase
+      .from("waitlists")
+      .select("id, name")
+      .eq("business_id", biz.id)
+      .order("created_at", { ascending: true })
+    : { data: [] };
+
+  return <PrivateSidebarClient userEmail={user?.email ?? null} role={role} lists={lists || []} />;
 }
 
 

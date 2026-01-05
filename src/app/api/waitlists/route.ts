@@ -75,6 +75,29 @@ export async function DELETE(req: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  // Check if this is the last list for the business
+  // First, get the business_id of the list to be deleted
+  const { data: listToDelete, error: listError } = await supabase
+    .from("waitlists")
+    .select("business_id")
+    .eq("id", id)
+    .single();
+
+  if (listError || !listToDelete) return NextResponse.json({ error: "List not found" }, { status: 404 });
+
+  // Count lists for this business
+  const { count } = await supabase
+    .from("waitlists")
+    .select("*", { count: "exact", head: true })
+    .eq("business_id", listToDelete.business_id);
+
+  if ((count || 0) <= 1) {
+    return NextResponse.json(
+      { error: "Cannot delete the only remaining list. You must have at least one list." },
+      { status: 400 }
+    );
+  }
+
   const { error } = await supabase.from("waitlists").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ ok: true });
