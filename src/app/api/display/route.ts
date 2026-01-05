@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
   const admin = getAdminClient();
   const { data: list, error: listErr } = await admin
     .from("waitlists")
-    .select("id, name, kiosk_enabled, business_id, seating_preferences")
+    .select("id, name, kiosk_enabled, business_id, seating_preferences, ask_name, ask_phone")
     .eq("display_token", token)
     .single();
   if (listErr || !list) return NextResponse.json({ error: "Invalid display token" }, { status: 404 });
@@ -78,6 +78,8 @@ export async function GET(req: NextRequest) {
     listId: list.id,
     listName: list.name,
     kioskEnabled: !!list.kiosk_enabled,
+    askName: list.ask_name !== false,
+    askPhone: list.ask_phone !== false,
     businessCountry,
     businessName,
     brandLogo,

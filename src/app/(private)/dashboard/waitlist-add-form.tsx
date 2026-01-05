@@ -13,7 +13,8 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
   const { register, handleSubmit, reset, watch, setValue, setError, setFocus, formState: { errors } } = useForm<FormValues>({
     defaultValues: { phone: "", customerName: "", waitlistId: "", sendSms: false, sendWhatsapp: false, partySize: 2 },
   });
-  const [waitlists, setWaitlists] = useState<{ id: string; name: string; display_token?: string; list_type?: string; seating_preferences?: string[] }[]>([]);
+  const [waitlists, setWaitlists] = useState<{ id: string; name: string; display_token?: string; list_type?: string; seating_preferences?: string[]; ask_name?: boolean; ask_phone?: boolean }[]>([]);
+  const [fetching, setFetching] = useState(true);
 
   useEffect(() => {
     onPendingChange?.(isPending);
@@ -29,8 +30,9 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
       } else if ((j.waitlists || []).length > 0) {
         reset((v) => ({ ...v, waitlistId: j.waitlists[0].id }));
       }
+      setFetching(false);
       // Focus the name field when modal opens
-      try { setFocus("customerName"); } catch { }
+      try { setTimeout(() => setFocus("customerName"), 50); } catch { }
     })();
   }, [reset, defaultWaitlistId]);
 
@@ -118,6 +120,14 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
     });
   };
 
+  if (fetching) {
+    return (
+      <div className="p-8 text-center text-muted-foreground animate-pulse">
+        Loading...
+      </div>
+    );
+  }
+
   return (
     <div>
       <form id={formId} onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
@@ -134,24 +144,26 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
             )}
           </div>
         )}
-        <div className="grid gap-2">
-          <label className="text-sm font-medium">Customer name</label>
-          <input className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm" placeholder="Full name" {...register("customerName", { required: true })} />
-          {errors.customerName && (
-            <p className="text-sm text-red-600">{errors.customerName.message}</p>
-          )}
-        </div>
-        <>
-          <div className="flex gap-6">
-            <div className="flex-none grid gap-2">
-              <label className="text-sm font-medium">Number of people</label>
-              <Stepper
-                value={watch("partySize")}
-                onChange={(value) => setValue("partySize", value)}
-                min={1}
-                max={20}
-              />
-            </div>
+        {(waitlists.find(w => w.id === watch("waitlistId"))?.ask_name !== false) && (
+          <div className="grid gap-2">
+            <label className="text-sm font-medium">Customer name</label>
+            <input className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm" placeholder="Full name" {...register("customerName", { required: true })} />
+            {errors.customerName && (
+              <p className="text-sm text-red-600">{errors.customerName.message}</p>
+            )}
+          </div>
+        )}
+        <div className="flex gap-6">
+          <div className="flex-none grid gap-2">
+            <label className="text-sm font-medium">Number of people</label>
+            <Stepper
+              value={watch("partySize")}
+              onChange={(value) => setValue("partySize", value)}
+              min={1}
+              max={20}
+            />
+          </div>
+          {(waitlists.find(w => w.id === watch("waitlistId"))?.ask_phone !== false) && (
             <div className="flex-1 grid gap-2">
               <label className="text-sm font-medium">Phone</label>
               <PhoneInput
@@ -163,39 +175,41 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
                 <p className="text-sm text-red-600">{errors.phone.message}</p>
               )}
             </div>
-          </div>
-          {(waitlists.find(w => w.id === watch("waitlistId"))?.seating_preferences || []).length > 0 ? (
-            <div className="grid gap-2">
-              <label className="text-sm font-medium">Seating preference</label>
-              <div className="flex flex-wrap gap-2">
-                {(waitlists.find(w => w.id === watch("waitlistId"))?.seating_preferences || []).map((s) => {
-                  const selected = watch("seatingPreference") === s;
-                  return (
-                    <button
-                      type="button"
-                      key={s}
-                      onClick={() => setValue("seatingPreference", s)}
-                      className={`inline-flex items-center rounded-full px-3 py-1 text-xs ring-1 ring-inset transition ${selected ? "bg-primary text-primary-foreground ring-primary" : "bg-card text-foreground ring-border hover:bg-muted"}`}
-                    >
-                      {s}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ) : null}
-        </>
-        <div className="flex items-center gap-4">
-          <label className="text-sm font-medium">Notify via</label>
-          <div className="flex items-center gap-2">
-            <input id="send-sms" type="checkbox" className="h-4 w-4 rounded border-border text-primary focus:ring-ring" {...register("sendSms")} />
-            <label htmlFor="send-sms" className="text-sm">SMS</label>
-          </div>
-          <div className="flex items-center gap-2">
-            <input id="send-wa" type="checkbox" className="h-4 w-4 rounded border-border text-primary focus:ring-ring" {...register("sendWhatsapp")} />
-            <label htmlFor="send-wa" className="text-sm">WhatsApp</label>
-          </div>
+          )}
         </div>
+        {(waitlists.find(w => w.id === watch("waitlistId"))?.seating_preferences || []).length > 0 ? (
+          <div className="grid gap-2">
+            <label className="text-sm font-medium">Seating preference</label>
+            <div className="flex flex-wrap gap-2">
+              {(waitlists.find(w => w.id === watch("waitlistId"))?.seating_preferences || []).map((s) => {
+                const selected = watch("seatingPreference") === s;
+                return (
+                  <button
+                    type="button"
+                    key={s}
+                    onClick={() => setValue("seatingPreference", s)}
+                    className={`inline-flex items-center rounded-full px-3 py-1 text-xs ring-1 ring-inset transition ${selected ? "bg-primary text-primary-foreground ring-primary" : "bg-card text-foreground ring-border hover:bg-muted"}`}
+                  >
+                    {s}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
+        {(waitlists.find(w => w.id === watch("waitlistId"))?.ask_phone !== false) && (
+          <div className="flex items-center gap-4">
+            <label className="text-sm font-medium">Notify via</label>
+            <div className="flex items-center gap-2">
+              <input id="send-sms" type="checkbox" className="h-4 w-4 rounded border-border text-primary focus:ring-ring" {...register("sendSms")} />
+              <label htmlFor="send-sms" className="text-sm">SMS</label>
+            </div>
+            <div className="flex items-center gap-2">
+              <input id="send-wa" type="checkbox" className="h-4 w-4 rounded border-border text-primary focus:ring-ring" {...register("sendWhatsapp")} />
+              <label htmlFor="send-wa" className="text-sm">WhatsApp</label>
+            </div>
+          </div>
+        )}
         {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
       </form>
     </div>

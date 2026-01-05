@@ -188,13 +188,6 @@ export default function PrivateSidebarClient({ userEmail, role, lists }: Props) 
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuGroup>
-                                    <DropdownMenuItem className="cursor-pointer">
-                                        <Sparkles className="mr-2 h-4 w-4" />
-                                        Upgrade to Pro
-                                    </DropdownMenuItem>
-                                </DropdownMenuGroup>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuGroup>
                                     <DropdownMenuSub>
                                         <DropdownMenuSubTrigger className="cursor-pointer">
                                             <div className="flex items-center gap-2">

@@ -34,6 +34,9 @@ type WaitlistRow = {
   kiosk_enabled: boolean | null;
   display_token: string | null;
   location_id: string | null;
+  ask_name: boolean | null;
+  ask_phone: boolean | null;
+  seating_preferences: string[] | null;
   business_locations: { id: string; name: string } | null;
 };
 
@@ -54,6 +57,9 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
       kiosk_enabled,
       display_token,
       location_id,
+      ask_name,
+      ask_phone,
+      seating_preferences,
       business_locations (
         id,
         name
@@ -109,6 +115,9 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
                 initialName={wl.name}
                 initialLocationId={wl.location_id || wl.business_locations?.id}
                 initialKioskEnabled={!!wl.kiosk_enabled}
+                initialAskName={wl.ask_name !== false}
+                initialAskPhone={wl.ask_phone !== false}
+                initialSeatingPreferences={wl.seating_preferences || []}
                 locations={typedLocations}
               />
               {wl.display_token && (

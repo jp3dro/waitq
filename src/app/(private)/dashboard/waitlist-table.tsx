@@ -76,10 +76,13 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
-  const [waitlists, setWaitlists] = useState<{ id: string; name: string; display_token?: string; list_type?: string; seating_preferences?: string[] }[]>([]);
+  const [waitlists, setWaitlists] = useState<{ id: string; name: string; display_token?: string; list_type?: string; seating_preferences?: string[]; ask_name?: boolean; ask_phone?: boolean }[]>([]);
   const [waitlistId, setWaitlistId] = useState<string | null>(fixedWaitlistId ?? null);
   const supabase = createClient();
   const refreshTimer = useRef<number | null>(null);
+  const currentList = waitlists.find(w => w.id === waitlistId);
+  const showName = currentList?.ask_name !== false;
+  const showPhone = currentList?.ask_phone !== false;
   const prevIdsRef = useRef<Set<string>>(new Set());
   const [highlightIds, setHighlightIds] = useState<Set<string>>(new Set());
   const displayChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
@@ -521,11 +524,11 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
             <tr>
               <th className="text-left font-medium text-foreground px-4 py-2">Actions</th>
               <th className="text-left font-medium text-foreground px-4 py-2">#</th>
-              <th className="text-left font-medium text-foreground px-4 py-2">Name</th>
-              <th className="text-left font-medium text-foreground px-4 py-2">Phone</th>
+              {showName && <th className="text-left font-medium text-foreground px-4 py-2">Name</th>}
+              {showPhone && <th className="text-left font-medium text-foreground px-4 py-2">Phone</th>}
               <th className="text-left font-medium text-foreground px-4 py-2">Party</th>
               <th className="text-left font-medium text-foreground px-4 py-2">Seating</th>
-              <th className="text-left font-medium text-foreground px-4 py-2">Notifications</th>
+              {showPhone && <th className="text-left font-medium text-foreground px-4 py-2">Notifications</th>}
               <th className="text-left font-medium text-foreground px-4 py-2">Waiting time</th>
               <th className="text-left font-medium text-foreground px-4 py-2"></th>
             </tr>
@@ -556,8 +559,8 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                   )}
                 </td>
                 <td className="px-4 py-2">{e.ticket_number ?? e.queue_position ?? "-"}</td>
-                <td className="px-4 py-2">{e.customer_name ?? "—"}</td>
-                <td className="px-4 py-2">{e.phone}</td>
+                {showName && <td className="px-4 py-2">{e.customer_name ?? "—"}</td>}
+                {showPhone && <td className="px-4 py-2">{e.phone}</td>}
                 <td className="px-4 py-2">
                   <div className="flex items-center gap-1.5">
                     <User className="h-3.5 w-3.5 text-muted-foreground" />
@@ -567,9 +570,11 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                 <td className="px-4 py-2">
                   {e.seating_preference ? <Badge variant="secondary">{e.seating_preference}</Badge> : "—"}
                 </td>
-                <td className="px-4 py-2">
-                  <span className="text-xs">{getNotificationDisplay(e.send_sms, e.send_whatsapp, e.sms_status, e.whatsapp_status)}</span>
-                </td>
+                {showPhone && (
+                  <td className="px-4 py-2">
+                    <span className="text-xs">{getNotificationDisplay(e.send_sms, e.send_whatsapp, e.sms_status, e.whatsapp_status)}</span>
+                  </td>
+                )}
                 <td className="px-4 py-2">
                   <TooltipProvider>
                     <Tooltip>
@@ -608,7 +613,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                           <Pencil className="h-4 w-4" />
                           Edit
                         </DropdownMenuItem>
-                        {(e.sms_status === "failed" || e.whatsapp_status === "failed") ? (
+                        {showPhone && (e.sms_status === "failed" || e.whatsapp_status === "failed") ? (
                           <>
                             {e.sms_status === "failed" ? (
                               <DropdownMenuItem disabled={isPending} onSelect={() => retryMessage(e.id, "sms")}>
@@ -657,15 +662,17 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
           </DialogHeader>
 
           <form className="grid gap-4">
-            <div className="grid gap-2">
-              <Label>Customer name</Label>
-              <Input
-                type="text"
-                value={editForm.customerName}
-                onChange={(e) => setEditForm(prev => ({ ...prev, customerName: e.target.value }))}
-                placeholder="Full name"
-              />
-            </div>
+            {showName && (
+              <div className="grid gap-2">
+                <Label>Customer name</Label>
+                <Input
+                  type="text"
+                  value={editForm.customerName}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, customerName: e.target.value }))}
+                  placeholder="Full name"
+                />
+              </div>
+            )}
 
             <div className="flex gap-6">
               <div className="flex-none grid gap-2">
@@ -677,14 +684,16 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                   max={20}
                 />
               </div>
-              <div className="flex-1 grid gap-2">
-                <Label>Phone</Label>
-                <PhoneInput
-                  defaultCountry="PT"
-                  value={editForm.phone}
-                  onChange={(value) => setEditForm(prev => ({ ...prev, phone: value }))}
-                />
-              </div>
+              {showPhone && (
+                <div className="flex-1 grid gap-2">
+                  <Label>Phone</Label>
+                  <PhoneInput
+                    defaultCountry="PT"
+                    value={editForm.phone}
+                    onChange={(value) => setEditForm(prev => ({ ...prev, phone: value }))}
+                  />
+                </div>
+              )}
             </div>
 
             {(waitlists.find(w => w.id === waitlistId)?.seating_preferences || []).length > 0 && (

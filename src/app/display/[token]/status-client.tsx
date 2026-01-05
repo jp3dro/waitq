@@ -14,7 +14,7 @@ import 'react-phone-number-input/style.css';
 import { User, Plus } from "lucide-react";
 
 type Entry = { id: string; ticket_number: number | null; queue_position: number | null; status: string; notified_at?: string | null; party_size?: number | null; seating_preference?: string | null };
-type Payload = { listId: string; listName: string; kioskEnabled?: boolean; businessCountry?: string | null; businessName?: string | null; brandLogo?: string | null; seatingPreferences?: string[]; estimatedMs?: number; entries: Entry[]; accentColor?: string; backgroundColor?: string };
+type Payload = { listId: string; listName: string; kioskEnabled?: boolean; askName?: boolean; askPhone?: boolean; businessCountry?: string | null; businessName?: string | null; brandLogo?: string | null; seatingPreferences?: string[]; estimatedMs?: number; entries: Entry[]; accentColor?: string; backgroundColor?: string };
 
 export default function DisplayClient({ token }: { token: string }) {
   const [data, setData] = useState<Payload | null>(null);
@@ -122,7 +122,13 @@ export default function DisplayClient({ token }: { token: string }) {
           ) : null}
           {data.kioskEnabled ? (
             <div className="">
-              <KioskButton token={token} defaultCountry={data.businessCountry || "PT"} seatingPreferences={data.seatingPreferences || []} />
+              <KioskButton
+                token={token}
+                defaultCountry={data.businessCountry || "PT"}
+                seatingPreferences={data.seatingPreferences || []}
+                askName={data.askName !== false}
+                askPhone={data.askPhone !== false}
+              />
             </div>
           ) : null}
         </div>
@@ -212,10 +218,23 @@ export default function DisplayClient({ token }: { token: string }) {
 }
 
 
-function KioskButton({ token, defaultCountry, seatingPreferences }: { token: string; defaultCountry: string; seatingPreferences: string[] }) {
+function KioskButton({
+  token,
+  defaultCountry,
+  seatingPreferences,
+  askName,
+  askPhone,
+}: {
+  token: string;
+  defaultCountry: string;
+  seatingPreferences: string[];
+  askName: boolean;
+  askPhone: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<"intro" | "form" | "confirm">("intro");
   const [phone, setPhone] = useState<string | undefined>(undefined);
+  const [name, setName] = useState<string | undefined>(undefined);
   const [partySize, setPartySize] = useState<number | undefined>(1);
   const [pref, setPref] = useState<string | undefined>(undefined);
   const [message, setMessage] = useState<string | null>(null);
@@ -228,6 +247,7 @@ function KioskButton({ token, defaultCountry, seatingPreferences }: { token: str
     setOpen(false);
     setStep("intro");
     setPhone(undefined);
+    setName(undefined);
     setPartySize(1);
     setPref(undefined);
     setMessage(null);
@@ -238,14 +258,18 @@ function KioskButton({ token, defaultCountry, seatingPreferences }: { token: str
     setMessage(null);
     setPhoneError(null);
     startTransition(async () => {
-      if (!phone) {
+      if (askPhone && !phone) {
         setPhoneError("Please enter your phone number");
+        return;
+      }
+      if (askName && !name) {
+        setMessage("Please enter your name");
         return;
       }
       const res = await fetch("/api/display/checkin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, phone, partySize, seatingPreference: pref }),
+        body: JSON.stringify({ token, phone, name, partySize, seatingPreference: pref }),
       });
       const j = await res.json().catch(() => ({}));
       if (res.ok) {
@@ -314,31 +338,54 @@ function KioskButton({ token, defaultCountry, seatingPreferences }: { token: str
                   </div>
                 ) : null}
               </div>
-              <Button onClick={() => setStep("form")} size="lg" className="w-full h-14 text-xl rounded-xl">
-                Continue
+              <Button
+                onClick={() => {
+                  if (!askName && !askPhone) submit();
+                  else setStep("form");
+                }}
+                size="lg"
+                className="w-full h-14 text-xl rounded-xl"
+              >
+                {!askName && !askPhone ? "Join Waitlist" : "Continue"}
               </Button>
             </div>
           ) : step === "form" ? (
             <div className="grid gap-5 text-foreground">
-              <div className="grid gap-2">
-                <label className="text-base font-medium" htmlFor="kiosk-phone">Phone number</label>
-                <PhoneInput
-                  id="kiosk-phone"
-                  international
-                  defaultCountry={defaultCountry as Country}
-                  value={phone}
-                  onChange={(value) => { setPhone(value || undefined); setPhoneError(null); }}
-                  withCountryCallingCode
-                  countryCallingCodeEditable={true}
-                  className={`block w-full rounded-xl border-0 shadow-sm ring-1 ring-inset px-4 py-3 text-2xl text-foreground focus:ring-2 ${phoneError ? "ring-red-500 focus:ring-red-600" : "ring-border focus:ring-primary"}`}
-                  aria-invalid={phoneError ? true : false}
-                  aria-describedby={phoneError ? "kiosk-phone-error" : undefined}
-                />
-                {phoneError ? (
-                  <p id="kiosk-phone-error" className="text-sm text-red-600">{phoneError}</p>
-                ) : null}
-              </div>
-              <Keypad value={phone} onChange={(v) => { setPhone(v); setPhoneError(null); }} callingCode={callingCode} />
+              {askName && (
+                <div className="grid gap-2">
+                  <label className="text-base font-medium" htmlFor="kiosk-name">Name</label>
+                  <input
+                    id="kiosk-name"
+                    type="text"
+                    value={name || ""}
+                    onChange={(e) => setName(e.target.value)}
+                    className="block w-full rounded-xl border-0 shadow-sm ring-1 ring-inset ring-border px-4 py-3 text-2xl text-foreground focus:ring-2 focus:ring-primary bg-background"
+                    placeholder="Your Name"
+                  />
+                </div>
+              )}
+
+              {askPhone && (
+                <div className="grid gap-2">
+                  <label className="text-base font-medium" htmlFor="kiosk-phone">Phone number</label>
+                  <PhoneInput
+                    id="kiosk-phone"
+                    international
+                    defaultCountry={defaultCountry as Country}
+                    value={phone}
+                    onChange={(value) => { setPhone(value || undefined); setPhoneError(null); }}
+                    withCountryCallingCode
+                    countryCallingCodeEditable={true}
+                    className={`block w-full rounded-xl border-0 shadow-sm ring-1 ring-inset px-4 py-3 text-2xl text-foreground focus:ring-2 ${phoneError ? "ring-red-500 focus:ring-red-600" : "ring-border focus:ring-primary"}`}
+                    aria-invalid={phoneError ? true : false}
+                    aria-describedby={phoneError ? "kiosk-phone-error" : undefined}
+                  />
+                  {phoneError ? (
+                    <p id="kiosk-phone-error" className="text-sm text-red-600">{phoneError}</p>
+                  ) : null}
+                </div>
+              )}
+              {askPhone && <Keypad value={phone} onChange={(v) => { setPhone(v); setPhoneError(null); }} callingCode={callingCode} />}
               <Button disabled={isPending} onClick={submit} size="lg" className="w-full h-14 text-xl rounded-xl disabled:opacity-50">
                 {isPending ? "Submitting…" : "Continue"}
               </Button>
@@ -346,7 +393,7 @@ function KioskButton({ token, defaultCountry, seatingPreferences }: { token: str
             </div>
           ) : (
             <div className="grid gap-5 text-center text-foreground">
-              <p className="text-lg">We&apos;ll notify you when your table is ready.</p>
+              {askPhone && <p className="text-lg">We&apos;ll notify you when your table is ready.</p>}
               <div>
                 <p className="text-sm text-muted-foreground">Your ticket</p>
                 <div className="mt-2 text-6xl font-extrabold text-foreground">{ticketNumber ?? "-"}</div>

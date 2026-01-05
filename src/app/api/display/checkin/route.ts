@@ -6,7 +6,8 @@ import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 const schema = z.object({
   token: z.string().min(1),
-  phone: z.string().min(8),
+  phone: z.string().optional(),
+  name: z.string().optional(),
   partySize: z.number().int().positive().optional(),
   seatingPreference: z.string().optional(),
 });
@@ -25,18 +26,22 @@ export async function POST(req: NextRequest) {
   const parse = schema.safeParse(json);
   if (!parse.success) return NextResponse.json({ error: parse.error.flatten() }, { status: 400 });
 
-  const { token: displayToken, phone, partySize, seatingPreference } = parse.data;
+  const { token: displayToken, phone, name, partySize, seatingPreference } = parse.data;
 
   const admin = getAdminClient();
 
   // Find the waitlist by display token and ensure kiosk is enabled
   const { data: list, error: listErr } = await admin
     .from("waitlists")
-    .select("id, business_id, kiosk_enabled")
+    .select("id, business_id, kiosk_enabled, ask_name, ask_phone")
     .eq("display_token", displayToken)
     .single();
   if (listErr || !list) return NextResponse.json({ error: "Invalid display token" }, { status: 404 });
   if (!list.kiosk_enabled) return NextResponse.json({ error: "Kiosk is disabled" }, { status: 403 });
+
+  // Validate required fields based on settings
+  if (list.ask_phone !== false && !phone) return NextResponse.json({ error: "Phone number is required" }, { status: 400 });
+  if (list.ask_name !== false && !name) return NextResponse.json({ error: "Name is required" }, { status: 400 });
 
   // Compute next ticket number
   const { data: maxRow } = await admin
@@ -55,8 +60,8 @@ export async function POST(req: NextRequest) {
     .insert({
       business_id: list.business_id,
       waitlist_id: list.id,
-      phone,
-      // customer_name intentionally omitted in kiosk mode
+      phone: phone || null,
+      customer_name: name || null,
       token: entryToken,
       ticket_number: nextTicket,
       party_size: typeof partySize === 'number' ? partySize : null,

@@ -51,7 +51,7 @@ async function calculateAndUpdateETA(admin: ReturnType<typeof getAdminClient>, w
 const schema = z.object({
   waitlistId: z.string().uuid(),
   phone: z.string().optional().refine((val) => !val || val.length >= 8, "Phone must be at least 8 characters"),
-  customerName: z.string().min(1),
+  customerName: z.string().optional(),
   sendSms: z.boolean().optional().default(false),
   sendWhatsapp: z.boolean().optional().default(false),
   partySize: z.number().int().positive().optional(),
@@ -74,13 +74,31 @@ export async function POST(req: NextRequest) {
   const token = nanoid(16);
   const { waitlistId, phone, customerName, sendSms: shouldSendSms, sendWhatsapp: shouldSendWhatsapp, partySize, seatingPreference } = parse.data;
 
-  // Look up business_id from waitlist to keep entries consistent
+  // Look up business_id and settings from waitlist
   const { data: w, error: wErr } = await supabase
     .from("waitlists")
-    .select("business_id")
+    .select("business_id, ask_name, ask_phone")
     .eq("id", waitlistId)
     .single();
   if (wErr) return NextResponse.json({ error: wErr.message }, { status: 400 });
+
+  // Validate required fields based on settings
+  if (w.ask_name !== false && !customerName) {
+    return NextResponse.json({
+      error: {
+        fieldErrors: { customerName: ["Name is required"] },
+        message: "Name is required"
+      }
+    }, { status: 400 });
+  }
+  if (w.ask_phone !== false && !phone) {
+    return NextResponse.json({
+      error: {
+        fieldErrors: { phone: ["Phone is required"] },
+        message: "Phone is required"
+      }
+    }, { status: 400 });
+  }
 
   // Compute next ticket number within this waitlist
   const { data: maxRow } = await supabase
@@ -330,7 +348,7 @@ export async function DELETE(req: NextRequest) {
   if (entry.waitlist_id) {
     try {
       await calculateAndUpdateETA(admin, entry.waitlist_id);
-    } catch {}
+    } catch { }
   }
 
   return NextResponse.json({ ok: true });

@@ -8,7 +8,7 @@ type ChangePayload = {
 };
 
 export default function StatsCards({ waitlistId }: { waitlistId: string }) {
-  const [lastCalledNumber, setLastCalledNumber] = useState<number | null>(null);
+  const [servingNumbers, setServingNumbers] = useState<string>("");
   const [etaDisplay, setEtaDisplay] = useState<string>("");
   const [queueLength, setQueueLength] = useState<number>(0);
   const [servedToday, setServedToday] = useState<number>(0);
@@ -41,13 +41,12 @@ export default function StatsCards({ waitlistId }: { waitlistId: string }) {
         // Last called number: any entry that has been notified (called), regardless of current status
         supabase
           .from("waitlist_entries")
-          .select("ticket_number, queue_position, notified_at")
+          .select("ticket_number, queue_position, notified_at, status")
           .eq("waitlist_id", waitlistId)
           .in("status", ["notified", "seated"])
           .not("notified_at", "is", null)
           .order("notified_at", { ascending: false })
-          .order("ticket_number", { ascending: false })
-          .limit(1),
+          .limit(100),
         // Queue length (waiting entries only, exclude archived)
         supabase
           .from("waitlist_entries")
@@ -84,9 +83,25 @@ export default function StatsCards({ waitlistId }: { waitlistId: string }) {
       const minutes = totalMin % 60;
       const newEtaDisplay = totalMin > 0 ? (hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`) : "0m";
 
-      // Get last called number
-      const lastCalledEntry = lastCalledRes.data?.[0] as { ticket_number: number | null; queue_position: number | null; notified_at: string | null } | undefined;
-      const newLastCalledNumber = lastCalledEntry?.ticket_number ?? lastCalledEntry?.queue_position ?? null;
+      // Get serving numbers
+      const entries = (lastCalledRes.data || []) as { ticket_number: number | null; queue_position: number | null; status: string }[];
+      let serving = entries.filter(e => e.status === 'notified');
+
+      let newServingNumbers = "";
+      if (serving.length > 0) {
+        // Sort ascendingly by number for display
+        newServingNumbers = serving
+          .map(e => ({ val: e.ticket_number ?? e.queue_position, original: e }))
+          .filter(e => e.val !== null)
+          .sort((a, b) => (a.val as number) - (b.val as number))
+          .map(e => e.val)
+          .join(", ");
+      } else if (entries.length > 0) {
+        // Fallback to the latest seated (index 0 is latest due to query sort)
+        const latest = entries[0];
+        const val = latest.ticket_number ?? latest.queue_position;
+        newServingNumbers = val !== null ? String(val) : "";
+      }
 
       // Queue length
       const newQueueLength = queueRes.count || 0;
@@ -96,7 +111,7 @@ export default function StatsCards({ waitlistId }: { waitlistId: string }) {
       const newNoShowToday = noShowTodayRes.count || 0;
 
 
-      setLastCalledNumber(newLastCalledNumber);
+      setServingNumbers(newServingNumbers);
       setEtaDisplay(newEtaDisplay);
       setQueueLength(newQueueLength);
       setServedToday(newServedToday);
@@ -149,7 +164,7 @@ export default function StatsCards({ waitlistId }: { waitlistId: string }) {
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
       <div className="bg-primary/10 text-card-foreground ring-1 ring-primary rounded-xl p-3">
         <p className="text-xs font-medium text-primary">Now serving</p>
-        <p className="mt-0.5 text-xl font-bold text-foreground">{lastCalledNumber ?? "—"}</p>
+        <p className="mt-0.5 text-xl font-bold text-foreground">{servingNumbers || "—"}</p>
       </div>
       <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-3">
         <p className="text-xs text-muted-foreground">Estimated wait time</p>

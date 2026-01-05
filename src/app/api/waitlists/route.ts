@@ -7,7 +7,7 @@ export async function GET() {
   const supabase = await createRouteClient();
   const { data, error } = await supabase
     .from("waitlists")
-    .select("id, name, business_id, location_id, display_token, kiosk_enabled, list_type, seating_preferences, created_at, business_locations:location_id(id, name)")
+    .select("id, name, business_id, location_id, display_token, kiosk_enabled, list_type, seating_preferences, ask_name, ask_phone, created_at, business_locations:location_id(id, name)")
     .order("created_at", { ascending: true });
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ waitlists: data ?? [] });
@@ -157,6 +157,8 @@ const patchSchema = z.object({
   locationId: z.string().uuid().optional(),
   kioskEnabled: z.boolean().optional(),
   seatingPreferences: z.array(z.string()).optional(),
+  askName: z.boolean().optional(),
+  askPhone: z.boolean().optional(),
 });
 
 export async function PUT(req: NextRequest) {
@@ -170,19 +172,22 @@ export async function PUT(req: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { id, name, locationId, kioskEnabled, seatingPreferences } = parse.data;
+  const { id, name, locationId, kioskEnabled, seatingPreferences, askName, askPhone } = parse.data;
   const payload: Record<string, unknown> = {};
   if (typeof name === "string") payload.name = name;
   if (typeof locationId === "string") payload.location_id = locationId;
   if (typeof kioskEnabled === "boolean") payload.kiosk_enabled = kioskEnabled;
   if (Array.isArray(seatingPreferences)) payload.seating_preferences = seatingPreferences;
+  if (typeof askName === "boolean") payload.ask_name = askName;
+  if (typeof askPhone === "boolean") payload.ask_phone = askPhone;
+
   if (Object.keys(payload).length === 0) return NextResponse.json({ error: "No fields to update" }, { status: 400 });
 
   const { data, error } = await supabase
     .from("waitlists")
     .update(payload)
     .eq("id", id)
-    .select("id, name, business_id, location_id, display_token, kiosk_enabled, list_type, seating_preferences")
+    .select("id, name, business_id, location_id, display_token, kiosk_enabled, list_type, seating_preferences, ask_name, ask_phone")
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ waitlist: data });
