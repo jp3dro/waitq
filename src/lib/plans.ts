@@ -15,6 +15,7 @@ export interface PlanFeature {
 export interface PlanDefinition {
   id: PlanId;
   name: string;
+  description: string;
   priceMonthlyEUR: number; // in euros
   features: string[]; // High-level features for the cards
   limits: Record<PlanLimitKeys, number>;
@@ -31,6 +32,7 @@ export const plans: Record<PlanId, PlanDefinition> = {
   free: {
     id: "free",
     name: "Free",
+    description: "Perfect for testing the waters and small establishments.",
     priceMonthlyEUR: 0,
     limits: {
       locations: 1,
@@ -52,6 +54,7 @@ export const plans: Record<PlanId, PlanDefinition> = {
   base: {
     id: "base",
     name: "Base",
+    description: "Essential features for growing busy restaurants.",
     priceMonthlyEUR: 49,
     limits: {
       locations: 5,
@@ -74,6 +77,7 @@ export const plans: Record<PlanId, PlanDefinition> = {
   premium: {
     id: "premium",
     name: "Premium",
+    description: "Unleash the full power with advanced analytics and support.",
     priceMonthlyEUR: 99,
     limits: {
       locations: 100,

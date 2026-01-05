@@ -61,12 +61,7 @@ export default function PricingPage() {
               <CardHeader>
                 <CardTitle className="text-2xl">{plan.name}</CardTitle>
                 <CardDescription className="min-h-[40px]">
-                  {plan.id === "free" &&
-                    "Perfect for testing the waters and small establishments."}
-                  {plan.id === "base" &&
-                    "Essential features for growing busy restaurants."}
-                  {plan.id === "premium" &&
-                    "Unleash the full power with advanced analytics and support."}
+                  {plan.description}
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex-1 space-y-6">

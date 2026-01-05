@@ -1,14 +1,13 @@
 export const metadata = { title: "Subscription" };
 export const dynamic = "force-dynamic";
 
-import Link from "next/link";
 import { orderedPlans, plans } from "@/lib/plans";
 import { createClient } from "@/lib/supabase/server";
 import SubscribeButton from "./subscribe-button";
-import { Button } from "@/components/ui/button";
 import { getStripe } from "@/lib/stripe";
 import { getAdminClient } from "@/lib/supabase/admin";
 import type Stripe from "stripe";
+import PlanCards from "@/components/subscriptions/PlanCards";
 
 
 function formatEUR(amount: number) {
@@ -705,67 +704,7 @@ export default async function SubscriptionPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {orderedPlans.map((plan) => {
-            const isCurrentPlan = plan.id === currentPlanId;
-            const isUpgradeable = currentPlanId !== "free" && plan.id !== currentPlanId && orderedPlans.findIndex(p => p.id === plan.id) > orderedPlans.findIndex(p => p.id === currentPlanId);
-            return (
-              <div key={plan.id} className={`bg-card text-card-foreground ring-1 rounded-xl p-6 flex flex-col justify-between relative ${isCurrentPlan
-                ? 'ring-primary/80 bg-accent/10'
-                : 'ring-border'
-                }`}>
-                <div className="grow">
-                  <div className="mb-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-xl font-semibold">{plan.name}</h3>
-                      {isCurrentPlan && (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary text-primary-foreground">
-                          Current Plan
-                        </span>
-                      )}
-                    </div>
-                    <div className="mt-2 text-2xl font-bold">
-                      {formatEUR(plan.priceMonthlyEUR)} <span className="text-sm font-normal">/ month</span>
-                    </div>
-                  </div>
-                  <ul className="text-sm text-foreground/80 space-y-1">
-                    <li>{plan.limits.locations} locations</li>
-                    <li>{plan.limits.users} users</li>
-                    <li>
-                      {plan.limits.reservationsPerMonth} reservations/queues per month
-                    </li>
-                    <li>{plan.limits.messagesPerMonth} SMS/emails per month</li>
-                    {plan.features.map((f, idx) => (
-                      <li key={idx}>{f}</li>
-                    ))}
-                  </ul>
-                </div>
-                <div className="mt-4">
-                  {plan.priceMonthlyEUR === 0 ? (
-                    // Hide "Included" button when user has an active subscription (any paid plan)
-                    currentPlanId !== "free" ? null : (
-                      isCurrentPlan ? null : (
-                        <Button asChild className="w-full">
-                          <Link href="/dashboard">Included</Link>
-                        </Button>
-                      )
-                    )
-                  ) : (
-                    <SubscribeButton
-                      lookupKey={plan.stripe.priceLookupKeyMonthly}
-                      planId={plan.id}
-                      className="w-full"
-                      variant={isCurrentPlan ? 'default' : (isUpgradeable ? 'outline' : 'default')}
-                      isPortal={isCurrentPlan}
-                    >
-                      {isCurrentPlan ? 'Manage in Stripe' : (isUpgradeable ? 'Upgrade' : 'Subscribe')}
-                    </SubscribeButton>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <PlanCards mode="manage" currentPlanId={currentPlanId} />
 
         <div className="grid grid-cols-1 gap-4">
           {hasActiveSubscription && uiSubscription && (

@@ -5,7 +5,7 @@ import { plans } from "@/lib/plans";
 import type { Stripe } from "stripe";
 
 export async function POST(req: NextRequest) {
-  const { priceId, lookupKey, customerEmail, planId } = await req.json();
+  const { priceId, lookupKey, customerEmail, planId, successPath, cancelPath } = await req.json();
   const stripe = getStripe();
 
   const supabase = await createRouteClient();
@@ -157,8 +157,8 @@ export async function POST(req: NextRequest) {
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
     line_items: [lineItem],
-    success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/subscriptions?checkout=success`,
-    cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/subscriptions`,
+    success_url: `${process.env.NEXT_PUBLIC_SITE_URL}${typeof successPath === "string" && successPath.startsWith("/") ? successPath : "/subscriptions?checkout=success"}`,
+    cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}${typeof cancelPath === "string" && cancelPath.startsWith("/") ? cancelPath : "/subscriptions"}`,
     customer: existingStripeCustomerId || undefined,
     customer_email: existingStripeCustomerId ? undefined : (customerEmail || user.email || undefined),
     allow_promotion_codes: true,

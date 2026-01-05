@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState, useTransition } from "react";
 import { getCountries } from "react-phone-number-input";
+import { useRouter } from "next/navigation";
 import { toastManager } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,6 +43,7 @@ function toBaseline(biz: Business): Baseline {
 }
 
 export default function BusinessDetailsClient({ initial, canEdit }: Props) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [uploading, setUploading] = useState(false);
   const logoFileRef = useRef<HTMLInputElement | null>(null);
@@ -105,6 +107,7 @@ export default function BusinessDetailsClient({ initial, canEdit }: Props) {
       if (!url) throw new Error("Upload failed");
 
       setLogoUrl(url);
+      router.refresh(); // ensure server components (sidebar) pick up new logo_url immediately
       toastManager.add({ title: "Uploaded", description: "Logo updated.", type: "success" });
     } catch (e) {
       toastManager.add({ title: "Upload failed", description: (e as Error).message, type: "error" });
@@ -122,6 +125,7 @@ export default function BusinessDetailsClient({ initial, canEdit }: Props) {
       if (!res.ok) throw new Error(j?.error || "Failed to remove logo");
 
       setLogoUrl("");
+      router.refresh(); // ensure server components (sidebar) pick up logo removal immediately
       toastManager.add({ title: "Removed", description: "Logo removed.", type: "success" });
     } catch (e) {
       toastManager.add({ title: "Error", description: (e as Error).message, type: "error" });

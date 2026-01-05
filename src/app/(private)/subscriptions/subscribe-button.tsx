@@ -10,9 +10,11 @@ type Props = {
   disabled?: boolean;
   variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
   isPortal?: boolean;
+  successPath?: string;
+  cancelPath?: string;
 };
 
-export default function SubscribeButton({ lookupKey, planId, children, className, disabled, variant, isPortal }: Props) {
+export default function SubscribeButton({ lookupKey, planId, children, className, disabled, variant, isPortal, successPath, cancelPath }: Props) {
   async function onClick() {
     if (disabled) return;
 
@@ -21,7 +23,7 @@ export default function SubscribeButton({ lookupKey, planId, children, className
     const res = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(isPortal ? {} : { lookupKey, planId }),
+      body: JSON.stringify(isPortal ? {} : { lookupKey, planId, successPath, cancelPath }),
     });
     if (!res.ok) return;
     const data = await res.json();

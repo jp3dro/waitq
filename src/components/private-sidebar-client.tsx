@@ -12,10 +12,7 @@ import {
     CreditCard,
     Building2,
     BarChart3,
-    BadgeCheck,
-    Bell,
     ChevronsUpDown,
-    Sparkles,
     Sun,
     Moon,
     Monitor
@@ -34,11 +31,6 @@ import {
     DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
-import { cn } from "@/lib/utils";
-import { ThemeToggle } from "@/components/ui/theme-toggle"; // Keeping if needed elsewhere or just remove if fully replaced.
-import { Button } from "@/components/ui/button";
 import {
     Sidebar,
     SidebarContent,
@@ -50,7 +42,9 @@ import {
 } from "@/components/ui/sidebar";
 
 type Props = {
+    userName: string | null;
     userEmail: string | null;
+    businessLogoUrl: string | null;
     role?: string;
     lists: { id: string; name: string }[];
 };
@@ -67,8 +61,8 @@ function NavItem({
     subItems?: { href: string; label: string }[];
 }) {
     const pathname = usePathname();
-    const isActive = pathname === href || (pathname.startsWith(href + "/") && !subItems);
     const isSubActive = subItems?.some((s) => pathname === s.href) ?? false;
+    const isActive = pathname === href || (pathname.startsWith(href + "/") && !subItems) || isSubActive;
     // If we have subitems, we might want the parent to show active if a child is active, OR just let the child be active.
     // Requirement: "show a little bit indented to show a dependency on Lists"
     // Let's keep the parent active if on the main list page, and separate active state for children.
@@ -105,7 +99,7 @@ function NavItem({
     );
 }
 
-export default function PrivateSidebarClient({ userEmail, role, lists }: Props) {
+export default function PrivateSidebarClient({ userName, userEmail, businessLogoUrl, role, lists }: Props) {
     const { setTheme } = useTheme();
     const canSeeAnalytics = role === "admin" || role === "manager";
     const isAdmin = role === "admin";
@@ -114,6 +108,18 @@ export default function PrivateSidebarClient({ userEmail, role, lists }: Props) 
         href: `/lists/${l.id}`,
         label: l.name,
     }));
+
+    const displayName = userName || userEmail?.split("@")[0] || "User";
+    const initials = (() => {
+        const raw = userName?.trim() || "";
+        if (raw) {
+            const parts = raw.split(/\s+/);
+            if (parts.length >= 2) return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+            return raw.slice(0, 2).toUpperCase();
+        }
+        if (userEmail) return userEmail.slice(0, 2).toUpperCase();
+        return "??";
+    })();
 
     return (
         <Sidebar variant="floating" collapsible="none" className="border-0">
@@ -146,7 +152,7 @@ export default function PrivateSidebarClient({ userEmail, role, lists }: Props) 
                 </SidebarMenu>
             </SidebarContent>
 
-            <SidebarFooter className="p-2">
+            <SidebarFooter className="ml-[-8px] mr-[8px]">
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <DropdownMenu>
@@ -155,35 +161,32 @@ export default function PrivateSidebarClient({ userEmail, role, lists }: Props) 
                                     size="lg"
                                     className="w-full data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                                 >
-                                    <Avatar className="h-8 w-8 rounded-lg">
-                                        <AvatarFallback className="rounded-lg">
-                                            {userEmail?.substring(0, 2).toUpperCase() || "CN"}
-                                        </AvatarFallback>
-                                    </Avatar>
+                                    <div className="h-8 w-8 rounded-sm overflow-hidden border border-border bg-background shrink-0 flex items-center justify-center">
+                                        {businessLogoUrl ? (
+                                            // eslint-disable-next-line @next/next/no-img-element
+                                            <img src={businessLogoUrl} alt="Business logo" className="h-full w-full object-cover" />
+                                        ) : (
+                                            <span className="text-xs font-semibold text-muted-foreground">{initials}</span>
+                                        )}
+                                    </div>
                                     <div className="grid flex-1 text-left text-sm leading-tight ml-2">
-                                        <span className="truncate font-semibold">{userEmail?.split("@")[0] || "User"}</span>
-                                        <span className="truncate text-xs text-muted-foreground">{userEmail}</span>
+                                        <span className="truncate font-semibold">{displayName}</span>
                                     </div>
                                     <ChevronsUpDown className="ml-auto size-4" />
                                 </SidebarMenuButton>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent
-                                className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+                                className="w-[--radix-dropdown-menu-trigger-width] rounded-lg"
                                 side="bottom"
-                                align="end"
+                                align="start"
                                 sideOffset={4}
                             >
-                                <DropdownMenuLabel className="p-0 font-normal">
-                                    <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                                        <Avatar className="h-8 w-8 rounded-lg">
-                                            <AvatarFallback className="rounded-lg">
-                                                {userEmail?.substring(0, 2).toUpperCase() || "CN"}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                        <div className="grid flex-1 text-left text-sm leading-tight">
-                                            <span className="truncate font-semibold">{userEmail?.split("@")[0] || "User"}</span>
-                                            <span className="truncate text-xs">{userEmail}</span>
-                                        </div>
+                                <DropdownMenuLabel className="px-2 py-1.5 font-normal">
+                                    <div className="grid text-left text-sm leading-tight">
+                                        <span className="truncate font-semibold">{displayName}</span>
+                                        {userEmail && (
+                                            <span className="truncate text-xs text-muted-foreground">{userEmail}</span>
+                                        )}
                                     </div>
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator />

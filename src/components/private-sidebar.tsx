@@ -9,7 +9,7 @@ export default async function PrivateSidebar() {
   // Resolve role via memberships (fallback to email admin for legacy)
   const { data: biz } = await supabase
     .from("businesses")
-    .select("id")
+    .select("id, logo_url")
     .order("created_at", { ascending: true })
     .limit(1)
     .maybeSingle();
@@ -27,7 +27,19 @@ export default async function PrivateSidebar() {
       .order("created_at", { ascending: true })
     : { data: [] };
 
-  return <PrivateSidebarClient userEmail={user?.email ?? null} role={role} lists={lists || []} />;
+  // Get user's name from onboarding (stored in user_metadata.full_name)
+  const userName = user?.user_metadata?.full_name || null;
+  const businessLogoUrl = (biz?.logo_url as string | null) || null;
+
+  return (
+    <PrivateSidebarClient
+      userName={userName}
+      userEmail={user?.email ?? null}
+      businessLogoUrl={businessLogoUrl}
+      role={role}
+      lists={lists || []}
+    />
+  );
 }
 
 
