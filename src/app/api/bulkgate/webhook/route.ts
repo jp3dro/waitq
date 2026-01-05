@@ -14,8 +14,30 @@ interface BulkGateWebhookPayload {
 
 export async function POST(req: NextRequest) {
   try {
+    const configuredSecret = process.env.BULKGATE_WEBHOOK_SECRET;
+    if (!configuredSecret) {
+      console.error("[BulkGate Webhook] BULKGATE_WEBHOOK_SECRET is not set");
+      return NextResponse.json({ error: "Webhook not configured" }, { status: 500 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const secretFromQuery = searchParams.get("secret");
+    const secretFromHeader =
+      req.headers.get("x-bulkgate-webhook-secret") ||
+      req.headers.get("x-webhook-secret") ||
+      (req.headers.get("authorization")?.startsWith("Bearer ") ? req.headers.get("authorization")?.slice("Bearer ".length) : null);
+
+    const providedSecret = secretFromHeader || secretFromQuery;
+    if (!providedSecret || providedSecret !== configuredSecret) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const payload: BulkGateWebhookPayload = await req.json();
-    console.log('[BulkGate Webhook] Received:', payload);
+    console.log("[BulkGate Webhook] Received event", {
+      channel: payload.channel,
+      status: payload.status,
+      message_id: payload.message_id,
+    });
 
     const admin = getAdminClient();
 
@@ -106,7 +128,7 @@ export async function POST(req: NextRequest) {
       .update(updateLogData)
       .eq('message_id', payload.message_id);
 
-    console.log(`[BulkGate Webhook] Updated ${payload.channel} status for entry ${data.id} (${data.customer_name}) to ${internalStatus}`);
+    console.log(`[BulkGate Webhook] Updated ${payload.channel} status for entry ${data.id} to ${internalStatus}`);
 
     return NextResponse.json({ success: true, updated: data.id });
   } catch (error) {

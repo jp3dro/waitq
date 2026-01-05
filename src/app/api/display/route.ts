@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/supabase/admin";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function GET(req: NextRequest) {
+  const ip = getClientIp(req.headers);
+  const rl = checkRateLimit({ key: `display:${ip}`, limit: 120, windowMs: 60_000 });
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "Too Many Requests" },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } }
+    );
+  }
+
   const { searchParams } = new URL(req.url);
   const token = searchParams.get("token");
   if (!token) return NextResponse.json({ error: "Missing token" }, { status: 400 });

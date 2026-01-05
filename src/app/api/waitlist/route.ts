@@ -285,30 +285,54 @@ export async function DELETE(req: NextRequest) {
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
-  // Use service role for hard delete regardless of RLS
+  // Require an authenticated user and authorize against the entry's business scope.
+  const supabase = await createRouteClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  // Use service role for delete, but only after server-side authorization.
   const admin = getAdminClient();
-  const { data: deleted, error } = await admin
+  const { data: entry, error: entryErr } = await admin
     .from("waitlist_entries")
-    .select("waitlist_id")
+    .select("id, business_id, waitlist_id")
     .eq("id", id)
     .maybeSingle();
-  if (!error) {
-    await admin.from("waitlist_entries").delete().eq("id", id);
-    if (deleted?.waitlist_id) {
-      // Recalculate ETA after deletion
-      await (async () => {
-        try {
-          await (async () => {
-            // reuse internal calculate by calling update with no-op? fallback to separate logic is complex; skip if not available
-            const admin2 = getAdminClient();
-            // Triggering existing logic by updating nothing is not ideal; leave as best-effort no-op
-            await admin2.from("waitlist_entries").select("id").eq("waitlist_id", deleted.waitlist_id).limit(1);
-          })();
-        } catch {}
-      })();
-    }
+  if (entryErr) return NextResponse.json({ error: entryErr.message }, { status: 400 });
+  if (!entry) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  // Owner can always delete; otherwise require active membership in the business.
+  const { data: owned } = await supabase
+    .from("businesses")
+    .select("id")
+    .eq("id", entry.business_id)
+    .eq("owner_user_id", user.id)
+    .maybeSingle();
+
+  let allowed = !!owned?.id;
+  if (!allowed) {
+    const { data: membership } = await supabase
+      .from("memberships")
+      .select("role, status")
+      .eq("business_id", entry.business_id)
+      .eq("user_id", user.id)
+      .maybeSingle();
+    allowed = membership?.status === "active";
   }
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+  if (!allowed) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  const { error: delErr } = await admin.from("waitlist_entries").delete().eq("id", id);
+  if (delErr) return NextResponse.json({ error: delErr.message }, { status: 400 });
+
+  // Recalculate ETA after deletion (best-effort)
+  if (entry.waitlist_id) {
+    try {
+      await calculateAndUpdateETA(admin, entry.waitlist_id);
+    } catch {}
+  }
+
   return NextResponse.json({ ok: true });
 }
 

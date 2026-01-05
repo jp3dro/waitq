@@ -3,21 +3,17 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
 type Entry = { status: string; created_at: string; eta_minutes: number | null; queue_position: number | null; waitlist_id?: string; ticket_number?: number | null; notified_at?: string | null; seating_preference?: string | null; party_size?: number | null };
 type Business = { name: string | null; logo_url: string | null; accent_color?: string | null; background_color?: string | null } | null;
 
 export default function ClientStatus({ token }: { token: string }) {
-  const supabase = createClient();
   const router = useRouter();
   const [data, setData] = useState<Entry | null>(null);
   const [loading, setLoading] = useState(true);
   const pollTimer = useRef<number | null>(null);
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const [nowServing, setNowServing] = useState<number | null>(null);
-  const bcRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const [business, setBusiness] = useState<Business>(null);
   const [displayToken, setDisplayToken] = useState<string | null>(null);
   const [waitlistName, setWaitlistName] = useState<string | null>(null);
@@ -46,58 +42,16 @@ export default function ClientStatus({ token }: { token: string }) {
 
   useEffect(() => {
     load();
-    // Optional: disable polling fallback; rely only on realtime
-    // pollTimer.current = window.setInterval(() => {
-    //   load(true);
-    // }, 2000);
+    // Polling is intentional: public pages should not subscribe directly to `waitlist_entries`,
+    // to avoid accidental PII exposure via Realtime payloads.
+    pollTimer.current = window.setInterval(() => {
+      load(true);
+    }, 2000);
     return () => {
       const id = pollTimer.current;
       if (id) window.clearInterval(id);
     };
   }, [token]);
-
-  // Realtime subscription by waitlist_id when known
-  useEffect(() => {
-    if (!data?.waitlist_id) return;
-    if (channelRef.current) {
-      supabase.removeChannel(channelRef.current);
-      channelRef.current = null;
-    }
-    const channel = supabase
-      .channel(`user-status-${data.waitlist_id}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "waitlist_entries", filter: `waitlist_id=eq.${data.waitlist_id}` },
-        () => {
-          // Refresh silently on any change in the same waitlist
-          load(true);
-        }
-      )
-      .subscribe();
-    channelRef.current = channel;
-    return () => {
-      if (channelRef.current) supabase.removeChannel(channelRef.current);
-      channelRef.current = null;
-    };
-  }, [supabase, data?.waitlist_id, load]);
-
-  // Broadcast fallback: dashboard sends refresh on call; listen and refresh silently
-  useEffect(() => {
-    if (!data?.waitlist_id) return;
-    if (bcRef.current) {
-      supabase.removeChannel(bcRef.current);
-      bcRef.current = null;
-    }
-    const chan = supabase
-      .channel(`user-wl-${data.waitlist_id}`)
-      .on('broadcast', { event: 'refresh' }, () => load(true))
-      .subscribe();
-    bcRef.current = chan;
-    return () => {
-      if (bcRef.current) supabase.removeChannel(bcRef.current);
-      bcRef.current = null;
-    };
-  }, [supabase, data?.waitlist_id, load]);
 
   // Accent customization removed: brand is now locked to the preset theme.
 

@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { createClient } from "@/lib/supabase/client";
 import {
   Dialog,
   DialogContent,
@@ -23,9 +22,6 @@ export default function DisplayClient({ token }: { token: string }) {
   const timer = useRef<number | null>(null);
   const prev = useRef<Payload | null>(null);
   const lastCalledRef = useRef<number | null>(null);
-  const supabase = createClient();
-  const subCreated = useRef<boolean>(false);
-  const bcCreated = useRef<boolean>(false);
   const [phoneError, setPhoneError] = useState<string | null>(null);
 
   async function load(silent: boolean = false) {
@@ -46,7 +42,11 @@ export default function DisplayClient({ token }: { token: string }) {
 
   useEffect(() => {
     load();
-    return () => { if (timer.current) window.clearInterval(timer.current); };
+    const id = window.setInterval(() => load(true), 2000);
+    return () => {
+      window.clearInterval(id);
+      if (timer.current) window.clearInterval(timer.current);
+    };
   }, [token]);
 
   // Reset last-called when changing displays
@@ -54,48 +54,8 @@ export default function DisplayClient({ token }: { token: string }) {
     lastCalledRef.current = null;
   }, [token]);
 
-  // Optional: disable polling fallback; rely only on realtime and broadcast
-  // useEffect(() => {
-  //   const id = window.setInterval(() => load(true), 2000);
-  //   return () => window.clearInterval(id);
-  // }, [token]);
-
-  useEffect(() => {
-    if (!data?.listId || subCreated.current) return;
-    const channel = supabase
-      .channel(`public-display-${data.listId}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "waitlist_entries", filter: `waitlist_id=eq.${data.listId}` },
-        () => {
-          if (timer.current) window.clearTimeout(timer.current);
-          timer.current = window.setTimeout(() => load(true), 100);
-        }
-      )
-      .subscribe();
-    subCreated.current = true;
-    return () => {
-      supabase.removeChannel(channel);
-      subCreated.current = false;
-    };
-  }, [supabase, data?.listId]);
-
-  // Broadcast fallback: listen for refresh notifications from dashboard
-  useEffect(() => {
-    if (bcCreated.current) return;
-    const channel = supabase
-      .channel(`display-bc-${token}`)
-      .on('broadcast', { event: 'refresh' }, () => {
-        if (timer.current) window.clearTimeout(timer.current);
-        timer.current = window.setTimeout(() => load(true), 100);
-      })
-      .subscribe();
-    bcCreated.current = true;
-    return () => {
-      supabase.removeChannel(channel);
-      bcCreated.current = false;
-    };
-  }, [supabase, token]);
+  // NOTE: No Supabase Realtime subscriptions in public display.
+  // This prevents accidental PII exposure via realtime payloads.
 
   const bg = data?.backgroundColor || "#000000";
   // Accent customization removed: brand is now locked to the preset theme.
