@@ -3,11 +3,12 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { differenceInMinutes } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import { toastManager } from "@/hooks/use-toast";
-import { RefreshCw, Archive, Pencil, Trash2, MoreHorizontal, Copy, Clock, User } from "lucide-react";
+import { RefreshCw, Archive, Pencil, Trash2, MoreHorizontal, Copy, Clock, User, MessageSquare } from "lucide-react";
 import { Stepper } from "@/components/ui/stepper";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { WhatsAppIcon } from "@/components/icons/whatsapp";
 import {
   Dialog,
   DialogContent,
@@ -233,23 +234,6 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
     smsStatus?: 'pending' | 'sent' | 'delivered' | 'failed' | null | undefined,
     whatsappStatus?: 'pending' | 'sent' | 'delivered' | 'failed' | null | undefined
   ) => {
-    const methods = [];
-
-    const getStatusIcon = (status: 'pending' | 'sent' | 'delivered' | 'failed' | null | undefined) => {
-      switch (status) {
-        case 'delivered':
-          return '✓✓'; // Double check for delivered
-        case 'sent':
-          return '✓'; // Single check for sent
-        case 'pending':
-          return '⏳'; // Hourglass for pending
-        case 'failed':
-          return '✗'; // Cross mark for failed
-        default:
-          return '…'; // Fallback
-      }
-    };
-
     const getStatusColor = (status: 'pending' | 'sent' | 'delivered' | 'failed' | null | undefined) => {
       switch (status) {
         case 'delivered':
@@ -265,33 +249,36 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
       }
     };
 
-    // Consider a channel active if it was requested OR if we already have a status for it
-    const isSmsActive = !!(sendSms || smsStatus);
-    const isWhatsappActive = !!(sendWhatsapp || whatsappStatus);
+    const isNotifiedStatus = (status: 'pending' | 'sent' | 'delivered' | 'failed' | null | undefined) =>
+      status === 'sent' || status === 'delivered';
 
-    if (isSmsActive) {
-      methods.push(
-        <span key="sms" className={`inline-flex items-center gap-1 ${getStatusColor(smsStatus)}`} title={`SMS: ${smsStatus || 'requested'}`}>
-          {getStatusIcon(smsStatus)} SMS
-        </span>
-      );
-    }
+    // Show icons only when a notification was actually sent/delivered.
+    const showSms = isNotifiedStatus(smsStatus);
+    const showWhatsapp = isNotifiedStatus(whatsappStatus);
 
-    if (isWhatsappActive) {
-      methods.push(
-        <span key="whatsapp" className={`inline-flex items-center gap-1 ${getStatusColor(whatsappStatus)}`} title={`WhatsApp: ${whatsappStatus || 'requested'}`}>
-          {getStatusIcon(whatsappStatus)} WhatsApp
-        </span>
-      );
-    }
+    // If nothing actually sent, fall back to showing "None".
+    if (!showSms && !showWhatsapp) return <span className="text-gray-500">None</span>;
 
-    return methods.length > 0 ? methods.reduce((prev, curr, index) => (
-      <>
-        {prev}
-        {index > 0 && <span className="text-gray-400">, </span>}
-        {curr}
-      </>
-    )) : <span className="text-gray-500">None</span>;
+    return (
+      <div className="inline-flex items-center gap-2">
+        {showSms ? (
+          <span
+            className={`inline-flex items-center ${getStatusColor(smsStatus)}`}
+            title={`SMS: ${smsStatus}`}
+          >
+            <MessageSquare className="h-4 w-4" />
+          </span>
+        ) : null}
+        {showWhatsapp ? (
+          <span
+            className={`inline-flex items-center ${getStatusColor(whatsappStatus)}`}
+            title={`WhatsApp: ${whatsappStatus}`}
+          >
+            <WhatsAppIcon className="h-4 w-4" />
+          </span>
+        ) : null}
+      </div>
+    );
   };
 
   const archive = (id: string) => {

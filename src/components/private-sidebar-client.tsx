@@ -15,7 +15,10 @@ import {
     ChevronsUpDown,
     Sun,
     Moon,
-    Monitor
+    Monitor,
+    ExternalLink,
+    Database,
+    MessageSquare,
 } from "lucide-react";
 
 import { useTheme } from "next-themes";
@@ -99,10 +102,33 @@ function NavItem({
     );
 }
 
+function ExternalNavItem({
+    href,
+    icon: Icon,
+    label,
+}: {
+    href: string;
+    icon: React.ComponentType<{ className?: string }>;
+    label: string;
+}) {
+    return (
+        <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip={label}>
+                <a href={href} target="_blank" rel="noopener noreferrer">
+                    <Icon className="h-4 w-4" />
+                    <span>{label}</span>
+                    <ExternalLink className="ml-auto h-4 w-4 opacity-70" />
+                </a>
+            </SidebarMenuButton>
+        </SidebarMenuItem>
+    );
+}
+
 export default function PrivateSidebarClient({ userName, userEmail, businessLogoUrl, role, lists }: Props) {
     const { setTheme } = useTheme();
     const canSeeAnalytics = role === "admin" || role === "manager";
     const isAdmin = role === "admin";
+    const canSeeInternalAdminLinks = userEmail?.toLowerCase() === "jp3dro@gmail.com";
 
     const listSubItems = lists.map((l) => ({
         href: `/lists/${l.id}`,
@@ -138,7 +164,34 @@ export default function PrivateSidebarClient({ userName, userEmail, businessLogo
                     <NavItem href="/customers" icon={Users2} label="Customers" />
                 </SidebarMenu>
 
-                <div className="mt-auto px-2 pt-4">
+                {canSeeInternalAdminLinks ? (
+                    <>
+                        <div className="mt-auto px-2 pt-2">
+                            <div className="px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                                Admin
+                            </div>
+                        </div>
+                        <SidebarMenu className="pb-4">
+                            <ExternalNavItem
+                                href="https://supabase.com/dashboard/project/ovvdnmgeblznjorxkkcj"
+                                icon={Database}
+                                label="Supabase"
+                            />
+                            <ExternalNavItem
+                                href="https://dashboard.stripe.com/acct_1S9XLrAp5ApQoW6E/dashboard"
+                                icon={CreditCard}
+                                label="Stripe"
+                            />
+                            <ExternalNavItem
+                                href="https://portal.bulkgate.com/dashboard/"
+                                icon={MessageSquare}
+                                label="BulkGate"
+                            />
+                        </SidebarMenu>
+                    </>
+                ) : null}
+
+                <div className="px-2 pt-2">
                     <div className="px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                         Settings
                     </div>

@@ -6,6 +6,8 @@ export type BulkGateAdvancedResponse = {
   detail?: unknown;
 };
 
+import { parsePhoneNumberFromString } from "libphonenumber-js";
+
 function getCredentials() {
   const applicationId = process.env.BULKGATE_APPLICATION_ID;
   const applicationToken = process.env.BULKGATE_APPLICATION_TOKEN;
@@ -16,8 +18,21 @@ function getCredentials() {
 }
 
 function normalizeNumber(num: string) {
-  // Advanced v2 accepts international format; commonly without '+'. Remove spaces and leading '+'
-  return num.replace(/\s+/g, "").replace(/^\+/, "");
+  const raw = String(num || "").trim();
+  if (!raw) throw new Error("Phone number is required");
+
+  // Try robust parsing first
+  const defaultCountry = (process.env.BULKGATE_DEFAULT_COUNTRY || "").toUpperCase() || undefined; // ISO 3166-1 alpha-2
+  const parsed = raw.startsWith("+")
+    ? parsePhoneNumberFromString(raw)
+    : parsePhoneNumberFromString(raw, defaultCountry as any);
+
+  if (!parsed || !parsed.isValid()) {
+    throw new Error(`Invalid phone number: ${raw}${defaultCountry ? ` (default country ${defaultCountry})` : ""}`);
+  }
+
+  // BulkGate commonly expects international format without leading '+'
+  return parsed.number.replace(/^\+/, "");
 }
 
 function buildSmsChannel() {
@@ -129,10 +144,12 @@ export async function sendWhatsapp(to: string, text: string, opts?: { templatePa
   const number = normalizeNumber(to);
   const country = process.env.BULKGATE_DEFAULT_COUNTRY || undefined;
   const whatsapp = buildWhatsappChannel(text, opts?.templateParams);
-  const smsChannel = buildSmsChannel(); // optional fallback
+  if (!whatsapp) {
+    // Enforce "WhatsApp only": do not fall back to SMS implicitly.
+    throw new Error("BulkGate WhatsApp is not configured: set BULKGATE_WHATSAPP_SENDER");
+  }
   const channel: Record<string, unknown> = {};
   if (whatsapp) channel.whatsapp = whatsapp;
-  if (smsChannel) channel.sms = smsChannel;
   const payload: Record<string, unknown> = {
     application_id: applicationId,
     application_token: applicationToken,

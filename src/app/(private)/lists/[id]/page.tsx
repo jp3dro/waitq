@@ -106,7 +106,7 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
           <h1 className="text-3xl font-bold tracking-tight">{wl.name}</h1>
         </div>
 
-        <div className="bg-card text-card-foreground rounded-xl space-y-6">
+        <div className="text-card-foreground rounded-xl space-y-6">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <AddButton defaultWaitlistId={wl.id} lockWaitlist businessCountry={businessCountry} />

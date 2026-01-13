@@ -5,6 +5,18 @@ import { getAdminClient } from "@/lib/supabase/admin";
 import { z } from "zod";
 import { sendSms, sendWhatsapp } from "@/lib/bulkgate";
 
+function getBulkGateMessageId(resp: unknown): string | null {
+  const r = resp as { data?: Record<string, unknown> } | null | undefined;
+  const v = r?.data?.message_id;
+  return typeof v === "string" && v.length ? v : null;
+}
+
+function getBulkGateChannel(resp: unknown): string | null {
+  const r = resp as { data?: Record<string, unknown> } | null | undefined;
+  const v = r?.data?.channel;
+  return typeof v === "string" && v.length ? v : null;
+}
+
 // Calculate ETA for all waiting entries in a waitlist
 // Assumes average service time of 15 minutes per person
 async function calculateAndUpdateETA(admin: ReturnType<typeof getAdminClient>, waitlistId: string) {
@@ -57,6 +69,20 @@ const schema = z.object({
   partySize: z.number().int().positive().optional(),
   seatingPreference: z.string().optional(),
 });
+
+function buildWaitlistNotificationMessage(opts: { businessName?: string | null; ticketNumber?: number | null; statusUrl: string }) {
+  const businessName = (opts.businessName || "").trim();
+  const brandPrefix = businessName ? `${businessName}: ` : "";
+  const ticketSuffix = opts.ticketNumber ? ` #${opts.ticketNumber}` : "";
+  const text = `${brandPrefix}You're ${ticketSuffix} on the list. Follow the progress here: ${opts.statusUrl}`;
+  const variables = {
+    brand: businessName,
+    ticket: (opts.ticketNumber || "").toString(),
+    link: opts.statusUrl,
+  };
+  const templateParams = [businessName, (opts.ticketNumber || "").toString(), opts.statusUrl];
+  return { text, variables, templateParams };
+}
 
 export async function POST(req: NextRequest) {
   const json = await req.json();
@@ -163,30 +189,28 @@ export async function POST(req: NextRequest) {
   const statusUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/w/${data.token}`;
   if (shouldSendSms || shouldSendWhatsapp) {
     try {
-      const ticket = data.ticket_number ? ` #${data.ticket_number}` : "";
       // Fetch business name for branding
-      let brand = "";
-      const { data: biz } = await supabase
-        .from("businesses")
-        .select("name")
-        .order("created_at", { ascending: true })
-        .limit(1)
-        .maybeSingle();
-      if (biz?.name) brand = `${biz.name}: `;
-      const message = `${brand}You're on the list${ticket}! Track your spot: ${statusUrl}`;
-      const variables = { brand: brand.trim().replace(/:$/, ""), ticket: (data.ticket_number || "").toString(), link: statusUrl };
-      const templateParams = [brand.trim().replace(/:$/, ""), (data.ticket_number || "").toString(), statusUrl];
+      const { data: biz } = await supabase.from("businesses").select("name").eq("id", w.business_id).maybeSingle();
+      const built = buildWaitlistNotificationMessage({
+        businessName: biz?.name ?? null,
+        ticketNumber: data.ticket_number ?? null,
+        statusUrl,
+      });
+      const message = built.text;
+      const variables = built.variables;
+      const templateParams = built.templateParams;
       if (shouldSendSms && phone) {
         try {
           const resp = await sendSms(phone, message, { variables });
           console.log("[Waitlist] SMS sent", resp);
 
           // Update the entry with SMS message ID and initial status
-          if (resp?.data?.message_id) {
+          const messageId = getBulkGateMessageId(resp);
+          if (messageId) {
             await admin
               .from("waitlist_entries")
               .update({
-                sms_message_id: resp.data.message_id,
+                sms_message_id: messageId,
                 sms_status: 'sent', // BulkGate returns 'accepted' which we map to 'sent'
                 sms_sent_at: new Date().toISOString()
               })
@@ -199,7 +223,7 @@ export async function POST(req: NextRequest) {
                 user_id: user.id,
                 waitlist_entry_id: data.id,
                 message_type: 'sms',
-                message_id: resp.data.message_id,
+                message_id: messageId,
                 phone_number: phone,
                 status: 'sent',
                 sent_at: new Date().toISOString(),
@@ -236,32 +260,44 @@ export async function POST(req: NextRequest) {
       if (shouldSendWhatsapp && phone) {
         try {
           const resp = await sendWhatsapp(phone, message, { templateParams, variables });
-          console.log("[Waitlist] WhatsApp sent", resp);
+          const actualChannel = getBulkGateChannel(resp) || "whatsapp";
+          console.log(`[Waitlist] Notification sent (${actualChannel})`, resp);
 
-          // Update the entry with WhatsApp message ID and initial status
-          if (resp?.data?.message_id) {
-            await admin
-              .from("waitlist_entries")
-              .update({
-                whatsapp_message_id: resp.data.message_id,
-                whatsapp_status: 'sent', // BulkGate returns 'accepted' which we map to 'sent'
-                whatsapp_sent_at: new Date().toISOString()
-              })
-              .eq("id", data.id);
+          const messageId = getBulkGateMessageId(resp);
+          if (messageId) {
+            const nowIso = new Date().toISOString();
 
-            // Insert into notification_logs for tracking
-            await admin
-              .from("notification_logs")
-              .insert({
-                user_id: user.id,
-                waitlist_entry_id: data.id,
-                message_type: 'whatsapp',
-                message_id: resp.data.message_id,
-                phone_number: phone,
-                status: 'sent',
-                sent_at: new Date().toISOString(),
-                message_text: message
-              });
+            if (actualChannel === "sms") {
+              // Provider reported SMS even though we attempted WhatsApp. Persist what actually happened.
+              await admin
+                .from("waitlist_entries")
+                .update({
+                  sms_message_id: messageId,
+                  sms_status: "sent",
+                  sms_sent_at: nowIso,
+                })
+                .eq("id", data.id);
+            } else {
+              await admin
+                .from("waitlist_entries")
+                .update({
+                  whatsapp_message_id: messageId,
+                  whatsapp_status: "sent", // BulkGate returns 'accepted' which we map to 'sent'
+                  whatsapp_sent_at: nowIso,
+                })
+                .eq("id", data.id);
+            }
+
+            await admin.from("notification_logs").insert({
+              user_id: user.id,
+              waitlist_entry_id: data.id,
+              message_type: actualChannel === "sms" ? "sms" : "whatsapp",
+              message_id: messageId,
+              phone_number: phone,
+              status: "sent",
+              sent_at: nowIso,
+              message_text: message,
+            });
           }
         } catch (err) {
           console.error("[Waitlist] WhatsApp error", err);
@@ -375,7 +411,7 @@ export async function PATCH(req: NextRequest) {
 
   // Handle retry actions
   if (action === "retry_sms" || action === "retry_whatsapp") {
-    return await handleRetry(id, action, supabase);
+    return await handleRetry(id, action, supabase, user.id);
   }
 
   let payload: Record<string, unknown> = {};
@@ -440,11 +476,16 @@ export async function PUT(req: NextRequest) {
 }
 
 // Handle retry logic for failed SMS/WhatsApp messages
-async function handleRetry(entryId: string, action: "retry_sms" | "retry_whatsapp", supabase: any) {
+async function handleRetry(
+  entryId: string,
+  action: "retry_sms" | "retry_whatsapp",
+  supabase: Awaited<ReturnType<typeof createRouteClient>>,
+  userId: string
+) {
   // Get entry details
   const { data: entry, error: entryError } = await supabase
     .from("waitlist_entries")
-    .select("id, phone, ticket_number, sms_status, whatsapp_status, waitlist_id")
+    .select("id, phone, token, ticket_number, sms_status, whatsapp_status, waitlist_id")
     .eq("id", entryId)
     .single();
 
@@ -453,33 +494,42 @@ async function handleRetry(entryId: string, action: "retry_sms" | "retry_whatsap
   }
 
   const admin = getAdminClient();
-  const statusUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/w/${entry.token || 'unknown'}`;
+  const statusUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/w/${entry.token || "unknown"}`;
 
   try {
-    // Fetch business name for branding
-    const { data: biz } = await supabase
-      .from("businesses")
-      .select("name")
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
+    // Fetch business name for branding (via waitlist -> business)
+    let businessName: string | null = null;
+    if (entry.waitlist_id) {
+      const { data: wl } = await supabase.from("waitlists").select("business_id").eq("id", entry.waitlist_id).maybeSingle();
+      const businessId = wl?.business_id as string | undefined;
+      if (businessId) {
+        const { data: biz } = await supabase.from("businesses").select("name").eq("id", businessId).maybeSingle();
+        businessName = (biz?.name as string | undefined) ?? null;
+      }
+    }
 
-    let brand = "";
-    if (biz?.name) brand = `${biz.name}: `;
-
-    const ticket = entry.ticket_number ? ` #${entry.ticket_number}` : "";
-    const message = `${brand}You're on the list${ticket}! Track your spot: ${statusUrl}`;
-    const variables = { brand: brand.trim().replace(/:$/, ""), ticket: (entry.ticket_number || "").toString(), link: statusUrl };
-    const templateParams = [brand.trim().replace(/:$/, ""), (entry.ticket_number || "").toString(), statusUrl];
+    const built = buildWaitlistNotificationMessage({
+      businessName,
+      ticketNumber: entry.ticket_number ?? null,
+      statusUrl,
+    });
+    const message = built.text;
+    const variables = built.variables;
+    const templateParams = built.templateParams;
 
     if (action === "retry_sms") {
       const resp = await sendSms(entry.phone, message, { variables });
 
       if (resp?.data?.message_id) {
+        const messageId = getBulkGateMessageId(resp);
+        if (!messageId) {
+          return NextResponse.json({ error: "BulkGate did not return a message_id" }, { status: 502 });
+        }
+
         await admin
           .from("waitlist_entries")
           .update({
-            sms_message_id: resp.data.message_id,
+            sms_message_id: messageId,
             sms_status: 'sent',
             sms_sent_at: new Date().toISOString(),
             sms_error_message: null // Clear previous error
@@ -487,14 +537,13 @@ async function handleRetry(entryId: string, action: "retry_sms" | "retry_whatsap
           .eq("id", entryId);
 
         // Insert new SMS log for retry
-        const { data: { user } } = await supabase.auth.getUser();
         await admin
           .from("notification_logs")
           .insert({
-            user_id: user.id,
+            user_id: userId,
             waitlist_entry_id: entryId,
             message_type: 'sms',
-            message_id: resp.data.message_id,
+            message_id: messageId,
             phone_number: entry.phone,
             status: 'sent',
             sent_at: new Date().toISOString(),
@@ -504,31 +553,42 @@ async function handleRetry(entryId: string, action: "retry_sms" | "retry_whatsap
     } else if (action === "retry_whatsapp") {
       const resp = await sendWhatsapp(entry.phone, message, { templateParams, variables });
 
-      if (resp?.data?.message_id) {
-        await admin
-          .from("waitlist_entries")
-          .update({
-            whatsapp_message_id: resp.data.message_id,
-            whatsapp_status: 'sent',
-            whatsapp_sent_at: new Date().toISOString(),
-            whatsapp_error_message: null // Clear previous error
-          })
-          .eq("id", entryId);
+      const actualChannel = getBulkGateChannel(resp) || "whatsapp";
+      const messageId = getBulkGateMessageId(resp);
+      if (messageId) {
+        const nowIso = new Date().toISOString();
+        if (actualChannel === "sms") {
+          await admin
+            .from("waitlist_entries")
+            .update({
+              sms_message_id: messageId,
+              sms_status: "sent",
+              sms_sent_at: nowIso,
+              sms_error_message: null,
+            })
+            .eq("id", entryId);
+        } else {
+          await admin
+            .from("waitlist_entries")
+            .update({
+              whatsapp_message_id: messageId,
+              whatsapp_status: "sent",
+              whatsapp_sent_at: nowIso,
+              whatsapp_error_message: null,
+            })
+            .eq("id", entryId);
+        }
 
-        // Insert new WhatsApp log for retry
-        const { data: { user } } = await supabase.auth.getUser();
-        await admin
-          .from("notification_logs")
-          .insert({
-            user_id: user.id,
-            waitlist_entry_id: entryId,
-            message_type: 'whatsapp',
-            message_id: resp.data.message_id,
-            phone_number: entry.phone,
-            status: 'sent',
-            sent_at: new Date().toISOString(),
-            message_text: message
-          });
+        await admin.from("notification_logs").insert({
+          user_id: userId,
+          waitlist_entry_id: entryId,
+          message_type: actualChannel === "sms" ? "sms" : "whatsapp",
+          message_id: messageId,
+          phone_number: entry.phone,
+          status: "sent",
+          sent_at: nowIso,
+          message_text: message,
+        });
       }
     }
 
