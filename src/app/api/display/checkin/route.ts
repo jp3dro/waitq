@@ -3,6 +3,7 @@ import { getAdminClient } from "@/lib/supabase/admin";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { broadcastRefresh } from "@/lib/realtime-broadcast";
 
 const schema = z.object({
   token: z.string().min(1),
@@ -72,6 +73,17 @@ export async function POST(req: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
   const statusUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/w/${data.token}`;
+
+  // Best-effort: refresh public display + personal status page
+  try {
+    await Promise.all([
+      broadcastRefresh(`display-bc-${displayToken}`),
+      broadcastRefresh(`waitlist-entries-${list.id}`),
+      broadcastRefresh(`user-wl-${list.id}`),
+      broadcastRefresh(`w-status-${data.token}`),
+    ]);
+  } catch { }
+
   return NextResponse.json(
     { id: data.id, token: data.token, statusUrl, ticketNumber: data.ticket_number ?? null },
     { status: 201 }

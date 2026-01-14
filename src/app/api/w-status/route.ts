@@ -17,6 +17,20 @@ export async function GET(req: NextRequest) {
   const token = searchParams.get("token");
   if (!token) return NextResponse.json({ error: "Missing token" }, { status: 400 });
 
+  // Token hardening: refuse obviously-invalid tokens to reduce abuse / scanning.
+  if (!/^[A-Za-z0-9_-]{10,64}$/.test(token)) {
+    return NextResponse.json({ error: "Invalid token" }, { status: 400 });
+  }
+
+  // Per-token rate limit (in addition to per-IP) to minimize brute force / overuse.
+  const rlToken = checkRateLimit({ key: `w-status:t:${token}`, limit: 120, windowMs: 60_000 });
+  if (!rlToken.ok) {
+    return NextResponse.json(
+      { error: "Too Many Requests" },
+      { status: 429, headers: { "Retry-After": String(rlToken.retryAfterSec) } }
+    );
+  }
+
   // Use the public-safe RPC (does not expose phone numbers).
   const supabase = await createRouteClient();
   const { data, error: e1 } = await supabase.rpc("public_waitlist_entry_by_token", { p_token: token });
@@ -24,10 +38,31 @@ export async function GET(req: NextRequest) {
   const entry = Array.isArray(data) ? data[0] : data;
   if (!entry) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
+  // Invalidate/expire sessions after 24 hours to reduce token reuse and unnecessary load.
+  try {
+    const createdAt = entry?.created_at ? new Date(entry.created_at as string) : null;
+    const ageMs = createdAt ? Date.now() - createdAt.getTime() : 0;
+    if (createdAt && isFinite(ageMs) && ageMs > 24 * 60 * 60 * 1000) {
+      return NextResponse.json({ error: "Expired" }, { status: 410 });
+    }
+  } catch { }
+
   const admin = getAdminClient();
 
   let nowServing: number | null = null;
-  let business: { name: string | null; logo_url: string | null; accent_color?: string | null; background_color?: string | null } | null = null;
+  let business:
+    | {
+        name: string | null;
+        logo_url: string | null;
+        accent_color?: string | null;
+        background_color?: string | null;
+        website_url?: string | null;
+        instagram_url?: string | null;
+        facebook_url?: string | null;
+        google_maps_url?: string | null;
+        menu_url?: string | null;
+      }
+    | null = null;
   let displayToken: string | null = null;
   let waitlistName: string | null = null;
   if (entry?.waitlist_id) {
@@ -55,7 +90,7 @@ export async function GET(req: NextRequest) {
   if (entry?.business_id) {
     const { data: biz } = await admin
       .from("businesses")
-      .select("name, logo_url, accent_color, background_color")
+      .select("name, logo_url, accent_color, background_color, website_url, instagram_url, facebook_url, google_maps_url, menu_url")
       .eq("id", entry.business_id)
       .limit(1)
       .maybeSingle();
@@ -64,6 +99,11 @@ export async function GET(req: NextRequest) {
       logo_url: (biz as { logo_url: string | null }).logo_url ?? null,
       accent_color: (biz as { accent_color: string | null }).accent_color ?? null,
       background_color: (biz as { background_color: string | null }).background_color ?? null,
+      website_url: (biz as { website_url: string | null }).website_url ?? null,
+      instagram_url: (biz as { instagram_url: string | null }).instagram_url ?? null,
+      facebook_url: (biz as { facebook_url: string | null }).facebook_url ?? null,
+      google_maps_url: (biz as { google_maps_url: string | null }).google_maps_url ?? null,
+      menu_url: (biz as { menu_url: string | null }).menu_url ?? null,
     };
   }
 

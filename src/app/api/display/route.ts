@@ -16,6 +16,20 @@ export async function GET(req: NextRequest) {
   const token = searchParams.get("token");
   if (!token) return NextResponse.json({ error: "Missing token" }, { status: 400 });
 
+  // Token hardening: refuse obviously-invalid tokens to reduce abuse / scanning.
+  if (!/^[A-Za-z0-9_-]{6,128}$/.test(token)) {
+    return NextResponse.json({ error: "Invalid token" }, { status: 400 });
+  }
+
+  // Per-token rate limit (in addition to per-IP) to minimize brute force / overuse.
+  const rlToken = checkRateLimit({ key: `display:t:${token}`, limit: 120, windowMs: 60_000 });
+  if (!rlToken.ok) {
+    return NextResponse.json(
+      { error: "Too Many Requests" },
+      { status: 429, headers: { "Retry-After": String(rlToken.retryAfterSec) } }
+    );
+  }
+
   const admin = getAdminClient();
   const { data: list, error: listErr } = await admin
     .from("waitlists")

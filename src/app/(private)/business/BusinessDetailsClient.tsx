@@ -21,6 +21,11 @@ type Business = {
   accent_color: string | null;
   background_color: string | null;
   country_code: string | null;
+  website_url?: string | null;
+  instagram_url?: string | null;
+  facebook_url?: string | null;
+  google_maps_url?: string | null;
+  menu_url?: string | null;
   owner_user_id: string | null;
   created_at: string;
 };
@@ -33,12 +38,22 @@ type Props = {
 type Baseline = {
   name: string;
   country_code: string;
+  website_url: string;
+  instagram_url: string;
+  facebook_url: string;
+  google_maps_url: string;
+  menu_url: string;
 };
 
 function toBaseline(biz: Business): Baseline {
   return {
     name: (biz.name || "").trim(),
     country_code: (biz.country_code || "PT").trim().toUpperCase(),
+    website_url: (biz.website_url || "").trim(),
+    instagram_url: (biz.instagram_url || "").trim(),
+    facebook_url: (biz.facebook_url || "").trim(),
+    google_maps_url: (biz.google_maps_url || "").trim(),
+    menu_url: (biz.menu_url || "").trim(),
   };
 }
 
@@ -53,14 +68,24 @@ export default function BusinessDetailsClient({ initial, canEdit }: Props) {
   const [name, setName] = useState(baseline.name);
   const [countryCode, setCountryCode] = useState(baseline.country_code);
   const [logoUrl, setLogoUrl] = useState(initial.logo_url || "");
+  const [websiteUrl, setWebsiteUrl] = useState(baseline.website_url);
+  const [instagramUrl, setInstagramUrl] = useState(baseline.instagram_url);
+  const [facebookUrl, setFacebookUrl] = useState(baseline.facebook_url);
+  const [googleMapsUrl, setGoogleMapsUrl] = useState(baseline.google_maps_url);
+  const [menuUrl, setMenuUrl] = useState(baseline.menu_url);
 
   const dirty = useMemo(() => {
     const next: Baseline = {
       name: name.trim(),
       country_code: countryCode.trim().toUpperCase(),
+      website_url: websiteUrl.trim(),
+      instagram_url: instagramUrl.trim(),
+      facebook_url: facebookUrl.trim(),
+      google_maps_url: googleMapsUrl.trim(),
+      menu_url: menuUrl.trim(),
     };
     return JSON.stringify(next) !== JSON.stringify(baseline);
-  }, [baseline, countryCode, name]);
+  }, [baseline, countryCode, facebookUrl, googleMapsUrl, instagramUrl, menuUrl, name, websiteUrl]);
 
   const countryOptions = useMemo(() => {
     const codes = getCountries();
@@ -137,6 +162,14 @@ export default function BusinessDetailsClient({ initial, canEdit }: Props) {
   async function save() {
     if (!canEdit) return;
     startTransition(async () => {
+      const normalizeUrl = (v: string) => {
+        const t = v.trim();
+        if (!t) return "";
+        // Allow absolute urls; if scheme is missing, default to https://
+        if (/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(t)) return t;
+        return `https://${t}`;
+      };
+
       const payload: Record<string, unknown> = {};
 
       const n = name.trim();
@@ -144,6 +177,21 @@ export default function BusinessDetailsClient({ initial, canEdit }: Props) {
 
       const cc = countryCode.trim().toUpperCase();
       if (cc !== baseline.country_code) payload.countryCode = cc;
+
+      const w = normalizeUrl(websiteUrl);
+      if (w !== baseline.website_url) payload.websiteUrl = w || null;
+
+      const ig = normalizeUrl(instagramUrl);
+      if (ig !== baseline.instagram_url) payload.instagramUrl = ig || null;
+
+      const fb = normalizeUrl(facebookUrl);
+      if (fb !== baseline.facebook_url) payload.facebookUrl = fb || null;
+
+      const gm = normalizeUrl(googleMapsUrl);
+      if (gm !== baseline.google_maps_url) payload.googleMapsUrl = gm || null;
+
+      const mu = normalizeUrl(menuUrl);
+      if (mu !== baseline.menu_url) payload.menuUrl = mu || null;
 
       if (Object.keys(payload).length === 0) {
         toastManager.add({ title: "No changes", description: "Nothing to save.", type: "info" });
@@ -164,6 +212,11 @@ export default function BusinessDetailsClient({ initial, canEdit }: Props) {
           setBaseline(nextBaseline);
           setName(nextBaseline.name);
           setCountryCode(nextBaseline.country_code);
+          setWebsiteUrl(nextBaseline.website_url);
+          setInstagramUrl(nextBaseline.instagram_url);
+          setFacebookUrl(nextBaseline.facebook_url);
+          setGoogleMapsUrl(nextBaseline.google_maps_url);
+          setMenuUrl(nextBaseline.menu_url);
         }
       } else {
         const err = typeof j?.error === "string" ? j.error : "Failed to save changes";
@@ -208,6 +261,88 @@ export default function BusinessDetailsClient({ initial, canEdit }: Props) {
               </SelectContent>
             </Select>
             <p className="text-sm text-muted-foreground">Used as the default region for phone number formatting.</p>
+          </div>
+
+          <div className="space-y-6 pt-2">
+            <div className="text-sm font-medium">Links</div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Website
+              </label>
+              <Input
+                value={websiteUrl}
+                onChange={(e) => setWebsiteUrl(e.target.value)}
+                disabled={!canEdit}
+                placeholder="https://yourdomain.com"
+                inputMode="url"
+                autoCapitalize="none"
+                autoCorrect="off"
+              />
+              <p className="text-sm text-muted-foreground">Shown on the customer wait page.</p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Instagram URL
+              </label>
+              <Input
+                value={instagramUrl}
+                onChange={(e) => setInstagramUrl(e.target.value)}
+                disabled={!canEdit}
+                placeholder="https://instagram.com/yourhandle"
+                inputMode="url"
+                autoCapitalize="none"
+                autoCorrect="off"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Facebook URL
+              </label>
+              <Input
+                value={facebookUrl}
+                onChange={(e) => setFacebookUrl(e.target.value)}
+                disabled={!canEdit}
+                placeholder="https://facebook.com/yourpage"
+                inputMode="url"
+                autoCapitalize="none"
+                autoCorrect="off"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Google Maps URL
+              </label>
+              <Input
+                value={googleMapsUrl}
+                onChange={(e) => setGoogleMapsUrl(e.target.value)}
+                disabled={!canEdit}
+                placeholder="https://maps.app.goo.gl/..."
+                inputMode="url"
+                autoCapitalize="none"
+                autoCorrect="off"
+              />
+              <p className="text-sm text-muted-foreground">Use your Google Maps place link.</p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Digital menu URL
+              </label>
+              <Input
+                value={menuUrl}
+                onChange={(e) => setMenuUrl(e.target.value)}
+                disabled={!canEdit}
+                placeholder="https://..."
+                inputMode="url"
+                autoCapitalize="none"
+                autoCorrect="off"
+              />
+              <p className="text-sm text-muted-foreground">If set, customers will see a “View menu” button while they wait.</p>
+            </div>
           </div>
 
           <div className="space-y-4 pt-4">

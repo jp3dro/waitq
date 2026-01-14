@@ -48,7 +48,9 @@ export async function GET() {
   const admin = getAdminClient();
   const { data, error } = await admin
     .from("businesses")
-    .select("id, name, logo_url, accent_color, background_color, country_code, owner_user_id, created_at")
+    .select(
+      "id, name, logo_url, accent_color, background_color, country_code, owner_user_id, created_at, website_url, instagram_url, facebook_url, google_maps_url, menu_url"
+    )
     .eq("id", resolved.businessId)
     .maybeSingle();
 
@@ -68,6 +70,11 @@ const patchSchema = z
       .string()
       .regex(/^#([0-9a-fA-F]{6})$/, { message: "backgroundColor must be a HEX color (#RRGGBB)" })
       .optional(),
+    websiteUrl: z.string().url().optional().nullable(),
+    instagramUrl: z.string().url().optional().nullable(),
+    facebookUrl: z.string().url().optional().nullable(),
+    googleMapsUrl: z.string().url().optional().nullable(),
+    menuUrl: z.string().url().optional().nullable(),
   })
   .strict();
 
@@ -86,12 +93,24 @@ export async function PATCH(req: NextRequest) {
   if (!resolved) return NextResponse.json({ error: "No business found" }, { status: 404 });
   if (!resolved.canEdit) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
+  const asNullIfEmpty = (v: string | null | undefined) => {
+    if (v === null) return null;
+    if (typeof v === "undefined") return undefined;
+    const t = v.trim();
+    return t.length === 0 ? null : t;
+  };
+
   const fields: Record<string, unknown> = {};
   if (typeof parse.data.name !== "undefined") fields.name = parse.data.name;
   if (typeof parse.data.countryCode !== "undefined") fields.country_code = parse.data.countryCode;
   if (typeof parse.data.logoUrl !== "undefined") fields.logo_url = parse.data.logoUrl;
   if (typeof parse.data.accentColor !== "undefined") fields.accent_color = parse.data.accentColor;
   if (typeof parse.data.backgroundColor !== "undefined") fields.background_color = parse.data.backgroundColor;
+  if (typeof parse.data.websiteUrl !== "undefined") fields.website_url = asNullIfEmpty(parse.data.websiteUrl);
+  if (typeof parse.data.instagramUrl !== "undefined") fields.instagram_url = asNullIfEmpty(parse.data.instagramUrl);
+  if (typeof parse.data.facebookUrl !== "undefined") fields.facebook_url = asNullIfEmpty(parse.data.facebookUrl);
+  if (typeof parse.data.googleMapsUrl !== "undefined") fields.google_maps_url = asNullIfEmpty(parse.data.googleMapsUrl);
+  if (typeof parse.data.menuUrl !== "undefined") fields.menu_url = asNullIfEmpty(parse.data.menuUrl);
 
   if (Object.keys(fields).length === 0) return NextResponse.json({ error: "No changes" }, { status: 400 });
 
@@ -100,7 +119,9 @@ export async function PATCH(req: NextRequest) {
     .from("businesses")
     .update(fields)
     .eq("id", resolved.businessId)
-    .select("id, name, logo_url, accent_color, background_color, country_code, owner_user_id, created_at")
+    .select(
+      "id, name, logo_url, accent_color, background_color, country_code, owner_user_id, created_at, website_url, instagram_url, facebook_url, google_maps_url, menu_url"
+    )
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });

@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import PhoneInput, { getCountryCallingCode, type Country } from "react-phone-number-input";
 import 'react-phone-number-input/style.css';
 import { User, Plus } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 type Entry = { id: string; ticket_number: number | null; queue_position: number | null; status: string; notified_at?: string | null; party_size?: number | null; seating_preference?: string | null };
 type Payload = { listId: string; listName: string; kioskEnabled?: boolean; askName?: boolean; askPhone?: boolean; businessCountry?: string | null; businessName?: string | null; brandLogo?: string | null; seatingPreferences?: string[]; estimatedMs?: number; entries: Entry[]; accentColor?: string; backgroundColor?: string };
@@ -23,6 +24,12 @@ export default function DisplayClient({ token }: { token: string }) {
   const prev = useRef<Payload | null>(null);
   const lastCalledRef = useRef<number | null>(null);
   const [phoneError, setPhoneError] = useState<string | null>(null);
+  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
+  const refreshTimerRef = useRef<number | null>(null);
+  const pendingRefreshRef = useRef(false);
+  const lastRefreshAtRef = useRef<number>(0);
+
+  if (!supabaseRef.current) supabaseRef.current = createClient();
 
   async function load(silent: boolean = false) {
     if (!silent && !data) setLoading(true);
@@ -41,10 +48,46 @@ export default function DisplayClient({ token }: { token: string }) {
   }
 
   useEffect(() => {
+    const supabase = supabaseRef.current!;
     load();
-    const id = window.setInterval(() => load(true), 2000);
+
+    // Public-safe realtime: we only listen to lightweight broadcast "refresh" events (no row payloads / no PII).
+    const channel = supabase
+      .channel(`display-bc-${token}`)
+      .on("broadcast", { event: "refresh" }, () => {
+        // Debounce bursts
+        const now = Date.now();
+        if (now - lastRefreshAtRef.current < 250) return;
+        lastRefreshAtRef.current = now;
+
+        if (typeof document !== "undefined" && document.hidden) {
+          pendingRefreshRef.current = true;
+          return;
+        }
+        if (refreshTimerRef.current) window.clearTimeout(refreshTimerRef.current);
+        refreshTimerRef.current = window.setTimeout(() => {
+          load(true);
+        }, 60);
+      })
+      .subscribe();
+
+    const onVisible = () => {
+      if (typeof document === "undefined") return;
+      if (!document.hidden && pendingRefreshRef.current) {
+        pendingRefreshRef.current = false;
+        load(true);
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+
     return () => {
-      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+      try {
+        supabase.removeChannel(channel);
+      } catch { }
+      if (refreshTimerRef.current) window.clearTimeout(refreshTimerRef.current);
       if (timer.current) window.clearInterval(timer.current);
     };
   }, [token]);
@@ -54,8 +97,7 @@ export default function DisplayClient({ token }: { token: string }) {
     lastCalledRef.current = null;
   }, [token]);
 
-  // NOTE: No Supabase Realtime subscriptions in public display.
-  // This prevents accidental PII exposure via realtime payloads.
+  // NOTE: We subscribe only to broadcast refresh events (no payload), then refetch via /api/display.
 
   const bg = data?.backgroundColor || "#000000";
   // Accent customization removed: brand is now locked to the preset theme.

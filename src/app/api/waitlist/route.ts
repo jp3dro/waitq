@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { nanoid } from "nanoid";
 import { createRouteClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
+import { broadcastRefresh } from "@/lib/realtime-broadcast";
 import { z } from "zod";
 import { sendSms, sendWhatsapp } from "@/lib/bulkgate";
 
@@ -331,6 +332,21 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Best-effort: notify public pages + displays to refetch (no PII in payload).
+  try {
+    await Promise.all([
+      broadcastRefresh(`w-status-${data.token}`),
+      broadcastRefresh(`user-wl-${waitlistId}`),
+      broadcastRefresh(`waitlist-entries-${waitlistId}`),
+      // display refresh uses the display token (if any)
+      (async () => {
+        const { data: wl } = await admin.from("waitlists").select("display_token").eq("id", waitlistId).maybeSingle();
+        const dt = (wl?.display_token as string | null) || null;
+        if (dt) await broadcastRefresh(`display-bc-${dt}`);
+      })(),
+    ]);
+  } catch { }
+
   return NextResponse.json({ id: data.id, token: data.token, statusUrl, ticketNumber: data.ticket_number ?? null }, { status: 201 });
 }
 
@@ -350,7 +366,7 @@ export async function DELETE(req: NextRequest) {
   const admin = getAdminClient();
   const { data: entry, error: entryErr } = await admin
     .from("waitlist_entries")
-    .select("id, business_id, waitlist_id")
+    .select("id, business_id, waitlist_id, token")
     .eq("id", id)
     .maybeSingle();
   if (entryErr) return NextResponse.json({ error: entryErr.message }, { status: 400 });
@@ -386,6 +402,23 @@ export async function DELETE(req: NextRequest) {
       await calculateAndUpdateETA(admin, entry.waitlist_id);
     } catch { }
   }
+
+  // Best-effort broadcast refreshes
+  try {
+    const wlId = (entry.waitlist_id as string | undefined) || null;
+    const entryToken = (entry.token as string | undefined) || null;
+    await Promise.all([
+      wlId ? broadcastRefresh(`waitlist-entries-${wlId}`) : Promise.resolve(),
+      wlId ? broadcastRefresh(`user-wl-${wlId}`) : Promise.resolve(),
+      entryToken ? broadcastRefresh(`w-status-${entryToken}`) : Promise.resolve(),
+      (async () => {
+        if (!wlId) return;
+        const { data: wl } = await admin.from("waitlists").select("display_token").eq("id", wlId).maybeSingle();
+        const dt = (wl?.display_token as string | null) || null;
+        if (dt) await broadcastRefresh(`display-bc-${dt}`);
+      })(),
+    ]);
+  } catch { }
 
   return NextResponse.json({ ok: true });
 }
@@ -429,7 +462,7 @@ export async function PATCH(req: NextRequest) {
     .from("waitlist_entries")
     .update(payload)
     .eq("id", id)
-    .select("id, status, ticket_number, waitlist_id")
+    .select("id, status, ticket_number, waitlist_id, token")
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
@@ -438,6 +471,24 @@ export async function PATCH(req: NextRequest) {
     const admin = getAdminClient();
     await calculateAndUpdateETA(admin, data.waitlist_id);
   }
+
+  // Best-effort broadcast refreshes
+  try {
+    const wlId = (data?.waitlist_id as string | undefined) || null;
+    const entryToken = (data?.token as string | undefined) || null;
+    const admin = getAdminClient();
+    await Promise.all([
+      wlId ? broadcastRefresh(`waitlist-entries-${wlId}`) : Promise.resolve(),
+      wlId ? broadcastRefresh(`user-wl-${wlId}`) : Promise.resolve(),
+      entryToken ? broadcastRefresh(`w-status-${entryToken}`) : Promise.resolve(),
+      (async () => {
+        if (!wlId) return;
+        const { data: wl } = await admin.from("waitlists").select("display_token").eq("id", wlId).maybeSingle();
+        const dt = (wl?.display_token as string | null) || null;
+        if (dt) await broadcastRefresh(`display-bc-${dt}`);
+      })(),
+    ]);
+  } catch { }
 
   return NextResponse.json({ entry: data });
 }
@@ -467,10 +518,28 @@ export async function PUT(req: NextRequest) {
     .from("waitlist_entries")
     .update(updates)
     .eq("id", id)
-    .select("id, customer_name, phone, party_size, seating_preference")
+    .select("id, customer_name, phone, party_size, seating_preference, waitlist_id, token")
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+  // Best-effort broadcast refreshes
+  try {
+    const wlId = (data?.waitlist_id as string | undefined) || null;
+    const entryToken = (data?.token as string | undefined) || null;
+    const admin = getAdminClient();
+    await Promise.all([
+      wlId ? broadcastRefresh(`waitlist-entries-${wlId}`) : Promise.resolve(),
+      wlId ? broadcastRefresh(`user-wl-${wlId}`) : Promise.resolve(),
+      entryToken ? broadcastRefresh(`w-status-${entryToken}`) : Promise.resolve(),
+      (async () => {
+        if (!wlId) return;
+        const { data: wl } = await admin.from("waitlists").select("display_token").eq("id", wlId).maybeSingle();
+        const dt = (wl?.display_token as string | null) || null;
+        if (dt) await broadcastRefresh(`display-bc-${dt}`);
+      })(),
+    ]);
+  } catch { }
 
   return NextResponse.json({ entry: data });
 }

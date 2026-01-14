@@ -4,19 +4,41 @@ import Link from "next/link";
 import { User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/client";
 
 type Entry = { status: string; created_at: string; eta_minutes: number | null; queue_position: number | null; waitlist_id?: string; ticket_number?: number | null; notified_at?: string | null; seating_preference?: string | null; party_size?: number | null };
-type Business = { name: string | null; logo_url: string | null; accent_color?: string | null; background_color?: string | null } | null;
+type Business =
+  | {
+      name: string | null;
+      logo_url: string | null;
+      accent_color?: string | null;
+      background_color?: string | null;
+      website_url?: string | null;
+      instagram_url?: string | null;
+      facebook_url?: string | null;
+      google_maps_url?: string | null;
+      menu_url?: string | null;
+    }
+  | null;
 
 export default function ClientStatus({ token }: { token: string }) {
   const router = useRouter();
   const [data, setData] = useState<Entry | null>(null);
   const [loading, setLoading] = useState(true);
-  const pollTimer = useRef<number | null>(null);
   const [nowServing, setNowServing] = useState<number | null>(null);
   const [business, setBusiness] = useState<Business>(null);
   const [displayToken, setDisplayToken] = useState<string | null>(null);
   const [waitlistName, setWaitlistName] = useState<string | null>(null);
+  const [waitlistId, setWaitlistId] = useState<string | null>(null);
+  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
+  const refreshTimerRef = useRef<number | null>(null);
+  const pendingRefreshRef = useRef(false);
+  const lastRefreshAtRef = useRef<number>(0);
+  const statusChannelRef = useRef<ReturnType<ReturnType<typeof createClient>["channel"]> | null>(null);
+  const waitlistChannelRef = useRef<ReturnType<ReturnType<typeof createClient>["channel"]> | null>(null);
+
+  if (!supabaseRef.current) supabaseRef.current = createClient();
 
   async function load(silent: boolean = false) {
     if (!silent && !data) setLoading(true);
@@ -27,6 +49,7 @@ export default function ClientStatus({ token }: { token: string }) {
       setNowServing(null);
       setBusiness(null);
       setDisplayToken(null);
+      setWaitlistId(null);
       if (!silent || !data) setLoading(false);
       return;
     }
@@ -37,41 +60,110 @@ export default function ClientStatus({ token }: { token: string }) {
     setBusiness(j.business || null);
     setDisplayToken((j.displayToken as string | null) || null);
     setWaitlistName((j.waitlistName as string | null) || null);
+    setWaitlistId((entry?.waitlist_id as string | undefined) || null);
     if (!silent || !data) setLoading(false);
   }
 
-  useEffect(() => {
-    load();
-    // Polling is intentional: public pages should not subscribe directly to `waitlist_entries`,
-    // to avoid accidental PII exposure via Realtime payloads.
-    pollTimer.current = window.setInterval(() => {
+  const scheduleRefresh = () => {
+    // Debounce bursts (multiple broadcasts can happen per mutation)
+    const now = Date.now();
+    if (now - lastRefreshAtRef.current < 250) return;
+    lastRefreshAtRef.current = now;
+
+    // If tab is hidden, defer the refetch to when the user comes back.
+    if (typeof document !== "undefined" && document.hidden) {
+      pendingRefreshRef.current = true;
+      return;
+    }
+    if (refreshTimerRef.current) window.clearTimeout(refreshTimerRef.current);
+    refreshTimerRef.current = window.setTimeout(() => {
       load(true);
-    }, 2000);
+    }, 60);
+  };
+
+  useEffect(() => {
+    const supabase = supabaseRef.current!;
+    load();
+
+    // Public-safe realtime: we only listen to lightweight broadcast "refresh" events (no payload / no PII).
+    const channel = supabase.channel(`w-status-${token}`).on("broadcast", { event: "refresh" }, scheduleRefresh).subscribe();
+    statusChannelRef.current = channel;
+
+    const onVisible = () => {
+      if (typeof document === "undefined") return;
+      if (!document.hidden && pendingRefreshRef.current) {
+        pendingRefreshRef.current = false;
+        load(true);
+      }
+    };
+
+    // Make sure we catch up when user returns to the tab/window.
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+
     return () => {
-      const id = pollTimer.current;
-      if (id) window.clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+      try {
+        if (statusChannelRef.current) {
+          try { supabase.removeChannel(statusChannelRef.current); } catch { }
+          statusChannelRef.current = null;
+        }
+        if (waitlistChannelRef.current) {
+          try { supabase.removeChannel(waitlistChannelRef.current); } catch { }
+          waitlistChannelRef.current = null;
+        }
+      } catch { }
+      if (refreshTimerRef.current) window.clearTimeout(refreshTimerRef.current);
     };
   }, [token]);
 
+  // Subscribe to waitlist-wide refreshes once we know the waitlist id.
+  // This is required so "Now serving" updates for everyone when staff calls a different number.
+  useEffect(() => {
+    const supabase = supabaseRef.current!;
+    if (!waitlistId) return;
+
+    // Don't subscribe if we've already reached a terminal state.
+    const status = data?.status;
+    if (status === "seated" || status === "cancelled" || status === "archived") return;
+
+    if (waitlistChannelRef.current) {
+      try { supabase.removeChannel(waitlistChannelRef.current); } catch { }
+      waitlistChannelRef.current = null;
+    }
+    const ch = supabase.channel(`user-wl-${waitlistId}`).on("broadcast", { event: "refresh" }, scheduleRefresh).subscribe();
+    waitlistChannelRef.current = ch;
+
+    return () => {
+      try { supabase.removeChannel(ch); } catch { }
+      if (waitlistChannelRef.current === ch) waitlistChannelRef.current = null;
+    };
+  }, [waitlistId, data?.status]);
+
   // Accent customization removed: brand is now locked to the preset theme.
 
-  // Redirect to public display for invalid/expired sessions:
-  // Conditions: missing entry; or status is one of terminal states; or entry created before today.
+  // Stop streaming after terminal state; expiry handling is done via API (410).
   useEffect(() => {
     if (loading) return;
     const isTerminal = (s: string | undefined) => s === "seated" || s === "cancelled" || s === "archived";
-    const createdAt = data?.created_at ? new Date(data.created_at) : null;
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
-    const isOld = createdAt ? createdAt < startOfToday : false;
-    const hasDisplay = typeof displayToken === 'string' && displayToken.length > 0;
-    if ((!data || isTerminal(data?.status) || isOld) && hasDisplay) {
-      router.replace(`/display/${encodeURIComponent(displayToken as string)}`);
-    } else if (!data && !hasDisplay) {
-      // Fallback if we cannot resolve a display token (e.g., invalid entry token)
+    if (!data) {
       router.replace(`/`);
+      return;
     }
-  }, [loading, data, displayToken, router]);
+    if (isTerminal(data?.status)) {
+      // stop realtime subscriptions once final
+      const supabase = supabaseRef.current!;
+      if (statusChannelRef.current) {
+        try { supabase.removeChannel(statusChannelRef.current); } catch { }
+        statusChannelRef.current = null;
+      }
+      if (waitlistChannelRef.current) {
+        try { supabase.removeChannel(waitlistChannelRef.current); } catch { }
+        waitlistChannelRef.current = null;
+      }
+    }
+  }, [loading, data, router]);
 
   if (loading || !data) return (
     <div className="min-h-dvh bg-background text-foreground">
@@ -97,6 +189,17 @@ export default function ClientStatus({ token }: { token: string }) {
   const isUserTurn = data.ticket_number !== null && data.ticket_number === nowServing;
 
   const yourNumber = typeof data.ticket_number === 'number' ? data.ticket_number : (typeof data.queue_position === 'number' ? data.queue_position : null);
+
+  const isTerminal = data.status === "seated" || data.status === "cancelled" || data.status === "archived";
+  const terminalLabel =
+    data.status === "archived" ? "No show" : data.status === "seated" ? "Show" : data.status === "cancelled" ? "Cancelled" : null;
+
+  const links = [
+    { key: "website", label: "Website", url: business?.website_url || "" },
+    { key: "instagram", label: "Instagram", url: business?.instagram_url || "" },
+    { key: "facebook", label: "Facebook", url: business?.facebook_url || "" },
+    { key: "google_maps", label: "Google Maps", url: business?.google_maps_url || "" },
+  ].filter((l) => typeof l.url === "string" && l.url.trim().length > 0);
 
   return (
     <div className="min-h-dvh bg-background text-foreground">
@@ -128,7 +231,28 @@ export default function ClientStatus({ token }: { token: string }) {
       </header>
       <main className="p-8">
         <div className="max-w-xl mx-auto">
-          {isUserTurn ? (
+          {business?.menu_url && business.menu_url.trim() ? (
+            <div className="mb-6">
+              <a href={business.menu_url.trim()} target="_blank" rel="noopener noreferrer" className="block">
+                <Button className="w-full" size="lg">View menu</Button>
+              </a>
+            </div>
+          ) : null}
+
+          {isTerminal ? (
+            <div className="rounded-2xl ring-1 shadow-sm p-6 bg-card ring-border text-center">
+              <h2 className="text-2xl font-bold text-foreground">This ticket is closed</h2>
+              <p className="mt-2 text-muted-foreground">
+                Your number was called and marked as <span className="font-medium text-foreground">{terminalLabel}</span>.
+              </p>
+              {typeof yourNumber === "number" ? (
+                <div className="mt-6">
+                  <div className="text-sm text-muted-foreground">Your number</div>
+                  <div className="mt-1 text-6xl font-extrabold text-foreground">{yourNumber}</div>
+                </div>
+              ) : null}
+            </div>
+          ) : isUserTurn ? (
             <div className="rounded-2xl ring-1 shadow-sm p-6 bg-accent/10 ring-primary/50 text-center">
               <h2 className="text-2xl font-bold text-primary">It&apos;s your turn!</h2>
               <p className="mt-2 text-foreground">Please proceed to {business?.name || "the venue"}</p>
@@ -175,6 +299,26 @@ export default function ClientStatus({ token }: { token: string }) {
               </div>
             </div>
           )}
+
+          {links.length ? (
+            <div className="mt-6 rounded-2xl bg-card text-card-foreground ring-1 ring-border shadow-sm p-6">
+              <div className="text-sm font-medium mb-3">Links</div>
+              <div className="grid gap-2">
+                {links.map((l) => (
+                  <a
+                    key={l.key}
+                    href={l.url.trim()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4"
+                  >
+                    {l.label}
+                  </a>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
           <p className="mt-4 text-center text-sm text-muted-foreground">This page updates automatically as the venue advances the queue.</p>
           <div className="mt-6 flex items-center justify-center">
             <Link href="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground">
