@@ -13,11 +13,13 @@ import PhoneInput, { getCountryCallingCode, type Country } from "react-phone-num
 import 'react-phone-number-input/style.css';
 import { User, Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { useTheme } from "next-themes";
 
 type Entry = { id: string; ticket_number: number | null; queue_position: number | null; status: string; notified_at?: string | null; party_size?: number | null; seating_preference?: string | null };
 type Payload = { listId: string; listName: string; kioskEnabled?: boolean; askName?: boolean; askPhone?: boolean; businessCountry?: string | null; businessName?: string | null; brandLogo?: string | null; seatingPreferences?: string[]; estimatedMs?: number; entries: Entry[]; accentColor?: string; backgroundColor?: string };
 
 export default function DisplayClient({ token }: { token: string }) {
+  const { setTheme } = useTheme();
   const [data, setData] = useState<Payload | null>(null);
   const [loading, setLoading] = useState(true);
   const timer = useRef<number | null>(null);
@@ -30,6 +32,11 @@ export default function DisplayClient({ token }: { token: string }) {
   const lastRefreshAtRef = useRef<number>(0);
 
   if (!supabaseRef.current) supabaseRef.current = createClient();
+
+  // Public pages should follow the user's OS theme by default.
+  useEffect(() => {
+    setTheme("system");
+  }, [setTheme]);
 
   async function load(silent: boolean = false) {
     if (!silent && !data) setLoading(true);

@@ -75,7 +75,7 @@ export default function RootLayout({
       <body className={`${figtree.variable} antialiased`}>
         <ThemeProvider
           attribute="data-theme"
-          defaultTheme="light"
+          defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >

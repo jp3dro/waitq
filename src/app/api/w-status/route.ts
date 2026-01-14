@@ -65,6 +65,7 @@ export async function GET(req: NextRequest) {
     | null = null;
   let displayToken: string | null = null;
   let waitlistName: string | null = null;
+  let locationPhone: string | null = null;
   if (entry?.waitlist_id) {
     const { data } = await admin
       .from("waitlist_entries")
@@ -80,11 +81,22 @@ export async function GET(req: NextRequest) {
     // Fetch the public display token for this waitlist to support redirects
     const { data: wl } = await admin
       .from("waitlists")
-      .select("display_token, name")
+      .select("display_token, name, location_id")
       .eq("id", entry.waitlist_id)
       .maybeSingle();
     displayToken = (wl?.display_token as string | null) || null;
     waitlistName = (wl?.name as string | null) || null;
+
+    const locationId = (wl?.location_id as string | null) || null;
+    if (locationId) {
+      const { data: loc } = await admin
+        .from("business_locations")
+        .select("phone")
+        .eq("id", locationId)
+        .maybeSingle();
+      const p = (loc?.phone as string | null) || null;
+      locationPhone = p && p.trim().length ? p.trim() : null;
+    }
   }
 
   if (entry?.business_id) {
@@ -107,7 +119,7 @@ export async function GET(req: NextRequest) {
     };
   }
 
-  return NextResponse.json({ entry, nowServing, business, displayToken, waitlistName });
+  return NextResponse.json({ entry, nowServing, business, displayToken, waitlistName, locationPhone });
 }
 
 

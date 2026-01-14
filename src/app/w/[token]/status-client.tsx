@@ -1,11 +1,12 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { User, Utensils, Globe, Instagram, Facebook, MapPin } from "lucide-react";
+import { User, Utensils, Globe, Instagram, Facebook, MapPin, PhoneCall } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
+import { useTheme } from "next-themes";
 
 type Entry = { status: string; created_at: string; eta_minutes: number | null; queue_position: number | null; waitlist_id?: string; ticket_number?: number | null; notified_at?: string | null; seating_preference?: string | null; party_size?: number | null };
 type Business =
@@ -24,10 +25,13 @@ type Business =
 
 export default function ClientStatus({ token }: { token: string }) {
   const router = useRouter();
+  const { setTheme } = useTheme();
   const [data, setData] = useState<Entry | null>(null);
   const [loading, setLoading] = useState(true);
   const [nowServing, setNowServing] = useState<number | null>(null);
   const [business, setBusiness] = useState<Business>(null);
+  const [locationPhone, setLocationPhone] = useState<string | null>(null);
+  const [isLive, setIsLive] = useState(false);
   const [displayToken, setDisplayToken] = useState<string | null>(null);
   const [waitlistName, setWaitlistName] = useState<string | null>(null);
   const [waitlistId, setWaitlistId] = useState<string | null>(null);
@@ -37,8 +41,15 @@ export default function ClientStatus({ token }: { token: string }) {
   const lastRefreshAtRef = useRef<number>(0);
   const statusChannelRef = useRef<ReturnType<ReturnType<typeof createClient>["channel"]> | null>(null);
   const waitlistChannelRef = useRef<ReturnType<ReturnType<typeof createClient>["channel"]> | null>(null);
+  const statusLiveRef = useRef(false);
+  const waitlistLiveRef = useRef(false);
 
   if (!supabaseRef.current) supabaseRef.current = createClient();
+
+  // Public pages should follow the user's OS theme by default.
+  useEffect(() => {
+    setTheme("system");
+  }, [setTheme]);
 
   async function load(silent: boolean = false) {
     if (!silent && !data) setLoading(true);
@@ -48,6 +59,7 @@ export default function ClientStatus({ token }: { token: string }) {
       setData(null);
       setNowServing(null);
       setBusiness(null);
+      setLocationPhone(null);
       setDisplayToken(null);
       setWaitlistId(null);
       if (!silent || !data) setLoading(false);
@@ -58,6 +70,7 @@ export default function ClientStatus({ token }: { token: string }) {
     setData((prev) => ({ ...(prev || entry || null), ...(entry || {}) } as Entry));
     setNowServing(j.nowServing ?? null);
     setBusiness(j.business || null);
+    setLocationPhone(typeof j.locationPhone === "string" && j.locationPhone.trim().length ? j.locationPhone.trim() : null);
     setDisplayToken((j.displayToken as string | null) || null);
     setWaitlistName((j.waitlistName as string | null) || null);
     setWaitlistId((entry?.waitlist_id as string | undefined) || null);
@@ -86,7 +99,15 @@ export default function ClientStatus({ token }: { token: string }) {
     load();
 
     // Public-safe realtime: we only listen to lightweight broadcast "refresh" events (no payload / no PII).
-    const channel = supabase.channel(`w-status-${token}`).on("broadcast", { event: "refresh" }, scheduleRefresh).subscribe();
+    const channel = supabase
+      .channel(`w-status-${token}`)
+      .on("broadcast", { event: "refresh" }, scheduleRefresh)
+      .subscribe((status) => {
+        // When streaming is unavailable, we'll show the "offline" indicator.
+        const ok = status === "SUBSCRIBED";
+        statusLiveRef.current = ok;
+        setIsLive(statusLiveRef.current || waitlistLiveRef.current);
+      });
     statusChannelRef.current = channel;
 
     const onVisible = () => {
@@ -114,6 +135,9 @@ export default function ClientStatus({ token }: { token: string }) {
           waitlistChannelRef.current = null;
         }
       } catch { }
+      statusLiveRef.current = false;
+      waitlistLiveRef.current = false;
+      setIsLive(false);
       if (refreshTimerRef.current) window.clearTimeout(refreshTimerRef.current);
     };
   }, [token]);
@@ -132,12 +156,21 @@ export default function ClientStatus({ token }: { token: string }) {
       try { supabase.removeChannel(waitlistChannelRef.current); } catch { }
       waitlistChannelRef.current = null;
     }
-    const ch = supabase.channel(`user-wl-${waitlistId}`).on("broadcast", { event: "refresh" }, scheduleRefresh).subscribe();
+    const ch = supabase
+      .channel(`user-wl-${waitlistId}`)
+      .on("broadcast", { event: "refresh" }, scheduleRefresh)
+      .subscribe((st) => {
+        const ok = st === "SUBSCRIBED";
+        waitlistLiveRef.current = ok;
+        setIsLive(statusLiveRef.current || waitlistLiveRef.current);
+      });
     waitlistChannelRef.current = ch;
 
     return () => {
       try { supabase.removeChannel(ch); } catch { }
       if (waitlistChannelRef.current === ch) waitlistChannelRef.current = null;
+      waitlistLiveRef.current = false;
+      setIsLive(statusLiveRef.current || waitlistLiveRef.current);
     };
   }, [waitlistId, data?.status]);
 
@@ -201,10 +234,12 @@ export default function ClientStatus({ token }: { token: string }) {
     { key: "google_maps", label: "Google Maps", url: business?.google_maps_url || "", icon: MapPin },
   ].filter((l) => typeof l.url === "string" && l.url.trim().length > 0);
 
+  const telHref = locationPhone ? `tel:${locationPhone.replace(/[^\d+]/g, "")}` : null;
+
   return (
     <div className="min-h-dvh bg-background text-foreground">
       <header className="border-b border-border bg-card py-4">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8 flex items-center justify-between">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           <div className="flex items-center gap-4">
             {business?.logo_url ? (
               <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-border bg-muted">
@@ -230,19 +265,13 @@ export default function ClientStatus({ token }: { token: string }) {
                 </Button>
               </a>
             ) : null}
-            <Link href="#" aria-label="Toggle theme" className="inline-flex items-center justify-center rounded-md p-2 text-foreground hover:bg-muted">
-              {/* We reuse the theme toggle component visuals here: */}
-              <span className="sr-only">Toggle theme</span>
-            </Link>
           </div>
         </div>
       </header>
-      <main className="p-8">
+      <main className="p-4 sm:p-8">
         <div className="max-w-xl mx-auto">
-          <p className="text-center text-xs text-muted-foreground mb-6">This page updates automatically as the venue advances the queue.</p>
-
           {isTerminal ? (
-            <div className="rounded-2xl ring-1 shadow-sm p-6 bg-card ring-border text-center">
+            <div className="rounded-2xl ring-1 shadow-sm p-4 sm:p-6 bg-card ring-border text-center">
               <h2 className="text-2xl font-bold text-foreground">This ticket is closed</h2>
               <p className="mt-2 text-muted-foreground">
                 Your number was called and marked as <span className="font-medium text-foreground">{terminalLabel}</span>.
@@ -255,7 +284,7 @@ export default function ClientStatus({ token }: { token: string }) {
               ) : null}
             </div>
           ) : isUserTurn ? (
-            <div className="rounded-2xl ring-1 shadow-sm p-6 bg-accent/10 ring-primary/50 text-center">
+            <div className="rounded-2xl ring-1 shadow-sm p-4 sm:p-6 bg-accent/10 ring-primary/50 text-center">
               <h2 className="text-2xl font-bold text-primary">It&apos;s your turn!</h2>
               <p className="mt-2 text-foreground">Please proceed to {business?.name || "the venue"}</p>
               {typeof yourNumber === 'number' ? (
@@ -266,13 +295,9 @@ export default function ClientStatus({ token }: { token: string }) {
               ) : null}
             </div>
           ) : (
-            <div className="space-y-6">
-              <div className="rounded-2xl bg-card text-card-foreground ring-1 ring-border shadow-sm p-6 text-center">
-                <div className="text-sm text-muted-foreground">Now serving</div>
-                <div className="mt-1 text-5xl font-bold text-foreground">{typeof nowServing === 'number' ? nowServing : '-'}</div>
-              </div>
-
-              <div className="rounded-2xl bg-card text-card-foreground ring-1 ring-border shadow-sm p-6 text-center">
+            <div className="space-y-4 sm:space-y-6">
+              {/* Your info */}
+              <div className="rounded-2xl bg-card text-card-foreground ring-1 ring-border shadow-sm p-4 sm:p-6 text-center">
                 {typeof yourNumber === 'number' && typeof nowServing === 'number' && (yourNumber - nowServing === 1) ? (
                   <div className="mb-8 p-4 bg-yellow-100/10 border border-yellow-500/50 rounded-xl">
                     <h3 className="text-lg font-bold text-yellow-600 dark:text-yellow-500 mb-1">Almost your turn!</h3>
@@ -299,25 +324,53 @@ export default function ClientStatus({ token }: { token: string }) {
                   <div className="mt-8 text-sm text-foreground">Estimated wait: <span className="font-medium">{data.eta_minutes} min</span></div>
                 ) : null}
               </div>
+
+              {/* Restaurant info */}
+              <div className="rounded-2xl bg-card text-card-foreground ring-1 ring-border shadow-sm p-4 sm:p-6 text-center">
+                <div className="flex items-center justify-center gap-2 text-sm font-semibold">
+                  <span className="relative flex h-3 w-3">
+                    {isLive ? (
+                      <>
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                      </>
+                    ) : (
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-muted-foreground/40"></span>
+                    )}
+                  </span>
+                  <span className={isLive ? "text-foreground" : "text-muted-foreground"}>Now serving</span>
+                </div>
+                <div className="mt-1 text-5xl font-bold text-foreground">{typeof nowServing === 'number' ? nowServing : '-'}</div>
+              </div>
+
+              {(links.length || telHref) ? (
+                <div className="flex flex-wrap justify-center gap-2">
+                  {links.map((l) => (
+                    <a
+                      key={l.key}
+                      href={l.url.trim()}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs bg-card text-card-foreground ring-1 ring-border rounded-full hover:bg-muted transition-colors"
+                    >
+                      <l.icon className="w-3.5 h-3.5" />
+                      {l.label}
+                    </a>
+                  ))}
+                  {telHref ? (
+                    <a
+                      href={telHref}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 text-xs bg-card text-card-foreground ring-1 ring-border rounded-full hover:bg-muted transition-colors"
+                    >
+                      <PhoneCall className="w-3.5 h-3.5" />
+                      {locationPhone}
+                    </a>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
           )}
 
-          {links.length ? (
-            <div className="mt-4 flex flex-wrap justify-center gap-2">
-              {links.map((l) => (
-                <a
-                  key={l.key}
-                  href={l.url.trim()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs bg-card text-card-foreground ring-1 ring-border rounded-full hover:bg-muted transition-colors"
-                >
-                  <l.icon className="w-3.5 h-3.5" />
-                  {l.label}
-                </a>
-              ))}
-            </div>
-          ) : null}
           <div className="mt-6 flex items-center justify-center">
             <Link href="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground">
               <span className="text-sm">Powered by</span>
