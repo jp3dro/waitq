@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { User } from "lucide-react";
+import { User, Utensils, Globe, Instagram, Facebook, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -195,10 +195,10 @@ export default function ClientStatus({ token }: { token: string }) {
     data.status === "archived" ? "No show" : data.status === "seated" ? "Show" : data.status === "cancelled" ? "Cancelled" : null;
 
   const links = [
-    { key: "website", label: "Website", url: business?.website_url || "" },
-    { key: "instagram", label: "Instagram", url: business?.instagram_url || "" },
-    { key: "facebook", label: "Facebook", url: business?.facebook_url || "" },
-    { key: "google_maps", label: "Google Maps", url: business?.google_maps_url || "" },
+    { key: "website", label: "Website", url: business?.website_url || "", icon: Globe },
+    { key: "instagram", label: "Instagram", url: business?.instagram_url || "", icon: Instagram },
+    { key: "facebook", label: "Facebook", url: business?.facebook_url || "", icon: Facebook },
+    { key: "google_maps", label: "Google Maps", url: business?.google_maps_url || "", icon: MapPin },
   ].filter((l) => typeof l.url === "string" && l.url.trim().length > 0);
 
   return (
@@ -221,7 +221,15 @@ export default function ClientStatus({ token }: { token: string }) {
               ) : null}
             </div>
           </div>
-          <div>
+          <div className="flex items-center gap-2">
+            {business?.menu_url && business.menu_url.trim() && !isTerminal ? (
+              <a href={business.menu_url.trim()} target="_blank" rel="noopener noreferrer">
+                <Button size="sm" className="text-xs px-3 py-1.5 sm:text-sm sm:px-4 sm:py-2">
+                  <Utensils className="w-4 h-4 mr-2" />
+                  View menu
+                </Button>
+              </a>
+            ) : null}
             <Link href="#" aria-label="Toggle theme" className="inline-flex items-center justify-center rounded-md p-2 text-foreground hover:bg-muted">
               {/* We reuse the theme toggle component visuals here: */}
               <span className="sr-only">Toggle theme</span>
@@ -231,13 +239,7 @@ export default function ClientStatus({ token }: { token: string }) {
       </header>
       <main className="p-8">
         <div className="max-w-xl mx-auto">
-          {business?.menu_url && business.menu_url.trim() ? (
-            <div className="mb-6">
-              <a href={business.menu_url.trim()} target="_blank" rel="noopener noreferrer" className="block">
-                <Button className="w-full" size="lg">View menu</Button>
-              </a>
-            </div>
-          ) : null}
+          <p className="text-center text-xs text-muted-foreground mb-6">This page updates automatically as the venue advances the queue.</p>
 
           {isTerminal ? (
             <div className="rounded-2xl ring-1 shadow-sm p-6 bg-card ring-border text-center">
@@ -301,25 +303,21 @@ export default function ClientStatus({ token }: { token: string }) {
           )}
 
           {links.length ? (
-            <div className="mt-6 rounded-2xl bg-card text-card-foreground ring-1 ring-border shadow-sm p-6">
-              <div className="text-sm font-medium mb-3">Links</div>
-              <div className="grid gap-2">
-                {links.map((l) => (
-                  <a
-                    key={l.key}
-                    href={l.url.trim()}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4"
-                  >
-                    {l.label}
-                  </a>
-                ))}
-              </div>
+            <div className="mt-4 flex flex-wrap justify-center gap-2">
+              {links.map((l) => (
+                <a
+                  key={l.key}
+                  href={l.url.trim()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs bg-card text-card-foreground ring-1 ring-border rounded-full hover:bg-muted transition-colors"
+                >
+                  <l.icon className="w-3.5 h-3.5" />
+                  {l.label}
+                </a>
+              ))}
             </div>
           ) : null}
-
-          <p className="mt-4 text-center text-sm text-muted-foreground">This page updates automatically as the venue advances the queue.</p>
           <div className="mt-6 flex items-center justify-center">
             <Link href="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground">
               <span className="text-sm">Powered by</span>
