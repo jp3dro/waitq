@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import OnboardingWizard from "./wizard";
 import { syncSubscriptionForUser } from "@/lib/subscription-sync";
 import { getAdminClient } from "@/lib/supabase/admin";
+import { getStripe } from "@/lib/stripe";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -21,6 +22,8 @@ export default async function OnboardingPage({
     const sp = await Promise.resolve(searchParams ?? {});
     const checkout =
         typeof sp.checkout === "string" ? sp.checkout : Array.isArray(sp.checkout) ? sp.checkout[0] : undefined;
+    const sessionId =
+        typeof sp.session_id === "string" ? sp.session_id : Array.isArray(sp.session_id) ? sp.session_id[0] : undefined;
 
     const { data: profile } = await supabase
         .from("profiles")
@@ -31,18 +34,52 @@ export default async function OnboardingPage({
     // If coming back from Stripe Checkout, try to confirm subscription and complete onboarding.
     // This prevents a loop where `/subscriptions` is gated behind `onboarding_completed`.
     if (checkout === "success") {
-        try {
-            const synced = await syncSubscriptionForUser({ userId: user.id, email: user.email });
-            const hasPaid = synced.planId === "base" || synced.planId === "premium";
-            if (hasPaid) {
-                const admin = getAdminClient();
-                await admin
-                    .from("profiles")
-                    .upsert({ id: user.id, onboarding_completed: true, onboarding_step: 3 }, { onConflict: "id" });
-                redirect("/dashboard");
+        let hasActiveSubscription = false;
+        let shouldRedirect = false;
+
+        // 1) Prefer deterministic verification using the checkout session id (no webhook timing/race).
+        if (sessionId) {
+            try {
+                const stripe = getStripe();
+                const session = await stripe.checkout.sessions.retrieve(sessionId, { expand: ["subscription"] });
+                const isPaid = session.payment_status === "paid";
+                const sub = session.subscription as any;
+                const status = typeof sub?.status === "string" ? sub.status : null;
+                const isActiveLike = status === "active" || status === "trialing" || status === "past_due";
+                
+                if (isPaid && isActiveLike) {
+                    hasActiveSubscription = true;
+                    shouldRedirect = true;
+                }
+            } catch (e) {
+                console.error("[onboarding] Failed to retrieve checkout session from Stripe:", e);
+                // Continue to fallback sync below
             }
-        } catch {
-            // If Stripe verification fails here, we fall back to rendering step 2 so user can retry.
+        }
+
+        // 2) Fallback: sync by user/email and infer plan (handles webhook delays or session lookup failures).
+        if (!hasActiveSubscription) {
+            try {
+                const synced = await syncSubscriptionForUser({ userId: user.id, email: user.email });
+                hasActiveSubscription = synced.planId === "base" || synced.planId === "premium";
+                if (hasActiveSubscription) {
+                    shouldRedirect = true;
+                }
+            } catch (e) {
+                console.error("[onboarding] Failed to sync subscription during onboarding return:", e);
+            }
+        }
+
+        // 3) If we confirmed an active paid subscription, complete onboarding and redirect.
+        if (shouldRedirect && hasActiveSubscription) {
+            // Sync once more to ensure DB is fully up-to-date before redirect
+            await syncSubscriptionForUser({ userId: user.id, email: user.email });
+            const admin = getAdminClient();
+            await admin
+                .from("profiles")
+                .upsert({ id: user.id, onboarding_completed: true, onboarding_step: 3 }, { onConflict: "id" });
+            // redirect() throws NEXT_REDIRECT which is expected Next.js behavior - don't catch it
+            redirect("/dashboard");
         }
     }
 

@@ -159,17 +159,25 @@ export async function POST(req: NextRequest) {
   let lineItem: Stripe.Checkout.SessionCreateParams.LineItem;
   if (resolvedPriceId) {
     lineItem = { price: resolvedPriceId, quantity: 1 };
-  } else if (planId && plans[planId as keyof typeof plans]?.stripe?.productId) {
+  } else if (planId && plans[planId as keyof typeof plans]) {
     const p = plans[planId as keyof typeof plans];
-    lineItem = {
-      quantity: 1,
-      price_data: {
-        currency: "eur",
-        product: p.stripe.productId as string,
-        unit_amount: Math.round(p.priceMonthlyEUR * 100),
-        recurring: { interval: "month" },
-      },
-    } as Stripe.Checkout.SessionCreateParams.LineItem;
+    // Get the appropriate product ID based on environment (test vs live)
+    const isProd = process.env.VERCEL_ENV === "production" || (process.env.NODE_ENV === "production" && !process.env.VERCEL_ENV);
+    const productId = isProd ? p.stripe.productIdLive : p.stripe.productIdTest;
+    
+    if (productId) {
+      lineItem = {
+        quantity: 1,
+        price_data: {
+          currency: "eur",
+          product: productId,
+          unit_amount: Math.round(p.priceMonthlyEUR * 100),
+          recurring: { interval: "month" },
+        },
+      } as Stripe.Checkout.SessionCreateParams.LineItem;
+    } else {
+      return NextResponse.json({ error: "Product ID not configured for this environment" }, { status: 400 });
+    }
   } else {
     return NextResponse.json({ error: "Unable to resolve price" }, { status: 400 });
   }
@@ -177,7 +185,14 @@ export async function POST(req: NextRequest) {
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
     line_items: [lineItem],
-    success_url: `${process.env.NEXT_PUBLIC_SITE_URL}${typeof successPath === "string" && successPath.startsWith("/") ? successPath : "/subscriptions?checkout=success"}`,
+    success_url: (() => {
+      const basePath =
+        typeof successPath === "string" && successPath.startsWith("/")
+          ? successPath
+          : "/subscriptions?checkout=success";
+      const joiner = basePath.includes("?") ? "&" : "?";
+      return `${process.env.NEXT_PUBLIC_SITE_URL}${basePath}${joiner}session_id={CHECKOUT_SESSION_ID}`;
+    })(),
     cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}${typeof cancelPath === "string" && cancelPath.startsWith("/") ? cancelPath : "/subscriptions"}`,
     customer: existingStripeCustomerId || undefined,
     customer_email: existingStripeCustomerId ? undefined : (customerEmail || user.email || undefined),

@@ -22,7 +22,9 @@ export interface PlanDefinition {
   // Stripe lookup keys allow us to resolve prices without hardcoding IDs
   stripe: {
     // Product IDs are used as the primary mapping from Stripe subscriptions to plans
-    productId?: string;
+    // Use test IDs for development, live IDs for production
+    productIdTest?: string;
+    productIdLive?: string;
     productLookupKey: string;
     priceLookupKeyMonthly: string;
   };
@@ -69,7 +71,8 @@ export const plans: Record<PlanId, PlanDefinition> = {
       "Standard Support",
     ],
     stripe: {
-      productId: "prod_ThYMSf5ia6jCDl",
+      productIdTest: "prod_ThYMSf5ia6jCDl", // Test mode product ID
+      productIdLive: undefined, // Set this when you create the live product
       productLookupKey: "waitq_base",
       priceLookupKeyMonthly: "BASE",
     },
@@ -92,7 +95,8 @@ export const plans: Record<PlanId, PlanDefinition> = {
       "Dedicated Account Manager",
     ],
     stripe: {
-      productId: "prod_ThYMSf5ia6jCDl",
+      productIdTest: "prod_ThYMSf5ia6jCDl", // Test mode product ID
+      productIdLive: undefined, // Set this when you create the live product
       productLookupKey: "waitq_premium",
       priceLookupKeyMonthly: "PREMIUM",
     },
@@ -252,6 +256,19 @@ export const pricingFeatures = [
 
 export function getPlanById(planId: PlanId): PlanDefinition {
   return plans[planId];
+}
+
+/**
+ * Get the appropriate Stripe product ID for a plan based on environment.
+ * Returns test ID in development, live ID in production.
+ */
+export function getProductIdForPlan(plan: PlanDefinition): string | undefined {
+  // Check if we're in production
+  const isProd = 
+    process.env.VERCEL_ENV === "production" || 
+    (process.env.NODE_ENV === "production" && !process.env.VERCEL_ENV);
+  
+  return isProd ? plan.stripe.productIdLive : plan.stripe.productIdTest;
 }
 
 export const orderedPlans: PlanDefinition[] = [

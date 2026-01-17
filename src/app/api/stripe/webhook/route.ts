@@ -75,10 +75,14 @@ export async function POST(req: NextRequest) {
             const actualLookupKey = (price?.lookup_key as string | null) || null;
             let derivedPlanId = planId;
             if (!derivedPlanId) {
-              // Try productId mapping first
+              // Try productId mapping first (check both test and live IDs)
               if (price?.product && typeof price.product === "string") {
                 const productId = price.product as string;
-                const byProduct = (Object.values(plans)).find((p) => p.stripe.productId === productId);
+                const byProduct = (Object.values(plans)).find((p) => {
+                  const testId = p.stripe.productIdTest;
+                  const liveId = p.stripe.productIdLive;
+                  return testId === productId || liveId === productId;
+                });
                 if (byProduct) derivedPlanId = byProduct.id;
               }
               // Fallback to lookup key pattern
@@ -141,10 +145,14 @@ export async function POST(req: NextRequest) {
               lookupKey = actualLookupKey;
               let derivedPlanId = planId;
               if (!derivedPlanId) {
-                // Try productId mapping first
+                // Try productId mapping first (check both test and live IDs)
                 if (price?.product && typeof price.product === "string") {
                   const productId = price.product as string;
-                  const byProduct = (Object.values(plans)).find((p) => p.stripe.productId === productId);
+                  const byProduct = (Object.values(plans)).find((p) => {
+                    const testId = p.stripe.productIdTest;
+                    const liveId = p.stripe.productIdLive;
+                    return testId === productId || liveId === productId;
+                  });
                   if (byProduct) derivedPlanId = byProduct.id;
                 }
                 // Fallback to lookup key pattern
@@ -225,6 +233,14 @@ export async function POST(req: NextRequest) {
     case "customer.subscription.deleted": {
       try {
         const sub = event.data.object as Stripe.Subscription;
+        // If user cancels via portal with "cancel at period end", force immediate cancellation.
+        if (event.type === "customer.subscription.updated" && sub.cancel_at_period_end === true && sub.status !== "canceled") {
+          try {
+            await stripe.subscriptions.cancel(sub.id, { prorate: false });
+          } catch (e) {
+            console.error("Failed to cancel subscription immediately:", sub.id, e);
+          }
+        }
         const admin = getAdminClient();
         // We expect user id in subscription.metadata
         const userId = sub.metadata?.user_id || sub.metadata?.userId || null;
@@ -257,7 +273,11 @@ export async function POST(req: NextRequest) {
           let derivedPlanId: string | null = null;
           if (price?.product && typeof price.product === "string") {
             const productId = price.product as string;
-            const byProduct = (Object.values(plans)).find((p) => p.stripe.productId === productId);
+            const byProduct = (Object.values(plans)).find((p) => {
+              const testId = p.stripe.productIdTest;
+              const liveId = p.stripe.productIdLive;
+              return testId === productId || liveId === productId;
+            });
             if (byProduct) derivedPlanId = byProduct.id;
           }
           if (!derivedPlanId && actualLookupKey) {

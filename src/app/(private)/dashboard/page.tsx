@@ -63,98 +63,6 @@ export default async function DashboardPage() {
 
   const waitingByList = new Map(waitingCounts.map((w) => [w.id, w.count] as const));
   const etaByList = new Map(estimatedTimes.map((e) => [e.id, e.avgMs] as const));
-  const totalWaiting = waitingCounts.reduce((sum, w) => sum + w.count, 0);
-
-  // Today's window (UTC)
-  const now = new Date();
-  const startOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0));
-  const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000);
-  const startISO = startOfDay.toISOString();
-  const endISO = endOfDay.toISOString();
-
-  // Aggregate today's visitors and wait times across all lists
-  const listIds = lists.map((l) => l.id);
-  let todayVisitors = 0;
-  let todayAvgWaitMs = 0;
-  let hourlyVisits = Array.from({ length: 24 }, () => 0);
-  let hourlyWaitMs = Array.from({ length: 24 }, () => 0);
-  let hourlyWaitCounts = Array.from({ length: 24 }, () => 0);
-  let servedTodayCount = 0;
-  let noShowTodayCount = 0;
-  if (listIds.length > 0) {
-    const [visitorsHead, waitRows, visitRows, servedHead, noShowHead] = await Promise.all([
-      supabase
-        .from("waitlist_entries")
-        .select("id", { count: "exact", head: true })
-        .in("waitlist_id", listIds)
-        .gte("created_at", startISO)
-        .lt("created_at", endISO),
-      supabase
-        .from("waitlist_entries")
-        .select("created_at, notified_at")
-        .in("waitlist_id", listIds)
-        .gte("notified_at", startISO)
-        .lt("notified_at", endISO)
-        .limit(10000),
-      supabase
-        .from("waitlist_entries")
-        .select("created_at")
-        .in("waitlist_id", listIds)
-        .gte("created_at", startISO)
-        .lt("created_at", endISO)
-        .limit(10000),
-      supabase
-        .from("waitlist_entries")
-        .select("id", { count: "exact", head: true })
-        .in("waitlist_id", listIds)
-        .eq("status", "seated")
-        .gte("notified_at", startISO)
-        .lt("notified_at", endISO),
-      supabase
-        .from("waitlist_entries")
-        .select("id", { count: "exact", head: true })
-        .in("waitlist_id", listIds)
-        .eq("status", "archived")
-        .gte("notified_at", startISO)
-        .lt("notified_at", endISO),
-    ]);
-
-    todayVisitors = visitorsHead.count || 0;
-    const waits = (waitRows.data || []) as { created_at: string; notified_at: string | null }[];
-    const durations = waits
-      .map((r) => (r.notified_at ? new Date(r.notified_at).getTime() - new Date(r.created_at).getTime() : null))
-      .filter((v): v is number => typeof v === "number" && isFinite(v) && v > 0);
-    todayAvgWaitMs = durations.length ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length) : 0;
-
-    // Hourly visits from created_at (UTC hour of day)
-    const visitRowsArr = (visitRows.data || []) as { created_at: string }[];
-    visitRowsArr.forEach((r) => {
-      const d = new Date(r.created_at);
-      const h = d.getUTCHours();
-      hourlyVisits[h] = (hourlyVisits[h] || 0) + 1;
-    });
-    // Hourly wait time from notified_at hour (UTC)
-    waits.forEach((r) => {
-      if (!r.notified_at) return;
-      const d = new Date(r.notified_at);
-      const h = d.getUTCHours();
-      const ms = new Date(r.notified_at).getTime() - new Date(r.created_at).getTime();
-      if (isFinite(ms) && ms > 0) {
-        hourlyWaitMs[h] = (hourlyWaitMs[h] || 0) + ms;
-        hourlyWaitCounts[h] = (hourlyWaitCounts[h] || 0) + 1;
-      }
-    });
-
-    servedTodayCount = servedHead.count || 0;
-    noShowTodayCount = noShowHead.count || 0;
-  }
-
-  const hourlyWaitAvgMin = hourlyWaitMs.map((ms, i) => {
-    const c = hourlyWaitCounts[i] || 0;
-    const avgMs = c ? Math.round(ms / c) : 0;
-    const totalMin = avgMs ? Math.max(1, Math.round(avgMs / 60000)) : 0;
-    return totalMin;
-  });
 
   // Business info for header
   type BusinessHeader = { name: string | null; logo_url: string | null } | null;
@@ -180,49 +88,6 @@ export default async function DashboardPage() {
             </div>
           </div>
         </div>
-
-
-        {/* Today's Analytics */}
-        <section className="space-y-4">
-          <h2 className="text-base font-semibold">Today’s analytics</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-4">
-              <p className="text-xs text-muted-foreground">Total visitors (today)</p>
-              <p className="mt-1 text-2xl font-semibold">{todayVisitors}</p>
-            </div>
-            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-4">
-              <p className="text-xs text-muted-foreground">Avg wait time (today)</p>
-              <p className="mt-1 text-2xl font-semibold">
-                {(() => {
-                  const totalMin = todayAvgWaitMs ? Math.max(1, Math.round(todayAvgWaitMs / 60000)) : 0;
-                  const hours = Math.floor(totalMin / 60);
-                  const minutes = totalMin % 60;
-                  return totalMin > 0 ? (hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`) : '—';
-                })()}
-              </p>
-            </div>
-            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-4">
-              <p className="text-xs text-muted-foreground">Served today</p>
-              <p className="mt-1 text-2xl font-semibold">{servedTodayCount}</p>
-            </div>
-            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-4">
-              <p className="text-xs text-muted-foreground">No show today</p>
-              <p className="mt-1 text-2xl font-semibold">{noShowTodayCount}</p>
-            </div>
-          </div>
-
-          {/* Charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-4">
-              <p className="text-xs text-muted-foreground">Hourly visits (today)</p>
-              <BarChart labels={[...Array(24).keys()].map((h) => `${String(h).padStart(2, '0')}`)} values={hourlyVisits} maxBars={24} color="var(--primary)" />
-            </div>
-            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-4">
-              <p className="text-xs text-muted-foreground">Avg wait time by hour (today)</p>
-              <BarChart labels={[...Array(24).keys()].map((h) => `${String(h).padStart(2, '0')}`)} values={hourlyWaitAvgMin} maxBars={24} color="var(--primary)" suffix="m" />
-            </div>
-          </div>
-        </section>
 
 
         {/* Lists grouped by location with waiting counts and ETA */}
@@ -276,25 +141,3 @@ export default async function DashboardPage() {
     </main>
   );
 }
-
-function BarChart({ labels, values, maxBars = 24, color = "var(--foreground)", suffix = "" }: { labels: string[]; values: number[]; maxBars?: number; color?: string; suffix?: string }) {
-  const max = Math.max(1, ...values);
-  return (
-    <div className="mt-2">
-      <div className="grid" style={{ gridTemplateColumns: `repeat(${Math.min(maxBars, labels.length)}, minmax(0, 1fr))`, gap: '8px' }}>
-        {values.slice(0, maxBars).map((v, i) => (
-          <div key={i} className="flex flex-col items-center justify-end gap-2">
-            <div className="w-full rounded-md relative group" style={{ height: `${(v / max) * 120 + 2}px`, backgroundColor: color }}>
-              <div className="pointer-events-none absolute -top-6 left-1/2 -translate-x-1/2 rounded bg-popover text-popover-foreground text-[10px] px-2 py-1 opacity-0 group-hover:opacity-100 transition whitespace-nowrap ring-1 ring-border">
-                {labels[i]}: {v}{suffix}
-              </div>
-            </div>
-            <div className="text-[10px] text-muted-foreground">{labels[i]}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-

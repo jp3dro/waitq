@@ -21,6 +21,7 @@ export default function CreateListButton() {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [name, setName] = useState("");
+  const [nameError, setNameError] = useState(false);
   const [kioskEnabled, setKioskEnabled] = useState(false);
   const [askName, setAskName] = useState(true);
   const [askPhone, setAskPhone] = useState(true);
@@ -35,6 +36,7 @@ export default function CreateListButton() {
 
   const reset = () => {
     setName("");
+    setNameError(false);
     setKioskEnabled(false);
     setAskName(true);
     setAskPhone(true);
@@ -45,9 +47,13 @@ export default function CreateListButton() {
 
   const onCreate = () => {
     setMessage(null);
+    setNameError(false);
     startTransition(async () => {
       const n = name.trim();
-      if (!n) return;
+      if (!n) {
+        setNameError(true);
+        return;
+      }
       const res = await fetch("/api/waitlists", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -92,7 +98,18 @@ export default function CreateListButton() {
           <div className="grid gap-4">
             <div className="grid gap-2">
               <Label>Name</Label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter list name" />
+              <Input
+                value={name}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setName(v);
+                  if (nameError && v.trim()) setNameError(false);
+                }}
+                placeholder="Enter list name"
+                aria-invalid={nameError ? true : undefined}
+                className={nameError ? "border-destructive focus-visible:ring-destructive" : undefined}
+              />
+              {nameError ? <p className="text-xs text-destructive">Name is required.</p> : null}
             </div>
 
             <div className="grid gap-4 mt-2">

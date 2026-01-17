@@ -28,6 +28,7 @@ type Location = {
   seating_capacity?: number | null;
   regular_hours?: RegularHours | null;
   timezone?: string | null;
+  country_code?: string | null;
 };
 
 type LocationUpdatePayload = {
@@ -232,6 +233,10 @@ export default function LocationsPage() {
   const [planId, setPlanId] = useState<PlanId>("free");
   const [locationLimit, setLocationLimit] = useState<number | null>(null);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [formNameError, setFormNameError] = useState<string | null>(null);
+  const [editNameError, setEditNameError] = useState<string | null>(null);
+  const [formSeatingError, setFormSeatingError] = useState<string | null>(null);
+  const [editSeatingError, setEditSeatingError] = useState<string | null>(null);
   const [form, setForm] = useState<{ name: string; phone: string; address: string; city: string; seatingCapacity: string; timezone: string; countryCode: string }>({
     name: "",
     phone: "",
@@ -344,9 +349,24 @@ export default function LocationsPage() {
 
   const canDelete = useMemo(() => locations.length > 1, [locations.length]);
 
-  const openCreateFlow = () => {
-    // Only gate when the free user is at/over the plan limit, so they can still create their first location.
-    if (planId === "free" && typeof locationLimit === "number" && locations.length >= locationLimit) {
+  const openCreateFlow = async () => {
+    // Gate when the user is at/over their plan's location limit (all tiers).
+    // If locationLimit hasn't loaded yet, fetch it now before deciding.
+    let effectiveLimit = locationLimit;
+    if (effectiveLimit === null) {
+      try {
+        const pRes = await fetch("/api/plan", { cache: "no-store" });
+        const pJ = await pRes.json().catch(() => ({}));
+        if (pRes.ok && typeof pJ?.limits?.locations === "number") {
+          effectiveLimit = pJ.limits.locations;
+          setLocationLimit(effectiveLimit);
+        }
+      } catch {
+        // If fetch fails, proceed to open (API will enforce limit anyway)
+      }
+    }
+
+    if (typeof effectiveLimit === "number" && locations.length >= effectiveLimit) {
       setUpgradeOpen(true);
       return;
     }
@@ -356,12 +376,17 @@ export default function LocationsPage() {
   const create = () => {
     startTransition(async () => {
       setMsg(null);
+      setFormNameError(null);
+      setFormSeatingError(null);
       const name = form.name.trim();
-      if (!name) return;
+      if (!name) {
+        setFormNameError("Name is required");
+        return;
+      }
       const cap = form.seatingCapacity.trim();
       const seatingCapacityNum = Number(cap);
       if (cap && (!Number.isFinite(seatingCapacityNum) || seatingCapacityNum <= 0)) {
-        setMsg("Seating capacity must be a positive number");
+        setFormSeatingError("Seating capacity must be a positive number");
         return;
       }
       const currentErrors = validateRegularHours(formRegularHours);
@@ -379,6 +404,7 @@ export default function LocationsPage() {
           address: form.address.trim() || null,
           city: form.city.trim() || null,
           seatingCapacity: cap ? seatingCapacityNum : null,
+          countryCode: form.countryCode || businessCountry,
           timezone: resolveTimezone(form.countryCode || businessCountry, form.timezone.trim()),
           regularHours: formRegularHours,
         }),
@@ -391,14 +417,22 @@ export default function LocationsPage() {
         setOpenCreate(false);
         await load();
       } else {
-        setMsg(j?.error ?? "Failed to create");
+        // If API returns a structured validation error, map it to the relevant field.
+        const errStr = typeof j?.error === "string" ? j.error : null;
+        if (errStr && errStr.toLowerCase().includes("name")) {
+          setFormNameError(errStr);
+        } else {
+          setMsg(j?.error ?? "Failed to create");
+        }
       }
     });
   };
 
   const openEditModal = (location: Location) => {
     setEdit(location);
-    const countryCode = businessCountry || "";
+    setEditNameError(null);
+    setEditSeatingError(null);
+    const countryCode = location.country_code || businessCountry || "";
     setEditForm({
       name: location.name,
       phone: location.phone || "",
@@ -422,11 +456,15 @@ export default function LocationsPage() {
     setInitialRegularHours(defaultRegularHours);
     setHoursErrors(validateRegularHours(defaultRegularHours));
     setEditMessage(null);
+    setEditNameError(null);
+    setEditSeatingError(null);
   };
 
   const saveEdit = () => {
     if (!edit) return;
     setEditMessage(null);
+    setEditNameError(null);
+    setEditSeatingError(null);
     startTransition(async () => {
       const updates: Partial<LocationUpdatePayload> = {};
       const currentErrors = validateRegularHours(editRegularHours);
@@ -436,8 +474,13 @@ export default function LocationsPage() {
         return;
       }
 
+      if (!editForm.name.trim()) {
+        setEditNameError("Name is required");
+        return;
+      }
+
       if (editForm.name !== edit.name) {
-        updates.name = editForm.name;
+        updates.name = editForm.name.trim();
       }
       if (editForm.phone !== (edit.phone || "")) {
         updates.phone = editForm.phone.trim() || null;
@@ -452,7 +495,7 @@ export default function LocationsPage() {
       const seatingCapacityNum = Number(cap);
       const seatingCapacity = cap ? seatingCapacityNum : null;
       if (cap && (!Number.isFinite(seatingCapacityNum) || seatingCapacityNum <= 0)) {
-        setEditMessage("Seating capacity must be a positive number");
+        setEditSeatingError("Seating capacity must be a positive number");
         return;
       }
       const prevCap = typeof edit.seating_capacity === "number" ? edit.seating_capacity : null;
@@ -463,6 +506,11 @@ export default function LocationsPage() {
       const nextTimezone = resolveTimezone(editForm.countryCode || businessCountry || "", editForm.timezone.trim());
       if (nextTimezone !== prevTimezone) {
         updates.timezone = nextTimezone;
+      }
+      const prevCountryCode = edit.country_code || businessCountry || "";
+      const nextCountryCode = editForm.countryCode || businessCountry || "";
+      if (nextCountryCode && nextCountryCode !== prevCountryCode) {
+        updates.countryCode = nextCountryCode;
       }
       if (JSON.stringify(editRegularHours) !== JSON.stringify(initialRegularHours)) {
         updates.regularHours = editRegularHours;
@@ -494,7 +542,12 @@ export default function LocationsPage() {
           type: "success",
         });
       } else {
-        setEditMessage(j?.error ?? "Failed to update");
+        const errStr = typeof j?.error === "string" ? j.error : null;
+        if (errStr && errStr.toLowerCase().includes("country_code")) {
+          setEditMessage("Per-location country is not enabled in this project yet.");
+        } else {
+          setEditMessage(j?.error ?? "Failed to update");
+        }
       }
     });
   };
@@ -582,12 +635,20 @@ export default function LocationsPage() {
               <DialogTitle>New location</DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 overflow-y-auto pr-1">
+              {msg ? <p className="text-sm text-destructive">{msg}</p> : null}
               <div className="grid gap-2">
                 <Label>Name</Label>
                 <Input
                   value={form.name}
-                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setForm((f) => ({ ...f, name: v }));
+                    if (formNameError && v.trim()) setFormNameError(null);
+                  }}
+                  aria-invalid={formNameError ? true : undefined}
+                  className={formNameError ? "border-destructive focus-visible:ring-destructive" : undefined}
                 />
+                {formNameError ? <p className="text-xs text-destructive">{formNameError}</p> : null}
               </div>
               <div className="grid gap-2">
                 <Label>Phone</Label>
@@ -604,7 +665,10 @@ export default function LocationsPage() {
                   value={form.seatingCapacity}
                   onChange={(e) => setForm((f) => ({ ...f, seatingCapacity: e.target.value }))}
                   placeholder="e.g. 80"
+                  aria-invalid={formSeatingError ? true : undefined}
+                  className={formSeatingError ? "border-destructive focus-visible:ring-destructive" : undefined}
                 />
+                {formSeatingError ? <p className="text-xs text-destructive">{formSeatingError}</p> : null}
               </div>
               <div className="grid gap-2">
                 <Label>Address</Label>
@@ -667,10 +731,9 @@ export default function LocationsPage() {
                 errors={formHoursErrors}
                 setErrors={setFormHoursErrors}
               />
-              {msg ? <p className="text-sm text-destructive">{msg}</p> : null}
             </div>
             <DialogFooter>
-              <Button type="button" onClick={create} disabled={isPending || !form.name.trim()}>
+              <Button type="button" onClick={create} disabled={isPending}>
                 Create
               </Button>
               <Button type="button" variant="outline" onClick={() => setOpenCreate(false)}>
@@ -701,12 +764,20 @@ export default function LocationsPage() {
               <DialogTitle>Edit location</DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 overflow-y-auto pr-1">
+              {editMessage ? <p className="text-sm text-destructive">{editMessage}</p> : null}
               <div className="grid gap-2">
                 <Label>Name</Label>
                 <Input
                   value={editForm.name}
-                  onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setEditForm((f) => ({ ...f, name: v }));
+                    if (editNameError && v.trim()) setEditNameError(null);
+                  }}
+                  aria-invalid={editNameError ? true : undefined}
+                  className={editNameError ? "border-destructive focus-visible:ring-destructive" : undefined}
                 />
+                {editNameError ? <p className="text-xs text-destructive">{editNameError}</p> : null}
               </div>
               <div className="grid gap-2">
                 <Label>Phone</Label>
@@ -723,7 +794,10 @@ export default function LocationsPage() {
                   value={editForm.seatingCapacity}
                   onChange={(e) => setEditForm((f) => ({ ...f, seatingCapacity: e.target.value }))}
                   placeholder="e.g. 80"
+                  aria-invalid={editSeatingError ? true : undefined}
+                  className={editSeatingError ? "border-destructive focus-visible:ring-destructive" : undefined}
                 />
+                {editSeatingError ? <p className="text-xs text-destructive">{editSeatingError}</p> : null}
               </div>
               <div className="grid gap-2">
                 <Label>Address</Label>
@@ -786,7 +860,6 @@ export default function LocationsPage() {
                 errors={hoursErrors}
                 setErrors={setHoursErrors}
               />
-              {editMessage ? <p className="text-sm text-destructive">{editMessage}</p> : null}
             </div>
             <DialogFooter>
               <Button type="button" onClick={saveEdit} disabled={isPending}>

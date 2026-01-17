@@ -144,7 +144,6 @@ export default function OnboardingWizard({ initialStep, initialData }: { initial
 
                             {/* User Info */}
                             <div className="space-y-4">
-                                <h3 className="text-sm font-medium text-muted-foreground pb-1">Information about you and your business</h3>
                                 <div className="space-y-2">
                                     <Label htmlFor="name" className={cn(errors.name && "text-destructive")}>Your Name</Label>
                                     <Input
@@ -164,9 +163,24 @@ export default function OnboardingWizard({ initialStep, initialData }: { initial
                                         className={cn(errors.businessName && "border-destructive focus-visible:ring-destructive")}
                                     />
                                     <ErrorMessage message={errors.businessName?.message} />
+                                </div>                                
+                            </div>
+
+                            {/* First Location Info */}
+                            <div className="space-y-4 border-border border-t pt-4">
+                                <h3 className="text-sm font-medium text-muted-foreground pb-1">Lets create your first location and waitlist</h3>
+                                <div className="space-y-2">
+                                    <Label htmlFor="locationName" className={cn(errors.locationName && "text-destructive")}>Location Name</Label>
+                                    <Input
+                                        id="locationName"
+                                        placeholder="e.g. Downtown Branch"
+                                        {...register("locationName")}
+                                        className={cn(errors.locationName && "border-destructive focus-visible:ring-destructive")}
+                                    />
+                                    <ErrorMessage message={errors.locationName?.message} />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className={cn(errors.country && "text-destructive")}>Business Country</Label>
+                                    <Label className={cn(errors.country && "text-destructive")}>Country</Label>
                                     <Select
                                         value={countryCode}
                                         onValueChange={(val) => setValue("country", val, { shouldValidate: true })}
@@ -186,21 +200,6 @@ export default function OnboardingWizard({ initialStep, initialData }: { initial
                                     </Select>
                                     <ErrorMessage message={errors.country?.message} />
                                 </div>
-                            </div>
-
-                            {/* First Location Info */}
-                            <div className="space-y-4">
-                                <h3 className="text-sm font-medium text-muted-foreground pb-1">Information about your business location</h3>
-                                <div className="space-y-2">
-                                    <Label htmlFor="locationName" className={cn(errors.locationName && "text-destructive")}>Location Name</Label>
-                                    <Input
-                                        id="locationName"
-                                        placeholder="e.g. Downtown Branch"
-                                        {...register("locationName")}
-                                        className={cn(errors.locationName && "border-destructive focus-visible:ring-destructive")}
-                                    />
-                                    <ErrorMessage message={errors.locationName?.message} />
-                                </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="phone" className={cn(errors.phone && "text-destructive")}>Location Phone Number</Label>
                                     <div className={cn(errors.phone && "border-destructive rounded-md border")}>
@@ -212,13 +211,8 @@ export default function OnboardingWizard({ initialStep, initialData }: { initial
                                     </div>
                                     <ErrorMessage message={errors.phone?.message} />
                                 </div>
-                            </div>
-
-                            {/* First List Info */}
-                            <div className="space-y-4">
-                                <h3 className="text-sm font-medium text-muted-foreground pb-1">Information about your first list</h3>
                                 <div className="space-y-2">
-                                    <Label htmlFor="listName" className={cn(errors.listName && "text-destructive")}>List Name</Label>
+                                    <Label htmlFor="listName" className={cn(errors.listName && "text-destructive")}>Waitlist Name</Label>
                                     <Input
                                         id="listName"
                                         placeholder="e.g. Dinner List"

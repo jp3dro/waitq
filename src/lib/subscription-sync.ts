@@ -47,7 +47,11 @@ function derivePlanIdFromSubscription(sub: Stripe.Subscription): PlanId | "free"
 
   if (price?.product && typeof price.product === "string") {
     const productId = price.product as string;
-    const byProduct = Object.values(plans).find((p) => p.stripe.productId === productId);
+    const byProduct = Object.values(plans).find((p) => {
+      const testId = p.stripe.productIdTest;
+      const liveId = p.stripe.productIdLive;
+      return testId === productId || liveId === productId;
+    });
     if (byProduct) return byProduct.id;
   }
 
@@ -162,7 +166,49 @@ export async function syncSubscriptionForUser({
     // ignore
   }
 
-  if (!activeSub) return { ok: true, planId: "free" as const, customerId };
+  // If there is no active subscription, actively clear any cached paid plan in DB.
+  if (!activeSub) {
+    const businessId = await resolveBusinessIdForUser(userId);
+    try {
+      await admin
+        .from("subscriptions")
+        .upsert(
+          {
+            user_id: userId,
+            business_id: businessId,
+            stripe_customer_id: customerId,
+            stripe_subscription_id: null,
+            plan_id: null,
+            price_lookup_key: null,
+            price_id: null,
+            latest_invoice_id: null,
+            collection_method: null,
+            billing_cycle_anchor: null,
+            cancel_at_period_end: null,
+            status: "canceled",
+            current_period_start: null,
+            current_period_end: null,
+            trial_end: null,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id" }
+        );
+    } catch (e) {
+      console.error("Failed to clear subscription row during sync:", e);
+    }
+    return { ok: true, planId: "free" as const, customerId };
+  }
+
+  // If the subscription is marked for end-of-period cancellation, cancel it immediately.
+  if (activeSub.cancel_at_period_end === true && activeSub.status !== "canceled") {
+    try {
+      await stripe.subscriptions.cancel(activeSub.id, { prorate: false });
+      // Re-fetch to get the updated status
+      activeSub = await stripe.subscriptions.retrieve(activeSub.id);
+    } catch (e) {
+      console.error("Failed to cancel subscription immediately during sync:", activeSub.id, e);
+    }
+  }
 
   const planId = derivePlanIdFromSubscription(activeSub);
   const price = activeSub.items?.data?.[0]?.price || null;

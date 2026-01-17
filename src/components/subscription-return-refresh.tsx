@@ -48,6 +48,7 @@ export default function SubscriptionReturnRefresh() {
         // Remove query flags to avoid repeated refresh loops.
         url.searchParams.delete("checkout");
         url.searchParams.delete("portal");
+        url.searchParams.delete("session_id");
         window.history.replaceState({}, "", url.toString());
 
         // Re-render server components (sidebar + plan context) using the updated DB row.

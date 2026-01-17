@@ -80,8 +80,7 @@ function SignupPageContent() {
       <div className="w-full max-w-sm">
         <div className="rounded-2xl bg-card text-card-foreground ring-1 ring-border shadow-sm p-6 space-y-6">
           <div className="text-center">
-            <h1 className="text-xl font-semibold">Create account</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Start using WaitQ</p>
+            <h1 className="text-xl font-semibold">Create a new WaitQ account</h1>
           </div>
 
           <div className="space-y-4">
@@ -132,7 +131,7 @@ function SignupPageContent() {
                     attemptedSubmit && !passwordMeetsRequirements ? "border-destructive focus:ring-destructive" : "border-input",
                   ].join(" ")}
                 />
-                <div className="mt-2 rounded-md border border-border bg-muted/30 p-3">
+                <div className="mt-2 rounded-md bg-muted/30 p-3">
                   <p className="text-xs font-medium text-foreground">Password requirements</p>
                   <ul className="mt-2 space-y-1">
                     {ruleStates.map((r) => (
