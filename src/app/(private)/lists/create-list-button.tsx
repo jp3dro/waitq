@@ -1,5 +1,5 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useId, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Info } from "lucide-react";
 import {
@@ -22,12 +22,23 @@ export default function CreateListButton() {
   const [isPending, startTransition] = useTransition();
   const [name, setName] = useState("");
   const [kioskEnabled, setKioskEnabled] = useState(false);
+  const [askName, setAskName] = useState(true);
+  const [askPhone, setAskPhone] = useState(true);
+  const [askEmail, setAskEmail] = useState(false);
   const [seatingPrefs, setSeatingPrefs] = useState<string[]>([]);
   const [message, setMessage] = useState<string | null>(null);
+  const baseId = useId();
+  const askNameId = `${baseId}-ask-name`;
+  const askPhoneId = `${baseId}-ask-phone`;
+  const askEmailId = `${baseId}-ask-email`;
+  const kioskEnabledId = `${baseId}-kiosk-enabled`;
 
   const reset = () => {
     setName("");
     setKioskEnabled(false);
+    setAskName(true);
+    setAskPhone(true);
+    setAskEmail(false);
     setSeatingPrefs([]);
     setMessage(null);
   };
@@ -40,7 +51,7 @@ export default function CreateListButton() {
       const res = await fetch("/api/waitlists", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: n, kioskEnabled, seatingPreferences: seatingPrefs }),
+        body: JSON.stringify({ name: n, kioskEnabled, askName, askPhone, askEmail, seatingPreferences: seatingPrefs }),
       });
       const j = await res.json().catch(() => ({}));
       if (res.ok) {
@@ -84,14 +95,57 @@ export default function CreateListButton() {
               <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter list name" />
             </div>
 
+            <div className="grid gap-4 mt-2">
+              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">List preferences</h3>
+
+              <div className="flex items-center gap-3">
+                <Switch id={askNameId} checked={askName} onCheckedChange={setAskName} />
+                <div className="flex items-center gap-2">
+                  <Label htmlFor={askNameId}>Collect Name</Label>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">Make name field required when joining</TooltipContent>
+                  </Tooltip>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Switch id={askPhoneId} checked={askPhone} onCheckedChange={setAskPhone} />
+                <div className="flex items-center gap-2">
+                  <Label htmlFor={askPhoneId}>Collect Phone</Label>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">Make phone field required when joining</TooltipContent>
+                  </Tooltip>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Switch id={askEmailId} checked={askEmail} onCheckedChange={setAskEmail} />
+                <div className="flex items-center gap-2">
+                  <Label htmlFor={askEmailId}>Collect Email</Label>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">Show an email field when joining</TooltipContent>
+                  </Tooltip>
+                </div>
+              </div>
+            </div>
+
             <div className="grid gap-2">
               <Label>Seating preferences</Label>
               <SeatingPrefsEditor value={seatingPrefs} onChange={setSeatingPrefs} />
             </div>
           <div className="flex items-center gap-3">
-            <Switch id="kiosk-enabled" checked={kioskEnabled} onCheckedChange={setKioskEnabled} />
+            <Switch id={kioskEnabledId} checked={kioskEnabled} onCheckedChange={setKioskEnabled} />
             <div className="flex items-center gap-2">
-              <Label htmlFor="kiosk-enabled">Self-checkin kiosk</Label>
+              <Label htmlFor={kioskEnabledId}>Self-checkin kiosk</Label>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Info className="h-4 w-4 text-muted-foreground cursor-help" />

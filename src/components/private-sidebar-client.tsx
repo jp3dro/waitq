@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 import {
     LayoutDashboard,
     ListChecks,
@@ -35,6 +36,17 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
     Sidebar,
     SidebarContent,
     SidebarFooter,
@@ -43,6 +55,8 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { Badge } from "@/components/ui/badge";
+import type { PlanId } from "@/lib/plans";
 
 type Props = {
     userName: string | null;
@@ -50,6 +64,7 @@ type Props = {
     businessLogoUrl: string | null;
     role?: string;
     lists: { id: string; name: string }[];
+    planId?: PlanId;
 };
 
 function NavItem({
@@ -57,25 +72,27 @@ function NavItem({
     icon: Icon,
     label,
     subItems,
+    rightSlot,
 }: {
     href: string;
     icon: React.ComponentType<{ className?: string }>;
     label: string;
     subItems?: { href: string; label: string }[];
+    rightSlot?: React.ReactNode;
 }) {
     const pathname = usePathname();
     const isSubActive = subItems?.some((s) => pathname === s.href) ?? false;
-    const isActive = pathname === href || (pathname.startsWith(href + "/") && !subItems) || isSubActive;
-    // If we have subitems, we might want the parent to show active if a child is active, OR just let the child be active.
-    // Requirement: "show a little bit indented to show a dependency on Lists"
-    // Let's keep the parent active if on the main list page, and separate active state for children.
+    const isActive = pathname === href || (pathname.startsWith(href + "/") && !subItems);
+    // When we have subitems, only mark parent as active if we're exactly on the parent page
+    // or if we're on a subpath that doesn't match any subitem
 
     return (
         <SidebarMenuItem>
             <SidebarMenuButton asChild isActive={isActive} tooltip={label}>
                 <Link href={href}>
                     <Icon className="h-4 w-4" />
-                    <span>{label}</span>
+                    <span className="flex-1 truncate">{label}</span>
+                    {rightSlot ? <span className="shrink-0">{rightSlot}</span> : null}
                 </Link>
             </SidebarMenuButton>
             {subItems && subItems.length > 0 && (
@@ -124,11 +141,13 @@ function ExternalNavItem({
     );
 }
 
-export default function PrivateSidebarClient({ userName, userEmail, businessLogoUrl, role, lists }: Props) {
+export default function PrivateSidebarClient({ userName, userEmail, businessLogoUrl, role, lists, planId }: Props) {
     const { setTheme } = useTheme();
+    const router = useRouter();
     const canSeeAnalytics = role === "admin" || role === "manager";
     const isAdmin = role === "admin";
     const canSeeInternalAdminLinks = userEmail?.toLowerCase() === "jp3dro@gmail.com";
+    const [deleting, setDeleting] = useState(false);
 
     const listSubItems = lists.map((l) => ({
         href: `/lists/${l.id}`,
@@ -199,7 +218,20 @@ export default function PrivateSidebarClient({ userName, userEmail, businessLogo
 
                 <SidebarMenu className="pb-4">
                     {isAdmin ? <NavItem href="/business" icon={Building2} label="Business" /> : null}
-                    {isAdmin ? <NavItem href="/subscriptions" icon={CreditCard} label="Subscription" /> : null}
+                    {isAdmin ? (
+                        <NavItem
+                            href="/subscriptions"
+                            icon={CreditCard}
+                            label="Subscription"
+                            rightSlot={
+                                planId === "free" ? (
+                                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5">
+                                        FREE
+                                    </Badge>
+                                ) : null
+                            }
+                        />
+                    ) : null}
                     {isAdmin ? <NavItem href="/locations" icon={MapPin} label="Locations" /> : null}
                     {isAdmin ? <NavItem href="/users" icon={Users2} label="Users" /> : null}
                 </SidebarMenu>
@@ -271,14 +303,56 @@ export default function PrivateSidebarClient({ userName, userEmail, businessLogo
                                     </DropdownMenuSub>
                                 </DropdownMenuGroup>
                                 <DropdownMenuSeparator />
-                                <form action="/auth/logout" method="post" id="logout-form">
-                                    <DropdownMenuItem asChild className="cursor-pointer">
-                                        <button type="submit" className="w-full flex items-center">
-                                            <LogOut className="mr-2 h-4 w-4" />
-                                            Log out
-                                        </button>
-                                    </DropdownMenuItem>
-                                </form>
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <DropdownMenuItem
+                                                className="cursor-pointer text-destructive focus:text-destructive"
+                                                onSelect={(e) => e.preventDefault()}
+                                            >
+                                                <div className="flex items-center">
+                                                    <span>Delete account</span>
+                                                </div>
+                                            </DropdownMenuItem>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Delete your account?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    This will permanently delete your user, business setup data, and activity from the database.
+                                                    This cannot be undone.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+                                                <AlertDialogAction
+                                                    variant="destructive"
+                                                    disabled={deleting}
+                                                    onClick={async () => {
+                                                        setDeleting(true);
+                                                        try {
+                                                            const res = await fetch("/api/account/delete", { method: "POST" });
+                                                            const j = (await res.json().catch(() => ({}))) as { error?: string };
+                                                            if (!res.ok) throw new Error(j.error || "Failed to delete account");
+                                                            router.replace("/");
+                                                            router.refresh();
+                                                        } catch (e) {
+                                                            console.error(e);
+                                                            alert(e instanceof Error ? e.message : "Failed to delete account");
+                                                            setDeleting(false);
+                                                        }
+                                                    }}
+                                                >
+                                                    {deleting ? "Deleting…" : "Delete"}
+                                                </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                <DropdownMenuItem asChild className="cursor-pointer">
+                                    <Link href="/auth/logout" className="w-full flex items-center">
+                                        <LogOut className="mr-2 h-4 w-4" />
+                                        Log out
+                                    </Link>
+                                </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </SidebarMenuItem>

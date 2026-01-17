@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { getLocationOpenState, type RegularHours } from "@/lib/location-hours";
 
 export async function GET(req: NextRequest) {
   const ip = getClientIp(req.headers);
@@ -33,10 +34,16 @@ export async function GET(req: NextRequest) {
   const admin = getAdminClient();
   const { data: list, error: listErr } = await admin
     .from("waitlists")
-    .select("id, name, kiosk_enabled, business_id, seating_preferences, ask_name, ask_phone")
+    .select("id, name, kiosk_enabled, business_id, location_id, seating_preferences, ask_name, ask_phone, ask_email, business_locations:location_id(regular_hours, timezone)")
     .eq("display_token", token)
     .single();
   if (listErr || !list) return NextResponse.json({ error: "Invalid display token" }, { status: 404 });
+
+  const loc = (list as unknown as { business_locations?: { regular_hours?: unknown; timezone?: unknown } | null }).business_locations;
+  const openState = getLocationOpenState({
+    regularHours: (loc?.regular_hours as RegularHours | null) || null,
+    timezone: (typeof loc?.timezone === "string" ? (loc.timezone as string) : null) || null,
+  });
 
   const { data: entries, error } = await admin
     .from("waitlist_entries")
@@ -92,8 +99,11 @@ export async function GET(req: NextRequest) {
     listId: list.id,
     listName: list.name,
     kioskEnabled: !!list.kiosk_enabled,
+    locationIsOpen: openState.isOpen,
+    locationStatusReason: openState.reason,
     askName: list.ask_name !== false,
     askPhone: list.ask_phone !== false,
+    askEmail: list.ask_email === true,
     businessCountry,
     businessName,
     brandLogo,

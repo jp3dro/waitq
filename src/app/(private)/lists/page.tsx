@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import CreateListButton from "./create-list-button";
 import ListCard from "./list-card";
+import { getLocationOpenState, type RegularHours } from "@/lib/location-hours";
 
 export const metadata = { title: "Lists" };
 
@@ -12,11 +13,21 @@ export default async function ListsIndexPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: locations } = await supabase.from("business_locations").select("id, name").order("created_at", { ascending: true });
+  const { data: locations } = await supabase.from("business_locations").select("id, name, regular_hours, timezone").order("created_at", { ascending: true });
   const { data: lists } = await supabase.from("waitlists").select("id, name, location_id, display_token, kiosk_enabled").order("created_at", { ascending: true });
   const { data: biz } = await supabase.from("businesses").select("name").order("created_at", { ascending: true }).limit(1).maybeSingle();
-  const locs = (locations || []) as { id: string; name: string }[];
+  const locs = (locations || []) as { id: string; name: string; regular_hours?: unknown; timezone?: string | null }[];
   const allLists = (lists || []) as { id: string; name: string; location_id: string | null; display_token?: string | null; kiosk_enabled?: boolean | null }[];
+
+  const locationOpenById = new Map(
+    locs.map((l) => {
+      const st = getLocationOpenState({
+        regularHours: (l.regular_hours as RegularHours | null) || null,
+        timezone: (typeof l.timezone === "string" ? l.timezone : null) || null,
+      });
+      return [l.id, st.isOpen] as const;
+    })
+  );
 
   // Per-list waiting counts and estimated times (reuse dashboard logic)
   const [waitingCounts, estimatedTimes] = await Promise.all([
@@ -90,6 +101,7 @@ export default async function ListsIndexPage() {
                       const hours = Math.floor(totalMin / 60);
                       const minutes = totalMin % 60;
                       const etaDisplay = totalMin > 0 ? (hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`) : '—';
+                      const locationIsOpen = l.location_id ? (locationOpenById.get(l.location_id) ?? true) : true;
                       return (
                         <li key={l.id}>
                           <ListCard
@@ -101,6 +113,7 @@ export default async function ListsIndexPage() {
                             businessName={(biz?.name as string | null) || undefined}
                             initialLocationId={l.location_id}
                             kioskEnabled={!!l.kiosk_enabled}
+                            locationIsOpen={locationIsOpen}
                             locations={locs}
                             disableDelete={allLists.length <= 1}
                           />

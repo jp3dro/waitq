@@ -5,15 +5,24 @@ import { PhoneInput, type Country } from "@/components/ui/phone-input";
 import { toastManager } from "@/hooks/use-toast";
 import { Stepper } from "@/components/ui/stepper";
 
-type FormValues = { phone: string; customerName: string; waitlistId: string; sendSms: boolean; sendWhatsapp: boolean; partySize?: number; seatingPreference?: string };
+type FormValues = {
+  phone: string;
+  email: string;
+  customerName: string;
+  waitlistId: string;
+  sendSms: boolean;
+  sendEmail: boolean;
+  partySize?: number;
+  seatingPreference?: string;
+};
 
-export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, businessCountry, formId = "add-waitlist-form", onPendingChange }: { onDone?: () => void; defaultWaitlistId?: string; lockWaitlist?: boolean; businessCountry?: Country; formId?: string; onPendingChange?: (pending: boolean) => void }) {
+export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, businessCountry, formId = "add-waitlist-form", onPendingChange, onBlockedReasonChange }: { onDone?: () => void; defaultWaitlistId?: string; lockWaitlist?: boolean; businessCountry?: Country; formId?: string; onPendingChange?: (pending: boolean) => void; onBlockedReasonChange?: (reason: string | null) => void }) {
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const { register, handleSubmit, reset, watch, setValue, setError, setFocus, formState: { errors } } = useForm<FormValues>({
-    defaultValues: { phone: "", customerName: "", waitlistId: "", sendSms: false, sendWhatsapp: false, partySize: 2 },
+    defaultValues: { phone: "", email: "", customerName: "", waitlistId: "", sendSms: false, sendEmail: false, partySize: 2 },
   });
-  const [waitlists, setWaitlists] = useState<{ id: string; name: string; display_token?: string; list_type?: string; seating_preferences?: string[]; ask_name?: boolean; ask_phone?: boolean }[]>([]);
+  const [waitlists, setWaitlists] = useState<{ id: string; name: string; display_token?: string; list_type?: string; seating_preferences?: string[]; ask_name?: boolean; ask_phone?: boolean; ask_email?: boolean; location_is_open?: boolean; location_status_reason?: string | null }[]>([]);
   const [fetching, setFetching] = useState(true);
 
   useEffect(() => {
@@ -36,8 +45,19 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
     })();
   }, [reset, defaultWaitlistId]);
 
+  const current = waitlists.find(w => w.id === watch("waitlistId"));
+  const blockedReason = current?.location_is_open === false ? (current.location_status_reason || "Restaurant is closed") : null;
+  useEffect(() => {
+    onBlockedReasonChange?.(blockedReason);
+  }, [blockedReason, onBlockedReasonChange]);
+
   const onSubmit = (values: FormValues) => {
     setMessage(null);
+    // Client-side guard (server will also enforce): avoid sending when location is closed.
+    if (blockedReason) {
+      setMessage(blockedReason);
+      return;
+    }
     startTransition(async () => {
       const res = await fetch("/api/waitlist", {
         method: "POST",
@@ -50,7 +70,7 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
           description: "Customer added to waitlist successfully",
           type: "success",
         });
-        reset({ phone: "", customerName: "", waitlistId: values.waitlistId, sendSms: false, sendWhatsapp: false, partySize: 2, seatingPreference: undefined });
+        reset({ phone: "", email: "", customerName: "", waitlistId: values.waitlistId, sendSms: false, sendEmail: false, partySize: 2, seatingPreference: undefined });
         setMessage("Added and message sent (if configured)");
         // Local optimistic refresh and broadcast
         try {
@@ -92,7 +112,8 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
                 // Map API field names to form field names
                 const formField = field === 'customerName' ? 'customerName' :
                   field === 'phone' ? 'phone' :
-                    field === 'waitlistId' ? 'waitlistId' : field;
+                    field === 'email' ? 'email' :
+                      field === 'waitlistId' ? 'waitlistId' : field;
                 setError(formField as keyof FormValues, {
                   type: 'server',
                   message: messages[0] // Use first error message
@@ -128,9 +149,17 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
     );
   }
 
+  const collectPhone = current?.ask_phone !== false;
+  const collectEmail = current?.ask_email === true;
+
   return (
     <div>
       <form id={formId} onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
+        {blockedReason ? (
+          <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {blockedReason}
+          </div>
+        ) : null}
         {lockWaitlist ? null : (
           <div className="grid gap-2">
             <label className="text-sm font-medium">Waitlist</label>
@@ -163,7 +192,7 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
               max={20}
             />
           </div>
-          {(waitlists.find(w => w.id === watch("waitlistId"))?.ask_phone !== false) && (
+          {collectPhone && (
             <div className="flex-1 grid gap-2">
               <label className="text-sm font-medium">Phone</label>
               <PhoneInput
@@ -177,6 +206,21 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
             </div>
           )}
         </div>
+
+        {collectEmail ? (
+          <div className="grid gap-2">
+            <label className="text-sm font-medium">Email</label>
+            <input
+              type="email"
+              className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm"
+              placeholder="name@example.com"
+              {...register("email")}
+            />
+            {errors.email && (
+              <p className="text-sm text-red-600">{errors.email.message}</p>
+            )}
+          </div>
+        ) : null}
         {(waitlists.find(w => w.id === watch("waitlistId"))?.seating_preferences || []).length > 0 ? (
           <div className="grid gap-2">
             <label className="text-sm font-medium">Seating preference</label>
@@ -197,17 +241,21 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
             </div>
           </div>
         ) : null}
-        {(waitlists.find(w => w.id === watch("waitlistId"))?.ask_phone !== false) && (
+        {(collectPhone || collectEmail) && (
           <div className="flex items-center gap-4">
             <label className="text-sm font-medium">Notify via</label>
-            <div className="flex items-center gap-2">
-              <input id="send-sms" type="checkbox" className="h-4 w-4 rounded border-border text-primary focus:ring-ring" {...register("sendSms")} />
-              <label htmlFor="send-sms" className="text-sm">SMS</label>
-            </div>
-            <div className="flex items-center gap-2">
-              <input id="send-wa" type="checkbox" className="h-4 w-4 rounded border-border text-primary focus:ring-ring" {...register("sendWhatsapp")} />
-              <label htmlFor="send-wa" className="text-sm">WhatsApp</label>
-            </div>
+            {collectPhone ? (
+              <div className="flex items-center gap-2">
+                <input id="send-sms" type="checkbox" className="h-4 w-4 rounded border-border text-primary focus:ring-ring" {...register("sendSms")} />
+                <label htmlFor="send-sms" className="text-sm">SMS</label>
+              </div>
+            ) : null}
+            {collectEmail ? (
+              <div className="flex items-center gap-2">
+                <input id="send-email" type="checkbox" className="h-4 w-4 rounded border-border text-primary focus:ring-ring" {...register("sendEmail")} />
+                <label htmlFor="send-email" className="text-sm">Email</label>
+              </div>
+            ) : null}
           </div>
         )}
         {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}

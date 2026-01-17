@@ -12,15 +12,31 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-export default function AddButton({ defaultWaitlistId, lockWaitlist, businessCountry }: { defaultWaitlistId?: string; lockWaitlist?: boolean; businessCountry?: Country }) {
+export default function AddButton({
+  defaultWaitlistId,
+  lockWaitlist,
+  businessCountry,
+  disabled,
+  disabledReason,
+}: {
+  defaultWaitlistId?: string;
+  lockWaitlist?: boolean;
+  businessCountry?: Country;
+  disabled?: boolean;
+  disabledReason?: string | null;
+}) {
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
+  const [blockedReason, setBlockedReason] = useState<string | null>(null);
+  const effectiveBlockedReason = disabled ? (disabledReason || "Restaurant is closed") : blockedReason;
   return (
     <>
-      <Button onClick={() => setOpen(true)} size="sm" className="gap-2">
-        <Plus className="h-4 w-4" />
-        Add to waitlist
-      </Button>
+      <div className="inline-block" title={effectiveBlockedReason || undefined}>
+        <Button onClick={() => setOpen(true)} disabled={!!effectiveBlockedReason} size="sm" className="gap-2">
+          <Plus className="h-4 w-4" />
+          Add to waitlist
+        </Button>
+      </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-lg">
@@ -34,12 +50,15 @@ export default function AddButton({ defaultWaitlistId, lockWaitlist, businessCou
             lockWaitlist={lockWaitlist}
             businessCountry={businessCountry}
             onPendingChange={setPending}
+            onBlockedReasonChange={setBlockedReason}
           />
 
           <DialogFooter>
-            <Button type="submit" form="add-waitlist-form" disabled={pending}>
-              {pending ? "Adding…" : "Add"}
-            </Button>
+            <div className="inline-block" title={effectiveBlockedReason || undefined}>
+              <Button type="submit" form="add-waitlist-form" disabled={pending || !!effectiveBlockedReason}>
+                {pending ? "Adding…" : "Add"}
+              </Button>
+            </div>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>

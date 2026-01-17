@@ -7,6 +7,17 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { useTheme } from "next-themes";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 type Entry = { status: string; created_at: string; eta_minutes: number | null; queue_position: number | null; waitlist_id?: string; ticket_number?: number | null; notified_at?: string | null; seating_preference?: string | null; party_size?: number | null };
 type Business =
@@ -35,6 +46,8 @@ export default function ClientStatus({ token }: { token: string }) {
   const [displayToken, setDisplayToken] = useState<string | null>(null);
   const [waitlistName, setWaitlistName] = useState<string | null>(null);
   const [waitlistId, setWaitlistId] = useState<string | null>(null);
+  const [cancelPending, setCancelPending] = useState(false);
+  const [cancelError, setCancelError] = useState<string | null>(null);
   const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
   const refreshTimerRef = useRef<number | null>(null);
   const pendingRefreshRef = useRef(false);
@@ -235,6 +248,26 @@ export default function ClientStatus({ token }: { token: string }) {
   ].filter((l) => typeof l.url === "string" && l.url.trim().length > 0);
 
   const telHref = locationPhone ? `tel:${locationPhone.replace(/[^\d+]/g, "")}` : null;
+  const cancelReservation = async () => {
+    setCancelError(null);
+    setCancelPending(true);
+    try {
+      const res = await fetch("/api/w-cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setCancelError(j?.error ?? "Unable to cancel ticket");
+        return;
+      }
+      setData((prev) => (prev ? { ...prev, status: "cancelled" } : prev));
+      await load(true);
+    } finally {
+      setCancelPending(false);
+    }
+  };
 
   return (
     <div className="min-h-dvh bg-background text-foreground">
@@ -370,6 +403,33 @@ export default function ClientStatus({ token }: { token: string }) {
               ) : null}
             </div>
           )}
+
+          {!isTerminal ? (
+            <div className="mt-6 flex flex-col items-center gap-2">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" disabled={cancelPending}>
+                    Cancel reservation
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Cancel your reservation?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      You&apos;ll be removed from the waitlist. You can rejoin if needed.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Keep my spot</AlertDialogCancel>
+                    <AlertDialogAction onClick={cancelReservation} disabled={cancelPending}>
+                      {cancelPending ? "Cancelling…" : "Cancel reservation"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              {cancelError ? <p className="text-xs text-destructive">{cancelError}</p> : null}
+            </div>
+          ) : null}
 
           <div className="mt-6 flex items-center justify-center">
             <Link href="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground">

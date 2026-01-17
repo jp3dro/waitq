@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { getCountries } from "react-phone-number-input";
 import { useRouter } from "next/navigation";
 import { toastManager } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { isEuCountry } from "@/lib/eu";
 import {
   Select,
   SelectContent,
@@ -21,6 +22,7 @@ type Business = {
   accent_color: string | null;
   background_color: string | null;
   country_code: string | null;
+  vat_id?: string | null;
   website_url?: string | null;
   instagram_url?: string | null;
   facebook_url?: string | null;
@@ -38,6 +40,7 @@ type Props = {
 type Baseline = {
   name: string;
   country_code: string;
+  vat_id: string;
   website_url: string;
   instagram_url: string;
   facebook_url: string;
@@ -49,6 +52,7 @@ function toBaseline(biz: Business): Baseline {
   return {
     name: (biz.name || "").trim(),
     country_code: (biz.country_code || "PT").trim().toUpperCase(),
+    vat_id: ((biz.vat_id as string | null) || "").trim().toUpperCase(),
     website_url: (biz.website_url || "").trim(),
     instagram_url: (biz.instagram_url || "").trim(),
     facebook_url: (biz.facebook_url || "").trim(),
@@ -67,6 +71,10 @@ export default function BusinessDetailsClient({ initial, canEdit }: Props) {
 
   const [name, setName] = useState(baseline.name);
   const [countryCode, setCountryCode] = useState(baseline.country_code);
+  const [vatId, setVatId] = useState(baseline.vat_id);
+  const [vatStatus, setVatStatus] = useState<null | { state: "idle" | "checking" | "valid" | "invalid" | "error"; detail?: string }>(
+    null
+  );
   const [logoUrl, setLogoUrl] = useState(initial.logo_url || "");
   const [websiteUrl, setWebsiteUrl] = useState(baseline.website_url);
   const [instagramUrl, setInstagramUrl] = useState(baseline.instagram_url);
@@ -78,6 +86,7 @@ export default function BusinessDetailsClient({ initial, canEdit }: Props) {
     const next: Baseline = {
       name: name.trim(),
       country_code: countryCode.trim().toUpperCase(),
+      vat_id: vatId.trim().toUpperCase(),
       website_url: websiteUrl.trim(),
       instagram_url: instagramUrl.trim(),
       facebook_url: facebookUrl.trim(),
@@ -85,7 +94,7 @@ export default function BusinessDetailsClient({ initial, canEdit }: Props) {
       menu_url: menuUrl.trim(),
     };
     return JSON.stringify(next) !== JSON.stringify(baseline);
-  }, [baseline, countryCode, facebookUrl, googleMapsUrl, instagramUrl, menuUrl, name, websiteUrl]);
+  }, [baseline, countryCode, facebookUrl, googleMapsUrl, instagramUrl, menuUrl, name, vatId, websiteUrl]);
 
   const countryOptions = useMemo(() => {
     const codes = getCountries();
@@ -108,6 +117,37 @@ export default function BusinessDetailsClient({ initial, canEdit }: Props) {
         : null;
     return displayNames?.of(countryCode) || countryCode;
   }, [countryCode]);
+
+  async function validateVatNow() {
+    const cc = countryCode.trim().toUpperCase();
+    const v = vatId.trim().toUpperCase();
+    if (!isEuCountry(cc)) {
+      setVatStatus({ state: "error", detail: "VAT validation is only available for EU countries." });
+      return;
+    }
+    if (!v) {
+      setVatStatus({ state: "error", detail: "Enter a VAT ID to validate." });
+      return;
+    }
+    setVatStatus({ state: "checking" });
+    try {
+      const res = await fetch("/api/vat/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ countryCode: cc, vatId: v }),
+      });
+      const j = (await res.json().catch(() => ({}))) as { valid?: boolean | null; reason?: string };
+      if (res.ok && j?.valid === true) {
+        setVatStatus({ state: "valid" });
+      } else if (res.ok && j?.valid === false) {
+        setVatStatus({ state: "invalid", detail: typeof j?.reason === "string" ? j.reason : undefined });
+      } else {
+        setVatStatus({ state: "error", detail: typeof j?.reason === "string" ? j.reason : "Unable to validate VAT ID" });
+      }
+    } catch (e) {
+      setVatStatus({ state: "error", detail: (e as Error).message });
+    }
+  }
 
   async function uploadLogo(file: File) {
     if (!canEdit) return;
@@ -178,6 +218,9 @@ export default function BusinessDetailsClient({ initial, canEdit }: Props) {
       const cc = countryCode.trim().toUpperCase();
       if (cc !== baseline.country_code) payload.countryCode = cc;
 
+      const v = vatId.trim().toUpperCase();
+      if (v !== baseline.vat_id) payload.vatId = v || null;
+
       const w = normalizeUrl(websiteUrl);
       if (w !== baseline.website_url) payload.websiteUrl = w || null;
 
@@ -212,6 +255,7 @@ export default function BusinessDetailsClient({ initial, canEdit }: Props) {
           setBaseline(nextBaseline);
           setName(nextBaseline.name);
           setCountryCode(nextBaseline.country_code);
+          setVatId(nextBaseline.vat_id);
           setWebsiteUrl(nextBaseline.website_url);
           setInstagramUrl(nextBaseline.instagram_url);
           setFacebookUrl(nextBaseline.facebook_url);
@@ -242,6 +286,42 @@ export default function BusinessDetailsClient({ initial, canEdit }: Props) {
             <p className="text-sm text-muted-foreground">This name appears on your public waitlist pages and QR code.</p>
           </div>
 
+          <div className="space-y-4 pt-1">
+            <div className="text-sm font-medium">Brand logo</div>
+            <div className="grid items-start gap-4 md:grid-cols-[96px_1fr]">
+              <div className="h-24 w-24 rounded-md ring-1 ring-border overflow-hidden bg-muted flex items-center justify-center">
+                {logoUrl.trim() ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={logoUrl.trim()} alt="Logo" className="h-full w-full object-cover" />
+                ) : (
+                  <span className="text-xs text-muted-foreground">No logo</span>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <input
+                  ref={logoFileRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) void uploadLogo(f);
+                    if (logoFileRef.current) logoFileRef.current.value = "";
+                  }}
+                />
+                <Button type="button" variant="outline" onClick={() => logoFileRef.current?.click()} disabled={!canEdit || uploading}>
+                  {uploading ? "Uploading..." : "Upload logo"}
+                </Button>
+                {logoUrl.trim() ? (
+                  <Button type="button" variant="outline" onClick={() => void removeLogo()} disabled={!canEdit || uploading}>
+                    Remove
+                  </Button>
+                ) : null}
+                <div className="text-xs text-muted-foreground">PNG/JPG, square recommended. Max 5 MB.</div>
+              </div>
+            </div>
+          </div>
+
           <div className="space-y-2">
             <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
               Country
@@ -262,6 +342,49 @@ export default function BusinessDetailsClient({ initial, canEdit }: Props) {
             </Select>
             <p className="text-sm text-muted-foreground">Used as the default region for phone number formatting.</p>
           </div>
+
+          {isEuCountry(countryCode) ? (
+            <div className="space-y-2">
+              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                VAT ID
+              </label>
+              <div className="flex items-center gap-2">
+                <Input
+                  value={vatId}
+                  onChange={(e) => {
+                    setVatId(e.target.value);
+                    setVatStatus(null);
+                  }}
+                  disabled={!canEdit}
+                  placeholder="e.g. PT123456789"
+                  autoCapitalize="characters"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => void validateVatNow()}
+                  disabled={!canEdit || vatStatus?.state === "checking"}
+                >
+                  {vatStatus?.state === "checking" ? "Validating..." : "Validate"}
+                </Button>
+              </div>
+              <div className="text-sm">
+                {vatStatus?.state === "checking" ? (
+                  <span className="text-muted-foreground">Checking VAT ID…</span>
+                ) : vatStatus?.state === "valid" ? (
+                  <span className="text-emerald-600">VAT ID is valid (VIES)</span>
+                ) : vatStatus?.state === "invalid" ? (
+                  <span className="text-destructive">VAT ID is not valid{vatStatus.detail ? `: ${vatStatus.detail}` : ""}</span>
+                ) : vatStatus?.state === "error" ? (
+                  <span className="text-muted-foreground">Could not verify VAT ID{vatStatus.detail ? `: ${vatStatus.detail}` : ""}</span>
+                ) : (
+                  <span className="text-muted-foreground">
+                    Used for EU VAT (VIES) validation. Portuguese businesses with a valid VIES VAT ID may be VAT-exempt.
+                  </span>
+                )}
+              </div>
+            </div>
+          ) : null}
 
           <div className="space-y-6 pt-2">
             <div className="text-sm font-medium">Links</div>
@@ -344,53 +467,10 @@ export default function BusinessDetailsClient({ initial, canEdit }: Props) {
               <p className="text-sm text-muted-foreground">If set, customers will see a “View menu” button while they wait.</p>
             </div>
           </div>
-
-          <div className="space-y-4 pt-4">
-            <div className="text-sm font-medium">Brand logo</div>
-            <div className="grid items-start gap-4 md:grid-cols-[96px_1fr]">
-              <div className="h-24 w-24 rounded-md ring-1 ring-border overflow-hidden bg-muted flex items-center justify-center">
-                {logoUrl.trim() ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={logoUrl.trim()} alt="Logo" className="h-full w-full object-cover" />
-                ) : (
-                  <span className="text-xs text-muted-foreground">No logo</span>
-                )}
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <input
-                  ref={logoFileRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) void uploadLogo(f);
-                    if (logoFileRef.current) logoFileRef.current.value = "";
-                  }}
-                />
-                <Button type="button" variant="outline" onClick={() => logoFileRef.current?.click()} disabled={!canEdit || uploading}>
-                  {uploading ? "Uploading..." : "Upload logo"}
-                </Button>
-                {logoUrl.trim() ? (
-                  <Button type="button" variant="outline" onClick={() => void removeLogo()} disabled={!canEdit || uploading}>
-                    Remove
-                  </Button>
-                ) : null}
-                <div className="text-xs text-muted-foreground">PNG/JPG, square recommended. Max 5 MB.</div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
-      {/* Fixed Save button (bottom-left of content area) */}
-      <div
-        className={[
-          "fixed bottom-6 left-6 z-40",
-          "md:left-[calc(var(--sidebar-width)+1.5rem)]",
-          "md:group-data-[collapsible=icon]/sidebar-wrapper:left-[calc(var(--sidebar-width-icon)+1.5rem)]",
-        ].join(" ")}
-      >
+      <div className="pt-2">
         <Button onClick={save} disabled={!canEdit || isPending || uploading || !dirty}>
           {isPending ? "Saving..." : "Save changes"}
         </Button>

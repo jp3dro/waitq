@@ -49,11 +49,22 @@ export async function GET() {
   const { data, error } = await admin
     .from("businesses")
     .select(
-      "id, name, logo_url, accent_color, background_color, country_code, owner_user_id, created_at, website_url, instagram_url, facebook_url, google_maps_url, menu_url"
+      "id, name, logo_url, accent_color, background_color, country_code, vat_id, owner_user_id, created_at, website_url, instagram_url, facebook_url, google_maps_url, menu_url"
     )
     .eq("id", resolved.businessId)
     .maybeSingle();
 
+  if (error && error.message.includes("column")) {
+    const retry = await admin
+      .from("businesses")
+      .select(
+        "id, name, logo_url, accent_color, background_color, country_code, owner_user_id, created_at, website_url, instagram_url, facebook_url, google_maps_url, menu_url"
+      )
+      .eq("id", resolved.businessId)
+      .maybeSingle();
+    if (retry.error) return NextResponse.json({ error: retry.error.message }, { status: 400 });
+    return NextResponse.json({ business: retry.data, canEdit: resolved.canEdit, role: resolved.role ?? null });
+  }
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   if (!data) return NextResponse.json({ error: "No business found" }, { status: 404 });
 
@@ -64,6 +75,7 @@ const patchSchema = z
   .object({
     name: z.string().min(1).optional(),
     countryCode: z.string().regex(/^[A-Z]{2}$/, { message: "countryCode must be a 2-letter ISO code (e.g. PT)" }).optional(),
+    vatId: z.string().optional().nullable(),
     logoUrl: z.string().url().optional().nullable(),
     accentColor: z.string().regex(/^#([0-9a-fA-F]{6})$/, { message: "accentColor must be a HEX color (#RRGGBB)" }).optional(),
     backgroundColor: z
@@ -103,6 +115,7 @@ export async function PATCH(req: NextRequest) {
   const fields: Record<string, unknown> = {};
   if (typeof parse.data.name !== "undefined") fields.name = parse.data.name;
   if (typeof parse.data.countryCode !== "undefined") fields.country_code = parse.data.countryCode;
+  if (typeof parse.data.vatId !== "undefined") fields.vat_id = asNullIfEmpty(parse.data.vatId);
   if (typeof parse.data.logoUrl !== "undefined") fields.logo_url = parse.data.logoUrl;
   if (typeof parse.data.accentColor !== "undefined") fields.accent_color = parse.data.accentColor;
   if (typeof parse.data.backgroundColor !== "undefined") fields.background_color = parse.data.backgroundColor;
@@ -120,9 +133,37 @@ export async function PATCH(req: NextRequest) {
     .update(fields)
     .eq("id", resolved.businessId)
     .select(
-      "id, name, logo_url, accent_color, background_color, country_code, owner_user_id, created_at, website_url, instagram_url, facebook_url, google_maps_url, menu_url"
+      "id, name, logo_url, accent_color, background_color, country_code, vat_id, owner_user_id, created_at, website_url, instagram_url, facebook_url, google_maps_url, menu_url"
     )
     .single();
+
+  // If vat_id is missing in the schema cache, retry without it (so other fields can still save).
+  if (error && (error.message.includes("vat_id") || error.message.includes("vatId"))) {
+    const { vat_id: _drop, ...rest } = fields as Record<string, unknown> & { vat_id?: unknown };
+    const retry = await admin
+      .from("businesses")
+      .update(rest)
+      .eq("id", resolved.businessId)
+      .select(
+        "id, name, logo_url, accent_color, background_color, country_code, owner_user_id, created_at, website_url, instagram_url, facebook_url, google_maps_url, menu_url"
+      )
+      .single();
+    if (retry.error) return NextResponse.json({ error: retry.error.message }, { status: 400 });
+    return NextResponse.json({ business: retry.data, canEdit: true, role: resolved.role ?? null });
+  }
+
+  if (error && error.message.includes("column")) {
+    const retry = await admin
+      .from("businesses")
+      .update(fields)
+      .eq("id", resolved.businessId)
+      .select(
+        "id, name, logo_url, accent_color, background_color, country_code, owner_user_id, created_at, website_url, instagram_url, facebook_url, google_maps_url, menu_url"
+      )
+      .single();
+    if (retry.error) return NextResponse.json({ error: retry.error.message }, { status: 400 });
+    return NextResponse.json({ business: retry.data, canEdit: true, role: resolved.role ?? null });
+  }
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ business: data, canEdit: true, role: resolved.role ?? null });

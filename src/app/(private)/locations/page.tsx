@@ -1,10 +1,14 @@
 "use client";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import { getAllCountries, getTimezonesForCountry } from "countries-and-timezones";
 import { toastManager } from "@/hooks/use-toast";
+import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PhoneInput, type Country } from "@/components/ui/phone-input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -12,29 +16,273 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import UpgradeRequiredDialog from "@/components/upgrade-required-dialog";
+import type { PlanId } from "@/lib/plans";
 
-type Location = { id: string; name: string; phone: string | null; address: string | null; city: string | null };
+type Location = {
+  id: string;
+  name: string;
+  phone: string | null;
+  address: string | null;
+  city: string | null;
+  seating_capacity?: number | null;
+  regular_hours?: RegularHours | null;
+  timezone?: string | null;
+};
+
+type LocationUpdatePayload = {
+  name?: string;
+  phone?: string | null;
+  address?: string | null;
+  city?: string | null;
+  seatingCapacity?: number | null;
+  timezone?: string;
+  countryCode?: string;
+  regularHours?: RegularHours;
+};
+
+type DayKey = "sun" | "mon" | "tue" | "wed" | "thu" | "fri" | "sat";
+type TimeRange = { start: string; end: string };
+type RegularHours = Record<DayKey, TimeRange[]>;
+
+const dayOptions: { key: DayKey; label: string }[] = [
+  { key: "sun", label: "Sun" },
+  { key: "mon", label: "Mon" },
+  { key: "tue", label: "Tue" },
+  { key: "wed", label: "Wed" },
+  { key: "thu", label: "Thu" },
+  { key: "fri", label: "Fri" },
+  { key: "sat", label: "Sat" },
+];
+
+const defaultRegularHours: RegularHours = {
+  sun: [{ start: "10:00", end: "23:00" }],
+  mon: [{ start: "10:00", end: "23:00" }],
+  tue: [{ start: "10:00", end: "23:00" }],
+  wed: [{ start: "10:00", end: "23:00" }],
+  thu: [{ start: "10:00", end: "23:00" }],
+  fri: [{ start: "10:00", end: "23:00" }],
+  sat: [{ start: "10:00", end: "23:00" }],
+};
+
+const parseTimeToMinutes = (value: string) => {
+  const [h, m] = value.split(":").map((v) => Number(v));
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
+  if (h < 0 || h > 23 || m < 0 || m > 59) return null;
+  return h * 60 + m;
+};
+
+const validateDayRanges = (ranges: TimeRange[]) => {
+  if (!ranges.length) return null;
+  const parsed = ranges.map((r) => ({
+    start: parseTimeToMinutes(r.start),
+    end: parseTimeToMinutes(r.end),
+  }));
+  if (parsed.some((r) => r.start === null || r.end === null)) {
+    return "Start and end times are required";
+  }
+  if (parsed.some((r) => (r.start as number) >= (r.end as number))) {
+    return "Start time must be earlier than end time";
+  }
+  const sorted = parsed
+    .map((r) => ({ start: r.start as number, end: r.end as number }))
+    .sort((a, b) => a.start - b.start);
+  for (let i = 1; i < sorted.length; i += 1) {
+    if (sorted[i].start < sorted[i - 1].end) {
+      return "Times overlap with another set of times";
+    }
+  }
+  return null;
+};
+
+const validateRegularHours = (hours: RegularHours) => {
+  const errors: Record<DayKey, string | null> = {
+    sun: null,
+    mon: null,
+    tue: null,
+    wed: null,
+    thu: null,
+    fri: null,
+    sat: null,
+  };
+  dayOptions.forEach(({ key }) => {
+    errors[key] = validateDayRanges(hours[key] || []);
+  });
+  return errors;
+};
+
+function RegularHoursEditor({
+  hours,
+  onChange,
+  errors,
+  setErrors,
+}: {
+  hours: RegularHours;
+  onChange: (next: RegularHours) => void;
+  errors: Record<DayKey, string | null>;
+  setErrors: (next: Record<DayKey, string | null>) => void;
+}) {
+  return (
+    <div className="space-y-3 pb-3">
+      <Label>Regular weekly hours</Label>
+      <div className="space-y-1">
+        {dayOptions.map((day) => {
+          const ranges = hours[day.key] || [];
+          const isOpen = ranges.length > 0;
+          const error = errors[day.key];
+          return (
+            <div key={day.key} className="pt-3">
+              <div className="flex flex-wrap items-baseline gap-3">
+                <Switch
+                  checked={isOpen}
+                  onCheckedChange={(checked) => {
+                    const next: RegularHours = { ...hours };
+                    next[day.key] = checked ? [{ start: "10:00", end: "23:00" }] : [];
+                    onChange(next);
+                    setErrors(validateRegularHours(next));
+                  }}
+                  className="align-top"
+                />
+                <span className="w-10 text-sm font-medium py-1">{day.label}</span>
+                <div className="flex-1 min-w-[220px]">
+                  {isOpen ? (
+                    <div className="flex flex-col gap-2">
+                      {ranges.map((range, idx) => (
+                        <div key={`${day.key}-${idx}`} className="flex items-start gap-2 py-1">
+                          <Input
+                            type="time"
+                            value={range.start}
+                            onChange={(e) => {
+                              const next: RegularHours = { ...hours };
+                              const dayRanges = [...(next[day.key] || [])];
+                              dayRanges[idx] = { ...dayRanges[idx], start: e.target.value };
+                              next[day.key] = dayRanges;
+                              onChange(next);
+                              setErrors(validateRegularHours(next));
+                            }}
+                            className="w-28"
+                          />
+                          <span className="text-sm text-muted-foreground mt-2">-</span>
+                          <Input
+                            type="time"
+                            value={range.end}
+                            onChange={(e) => {
+                              const next: RegularHours = { ...hours };
+                              const dayRanges = [...(next[day.key] || [])];
+                              dayRanges[idx] = { ...dayRanges[idx], end: e.target.value };
+                              next[day.key] = dayRanges;
+                              onChange(next);
+                              setErrors(validateRegularHours(next));
+                            }}
+                            className="w-28"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              const next: RegularHours = { ...hours };
+                              const dayRanges = [...(next[day.key] || [])];
+                              dayRanges.splice(idx, 1);
+                              next[day.key] = dayRanges;
+                              onChange(next);
+                              setErrors(validateRegularHours(next));
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 text-muted-foreground" />
+                          </Button>
+                          {idx === 0 ? (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                const next: RegularHours = { ...hours };
+                                const dayRanges = [...(next[day.key] || [])];
+                                dayRanges.push({ start: "12:00", end: "13:00" });
+                                next[day.key] = dayRanges;
+                                onChange(next);
+                                setErrors(validateRegularHours(next));
+                              }}
+                            >
+                              <Plus className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          ) : null}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">Closed</span>
+                  )}
+                </div>
+              </div>
+              {error ? <p className="text-xs pl-24 pt-2 text-destructive">{error}</p> : null}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export default function LocationsPage() {
   const [locations, setLocations] = useState<Location[]>([]);
   const [isPending, startTransition] = useTransition();
   const [msg, setMsg] = useState<string | null>(null);
-  const [form, setForm] = useState<{ name: string; phone: string; address: string; city: string }>({ name: "", phone: "", address: "", city: "" });
+  const [planId, setPlanId] = useState<PlanId>("free");
+  const [locationLimit, setLocationLimit] = useState<number | null>(null);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [form, setForm] = useState<{ name: string; phone: string; address: string; city: string; seatingCapacity: string; timezone: string; countryCode: string }>({
+    name: "",
+    phone: "",
+    address: "",
+    city: "",
+    seatingCapacity: "",
+    timezone: "",
+    countryCode: "",
+  });
+  const [formRegularHours, setFormRegularHours] = useState<RegularHours>(defaultRegularHours);
+  const [formHoursErrors, setFormHoursErrors] = useState<Record<DayKey, string | null>>(validateRegularHours(defaultRegularHours));
   const [openCreate, setOpenCreate] = useState(false);
   const [edit, setEdit] = useState<Location | null>(null);
-  const [editForm, setEditForm] = useState<{ name: string; phone: string; address: string; city: string }>({ name: "", phone: "", address: "", city: "" });
+  const [editForm, setEditForm] = useState<{ name: string; phone: string; address: string; city: string; seatingCapacity: string; timezone: string; countryCode: string }>({
+    name: "",
+    phone: "",
+    address: "",
+    city: "",
+    seatingCapacity: "",
+    timezone: "",
+    countryCode: "",
+  });
+  const [editRegularHours, setEditRegularHours] = useState<RegularHours>(defaultRegularHours);
+  const [initialRegularHours, setInitialRegularHours] = useState<RegularHours>(defaultRegularHours);
+  const [hoursErrors, setHoursErrors] = useState<Record<DayKey, string | null>>(validateRegularHours(defaultRegularHours));
   const [editMessage, setEditMessage] = useState<string | null>(null);
   const [businessCountry, setBusinessCountry] = useState<Country>("PT");
 
   async function load() {
     const res = await fetch("/api/locations", { cache: "no-store" });
-    const j = await res.json();
-    setLocations(j.locations || []);
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setMsg(j?.error ?? "Failed to load locations");
+      setLocations([]);
+    } else {
+      setMsg(null);
+      setLocations(j.locations || []);
+    }
 
     const bRes = await fetch("/api/business", { cache: "no-store" });
     const bJ = await bRes.json();
     if (bJ.business?.country_code) {
       setBusinessCountry(bJ.business.country_code as Country);
+    }
+
+    const pRes = await fetch("/api/plan", { cache: "no-store" });
+    const pJ = await pRes.json().catch(() => ({}));
+    if (pRes.ok) {
+      if (typeof pJ.planId === "string") setPlanId(pJ.planId as PlanId);
+      const lim = pJ?.limits?.locations;
+      if (typeof lim === "number") setLocationLimit(lim);
     }
   }
 
@@ -46,21 +294,100 @@ export default function LocationsPage() {
     document.title = "Locations - WaitQ";
   }, []);
 
+  const defaultTimezone = useMemo(() => {
+    if (typeof Intl !== "undefined" && Intl.DateTimeFormat) {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+    }
+    return "UTC";
+  }, []);
+
+  const countryOptions = useMemo(() => {
+    const all = getAllCountries();
+    return Object.values(all)
+      .map((country) => ({
+        code: country.id,
+        name: country.name,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, []);
+
+  const getCountryTimezones = useCallback((code: string) => {
+    if (!code) return [];
+    return getTimezonesForCountry(code) || [];
+  }, []);
+
+  const resolveTimezone = useCallback((countryCode: string, current?: string) => {
+    const tzs = getCountryTimezones(countryCode);
+    if (!tzs.length) return current || defaultTimezone;
+    if (current && tzs.some((tz) => tz.name === current)) return current;
+    return tzs[0].name;
+  }, [defaultTimezone, getCountryTimezones]);
+
+  const getTimezoneOptions = useCallback((countryCode: string, current?: string) => {
+    const tzs = getCountryTimezones(countryCode);
+    if (tzs.length) return tzs;
+    if (current) return [{ name: current }];
+    return [{ name: defaultTimezone }];
+  }, [defaultTimezone, getCountryTimezones]);
+
+  useEffect(() => {
+    if (!openCreate) return;
+    setForm((prev) => {
+      const nextCountry = prev.countryCode || businessCountry || "PT";
+      const nextTimezone = resolveTimezone(nextCountry, prev.timezone);
+      if (prev.countryCode === nextCountry && prev.timezone === nextTimezone) return prev;
+      return { ...prev, countryCode: nextCountry, timezone: nextTimezone };
+    });
+    setFormRegularHours(defaultRegularHours);
+    setFormHoursErrors(validateRegularHours(defaultRegularHours));
+  }, [openCreate, businessCountry, resolveTimezone]);
+
   const canDelete = useMemo(() => locations.length > 1, [locations.length]);
+
+  const openCreateFlow = () => {
+    // Only gate when the free user is at/over the plan limit, so they can still create their first location.
+    if (planId === "free" && typeof locationLimit === "number" && locations.length >= locationLimit) {
+      setUpgradeOpen(true);
+      return;
+    }
+    setOpenCreate(true);
+  };
 
   const create = () => {
     startTransition(async () => {
       setMsg(null);
       const name = form.name.trim();
       if (!name) return;
+      const cap = form.seatingCapacity.trim();
+      const seatingCapacityNum = Number(cap);
+      if (cap && (!Number.isFinite(seatingCapacityNum) || seatingCapacityNum <= 0)) {
+        setMsg("Seating capacity must be a positive number");
+        return;
+      }
+      const currentErrors = validateRegularHours(formRegularHours);
+      setFormHoursErrors(currentErrors);
+      if (Object.values(currentErrors).some((err) => typeof err === "string" && err.length > 0)) {
+        setMsg("Please fix the highlighted hours before saving");
+        return;
+      }
       const res = await fetch("/api/locations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, phone: form.phone.trim() || null, address: form.address.trim() || null, city: form.city.trim() || null }),
+        body: JSON.stringify({
+          name,
+          phone: form.phone.trim() || null,
+          address: form.address.trim() || null,
+          city: form.city.trim() || null,
+          seatingCapacity: cap ? seatingCapacityNum : null,
+          timezone: resolveTimezone(form.countryCode || businessCountry, form.timezone.trim()),
+          regularHours: formRegularHours,
+        }),
       });
       const j = await res.json().catch(() => ({}));
       if (res.ok) {
-        setForm({ name: "", phone: "", address: "", city: "" });
+        setForm({ name: "", phone: "", address: "", city: "", seatingCapacity: "", timezone: "", countryCode: "" });
+        setFormRegularHours(defaultRegularHours);
+        setFormHoursErrors(validateRegularHours(defaultRegularHours));
         setOpenCreate(false);
         await load();
       } else {
@@ -71,18 +398,29 @@ export default function LocationsPage() {
 
   const openEditModal = (location: Location) => {
     setEdit(location);
+    const countryCode = businessCountry || "";
     setEditForm({
       name: location.name,
       phone: location.phone || "",
       address: location.address || "",
       city: location.city || "",
+      seatingCapacity: typeof location.seating_capacity === "number" ? String(location.seating_capacity) : "",
+      timezone: resolveTimezone(countryCode, location.timezone || defaultTimezone),
+      countryCode,
     });
+    const baseHours = location.regular_hours || defaultRegularHours;
+    setEditRegularHours(baseHours);
+    setInitialRegularHours(baseHours);
+    setHoursErrors(validateRegularHours(baseHours));
     setEditMessage(null);
   };
 
   const closeEditModal = () => {
     setEdit(null);
-    setEditForm({ name: "", phone: "", address: "", city: "" });
+    setEditForm({ name: "", phone: "", address: "", city: "", seatingCapacity: "", timezone: "", countryCode: "" });
+    setEditRegularHours(defaultRegularHours);
+    setInitialRegularHours(defaultRegularHours);
+    setHoursErrors(validateRegularHours(defaultRegularHours));
     setEditMessage(null);
   };
 
@@ -90,7 +428,13 @@ export default function LocationsPage() {
     if (!edit) return;
     setEditMessage(null);
     startTransition(async () => {
-      const updates: Partial<Omit<Location, "id">> = {};
+      const updates: Partial<LocationUpdatePayload> = {};
+      const currentErrors = validateRegularHours(editRegularHours);
+      setHoursErrors(currentErrors);
+      if (Object.values(currentErrors).some((err) => typeof err === "string" && err.length > 0)) {
+        setEditMessage("Please fix the highlighted hours before saving");
+        return;
+      }
 
       if (editForm.name !== edit.name) {
         updates.name = editForm.name;
@@ -103,6 +447,25 @@ export default function LocationsPage() {
       }
       if (editForm.city !== (edit.city || "")) {
         updates.city = editForm.city.trim() || null;
+      }
+      const cap = editForm.seatingCapacity.trim();
+      const seatingCapacityNum = Number(cap);
+      const seatingCapacity = cap ? seatingCapacityNum : null;
+      if (cap && (!Number.isFinite(seatingCapacityNum) || seatingCapacityNum <= 0)) {
+        setEditMessage("Seating capacity must be a positive number");
+        return;
+      }
+      const prevCap = typeof edit.seating_capacity === "number" ? edit.seating_capacity : null;
+      if (seatingCapacity !== prevCap) {
+        updates.seatingCapacity = seatingCapacity;
+      }
+      const prevTimezone = resolveTimezone(editForm.countryCode || businessCountry || "", edit.timezone || defaultTimezone);
+      const nextTimezone = resolveTimezone(editForm.countryCode || businessCountry || "", editForm.timezone.trim());
+      if (nextTimezone !== prevTimezone) {
+        updates.timezone = nextTimezone;
+      }
+      if (JSON.stringify(editRegularHours) !== JSON.stringify(initialRegularHours)) {
+        updates.regularHours = editRegularHours;
       }
 
       // If no fields changed, just close modal and show success
@@ -156,7 +519,7 @@ export default function LocationsPage() {
       <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-3xl font-bold tracking-tight">Locations</h1>
-          <Button onClick={() => setOpenCreate(true)}>New location</Button>
+          <Button onClick={openCreateFlow}>New location</Button>
         </div>
 
         <div className="space-y-4">
@@ -169,6 +532,11 @@ export default function LocationsPage() {
                   <div>
                     <h3 className="font-medium">{l.name}</h3>
                   </div>
+                {typeof l.seating_capacity === "number" ? (
+                  <div className="text-sm text-muted-foreground">
+                    Seating capacity: <span className="font-medium text-foreground">{l.seating_capacity}</span>
+                  </div>
+                ) : null}
                   {l.phone && (
                     <div className="flex items-center text-sm text-muted-foreground">
                       <svg className="mr-2 h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
@@ -209,11 +577,11 @@ export default function LocationsPage() {
 
         {/* Create location (shadcn Dialog) */}
         <Dialog open={openCreate} onOpenChange={setOpenCreate}>
-          <DialogContent className="sm:max-w-lg">
+          <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col">
             <DialogHeader>
               <DialogTitle>New location</DialogTitle>
             </DialogHeader>
-            <div className="grid gap-4">
+            <div className="grid gap-4 overflow-y-auto pr-1">
               <div className="grid gap-2">
                 <Label>Name</Label>
                 <Input
@@ -230,6 +598,15 @@ export default function LocationsPage() {
                 />
               </div>
               <div className="grid gap-2">
+                <Label>Seating capacity</Label>
+                <Input
+                  inputMode="numeric"
+                  value={form.seatingCapacity}
+                  onChange={(e) => setForm((f) => ({ ...f, seatingCapacity: e.target.value }))}
+                  placeholder="e.g. 80"
+                />
+              </div>
+              <div className="grid gap-2">
                 <Label>Address</Label>
                 <Input
                   value={form.address}
@@ -243,6 +620,53 @@ export default function LocationsPage() {
                   onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
                 />
               </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid gap-2">
+                  <Label>Country</Label>
+                  <Select
+                    value={form.countryCode || businessCountry}
+                    onValueChange={(value) => {
+                      const nextTimezone = resolveTimezone(value, form.timezone);
+                      setForm((f) => ({ ...f, countryCode: value, timezone: nextTimezone }));
+                    }}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select country" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {countryOptions.map((country) => (
+                        <SelectItem key={country.code} value={country.code}>
+                          {country.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label>Timezone</Label>
+                  <Select
+                    value={form.timezone}
+                    onValueChange={(value) => setForm((f) => ({ ...f, timezone: value }))}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select timezone" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getTimezoneOptions(form.countryCode || businessCountry, form.timezone).map((tz) => (
+                        <SelectItem key={tz.name} value={tz.name}>
+                          {tz.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <RegularHoursEditor
+                hours={formRegularHours}
+                onChange={setFormRegularHours}
+                errors={formHoursErrors}
+                setErrors={setFormHoursErrors}
+              />
               {msg ? <p className="text-sm text-destructive">{msg}</p> : null}
             </div>
             <DialogFooter>
@@ -256,6 +680,15 @@ export default function LocationsPage() {
           </DialogContent>
         </Dialog>
 
+        <UpgradeRequiredDialog
+          open={upgradeOpen}
+          onOpenChange={setUpgradeOpen}
+          title="Upgrade to add more locations"
+          description="Your current plan includes a limited number of locations. Upgrade your subscription to unlock multiple locations."
+          ctaLabel="View plans"
+          ctaHref="/subscriptions"
+        />
+
         {/* Edit location (shadcn Dialog) */}
         <Dialog
           open={!!edit}
@@ -263,11 +696,11 @@ export default function LocationsPage() {
             if (!open) closeEditModal();
           }}
         >
-          <DialogContent className="sm:max-w-lg">
+          <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col">
             <DialogHeader>
               <DialogTitle>Edit location</DialogTitle>
             </DialogHeader>
-            <div className="grid gap-4">
+            <div className="grid gap-4 overflow-y-auto pr-1">
               <div className="grid gap-2">
                 <Label>Name</Label>
                 <Input
@@ -284,6 +717,15 @@ export default function LocationsPage() {
                 />
               </div>
               <div className="grid gap-2">
+                <Label>Seating capacity</Label>
+                <Input
+                  inputMode="numeric"
+                  value={editForm.seatingCapacity}
+                  onChange={(e) => setEditForm((f) => ({ ...f, seatingCapacity: e.target.value }))}
+                  placeholder="e.g. 80"
+                />
+              </div>
+              <div className="grid gap-2">
                 <Label>Address</Label>
                 <Input
                   value={editForm.address}
@@ -297,6 +739,53 @@ export default function LocationsPage() {
                   onChange={(e) => setEditForm((f) => ({ ...f, city: e.target.value }))}
                 />
               </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid gap-2">
+                  <Label>Country</Label>
+                  <Select
+                    value={editForm.countryCode || businessCountry}
+                    onValueChange={(value) => {
+                      const nextTimezone = resolveTimezone(value, editForm.timezone);
+                      setEditForm((f) => ({ ...f, countryCode: value, timezone: nextTimezone }));
+                    }}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select country" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {countryOptions.map((country) => (
+                        <SelectItem key={country.code} value={country.code}>
+                          {country.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label>Timezone</Label>
+                  <Select
+                    value={editForm.timezone}
+                    onValueChange={(value) => setEditForm((f) => ({ ...f, timezone: value }))}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select timezone" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getTimezoneOptions(editForm.countryCode || businessCountry, editForm.timezone).map((tz) => (
+                        <SelectItem key={tz.name} value={tz.name}>
+                          {tz.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <RegularHoursEditor
+                hours={editRegularHours}
+                onChange={setEditRegularHours}
+                errors={hoursErrors}
+                setErrors={setHoursErrors}
+              />
               {editMessage ? <p className="text-sm text-destructive">{editMessage}</p> : null}
             </div>
             <DialogFooter>

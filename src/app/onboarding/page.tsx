@@ -3,13 +3,23 @@ import { redirect } from "next/navigation";
 import OnboardingWizard from "./wizard";
 import { getStripe } from "@/lib/stripe";
 
-export default async function OnboardingPage({ searchParams }: { searchParams?: Record<string, string | string[] | undefined> }) {
+type SearchParams = Record<string, string | string[] | undefined>;
+
+export default async function OnboardingPage({
+    searchParams,
+}: {
+    searchParams?: SearchParams | Promise<SearchParams>;
+}) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
         redirect("/login");
     }
+
+    const sp = await Promise.resolve(searchParams ?? {});
+    const checkout =
+        typeof sp.checkout === "string" ? sp.checkout : Array.isArray(sp.checkout) ? sp.checkout[0] : undefined;
 
     const { data: profile } = await supabase
         .from("profiles")
@@ -19,7 +29,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams?: 
 
     // If coming back from Stripe Checkout, try to confirm subscription and complete onboarding.
     // This prevents a loop where `/subscriptions` is gated behind `onboarding_completed`.
-    if (searchParams?.checkout === "success") {
+    if (checkout === "success") {
         try {
             const stripe = getStripe();
             const { data: subRow } = await supabase
@@ -80,6 +90,8 @@ export default async function OnboardingPage({ searchParams }: { searchParams?: 
         }
     }
 
+    const hasSetupData = !!businessId && !!location?.id && !!listName.trim();
+
     const initialData = {
         name: user.user_metadata?.full_name || "",
         businessName: business?.name || profile?.business_name || "",
@@ -90,6 +102,6 @@ export default async function OnboardingPage({ searchParams }: { searchParams?: 
     };
 
     return (
-        <OnboardingWizard initialStep={profile?.onboarding_step || 1} initialData={initialData} />
+        <OnboardingWizard initialStep={hasSetupData ? (profile?.onboarding_step || 1) : 1} initialData={initialData} />
     );
 }

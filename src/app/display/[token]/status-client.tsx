@@ -16,7 +16,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useTheme } from "next-themes";
 
 type Entry = { id: string; ticket_number: number | null; queue_position: number | null; status: string; notified_at?: string | null; party_size?: number | null; seating_preference?: string | null };
-type Payload = { listId: string; listName: string; kioskEnabled?: boolean; askName?: boolean; askPhone?: boolean; businessCountry?: string | null; businessName?: string | null; brandLogo?: string | null; seatingPreferences?: string[]; estimatedMs?: number; entries: Entry[]; accentColor?: string; backgroundColor?: string };
+type Payload = { listId: string; listName: string; kioskEnabled?: boolean; locationIsOpen?: boolean; locationStatusReason?: string | null; askName?: boolean; askPhone?: boolean; askEmail?: boolean; businessCountry?: string | null; businessName?: string | null; brandLogo?: string | null; seatingPreferences?: string[]; estimatedMs?: number; entries: Entry[]; accentColor?: string; backgroundColor?: string };
 
 export default function DisplayClient({ token }: { token: string }) {
   const { setTheme } = useTheme();
@@ -144,10 +144,17 @@ export default function DisplayClient({ token }: { token: string }) {
 
   const nowServingNumber = nowServing?.ticket_number ?? nowServing?.queue_position ?? lastCalledRef.current ?? null;
   const waiting = data.entries.filter((e) => e.status === "waiting").slice(0, 10);
+  const locationIsOpen = data.locationIsOpen !== false;
 
   return (
     <main className="h-screen bg-background text-foreground flex flex-col overflow-hidden">
       <div className="flex flex-col flex-1 px-6 py-8 md:px-10 overflow-hidden">
+        {!locationIsOpen ? (
+          <div className="mb-6 rounded-xl border border-destructive/30 bg-destructive/10 text-destructive px-4 py-3">
+            <div className="font-semibold">Restaurant is closed</div>
+            <div className="text-sm opacity-90">{data.locationStatusReason || "This location is currently closed based on regular opening hours."}</div>
+          </div>
+        ) : null}
         <div className="flex w-full flex-wrap items-center shrink-0">
           <div className="mr-6 flex items-center gap-4 flex-1">
             {data.brandLogo ? (
@@ -177,6 +184,9 @@ export default function DisplayClient({ token }: { token: string }) {
                 seatingPreferences={data.seatingPreferences || []}
                 askName={data.askName !== false}
                 askPhone={data.askPhone !== false}
+                askEmail={data.askEmail === true}
+                disabled={!locationIsOpen}
+                disabledReason={data.locationStatusReason || "Restaurant is closed"}
               />
             </div>
           ) : null}
@@ -273,17 +283,24 @@ function KioskButton({
   seatingPreferences,
   askName,
   askPhone,
+  askEmail,
+  disabled,
+  disabledReason,
 }: {
   token: string;
   defaultCountry: string;
   seatingPreferences: string[];
   askName: boolean;
   askPhone: boolean;
+  askEmail: boolean;
+  disabled?: boolean;
+  disabledReason?: string | null;
 }) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<"intro" | "form" | "confirm">("intro");
   const [phone, setPhone] = useState<string | undefined>(undefined);
   const [name, setName] = useState<string | undefined>(undefined);
+  const [email, setEmail] = useState<string | undefined>(undefined);
   const [partySize, setPartySize] = useState<number | undefined>(1);
   const [pref, setPref] = useState<string | undefined>(undefined);
   const [message, setMessage] = useState<string | null>(null);
@@ -297,6 +314,7 @@ function KioskButton({
     setStep("intro");
     setPhone(undefined);
     setName(undefined);
+    setEmail(undefined);
     setPartySize(1);
     setPref(undefined);
     setMessage(null);
@@ -318,7 +336,7 @@ function KioskButton({
       const res = await fetch("/api/display/checkin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, phone, name, partySize, seatingPreference: pref }),
+        body: JSON.stringify({ token, phone, name, email: askEmail ? email : undefined, partySize, seatingPreference: pref }),
       });
       const j = await res.json().catch(() => ({}));
       if (res.ok) {
@@ -340,10 +358,12 @@ function KioskButton({
 
   return (
     <>
-      <Button onClick={() => setOpen(true)} size="lg" className="h-14 px-8 text-xl rounded-xl">
+      <div className="inline-block" title={disabled ? (disabledReason || "Restaurant is closed") : undefined}>
+        <Button onClick={() => setOpen(true)} disabled={!!disabled} size="lg" className="h-14 px-8 text-xl rounded-xl">
         <Plus className="mr-2 h-8 w-8" />
         Add to Waiting list
-      </Button>
+        </Button>
+      </div>
       <Dialog
         open={open}
         onOpenChange={(v) => {
@@ -389,13 +409,13 @@ function KioskButton({
               </div>
               <Button
                 onClick={() => {
-                  if (!askName && !askPhone) submit();
+                  if (!askName && !askPhone && !askEmail) submit();
                   else setStep("form");
                 }}
                 size="lg"
                 className="w-full h-14 text-xl rounded-xl"
               >
-                {!askName && !askPhone ? "Join Waitlist" : "Continue"}
+                {!askName && !askPhone && !askEmail ? "Join Waitlist" : "Continue"}
               </Button>
             </div>
           ) : step === "form" ? (
@@ -435,6 +455,20 @@ function KioskButton({
                 </div>
               )}
               {askPhone && <Keypad value={phone} onChange={(v) => { setPhone(v); setPhoneError(null); }} callingCode={callingCode} />}
+
+              {askEmail ? (
+                <div className="grid gap-2">
+                  <label className="text-base font-medium" htmlFor="kiosk-email">Email (optional)</label>
+                  <input
+                    id="kiosk-email"
+                    type="email"
+                    value={email || ""}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="block w-full rounded-xl border-0 shadow-sm ring-1 ring-inset ring-border px-4 py-3 text-2xl text-foreground focus:ring-2 focus:ring-primary bg-background"
+                    placeholder="name@example.com"
+                  />
+                </div>
+              ) : null}
               <Button disabled={isPending} onClick={submit} size="lg" className="w-full h-14 text-xl rounded-xl disabled:opacity-50">
                 {isPending ? "Submitting…" : "Continue"}
               </Button>
@@ -442,7 +476,11 @@ function KioskButton({
             </div>
           ) : (
             <div className="grid gap-5 text-center text-foreground">
-              {askPhone && <p className="text-lg">We&apos;ll notify you when your table is ready.</p>}
+              {askEmail && email ? (
+                <p className="text-lg">We sent your ticket details to your email.</p>
+              ) : askPhone ? (
+                <p className="text-lg">We&apos;ll notify you when your table is ready.</p>
+              ) : null}
               <div>
                 <p className="text-sm text-muted-foreground">Your ticket</p>
                 <div className="mt-2 text-6xl font-extrabold text-foreground">{ticketNumber ?? "-"}</div>

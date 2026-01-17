@@ -5,6 +5,10 @@ import { getAdminClient } from "@/lib/supabase/admin";
 import { broadcastRefresh } from "@/lib/realtime-broadcast";
 import { z } from "zod";
 import { sendSms, sendWhatsapp } from "@/lib/bulkgate";
+import { resend } from "@/lib/resend";
+import { normalizePhone } from "@/lib/phone";
+import { countEntriesInPeriod, countSmsInPeriod, getPlanContext } from "@/lib/plan-limits";
+import { getLocationOpenState, type RegularHours } from "@/lib/location-hours";
 
 function getBulkGateMessageId(resp: unknown): string | null {
   const r = resp as { data?: Record<string, unknown> } | null | undefined;
@@ -61,12 +65,80 @@ async function calculateAndUpdateETA(admin: ReturnType<typeof getAdminClient>, w
   }
 }
 
+function escapeHtml(value?: string | null) {
+  if (!value) return "";
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function buildWaitlistEmailHtml(opts: {
+  businessName?: string | null;
+  waitlistName?: string | null;
+  customerName?: string | null;
+  ticketNumber?: number | null;
+  partySize?: number | null;
+  seatingPreference?: string | null;
+  statusUrl: string;
+}) {
+  const safeBiz = escapeHtml((opts.businessName || "").trim());
+  const safeList = escapeHtml((opts.waitlistName || "").trim());
+  const safeName = escapeHtml((opts.customerName || "").trim());
+  const safeUrl = escapeHtml(opts.statusUrl);
+  const ticket = typeof opts.ticketNumber === "number" ? `#${opts.ticketNumber}` : "";
+  const safeTicket = escapeHtml(ticket);
+  const party = typeof opts.partySize === "number" ? String(opts.partySize) : "";
+  const safeParty = escapeHtml(party);
+  const safePref = escapeHtml((opts.seatingPreference || "").trim());
+  return `
+  <body style="margin:0;background-color:#f8fafc;padding:32px 0;font-family:'Inter','Helvetica Neue',Arial,sans-serif;">
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+      <tr>
+        <td align="center">
+          <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:640px;padding:0 24px;">
+            <tr>
+              <td>
+                <div style="background-color:#ffffff;border-radius:24px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 18px 34px rgba(15,23,42,0.10);">
+                  <div style="padding:28px 28px 20px;">
+                    <div style="text-transform:uppercase;font-size:12px;letter-spacing:2px;font-weight:700;color:#0f172a;">Your ticket</div>
+                    <h1 style="margin:10px 0 8px;font-size:24px;line-height:1.25;color:#0f172a;">${safeBiz ? safeBiz : "WaitQ"} ${safeTicket ? safeTicket : ""}</h1>
+                    ${safeList ? `<p style="margin:0 0 8px;font-size:14px;line-height:1.6;color:#475569;">List: <strong style="color:#0f172a;">${safeList}</strong></p>` : ""}
+                    ${safeName ? `<p style="margin:0 0 8px;font-size:14px;line-height:1.6;color:#475569;">Name: <strong style="color:#0f172a;">${safeName}</strong></p>` : ""}
+                    ${safeParty ? `<p style="margin:0 0 8px;font-size:14px;line-height:1.6;color:#475569;">Party size: <strong style="color:#0f172a;">${safeParty}</strong></p>` : ""}
+                    ${safePref ? `<p style="margin:0 0 8px;font-size:14px;line-height:1.6;color:#475569;">Seating: <strong style="color:#0f172a;">${safePref}</strong></p>` : ""}
+                    <p style="margin:10px 0 18px;font-size:15px;line-height:1.6;color:#475569;">Open the live queue page to follow progress in real time:</p>
+                    <div style="margin:18px 0;">
+                      <a href="${safeUrl}" style="display:inline-flex;align-items:center;justify-content:center;padding:12px 22px;border-radius:999px;background-color:#FF9500;color:#111827;font-weight:700;text-decoration:none;border:1px solid #ea580c;">Open status</a>
+                    </div>
+                    <p style="margin:0;font-size:12px;line-height:1.6;color:#64748b;">If the button doesn't work, copy and paste this link:<br /><a href="${safeUrl}" style="color:#111827;text-decoration:underline;">${safeUrl}</a></p>
+                  </div>
+                </div>
+                <p style="text-align:center;color:#94a3b8;font-size:12px;margin-top:16px;line-height:1.5;">Powered by WaitQ</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+  `;
+}
+
 const schema = z.object({
   waitlistId: z.string().uuid(),
   phone: z.string().optional().refine((val) => !val || val.length >= 8, "Phone must be at least 8 characters"),
   customerName: z.string().optional(),
+  email: z
+    .string()
+    .optional()
+    .transform((v) => (typeof v === "string" ? v.trim() : undefined))
+    .refine((v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), "Invalid email"),
   sendSms: z.boolean().optional().default(false),
   sendWhatsapp: z.boolean().optional().default(false),
+  sendEmail: z.boolean().optional().default(false),
   partySize: z.number().int().positive().optional(),
   seatingPreference: z.string().optional(),
 });
@@ -99,15 +171,38 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const token = nanoid(16);
-  const { waitlistId, phone, customerName, sendSms: shouldSendSms, sendWhatsapp: shouldSendWhatsapp, partySize, seatingPreference } = parse.data;
+  const { waitlistId, phone, customerName, email, sendSms: shouldSendSms, sendWhatsapp: shouldSendWhatsapp, sendEmail: shouldSendEmail, partySize, seatingPreference } = parse.data;
 
   // Look up business_id and settings from waitlist
   const { data: w, error: wErr } = await supabase
     .from("waitlists")
-    .select("business_id, ask_name, ask_phone")
+    .select("business_id, name, ask_name, ask_phone, ask_email, location_id")
     .eq("id", waitlistId)
     .single();
   if (wErr) return NextResponse.json({ error: wErr.message }, { status: 400 });
+
+  // Enforce location regular hours: do not accept new entries when closed.
+  try {
+    const locationId = (w as unknown as { location_id?: string | null }).location_id || null;
+    if (locationId) {
+      const admin = getAdminClient();
+      const { data: loc } = await admin
+        .from("business_locations")
+        .select("regular_hours, timezone")
+        .eq("id", locationId)
+        .maybeSingle();
+      const openState = getLocationOpenState({
+        regularHours: (loc?.regular_hours as RegularHours | null) || null,
+        timezone: (loc?.timezone as string | null) || null,
+      });
+      if (!openState.isOpen) {
+        return NextResponse.json({ error: openState.reason || "Restaurant is closed" }, { status: 403 });
+      }
+    }
+  } catch {
+    // If we can't check hours, fail closed to prevent accepting entries unexpectedly.
+    return NextResponse.json({ error: "Restaurant is closed" }, { status: 403 });
+  }
 
   // Validate required fields based on settings
   if (w.ask_name !== false && !customerName) {
@@ -126,6 +221,46 @@ export async function POST(req: NextRequest) {
       }
     }, { status: 400 });
   }
+  const normalizedPhone = normalizePhone(phone);
+  if (phone && !normalizedPhone) {
+    return NextResponse.json({
+      error: {
+        fieldErrors: { phone: ["Invalid phone number"] },
+        message: "Invalid phone number"
+      }
+    }, { status: 400 });
+  }
+  if (shouldSendEmail && !email) {
+    return NextResponse.json({
+      error: {
+        fieldErrors: { email: ["Email is required to send an email notification"] },
+        message: "Email is required to send an email notification",
+      }
+    }, { status: 400 });
+  }
+
+  if (w.business_id) {
+    const { limits, window } = await getPlanContext(w.business_id);
+    const usedEntries = await countEntriesInPeriod(w.business_id, window.start, window.end);
+    if (usedEntries >= limits.reservationsPerMonth) {
+      return NextResponse.json({ error: "Monthly waitlist limit reached for your plan" }, { status: 403 });
+    }
+  }
+
+  if (normalizedPhone) {
+    const { data: existing } = await supabase
+      .from("waitlist_entries")
+      .select("id")
+      .eq("waitlist_id", waitlistId)
+      .eq("phone", normalizedPhone)
+      .in("status", ["waiting", "notified"])
+      .not("ticket_number", "is", null)
+      .limit(1)
+      .maybeSingle();
+    if (existing?.id) {
+      return NextResponse.json({ error: "Phone number already waiting" }, { status: 409 });
+    }
+  }
 
   // Compute next ticket number within this waitlist
   const { data: maxRow } = await supabase
@@ -141,12 +276,14 @@ export async function POST(req: NextRequest) {
   let insertData: Record<string, unknown> = {
     business_id: w.business_id,
     waitlist_id: waitlistId,
-    phone,
+    phone: normalizedPhone,
+    email: email || null,
     customer_name: customerName,
     token,
     ticket_number: nextTicket,
     send_sms: shouldSendSms,
     send_whatsapp: shouldSendWhatsapp,
+    send_email: shouldSendEmail,
     party_size: typeof partySize === 'number' ? partySize : null,
     seating_preference: seatingPreference || null,
   };
@@ -158,11 +295,12 @@ export async function POST(req: NextRequest) {
     .single();
 
   // If the insert fails due to missing columns, retry without them
-  if (error && (error.message.includes("send_sms") || error.message.includes("send_whatsapp") || error.message.includes("column"))) {
+  if (error && (error.message.includes("send_sms") || error.message.includes("send_whatsapp") || error.message.includes("send_email") || error.message.includes("column"))) {
     insertData = {
       business_id: w.business_id,
       waitlist_id: waitlistId,
-      phone,
+      phone: normalizedPhone,
+      email: email || null,
       customer_name: customerName,
       token,
       ticket_number: nextTicket,
@@ -187,22 +325,64 @@ export async function POST(req: NextRequest) {
   const admin = getAdminClient();
   await calculateAndUpdateETA(admin, waitlistId);
 
-  const statusUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/w/${data.token}`;
+  const statusUrl = `${process.env.NEXT_PUBLIC_SITE_URL || ""}/w/${data.token}`;
+
+  // Fetch business name if we will send any notifications (SMS/WhatsApp/Email).
+  let businessName: string | null = null;
+  if ((shouldSendSms || shouldSendWhatsapp || shouldSendEmail) && w.business_id) {
+    try {
+      const { data: biz } = await supabase.from("businesses").select("name").eq("id", w.business_id).maybeSingle();
+      businessName = (biz?.name as string | undefined) ?? null;
+    } catch { }
+  }
+
+  // Email notification (ticket + details + status link)
+  if (shouldSendEmail && email) {
+    try {
+      if (!process.env.RESEND_API_KEY) {
+        console.warn("[waitlist-email] RESEND_API_KEY missing; email not sent", { email });
+      } else {
+        await resend.emails.send({
+          from: process.env.RESEND_FROM_EMAIL || "WaitQ <noreply@waitq.com>",
+          replyTo: process.env.RESEND_REPLY_TO_EMAIL,
+          to: email,
+          subject: `${businessName ? businessName : "WaitQ"} ticket ${typeof data.ticket_number === "number" ? `#${data.ticket_number}` : ""}`.trim(),
+          html: buildWaitlistEmailHtml({
+            businessName,
+            waitlistName: (w as any)?.name ?? null,
+            customerName: customerName ?? null,
+            ticketNumber: data.ticket_number ?? null,
+            partySize: typeof partySize === "number" ? partySize : null,
+            seatingPreference: seatingPreference || null,
+            statusUrl,
+          }),
+        });
+      }
+    } catch (e) {
+      console.error("[waitlist-email] Failed to send ticket email", e);
+    }
+  }
+
   if (shouldSendSms || shouldSendWhatsapp) {
     try {
-      // Fetch business name for branding
-      const { data: biz } = await supabase.from("businesses").select("name").eq("id", w.business_id).maybeSingle();
       const built = buildWaitlistNotificationMessage({
-        businessName: biz?.name ?? null,
+        businessName,
         ticketNumber: data.ticket_number ?? null,
         statusUrl,
       });
       const message = built.text;
       const variables = built.variables;
       const templateParams = built.templateParams;
-      if (shouldSendSms && phone) {
+      if (shouldSendSms && normalizedPhone) {
+        if (w.business_id) {
+          const { limits, window } = await getPlanContext(w.business_id);
+          const usedSms = await countSmsInPeriod(w.business_id, window.start, window.end);
+          if (usedSms >= limits.messagesPerMonth) {
+            return NextResponse.json({ error: "Monthly SMS limit reached for your plan" }, { status: 403 });
+          }
+        }
         try {
-          const resp = await sendSms(phone, message, { variables });
+          const resp = await sendSms(normalizedPhone, message, { variables });
           console.log("[Waitlist] SMS sent", resp);
 
           // Update the entry with SMS message ID and initial status
@@ -225,7 +405,7 @@ export async function POST(req: NextRequest) {
                 waitlist_entry_id: data.id,
                 message_type: 'sms',
                 message_id: messageId,
-                phone_number: phone,
+                phone_number: normalizedPhone,
                 status: 'sent',
                 sent_at: new Date().toISOString(),
                 message_text: message
@@ -251,16 +431,16 @@ export async function POST(req: NextRequest) {
               waitlist_entry_id: data.id,
               message_type: 'sms',
               message_id: `failed-${Date.now()}`, // Generate a unique ID for failed messages
-              phone_number: phone,
+              phone_number: normalizedPhone,
               status: 'failed',
               error_message: errMsg,
               message_text: message
             });
         }
       }
-      if (shouldSendWhatsapp && phone) {
+      if (shouldSendWhatsapp && normalizedPhone) {
         try {
-          const resp = await sendWhatsapp(phone, message, { templateParams, variables });
+          const resp = await sendWhatsapp(normalizedPhone, message, { templateParams, variables });
           const actualChannel = getBulkGateChannel(resp) || "whatsapp";
           console.log(`[Waitlist] Notification sent (${actualChannel})`, resp);
 
@@ -294,7 +474,7 @@ export async function POST(req: NextRequest) {
               waitlist_entry_id: data.id,
               message_type: actualChannel === "sms" ? "sms" : "whatsapp",
               message_id: messageId,
-              phone_number: phone,
+              phone_number: normalizedPhone,
               status: "sent",
               sent_at: nowIso,
               message_text: message,
@@ -320,7 +500,7 @@ export async function POST(req: NextRequest) {
               waitlist_entry_id: data.id,
               message_type: 'whatsapp',
               message_id: `failed-${Date.now()}`, // Generate a unique ID for failed messages
-              phone_number: phone,
+              phone_number: normalizedPhone,
               status: 'failed',
               error_message: errMsg,
               message_text: message
@@ -587,6 +767,17 @@ async function handleRetry(
     const templateParams = built.templateParams;
 
     if (action === "retry_sms") {
+      if (entry.waitlist_id) {
+        const { data: wl } = await supabase.from("waitlists").select("business_id").eq("id", entry.waitlist_id).maybeSingle();
+        const businessId = (wl?.business_id as string | undefined) || undefined;
+        if (businessId) {
+          const { limits, window } = await getPlanContext(businessId);
+          const usedSms = await countSmsInPeriod(businessId, window.start, window.end);
+          if (usedSms >= limits.messagesPerMonth) {
+            return NextResponse.json({ error: "Monthly SMS limit reached for your plan" }, { status: 403 });
+          }
+        }
+      }
       const resp = await sendSms(entry.phone, message, { variables });
 
       if (resp?.data?.message_id) {

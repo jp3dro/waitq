@@ -34,7 +34,8 @@ export async function submitSetup(formData: FormData) {
                 country,
                 phone,
                 location_name: locationName,
-                onboarding_step: 2, // Next step is plan selection
+                // Keep user on step 1 until ALL setup entities are created successfully.
+                onboarding_step: 1,
             },
             { onConflict: "id" }
         );
@@ -74,7 +75,7 @@ export async function submitSetup(formData: FormData) {
     if (!businessId) throw new Error("Failed to create business");
 
     // 3. Membership
-    await admin
+    const { error: membershipErr } = await admin
         .from("memberships")
         .upsert({
             business_id: businessId,
@@ -82,25 +83,62 @@ export async function submitSetup(formData: FormData) {
             role: 'admin',
             status: 'active'
         }, { onConflict: 'user_id, business_id' });
+    if (membershipErr) throw membershipErr;
 
     // 4. Location
     let locationId: string | null = null;
-    const { data: existingLoc } = await admin.from("business_locations").select("id").eq("business_id", businessId).limit(1).maybeSingle();
+    const { data: existingLoc, error: existingLocErr } = await admin
+        .from("business_locations")
+        .select("id")
+        .eq("business_id", businessId)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+    if (existingLocErr) throw existingLocErr;
 
     if (existingLoc) {
         locationId = existingLoc.id;
-        await admin.from("business_locations").update({ name: locationName }).eq("id", locationId);
+        const { error: updateLocErr } = await admin.from("business_locations").update({ name: locationName }).eq("id", locationId);
+        if (updateLocErr) throw updateLocErr;
     } else {
-        const { data: location } = await admin.from("business_locations").insert({
+        const { data: location, error: insertLocErr } = await admin.from("business_locations").insert({
             business_id: businessId,
             name: locationName,
         }).select("id").single();
+        if (insertLocErr) throw insertLocErr;
         locationId = location?.id || null;
     }
+
+    // Re-resolve canonical first location for this business to avoid inserting a waitlist with a null location_id.
+    // (PostgREST can omit fields in some edge cases; this makes the flow deterministic.)
+    const { data: canonicalLoc, error: canonicalLocErr } = await admin
+        .from("business_locations")
+        .select("id")
+        .eq("business_id", businessId)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .single();
+    if (canonicalLocErr) throw canonicalLocErr;
+    locationId = (canonicalLoc?.id as string | null) || null;
 
     if (!locationId) throw new Error("Failed to create location");
 
     // 5. Waitlist
+    // Final guarantee: we must have a location_id for waitlists (DB constraint).
+    // If something earlier failed to produce a location row, create one now.
+    if (!locationId) {
+        const fallbackName = (typeof locationName === "string" && locationName.trim().length >= 2) ? locationName.trim() : "Main Location";
+        const { data: fallbackLoc, error: fallbackLocErr } = await admin
+            .from("business_locations")
+            .insert({ business_id: businessId, name: fallbackName })
+            .select("id")
+            .single();
+        if (fallbackLocErr) throw fallbackLocErr;
+        locationId = (fallbackLoc?.id as string | null) || null;
+    }
+
+    if (!locationId) throw new Error("Failed to create location (no id returned)");
+
     const { data: existingWaitlist } = await admin
         .from("waitlists")
         .select("id")
@@ -110,17 +148,19 @@ export async function submitSetup(formData: FormData) {
         .maybeSingle();
 
     if (existingWaitlist?.id) {
-        await admin
+        const { error: updateWaitlistErr } = await admin
             .from("waitlists")
-            .update({ name: listName })
+            .update({ name: listName, location_id: locationId })
             .eq("id", existingWaitlist.id);
+        if (updateWaitlistErr) throw updateWaitlistErr;
     } else {
-        await admin.from("waitlists").insert({
+        const { error: insertWaitlistErr } = await admin.from("waitlists").insert({
             business_id: businessId,
             location_id: locationId,
             name: listName,
             list_type: 'restaurants'
         });
+        if (insertWaitlistErr) throw insertWaitlistErr;
     }
 
     // 6. Stripe
@@ -155,6 +195,12 @@ export async function submitSetup(formData: FormData) {
     } catch (e) {
         console.error("Stripe init failed", e);
     }
+
+    // Mark setup complete ONLY after business/location/waitlist are created.
+    const { error: stepErr } = await supabase
+        .from("profiles")
+        .upsert({ id: user.id, onboarding_step: 2 }, { onConflict: "id" });
+    if (stepErr) throw stepErr;
 
     revalidatePath("/onboarding");
 }

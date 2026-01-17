@@ -12,6 +12,8 @@ import type { Country } from "react-phone-number-input";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { getLocationOpenState, type RegularHours } from "@/lib/location-hours";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const supabase = await createClient();
@@ -36,8 +38,9 @@ type WaitlistRow = {
   location_id: string | null;
   ask_name: boolean | null;
   ask_phone: boolean | null;
+  ask_email?: boolean | null;
   seating_preferences: string[] | null;
-  business_locations: { id: string; name: string } | null;
+  business_locations: { id: string; name: string; regular_hours?: unknown; timezone?: string | null } | null;
 };
 
 export default async function ListDetailsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -59,10 +62,13 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
       location_id,
       ask_name,
       ask_phone,
+      ask_email,
       seating_preferences,
       business_locations (
         id,
-        name
+        name,
+        regular_hours,
+        timezone
       )
     `)
     .eq("id", waitlistId)
@@ -92,6 +98,17 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
   const businessCountry = (business?.country_code || "PT") as Country;
   const businessName = business?.name;
 
+  const locationIsOpen = (() => {
+    const loc = wl.business_locations;
+    if (!loc) return true;
+    const st = getLocationOpenState({
+      regularHours: (loc.regular_hours as RegularHours | null) || null,
+      timezone: (typeof loc.timezone === "string" ? loc.timezone : null) || null,
+    });
+    return st.isOpen;
+  })();
+  const isLive = !!wl.kiosk_enabled && locationIsOpen;
+
   return (
     <main className="py-5">
       <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
@@ -103,13 +120,35 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
               Back to Lists
             </Link>
           </Button>
-          <h1 className="text-3xl font-bold tracking-tight">{wl.name}</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold tracking-tight">{wl.name}</h1>
+            {!locationIsOpen ? (
+              <Badge variant="secondary" className="gap-1 bg-destructive/10 text-destructive ring-1 ring-inset ring-destructive/30">
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-destructive"></span>
+                Closed
+              </Badge>
+            ) : isLive ? (
+              <Badge variant="secondary" className="gap-1 bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-200 dark:ring-emerald-800">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                </span>
+                Live
+              </Badge>
+            ) : null}
+          </div>
         </div>
 
         <div className="text-card-foreground rounded-xl space-y-6">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <AddButton defaultWaitlistId={wl.id} lockWaitlist businessCountry={businessCountry} />
+              <AddButton
+                defaultWaitlistId={wl.id}
+                lockWaitlist
+                businessCountry={businessCountry}
+                disabled={!locationIsOpen}
+                disabledReason="Restaurant is closed"
+              />
               <EditListButton
                 waitlistId={wl.id}
                 initialName={wl.name}
@@ -117,6 +156,7 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
                 initialKioskEnabled={!!wl.kiosk_enabled}
                 initialAskName={wl.ask_name !== false}
                 initialAskPhone={wl.ask_phone !== false}
+                initialAskEmail={wl.ask_email === true}
                 initialSeatingPreferences={wl.seating_preferences || []}
                 locations={typedLocations}
               />

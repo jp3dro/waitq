@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useId, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Info } from "lucide-react";
 import {
@@ -33,6 +33,7 @@ export default function EditListButton({
   initialKioskEnabled = false,
   initialAskName = true,
   initialAskPhone = true,
+  initialAskEmail = false,
   initialSeatingPreferences = [],
   triggerId,
   hideTrigger = false,
@@ -46,6 +47,7 @@ export default function EditListButton({
   initialKioskEnabled?: boolean;
   initialAskName?: boolean;
   initialAskPhone?: boolean;
+  initialAskEmail?: boolean;
   initialSeatingPreferences?: string[];
   triggerId?: string;
   hideTrigger?: boolean;
@@ -58,10 +60,16 @@ export default function EditListButton({
   const [kioskEnabled, setKioskEnabled] = useState<boolean>(initialKioskEnabled);
   const [askName, setAskName] = useState<boolean>(initialAskName);
   const [askPhone, setAskPhone] = useState<boolean>(initialAskPhone);
+  const [askEmail, setAskEmail] = useState<boolean>(initialAskEmail);
   const [seatingPrefs, setSeatingPrefs] = useState<string[]>(initialSeatingPreferences || []);
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const router = useRouter();
+  const baseId = useId();
+  const askNameId = `${baseId}-ask-name`;
+  const askPhoneId = `${baseId}-ask-phone`;
+  const askEmailId = `${baseId}-ask-email`;
+  const kioskEnabledId = `${baseId}-kiosk-enabled`;
 
   // If parent controls open state, reset fields when opening
   useEffect(() => {
@@ -72,11 +80,12 @@ export default function EditListButton({
         setKioskEnabled(initialKioskEnabled);
         setAskName(initialAskName);
         setAskPhone(initialAskPhone);
+        setAskEmail(initialAskEmail);
         setSeatingPrefs(initialSeatingPreferences || []);
         setMessage(null);
       }
     }
-  }, [controlledOpen, initialName, initialLocationId, initialKioskEnabled, initialAskName, initialAskPhone, initialSeatingPreferences, locations]);
+  }, [controlledOpen, initialName, initialLocationId, initialKioskEnabled, initialAskName, initialAskPhone, initialAskEmail, initialSeatingPreferences, locations]);
 
   const setOpen = (v: boolean) => {
     if (typeof controlledOpen === 'boolean' && onOpenChange) onOpenChange(v);
@@ -92,6 +101,7 @@ export default function EditListButton({
     setKioskEnabled(initialKioskEnabled);
     setAskName(initialAskName);
     setAskPhone(initialAskPhone);
+    setAskEmail(initialAskEmail);
     setSeatingPrefs(initialSeatingPreferences || []);
     setMessage(null);
   };
@@ -103,6 +113,7 @@ export default function EditListButton({
     setKioskEnabled(initialKioskEnabled);
     setAskName(initialAskName);
     setAskPhone(initialAskPhone);
+    setAskEmail(initialAskEmail);
     setSeatingPrefs(initialSeatingPreferences || []);
     setMessage(null);
   };
@@ -110,7 +121,7 @@ export default function EditListButton({
   const save = () => {
     setMessage(null);
     startTransition(async () => {
-      const payload: { id: string; name?: string; locationId?: string; kioskEnabled?: boolean; askName?: boolean; askPhone?: boolean; seatingPreferences?: string[] } = { id: waitlistId };
+      const payload: { id: string; name?: string; locationId?: string; kioskEnabled?: boolean; askName?: boolean; askPhone?: boolean; askEmail?: boolean; seatingPreferences?: string[] } = { id: waitlistId };
 
       // Only include fields that have changed
       if (name !== initialName) {
@@ -122,6 +133,7 @@ export default function EditListButton({
       payload.kioskEnabled = kioskEnabled;
       payload.askName = askName;
       payload.askPhone = askPhone;
+      payload.askEmail = askEmail;
 
       // Compare arrays for seating preferences
       const sameSeating = JSON.stringify(seatingPrefs.sort()) === JSON.stringify((initialSeatingPreferences || []).sort());
@@ -211,9 +223,9 @@ export default function EditListButton({
               <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">List preferences</h3>
 
               <div className="flex items-center gap-3">
-                <Switch id="ask-name" checked={askName} onCheckedChange={setAskName} />
+                <Switch id={askNameId} checked={askName} onCheckedChange={setAskName} />
                 <div className="flex items-center gap-2">
-                  <Label htmlFor="ask-name">Collect Name</Label>
+                  <Label htmlFor={askNameId}>Collect Name</Label>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Info className="h-4 w-4 text-muted-foreground cursor-help" />
@@ -224,9 +236,9 @@ export default function EditListButton({
               </div>
 
               <div className="flex items-center gap-3">
-                <Switch id="ask-phone" checked={askPhone} onCheckedChange={setAskPhone} />
+                <Switch id={askPhoneId} checked={askPhone} onCheckedChange={setAskPhone} />
                 <div className="flex items-center gap-2">
-                  <Label htmlFor="ask-phone">Collect Phone</Label>
+                  <Label htmlFor={askPhoneId}>Collect Phone</Label>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Info className="h-4 w-4 text-muted-foreground cursor-help" />
@@ -237,9 +249,22 @@ export default function EditListButton({
               </div>
 
               <div className="flex items-center gap-3">
-                <Switch id="kiosk-enabled" checked={kioskEnabled} onCheckedChange={setKioskEnabled} />
+                <Switch id={askEmailId} checked={askEmail} onCheckedChange={setAskEmail} />
                 <div className="flex items-center gap-2">
-                  <Label htmlFor="kiosk-enabled">Self-checkin kiosk</Label>
+                  <Label htmlFor={askEmailId}>Collect Email</Label>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">Show an email field when joining</TooltipContent>
+                  </Tooltip>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Switch id={kioskEnabledId} checked={kioskEnabled} onCheckedChange={setKioskEnabled} />
+                <div className="flex items-center gap-2">
+                  <Label htmlFor={kioskEnabledId}>Self-checkin kiosk</Label>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Info className="h-4 w-4 text-muted-foreground cursor-help" />

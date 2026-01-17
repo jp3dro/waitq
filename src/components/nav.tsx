@@ -32,7 +32,7 @@ export default async function Nav() {
           <ThemeToggle />
           {!user ? (
             <Button asChild size="sm">
-              <Link href="/login">Sign up</Link>
+              <Link href="/signup">Sign up</Link>
             </Button>
           ) : (
             <Button asChild size="sm">

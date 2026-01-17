@@ -2,15 +2,32 @@ import { NextRequest, NextResponse } from "next/server";
 import { createRouteClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { z } from "zod";
+import { getLocationOpenState, type RegularHours } from "@/lib/location-hours";
 
 export async function GET() {
   const supabase = await createRouteClient();
   const { data, error } = await supabase
     .from("waitlists")
-    .select("id, name, business_id, location_id, display_token, kiosk_enabled, list_type, seating_preferences, ask_name, ask_phone, created_at, business_locations:location_id(id, name)")
+    .select(
+      "id, name, business_id, location_id, display_token, kiosk_enabled, list_type, seating_preferences, ask_name, ask_phone, ask_email, created_at, business_locations:location_id(id, name, regular_hours, timezone)"
+    )
     .order("created_at", { ascending: true });
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-  return NextResponse.json({ waitlists: data ?? [] });
+
+  const waitlists = (data ?? []).map((w) => {
+    const loc = (w as unknown as { business_locations?: { regular_hours?: unknown; timezone?: unknown } | null }).business_locations;
+    const openState = getLocationOpenState({
+      regularHours: (loc?.regular_hours as RegularHours | null) || null,
+      timezone: (typeof loc?.timezone === "string" ? (loc.timezone as string) : null) || null,
+    });
+    return {
+      ...w,
+      location_is_open: openState.isOpen,
+      location_status_reason: openState.reason,
+    };
+  });
+
+  return NextResponse.json({ waitlists });
 }
 
 const postSchema = z.object({
@@ -19,6 +36,9 @@ const postSchema = z.object({
   locationId: z.string().uuid().optional(),
   kioskEnabled: z.boolean().optional().default(false),
   seatingPreferences: z.array(z.string()).optional().default([]),
+  askName: z.boolean().optional().default(true),
+  askPhone: z.boolean().optional().default(true),
+  askEmail: z.boolean().optional().default(false),
 });
 
 export async function POST(req: NextRequest) {
@@ -33,7 +53,15 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   let businessId = parse.data.businessId;
-  const { name, kioskEnabled, seatingPreferences } = parse.data as { name: string; locationId?: string; kioskEnabled?: boolean; seatingPreferences?: string[] };
+  const { name, kioskEnabled, seatingPreferences, askName, askPhone, askEmail } = parse.data as {
+    name: string;
+    locationId?: string;
+    kioskEnabled?: boolean;
+    seatingPreferences?: string[];
+    askName?: boolean;
+    askPhone?: boolean;
+    askEmail?: boolean;
+  };
   let { locationId } = parse.data as { name: string; locationId?: string };
   if (!businessId) {
     const { data: biz, error: bizErr } = await supabase
@@ -57,8 +85,18 @@ export async function POST(req: NextRequest) {
   }
   const { data, error } = await supabase
     .from("waitlists")
-    .insert({ business_id: businessId, name, location_id: locationId, kiosk_enabled: !!kioskEnabled, list_type: "restaurants", seating_preferences: seatingPreferences || [] })
-    .select("id, name, business_id, location_id, display_token, kiosk_enabled, list_type, seating_preferences")
+    .insert({
+      business_id: businessId,
+      name,
+      location_id: locationId,
+      kiosk_enabled: !!kioskEnabled,
+      list_type: "restaurants",
+      seating_preferences: seatingPreferences || [],
+      ask_name: askName !== false,
+      ask_phone: askPhone !== false,
+      ask_email: askEmail === true,
+    })
+    .select("id, name, business_id, location_id, display_token, kiosk_enabled, list_type, seating_preferences, ask_name, ask_phone, ask_email")
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ waitlist: data }, { status: 201 });
@@ -159,6 +197,7 @@ const patchSchema = z.object({
   seatingPreferences: z.array(z.string()).optional(),
   askName: z.boolean().optional(),
   askPhone: z.boolean().optional(),
+  askEmail: z.boolean().optional(),
 });
 
 export async function PUT(req: NextRequest) {
@@ -172,7 +211,7 @@ export async function PUT(req: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { id, name, locationId, kioskEnabled, seatingPreferences, askName, askPhone } = parse.data;
+  const { id, name, locationId, kioskEnabled, seatingPreferences, askName, askPhone, askEmail } = parse.data;
   const payload: Record<string, unknown> = {};
   if (typeof name === "string") payload.name = name;
   if (typeof locationId === "string") payload.location_id = locationId;
@@ -180,6 +219,7 @@ export async function PUT(req: NextRequest) {
   if (Array.isArray(seatingPreferences)) payload.seating_preferences = seatingPreferences;
   if (typeof askName === "boolean") payload.ask_name = askName;
   if (typeof askPhone === "boolean") payload.ask_phone = askPhone;
+  if (typeof askEmail === "boolean") payload.ask_email = askEmail;
 
   if (Object.keys(payload).length === 0) return NextResponse.json({ error: "No fields to update" }, { status: 400 });
 
@@ -187,10 +227,9 @@ export async function PUT(req: NextRequest) {
     .from("waitlists")
     .update(payload)
     .eq("id", id)
-    .select("id, name, business_id, location_id, display_token, kiosk_enabled, list_type, seating_preferences, ask_name, ask_phone")
+    .select("id, name, business_id, location_id, display_token, kiosk_enabled, list_type, seating_preferences, ask_name, ask_phone, ask_email")
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ waitlist: data });
 }
-
 

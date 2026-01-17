@@ -36,6 +36,8 @@ type Entry = {
   id: string;
   customer_name: string | null;
   phone: string;
+  visits_count?: number | null;
+  is_returning?: boolean | null;
   status: string;
   queue_position: number | null;
   created_at: string;
@@ -105,7 +107,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
     // Compute new ids for highlight animation
     const incoming = (data.entries || [])
       .filter((e) => e.ticket_number != null)
-      .filter((e) => e.status !== "archived" && e.status !== "seated");
+      .filter((e) => e.status !== "archived" && e.status !== "seated" && e.status !== "cancelled");
     const incomingIds = new Set(incoming.map((e) => e.id));
     const prevIds = prevIdsRef.current;
     const newIds = new Set<string>();
@@ -546,7 +548,25 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                   )}
                 </td>
                 <td className="px-4 py-2">{e.ticket_number ?? e.queue_position ?? "-"}</td>
-                {showName && <td className="px-4 py-2">{e.customer_name ?? "—"}</td>}
+                {showName && (
+                  <td className="px-4 py-2">
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-2">
+                        <span>{e.customer_name ?? "—"}</span>
+                        {e.is_returning ? (
+                          <Badge variant="secondary" className="text-[10px] px-2 py-0.5">
+                            Returning visitor
+                          </Badge>
+                        ) : null}
+                      </div>
+                      {typeof e.visits_count === "number" ? (
+                        <span className="text-xs text-muted-foreground">
+                          {e.visits_count <= 0 ? "New customer" : `${e.visits_count} visit${e.visits_count === 1 ? "" : "s"}`}
+                        </span>
+                      ) : null}
+                    </div>
+                  </td>
+                )}
                 {showPhone && <td className="px-4 py-2">{e.phone}</td>}
                 <td className="px-4 py-2">
                   <div className="flex items-center gap-1.5">

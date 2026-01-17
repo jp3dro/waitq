@@ -1,5 +1,6 @@
 "use client";
 import { Suspense, useState, useEffect } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toastManager } from "@/hooks/use-toast";
@@ -117,6 +118,12 @@ function LoginPageContent() {
                     {loading ? "Signing in…" : "Sign in"}
                 </button>
             </form>
+            <p className="text-xs text-center text-muted-foreground">
+              Need an account?{" "}
+              <Link href="/signup" className="text-primary hover:underline">
+                Create one
+              </Link>
+            </p>
           </div>
         </div>
       </div>

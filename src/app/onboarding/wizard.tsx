@@ -96,7 +96,13 @@ export default function OnboardingWizard({ initialStep, initialData }: { initial
             setStep(2);
         } catch (error) {
             console.error(error);
-            alert("Failed to save info");
+            const msg =
+                error instanceof Error
+                    ? error.message
+                    : typeof error === "string"
+                        ? error
+                        : "Failed to save info";
+            alert(msg);
         } finally {
             setLoading(false);
         }
