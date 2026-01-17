@@ -4,13 +4,20 @@ import { createRouteClient } from "@/lib/supabase/server";
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const code = searchParams.get("code");
+  const tokenHash = searchParams.get("token_hash");
+  const type = searchParams.get("type");
   const next = searchParams.get("next");
   const safeNext =
     typeof next === "string" && next.startsWith("/") && !next.startsWith("//") ? next : null;
 
-  if (code) {
+  if (code || tokenHash) {
     const supabase = await createRouteClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { error } = code
+      ? await supabase.auth.exchangeCodeForSession(code)
+      : await supabase.auth.verifyOtp({
+          type: (type as any) || "recovery",
+          token_hash: tokenHash as string,
+        });
 
     if (!error) {
       // Allow certain flows to bypass onboarding redirect logic (ex: password recovery)

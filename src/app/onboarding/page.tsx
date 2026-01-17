@@ -1,7 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import OnboardingWizard from "./wizard";
-import { getStripe } from "@/lib/stripe";
+import { syncSubscriptionForUser } from "@/lib/subscription-sync";
+import { getAdminClient } from "@/lib/supabase/admin";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -31,24 +32,14 @@ export default async function OnboardingPage({
     // This prevents a loop where `/subscriptions` is gated behind `onboarding_completed`.
     if (checkout === "success") {
         try {
-            const stripe = getStripe();
-            const { data: subRow } = await supabase
-                .from("subscriptions")
-                .select("stripe_customer_id")
-                .eq("user_id", user.id)
-                .maybeSingle();
-
-            const customerId = (subRow?.stripe_customer_id as string | null) || null;
-            if (customerId) {
-                const subs = await stripe.subscriptions.list({ customer: customerId, status: "all", limit: 20 });
-                const activeLike = new Set(["active", "trialing", "past_due"]);
-                const hasActive = subs.data.some((s) => activeLike.has(s.status as string));
-                if (hasActive) {
-                    await supabase
-                        .from("profiles")
-                        .upsert({ id: user.id, onboarding_completed: true, onboarding_step: 3 }, { onConflict: "id" });
-                    redirect("/dashboard");
-                }
+            const synced = await syncSubscriptionForUser({ userId: user.id, email: user.email });
+            const hasPaid = synced.planId === "base" || synced.planId === "premium";
+            if (hasPaid) {
+                const admin = getAdminClient();
+                await admin
+                    .from("profiles")
+                    .upsert({ id: user.id, onboarding_completed: true, onboarding_step: 3 }, { onConflict: "id" });
+                redirect("/dashboard");
             }
         } catch {
             // If Stripe verification fails here, we fall back to rendering step 2 so user can retry.

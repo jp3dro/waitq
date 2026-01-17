@@ -56,15 +56,17 @@ export async function POST(req: NextRequest) {
 
   // If we already have a Stripe customer for this user, check for active subscription to upgrade/update
   let activeSubscriptionId: string | null = null;
+  let currentPlanId: string | null = null;
 
   try {
     const { data: row } = await supabase
       .from("subscriptions")
-      .select("stripe_customer_id, stripe_subscription_id, status")
+      .select("stripe_customer_id, stripe_subscription_id, status, plan_id")
       .eq("user_id", user.id)
       .maybeSingle();
 
     existingStripeCustomerId = (row?.stripe_customer_id as string | null) || null;
+    currentPlanId = (row?.plan_id as string | null) || null;
 
     // Check if subscription is active
     const status = row?.status;
@@ -73,8 +75,16 @@ export async function POST(req: NextRequest) {
     }
   } catch { }
 
-  // If there is an active subscription, redirect to Portal Update flow instead of creating a new Checkout Session (which would double-subscribe)
-  if (activeSubscriptionId && existingStripeCustomerId) {
+  // If there is an active subscription and the user is trying to manage the SAME plan, use the Portal.
+  // If they're upgrading (planId differs), send them through Checkout for a payment experience.
+  const isSamePlanRequest =
+    typeof planId === "string" &&
+    planId.length > 0 &&
+    typeof currentPlanId === "string" &&
+    currentPlanId.length > 0 &&
+    planId === currentPlanId;
+
+  if (activeSubscriptionId && existingStripeCustomerId && (planId == null || isSamePlanRequest)) {
     try {
       const portalSession = await stripe.billingPortal.sessions.create({
         customer: existingStripeCustomerId,
@@ -135,6 +145,16 @@ export async function POST(req: NextRequest) {
     }
   } catch { }
 
+  const isUpgradeViaCheckout = !!(
+    activeSubscriptionId &&
+    existingStripeCustomerId &&
+    typeof planId === "string" &&
+    planId.length > 0 &&
+    typeof currentPlanId === "string" &&
+    currentPlanId.length > 0 &&
+    planId !== currentPlanId
+  );
+
   // Build line item: prefer existing recurring price; otherwise use inline price_data with monthly recurring
   let lineItem: Stripe.Checkout.SessionCreateParams.LineItem;
   if (resolvedPriceId) {
@@ -168,6 +188,7 @@ export async function POST(req: NextRequest) {
       plan_id: planId || "",
       lookup_key: lookupKey || "",
       business_id: businessId || "",
+      ...(isUpgradeViaCheckout ? { upgrade_from_subscription_id: activeSubscriptionId || "" } : {}),
     },
     subscription_data: {
       metadata: {
@@ -175,6 +196,7 @@ export async function POST(req: NextRequest) {
         plan_id: planId || "",
         lookup_key: lookupKey || "",
         business_id: businessId || "",
+        ...(isUpgradeViaCheckout ? { upgrade_from_subscription_id: activeSubscriptionId || "" } : {}),
       },
     },
   });

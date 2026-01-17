@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function RecoverPasswordPage() {
   const [email, setEmail] = useState("");
@@ -61,9 +62,12 @@ export default function RecoverPasswordPage() {
             </button>
 
             {submitted ? (
-              <p className="text-xs text-center text-muted-foreground">
-                If this email is used by an account, you will receive a reset password email.
-              </p>
+              <Alert className="border-emerald-200 bg-emerald-50 text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-900/20 dark:text-emerald-200">
+                <AlertTitle className="text-sm">Check your inbox</AlertTitle>
+                <AlertDescription className="text-emerald-900/90 dark:text-emerald-200/90">
+                  If this email is used by an account, you will receive a reset password email. Please check your Spam folder as well.
+                </AlertDescription>
+              </Alert>
             ) : null}
 
             <p className="text-xs text-center text-muted-foreground">

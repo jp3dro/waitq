@@ -31,10 +31,32 @@ function ResetPasswordContent() {
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth
-      .getSession()
-      .then(({ data }) => setHasSession(!!data.session))
-      .catch(() => setHasSession(false));
+    (async () => {
+      // Recovery links may arrive with tokens in the URL hash.
+      // If present, set the session before checking it.
+      try {
+        const hash = typeof window !== "undefined" ? window.location.hash : "";
+        if (hash && hash.startsWith("#")) {
+          const params = new URLSearchParams(hash.slice(1));
+          const access_token = params.get("access_token");
+          const refresh_token = params.get("refresh_token");
+          if (access_token && refresh_token) {
+            await supabase.auth.setSession({ access_token, refresh_token });
+            // Clean hash from URL to avoid leaking tokens via copy/paste.
+            window.history.replaceState({}, "", window.location.pathname + window.location.search);
+          }
+        }
+      } catch {
+        // ignore
+      }
+
+      try {
+        const { data } = await supabase.auth.getSession();
+        setHasSession(!!data.session);
+      } catch {
+        setHasSession(false);
+      }
+    })();
   }, []);
 
   const ruleStates = useMemo(() => {
@@ -107,6 +129,10 @@ function ResetPasswordContent() {
                   Back to login
                 </Link>
               </div>
+            </div>
+          ) : hasSession === null ? (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">Opening your reset link…</p>
             </div>
           ) : (
             <form onSubmit={onSubmit} className="space-y-4">

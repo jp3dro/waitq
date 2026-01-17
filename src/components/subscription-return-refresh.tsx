@@ -38,13 +38,22 @@ export default function SubscriptionReturnRefresh() {
       });
     }
 
-    // Remove query flags to avoid repeated refresh loops.
-    url.searchParams.delete("checkout");
-    url.searchParams.delete("portal");
-    window.history.replaceState({}, "", url.toString());
+    (async () => {
+      // Ensure DB is synced BEFORE refresh so the sidebar sees the updated plan immediately.
+      try {
+        await fetch("/api/subscriptions/sync", { method: "POST" });
+      } catch {
+        // ignore
+      } finally {
+        // Remove query flags to avoid repeated refresh loops.
+        url.searchParams.delete("checkout");
+        url.searchParams.delete("portal");
+        window.history.replaceState({}, "", url.toString());
 
-    // Re-render server components (sidebar + plan context) using the updated DB row.
-    router.refresh();
+        // Re-render server components (sidebar + plan context) using the updated DB row.
+        router.refresh();
+      }
+    })();
   }, [router]);
 
   return null;

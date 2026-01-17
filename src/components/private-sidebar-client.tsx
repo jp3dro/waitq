@@ -168,8 +168,8 @@ export default function PrivateSidebarClient({ userName, userEmail, businessLogo
 
     const planBadge = planId ? (
         <Badge
-            variant={planId === "free" ? "secondary" : "default"}
-            className="text-[10px] px-1.5 py-0.5"
+            variant="outline"
+            className="text-[10px] px-1.5 py-0.5 bg-muted/30 text-muted-foreground border-border/70"
         >
             {planId.toUpperCase()}
         </Badge>
@@ -194,7 +194,7 @@ export default function PrivateSidebarClient({ userName, userEmail, businessLogo
 
                 {canSeeInternalAdminLinks ? (
                     <>
-                        <div className="mt-auto px-2 pt-2">
+                        <div className="px-2 pt-2">
                             <div className="px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                                 Admin
                             </div>
@@ -219,27 +219,27 @@ export default function PrivateSidebarClient({ userName, userEmail, businessLogo
                     </>
                 ) : null}
 
-                <div className="px-2 pt-2">
-                    <div className="px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                        Settings
+                <div className="mt-auto">
+                    <div className="px-2 pt-2">
+                        <div className="px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                            Settings
+                        </div>
                     </div>
-                </div>
 
-                <SidebarMenu className="pb-4">
-                    {isAdmin ? <NavItem href="/business" icon={Building2} label="Business" /> : null}
-                    {isAdmin ? (
-                        <NavItem
-                            href="/subscriptions"
-                            icon={CreditCard}
-                            label="Subscription"
-                            rightSlot={
-                                planBadge
-                            }
-                        />
-                    ) : null}
-                    {isAdmin ? <NavItem href="/locations" icon={MapPin} label="Locations" /> : null}
-                    {isAdmin ? <NavItem href="/users" icon={Users2} label="Users" /> : null}
-                </SidebarMenu>
+                    <SidebarMenu className="pb-4">
+                        {isAdmin ? <NavItem href="/business" icon={Building2} label="Business" /> : null}
+                        {isAdmin ? (
+                            <NavItem
+                                href="/subscriptions"
+                                icon={CreditCard}
+                                label="Subscription"
+                                rightSlot={planBadge}
+                            />
+                        ) : null}
+                        {isAdmin ? <NavItem href="/locations" icon={MapPin} label="Locations" /> : null}
+                        {isAdmin ? <NavItem href="/users" icon={Users2} label="Users" /> : null}
+                    </SidebarMenu>
+                </div>
             </SidebarContent>
 
             <SidebarFooter className="ml-[-8px] mr-[8px]">
