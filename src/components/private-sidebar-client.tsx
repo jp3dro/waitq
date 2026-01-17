@@ -166,6 +166,15 @@ export default function PrivateSidebarClient({ userName, userEmail, businessLogo
         return "??";
     })();
 
+    const planBadge = planId ? (
+        <Badge
+            variant={planId === "free" ? "secondary" : "default"}
+            className="text-[10px] px-1.5 py-0.5"
+        >
+            {planId.toUpperCase()}
+        </Badge>
+    ) : null;
+
     return (
         <Sidebar variant="floating" collapsible="none" className="border-0">
             <SidebarHeader className="py-4">
@@ -224,11 +233,7 @@ export default function PrivateSidebarClient({ userName, userEmail, businessLogo
                             icon={CreditCard}
                             label="Subscription"
                             rightSlot={
-                                planId === "free" ? (
-                                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5">
-                                        FREE
-                                    </Badge>
-                                ) : null
+                                planBadge
                             }
                         />
                     ) : null}

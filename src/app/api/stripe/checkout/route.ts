@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
     try {
       const portalSession = await stripe.billingPortal.sessions.create({
         customer: existingStripeCustomerId,
-        return_url: `${process.env.NEXT_PUBLIC_SITE_URL}/subscriptions`,
+        return_url: `${process.env.NEXT_PUBLIC_SITE_URL}/subscriptions?portal=return`,
         flow_data: {
           type: 'subscription_update',
           subscription_update: {
@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
         try {
           const portalSession = await stripe.billingPortal.sessions.create({
             customer: existingStripeCustomerId,
-            return_url: `${process.env.NEXT_PUBLIC_SITE_URL}/subscriptions`,
+            return_url: `${process.env.NEXT_PUBLIC_SITE_URL}/subscriptions?portal=return`,
           });
           return NextResponse.json({ url: portalSession.url });
         } catch (fallbackErr) {

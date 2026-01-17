@@ -4,13 +4,20 @@ import { createRouteClient } from "@/lib/supabase/server";
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const code = searchParams.get("code");
-  // const next = searchParams.get('next') ?? '/dashboard'
+  const next = searchParams.get("next");
+  const safeNext =
+    typeof next === "string" && next.startsWith("/") && !next.startsWith("//") ? next : null;
 
   if (code) {
     const supabase = await createRouteClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
+      // Allow certain flows to bypass onboarding redirect logic (ex: password recovery)
+      if (safeNext === "/reset-password") {
+        return NextResponse.redirect(new URL(safeNext, process.env.NEXT_PUBLIC_SITE_URL || req.url));
+      }
+
       // Check onboarding status
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -35,7 +42,9 @@ export async function GET(req: NextRequest) {
 
   // Default to dashboard if everything is fine (or if code is missing/error)
   // Ideally, if error, we might want to redirect to login with error, but standard is dashboard/home
-  return NextResponse.redirect(new URL("/dashboard", process.env.NEXT_PUBLIC_SITE_URL || req.url));
+  return NextResponse.redirect(
+    new URL(safeNext || "/dashboard", process.env.NEXT_PUBLIC_SITE_URL || req.url)
+  );
 }
 
 

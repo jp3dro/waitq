@@ -8,6 +8,7 @@ import { getStripe } from "@/lib/stripe";
 import { getAdminClient } from "@/lib/supabase/admin";
 import type Stripe from "stripe";
 import PlanCards from "@/components/subscriptions/PlanCards";
+import SubscriptionReturnRefresh from "@/components/subscription-return-refresh";
 
 
 function formatEUR(amount: number) {
@@ -696,6 +697,7 @@ export default async function SubscriptionPage() {
 
   return (
     <main className="py-5">
+      <SubscriptionReturnRefresh />
       <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
         <div className="flex items-end justify-between gap-4">
           <div>
