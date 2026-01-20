@@ -75,14 +75,10 @@ export async function POST(req: NextRequest) {
             const actualLookupKey = (price?.lookup_key as string | null) || null;
             let derivedPlanId = planId;
             if (!derivedPlanId) {
-              // Try productId mapping first (check both test and live IDs)
+              // Try productId mapping first
               if (price?.product && typeof price.product === "string") {
                 const productId = price.product as string;
-                const byProduct = (Object.values(plans)).find((p) => {
-                  const testId = p.stripe.productIdTest;
-                  const liveId = p.stripe.productIdLive;
-                  return testId === productId || liveId === productId;
-                });
+                const byProduct = (Object.values(plans)).find((p) => p.stripe.productId === productId);
                 if (byProduct) derivedPlanId = byProduct.id;
               }
               // Fallback to lookup key pattern
@@ -145,14 +141,10 @@ export async function POST(req: NextRequest) {
               lookupKey = actualLookupKey;
               let derivedPlanId = planId;
               if (!derivedPlanId) {
-                // Try productId mapping first (check both test and live IDs)
+                // Try productId mapping first
                 if (price?.product && typeof price.product === "string") {
                   const productId = price.product as string;
-                  const byProduct = (Object.values(plans)).find((p) => {
-                    const testId = p.stripe.productIdTest;
-                    const liveId = p.stripe.productIdLive;
-                    return testId === productId || liveId === productId;
-                  });
+                  const byProduct = (Object.values(plans)).find((p) => p.stripe.productId === productId);
                   if (byProduct) derivedPlanId = byProduct.id;
                 }
                 // Fallback to lookup key pattern
@@ -273,11 +265,7 @@ export async function POST(req: NextRequest) {
           let derivedPlanId: string | null = null;
           if (price?.product && typeof price.product === "string") {
             const productId = price.product as string;
-            const byProduct = (Object.values(plans)).find((p) => {
-              const testId = p.stripe.productIdTest;
-              const liveId = p.stripe.productIdLive;
-              return testId === productId || liveId === productId;
-            });
+            const byProduct = (Object.values(plans)).find((p) => p.stripe.productId === productId);
             if (byProduct) derivedPlanId = byProduct.id;
           }
           if (!derivedPlanId && actualLookupKey) {

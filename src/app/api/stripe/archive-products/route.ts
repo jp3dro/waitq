@@ -19,10 +19,10 @@ export async function POST(req: NextRequest) {
 
   const stripe = getStripe();
 
-  // Product IDs to keep active (Base, Premium) - include both test and live IDs
+  // Product IDs to keep active (Base, Premium)
   const keepProductIds = new Set<string>(
     Object.values(plans)
-      .flatMap((p) => [p.stripe.productIdTest, p.stripe.productIdLive])
+      .map((p) => p.stripe.productId)
       .filter((id): id is string => !!id)
   );
 

@@ -177,11 +177,7 @@ export default async function SubscriptionPage() {
             // Search in reverse order (Premium first) or just find relevant using filter? 
             // In shared product ID case, this is ambiguous. We rely on amount/key mostly. 
             // Only use if we haven't found a match yet.
-            const byProduct = (Object.values(plans) as typeof orderedPlans).find((p) => {
-              const testId = p.stripe.productIdTest;
-              const liveId = p.stripe.productIdLive;
-              return testId === productId || liveId === productId;
-            });
+            const byProduct = (Object.values(plans) as typeof orderedPlans).find((p) => p.stripe.productId === productId);
             planId = byProduct ? byProduct.id : null;
           }
 
@@ -384,11 +380,7 @@ export default async function SubscriptionPage() {
                 // Second priority: map by Stripe product id
                 else if (price?.product && typeof price.product === "string") {
                   const productId = price.product as string;
-                  const byProduct = (Object.values(plans) as typeof orderedPlans).find((p) => {
-                    const testId = p.stripe.productIdTest;
-                    const liveId = p.stripe.productIdLive;
-                    return testId === productId || liveId === productId;
-                  });
+                  const byProduct = (Object.values(plans) as typeof orderedPlans).find((p) => p.stripe.productId === productId);
                   planId = byProduct ? byProduct.id : null;
                 }
                 // Third priority: derive from price amount
@@ -542,11 +534,7 @@ export default async function SubscriptionPage() {
               // Second priority: map by Stripe product id
               else if (price?.product && typeof price.product === "string") {
                 const productId = price.product as string;
-                const byProduct = (Object.values(plans) as typeof orderedPlans).find((p) => {
-                  const testId = p.stripe.productIdTest;
-                  const liveId = p.stripe.productIdLive;
-                  return testId === productId || liveId === productId;
-                });
+                const byProduct = (Object.values(plans) as typeof orderedPlans).find((p) => p.stripe.productId === productId);
                 planId = byProduct ? byProduct.id : null;
               }
               // Third priority: derive from price amount

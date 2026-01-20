@@ -47,11 +47,7 @@ function derivePlanIdFromSubscription(sub: Stripe.Subscription): PlanId | "free"
 
   if (price?.product && typeof price.product === "string") {
     const productId = price.product as string;
-    const byProduct = Object.values(plans).find((p) => {
-      const testId = p.stripe.productIdTest;
-      const liveId = p.stripe.productIdLive;
-      return testId === productId || liveId === productId;
-    });
+    const byProduct = Object.values(plans).find((p) => p.stripe.productId === productId);
     if (byProduct) return byProduct.id;
   }
 

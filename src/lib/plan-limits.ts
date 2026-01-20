@@ -17,7 +17,9 @@ function coerceDate(value?: string | null) {
 
 export async function getPlanContext(businessId: string) {
   const admin = getAdminClient();
-  const { data: subscription } = await admin
+  
+  // First check for active subscriptions
+  const { data: activeSubscription } = await admin
     .from("subscriptions")
     .select("plan_id, current_period_start, current_period_end, status, updated_at")
     .eq("business_id", businessId)
@@ -26,13 +28,29 @@ export async function getPlanContext(businessId: string) {
     .limit(1)
     .maybeSingle();
 
-  const planId = (subscription?.plan_id as PlanId | null) || "free";
+  // If there's an active subscription, use it
+  if (activeSubscription) {
+    const planId = (activeSubscription.plan_id as PlanId | null) || "free";
+    const limits = getPlanById(planId).limits;
+    const start = coerceDate(activeSubscription.current_period_start) || null;
+    const end = coerceDate(activeSubscription.current_period_end) || null;
+    const window = start && end && end > start ? { start, end } : getMonthWindow();
+    return { planId, limits, window };
+  }
+
+  // If no active subscription, check if there's a canceled one (to confirm they're on free tier)
+  const { data: anySubscription } = await admin
+    .from("subscriptions")
+    .select("status, updated_at")
+    .eq("business_id", businessId)
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  // Return free tier (whether there's a canceled sub or no sub at all)
+  const planId = "free" as const;
   const limits = getPlanById(planId).limits;
-
-  const start = coerceDate(subscription?.current_period_start) || null;
-  const end = coerceDate(subscription?.current_period_end) || null;
-  const window = start && end && end > start ? { start, end } : getMonthWindow();
-
+  const window = getMonthWindow();
   return { planId, limits, window };
 }
 
