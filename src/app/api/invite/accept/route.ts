@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
   
   const { data: membership } = await admin
     .from("memberships")
-    .select("id, invitation_email")
+    .select("id, invitation_email, role, business_id")
     .eq("token", token)
     .eq("status", "pending")
     .maybeSingle();
@@ -38,6 +38,13 @@ export async function POST(req: NextRequest) {
     .eq("id", membership.id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+  // Skip onboarding for invited members
+  try {
+    await admin
+      .from("profiles")
+      .upsert({ id: user.id, onboarding_completed: true, onboarding_step: 3 }, { onConflict: "id" });
+  } catch { }
 
   return NextResponse.json({ ok: true });
 }

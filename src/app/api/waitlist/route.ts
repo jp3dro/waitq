@@ -172,6 +172,7 @@ export async function POST(req: NextRequest) {
 
   const token = nanoid(16);
   const { waitlistId, phone, customerName, email, sendSms: shouldSendSms, sendWhatsapp: shouldSendWhatsapp, sendEmail: shouldSendEmail, partySize, seatingPreference } = parse.data;
+  const normalizedEmail = typeof email === "string" && email.trim().length ? email.trim().toLowerCase() : undefined;
 
   // Look up business_id and settings from waitlist
   const { data: w, error: wErr } = await supabase
@@ -230,7 +231,7 @@ export async function POST(req: NextRequest) {
       }
     }, { status: 400 });
   }
-  if (shouldSendEmail && !email) {
+  if (shouldSendEmail && !normalizedEmail) {
     return NextResponse.json({
       error: {
         fieldErrors: { email: ["Email is required to send an email notification"] },
@@ -261,6 +262,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Phone number already waiting" }, { status: 409 });
     }
   }
+  if (normalizedEmail) {
+    const { data: existing } = await supabase
+      .from("waitlist_entries")
+      .select("id")
+      .eq("waitlist_id", waitlistId)
+      .ilike("email", normalizedEmail)
+      .in("status", ["waiting", "notified"])
+      .not("ticket_number", "is", null)
+      .limit(1)
+      .maybeSingle();
+    if (existing?.id) {
+      return NextResponse.json({ error: "Email already waiting" }, { status: 409 });
+    }
+  }
 
   // Compute next ticket number within this waitlist
   const { data: maxRow } = await supabase
@@ -277,7 +292,7 @@ export async function POST(req: NextRequest) {
     business_id: w.business_id,
     waitlist_id: waitlistId,
     phone: normalizedPhone,
-    email: email || null,
+    email: normalizedEmail || null,
     customer_name: customerName,
     token,
     ticket_number: nextTicket,
@@ -300,7 +315,7 @@ export async function POST(req: NextRequest) {
       business_id: w.business_id,
       waitlist_id: waitlistId,
       phone: normalizedPhone,
-      email: email || null,
+      email: normalizedEmail || null,
       customer_name: customerName,
       token,
       ticket_number: nextTicket,
@@ -337,15 +352,15 @@ export async function POST(req: NextRequest) {
   }
 
   // Email notification (ticket + details + status link)
-  if (shouldSendEmail && email) {
+  if (shouldSendEmail && normalizedEmail) {
     try {
       if (!process.env.RESEND_API_KEY) {
-        console.warn("[waitlist-email] RESEND_API_KEY missing; email not sent", { email });
+        console.warn("[waitlist-email] RESEND_API_KEY missing; email not sent", { email: normalizedEmail });
       } else {
         await resend.emails.send({
           from: process.env.RESEND_FROM_EMAIL || "WaitQ <noreply@waitq.com>",
           replyTo: process.env.RESEND_REPLY_TO_EMAIL,
-          to: email,
+          to: normalizedEmail,
           subject: `${businessName ? businessName : "WaitQ"} ticket ${typeof data.ticket_number === "number" ? `#${data.ticket_number}` : ""}`.trim(),
           html: buildWaitlistEmailHtml({
             businessName,

@@ -6,6 +6,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Stepper } from "@/components/ui/stepper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,8 +24,8 @@ import { User, Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useTheme } from "next-themes";
 
-type Entry = { id: string; ticket_number: number | null; queue_position: number | null; status: string; notified_at?: string | null; party_size?: number | null; seating_preference?: string | null };
-type Payload = { listId: string; listName: string; kioskEnabled?: boolean; locationIsOpen?: boolean; locationStatusReason?: string | null; askName?: boolean; askPhone?: boolean; askEmail?: boolean; businessCountry?: string | null; businessName?: string | null; brandLogo?: string | null; seatingPreferences?: string[]; estimatedMs?: number; entries: Entry[]; accentColor?: string; backgroundColor?: string };
+type Entry = { id: string; ticket_number: number | null; queue_position: number | null; status: string; notified_at?: string | null; party_size?: number | null; seating_preference?: string | null; customer_name?: string | null };
+type Payload = { listId: string; listName: string; kioskEnabled?: boolean; displayEnabled?: boolean; showNameOnDisplay?: boolean; showQrOnDisplay?: boolean; locationIsOpen?: boolean; locationStatusReason?: string | null; askName?: boolean; askPhone?: boolean; askEmail?: boolean; businessCountry?: string | null; businessName?: string | null; brandLogo?: string | null; seatingPreferences?: string[]; estimatedMs?: number; entries: Entry[]; accentColor?: string; backgroundColor?: string };
 
 export default function DisplayClient({ token }: { token: string }) {
   const { setTheme } = useTheme();
@@ -30,6 +39,8 @@ export default function DisplayClient({ token }: { token: string }) {
   const refreshTimerRef = useRef<number | null>(null);
   const pendingRefreshRef = useRef(false);
   const lastRefreshAtRef = useRef<number>(0);
+  const [qrUrl, setQrUrl] = useState<string | null>(null);
+  const [qrProviderIndex, setQrProviderIndex] = useState(0);
 
   if (!supabaseRef.current) supabaseRef.current = createClient();
 
@@ -41,6 +52,11 @@ export default function DisplayClient({ token }: { token: string }) {
   async function load(silent: boolean = false) {
     if (!silent && !data) setLoading(true);
     const res = await fetch(`/api/display?token=${encodeURIComponent(token)}`, { cache: "no-store" });
+    if (!res.ok) {
+      if (!silent || !data) setLoading(false);
+      setData(null);
+      return;
+    }
     const j = (await res.json()) as Payload;
     // Ensure consistent order in UI: by ticket_number ascending
     j.entries = (j.entries || []).slice().sort((a, b) => (a.ticket_number ?? 0) - (b.ticket_number ?? 0));
@@ -104,15 +120,35 @@ export default function DisplayClient({ token }: { token: string }) {
     lastCalledRef.current = null;
   }, [token]);
 
+  useEffect(() => {
+    const enabled = data?.showQrOnDisplay === true;
+    if (!enabled) {
+      setQrUrl(null);
+      setQrProviderIndex(0);
+      return;
+    }
+    const base = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== "undefined" ? window.location.origin : "");
+    const displayUrl = `${base}/display/${encodeURIComponent(token)}`;
+    const providers = [
+      (t: string) => `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=2&data=${encodeURIComponent(t)}`,
+      (t: string) => `https://quickchart.io/qr?size=240&margin=2&text=${encodeURIComponent(t)}`,
+      (t: string) => `https://chart.googleapis.com/chart?cht=qr&chs=240x240&chld=L|2&chl=${encodeURIComponent(t)}`,
+    ];
+    setQrProviderIndex(0);
+    setQrUrl(providers[0](displayUrl));
+  }, [data?.showQrOnDisplay, token]);
+
   // NOTE: We subscribe only to broadcast refresh events (no payload), then refetch via /api/display.
 
   const bg = data?.backgroundColor || "#000000";
   // Accent customization removed: brand is now locked to the preset theme.
-  if (loading || !data) return (
-    <main className="min-h-screen bg-background text-foreground flex items-center justify-center">
-      <p className="text-muted-foreground">Loading…</p>
-    </main>
-  );
+  if (loading || !data) {
+    return (
+      <main className="min-h-screen bg-background text-foreground flex items-center justify-center">
+        <p className="text-muted-foreground">{loading ? "Loading…" : "Unable to load this display."}</p>
+      </main>
+    );
+  }
 
   const notified = data.entries.filter((e) => e.status === "notified");
   const nowServing = notified.length
@@ -145,6 +181,8 @@ export default function DisplayClient({ token }: { token: string }) {
   const nowServingNumber = nowServing?.ticket_number ?? nowServing?.queue_position ?? lastCalledRef.current ?? null;
   const waiting = data.entries.filter((e) => e.status === "waiting").slice(0, 10);
   const locationIsOpen = data.locationIsOpen !== false;
+  const showNameOnDisplay = data.showNameOnDisplay === true;
+  const showQrOnDisplay = data.showQrOnDisplay === true;
 
   return (
     <main className="h-screen bg-background text-foreground flex flex-col overflow-hidden">
@@ -190,6 +228,35 @@ export default function DisplayClient({ token }: { token: string }) {
               />
             </div>
           ) : null}
+          {showQrOnDisplay ? (
+            <div className="ml-6 flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2">
+              <div className="text-sm text-muted-foreground">Scan to join</div>
+              {qrUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={qrUrl}
+                  alt="QR code"
+                  className="h-20 w-20 rounded-md bg-white p-1"
+                  onError={() => {
+                    const providers = [
+                      (t: string) => `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=2&data=${encodeURIComponent(t)}`,
+                      (t: string) => `https://quickchart.io/qr?size=240&margin=2&text=${encodeURIComponent(t)}`,
+                      (t: string) => `https://chart.googleapis.com/chart?cht=qr&chs=240x240&chld=L|2&chl=${encodeURIComponent(t)}`,
+                    ];
+                    if (qrProviderIndex < providers.length - 1) {
+                      const next = qrProviderIndex + 1;
+                      const base = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== "undefined" ? window.location.origin : "");
+                      const displayUrl = `${base}/display/${encodeURIComponent(token)}`;
+                      setQrProviderIndex(next);
+                      setQrUrl(providers[next](displayUrl));
+                    }
+                  }}
+                />
+              ) : (
+                <div className="h-20 w-20 rounded-md bg-muted" />
+              )}
+            </div>
+          ) : null}
         </div>
 
         <div className="mt-8 grid md:grid-cols-[1.2fr_1fr] gap-8 flex-1 min-h-0">
@@ -208,6 +275,9 @@ export default function DisplayClient({ token }: { token: string }) {
                         {e.ticket_number ?? e.queue_position ?? "-"}
                       </span>
                       <div className="flex items-center gap-8">
+                        {showNameOnDisplay && e.customer_name ? (
+                          <div className="text-lg font-medium">{e.customer_name}</div>
+                        ) : null}
                         {typeof e.party_size === 'number' ? (
                           <div className="flex items-center gap-1.5 text-xl font-medium">
                             <User className="h-5 w-5" />
@@ -246,6 +316,9 @@ export default function DisplayClient({ token }: { token: string }) {
                         {e.ticket_number ?? e.queue_position ?? "-"}
                       </span>
                       <div className="flex items-center gap-8">
+                        {showNameOnDisplay && e.customer_name ? (
+                          <div className="text-2xl font-semibold">{e.customer_name}</div>
+                        ) : null}
                         {typeof e.party_size === 'number' ? (
                           <div className="flex items-center gap-1.5 text-2xl font-medium">
                             <User className="h-6 w-6" />
@@ -304,6 +377,7 @@ function KioskButton({
   const [partySize, setPartySize] = useState<number | undefined>(1);
   const [pref, setPref] = useState<string | undefined>(undefined);
   const [message, setMessage] = useState<string | null>(null);
+  const [duplicateDialog, setDuplicateDialog] = useState<{ open: boolean; message: string }>({ open: false, message: "" });
   const [ticketNumber, setTicketNumber] = useState<number | null>(null);
   const [isPending, startTransition] = useTransition();
   const [phoneError, setPhoneError] = useState<string | null>(null);
@@ -319,6 +393,7 @@ function KioskButton({
     setPref(undefined);
     setMessage(null);
     setTicketNumber(null);
+    setDuplicateDialog({ open: false, message: "" });
   };
 
   const submit = () => {
@@ -343,6 +418,11 @@ function KioskButton({
         setTicketNumber(j.ticketNumber ?? null);
         setStep("confirm");
       } else {
+        if (res.status === 409) {
+          const errStr = typeof j?.error === "string" ? j.error : "This person is already waiting.";
+          setDuplicateDialog({ open: true, message: errStr });
+          return;
+        }
         const err = (j && j.error) || "Failed to add to waiting list";
         // If server returns a structured error for phone, surface it on the field
         const errStr = typeof err === "string" ? err : "";
@@ -492,6 +572,19 @@ function KioskButton({
           )}
         </DialogContent>
       </Dialog>
+      <AlertDialog open={duplicateDialog.open} onOpenChange={(open) => setDuplicateDialog((prev) => ({ ...prev, open }))}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Already waiting</AlertDialogTitle>
+            <AlertDialogDescription>
+              {duplicateDialog.message || "This person is already waiting in this list."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction>OK</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
@@ -543,6 +636,7 @@ function Keypad({ value, onChange, callingCode }: { value: string | undefined; o
     </div>
   );
 }
+
 function formatDuration(ms: number) {
   const totalMin = Math.max(0, Math.round(ms / 60000));
   const hours = Math.floor(totalMin / 60);

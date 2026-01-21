@@ -32,12 +32,25 @@ export async function GET(req: NextRequest) {
   }
 
   const admin = getAdminClient();
-  const { data: list, error: listErr } = await admin
+  const listSelect = "id, name, kiosk_enabled, display_enabled, display_show_name, display_show_qr, business_id, location_id, seating_preferences, ask_name, ask_phone, ask_email, business_locations:location_id(regular_hours, timezone)";
+  let list = null as any;
+  const { data: listData, error: listErr } = await admin
     .from("waitlists")
-    .select("id, name, kiosk_enabled, business_id, location_id, seating_preferences, ask_name, ask_phone, ask_email, business_locations:location_id(regular_hours, timezone)")
+    .select(listSelect)
     .eq("display_token", token)
     .single();
-  if (listErr || !list) return NextResponse.json({ error: "Invalid display token" }, { status: 404 });
+  if (listErr && listErr.message.toLowerCase().includes("column")) {
+    const { data: fallback, error: fbErr } = await admin
+      .from("waitlists")
+      .select("id, name, kiosk_enabled, business_id, location_id, seating_preferences, ask_name, ask_phone, ask_email, business_locations:location_id(regular_hours, timezone)")
+      .eq("display_token", token)
+      .single();
+    if (fbErr || !fallback) return NextResponse.json({ error: "Invalid display token" }, { status: 404 });
+    list = { ...fallback, display_enabled: true, display_show_name: false, display_show_qr: false };
+  } else {
+    if (listErr || !listData) return NextResponse.json({ error: "Invalid display token" }, { status: 404 });
+    list = listData;
+  }
 
   const loc = (list as unknown as { business_locations?: { regular_hours?: unknown; timezone?: unknown } | null }).business_locations;
   const openState = getLocationOpenState({
@@ -45,10 +58,19 @@ export async function GET(req: NextRequest) {
     timezone: (typeof loc?.timezone === "string" ? (loc.timezone as string) : null) || null,
   });
 
+  const displayEnabled = list.display_enabled !== false;
+  const showNameOnDisplay = displayEnabled && list.display_show_name !== false && list.ask_name !== false;
+  const showQrOnDisplay = displayEnabled && list.display_show_qr === true;
+
+  const entriesSelect = showNameOnDisplay
+    ? "id, status, queue_position, ticket_number, notified_at, party_size, seating_preference, customer_name"
+    : "id, status, queue_position, ticket_number, notified_at, party_size, seating_preference";
   const { data: entries, error } = await admin
     .from("waitlist_entries")
-    .select("id, status, queue_position, ticket_number, notified_at, party_size, seating_preference")
+    .select(entriesSelect)
     .eq("waitlist_id", list.id)
+    .neq("status", "cancelled")
+    .neq("status", "archived")
     .order("ticket_number", { ascending: true });
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
@@ -99,6 +121,9 @@ export async function GET(req: NextRequest) {
     listId: list.id,
     listName: list.name,
     kioskEnabled: !!list.kiosk_enabled,
+    displayEnabled,
+    showNameOnDisplay,
+    showQrOnDisplay,
     locationIsOpen: openState.isOpen,
     locationStatusReason: openState.reason,
     askName: list.ask_name !== false,

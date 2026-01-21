@@ -31,6 +31,7 @@ type Customer = {
   key: string;
   name: string | null;
   phone: string | null;
+  email: string | null;
   visits: number;
   firstSeen: string;
   lastSeen: string;
@@ -51,7 +52,9 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
     const q = query.trim().toLowerCase();
     const list = q
       ? customers.filter((c) =>
-        (c.name || "").toLowerCase().includes(q) || (c.phone || "").toLowerCase().includes(q)
+        (c.name || "").toLowerCase().includes(q) ||
+        (c.phone || "").toLowerCase().includes(q) ||
+        (c.email || "").toLowerCase().includes(q)
       )
       : customers;
     const sorted = [...list].sort((a, b) => {
@@ -109,7 +112,7 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search name or phone..."
+            placeholder="Search name, phone, or email..."
             className="w-full sm:w-80"
           />
           <div className="flex items-center gap-2 text-sm">
@@ -136,6 +139,7 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
             <tr>
               <th className="text-left font-medium text-foreground px-4 py-2">Name</th>
               <th className="text-left font-medium text-foreground px-4 py-2">Phone</th>
+              <th className="text-left font-medium text-foreground px-4 py-2">Email</th>
               <th className="text-left font-medium text-foreground px-4 py-2">Visits</th>
               <th className="text-left font-medium text-foreground px-4 py-2">Served</th>
               <th className="text-left font-medium text-foreground px-4 py-2">No show</th>
@@ -149,6 +153,7 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
               <tr key={c.key} className="border-t border-border hover:bg-muted odd:bg-muted/50">
                 <td className="px-4 py-2">{c.name || "—"}</td>
                 <td className="px-4 py-2">{c.phone || "—"}</td>
+                <td className="px-4 py-2">{c.email || "—"}</td>
                 <td className="px-4 py-2">{c.visits}</td>
                 <td className="px-4 py-2">{c.servedCount}</td>
                 <td className="px-4 py-2">{c.noShowCount ?? 0}</td>
@@ -181,7 +186,7 @@ export default function CustomersTable({ initialCustomers }: { initialCustomers:
             ))}
             {filtered.length === 0 ? (
               <tr>
-                <td className="px-4 py-6 text-muted-foreground" colSpan={7}>No customers found</td>
+                <td className="px-4 py-6 text-muted-foreground" colSpan={8}>No customers found</td>
               </tr>
             ) : null}
           </tbody>

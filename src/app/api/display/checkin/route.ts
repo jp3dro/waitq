@@ -82,6 +82,7 @@ export async function POST(req: NextRequest) {
   if (!parse.success) return NextResponse.json({ error: parse.error.flatten() }, { status: 400 });
 
   const { token: displayToken, phone, name, email, partySize, seatingPreference } = parse.data;
+  const normalizedEmail = typeof email === "string" && email.trim().length ? email.trim().toLowerCase() : undefined;
 
   const admin = getAdminClient();
 
@@ -115,6 +116,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Restaurant is closed" }, { status: 403 });
   }
 
+
   // Validate required fields based on settings
   if (list.ask_phone !== false && !phone) return NextResponse.json({ error: "Phone number is required" }, { status: 400 });
   if (list.ask_name !== false && !name) return NextResponse.json({ error: "Name is required" }, { status: 400 });
@@ -133,6 +135,20 @@ export async function POST(req: NextRequest) {
       .maybeSingle();
     if (existing?.id) {
       return NextResponse.json({ error: "Phone number already waiting" }, { status: 409 });
+    }
+  }
+  if (normalizedEmail) {
+    const { data: existing } = await admin
+      .from("waitlist_entries")
+      .select("id")
+      .eq("waitlist_id", list.id)
+      .ilike("email", normalizedEmail)
+      .in("status", ["waiting", "notified"])
+      .not("ticket_number", "is", null)
+      .limit(1)
+      .maybeSingle();
+    if (existing?.id) {
+      return NextResponse.json({ error: "Email already waiting" }, { status: 409 });
     }
   }
 
@@ -162,7 +178,7 @@ export async function POST(req: NextRequest) {
       business_id: list.business_id,
       waitlist_id: list.id,
       phone: normalizedPhone || null,
-      email: email || null,
+      email: normalizedEmail || null,
       customer_name: name || null,
       token: entryToken,
       ticket_number: nextTicket,
@@ -176,17 +192,17 @@ export async function POST(req: NextRequest) {
   const statusUrl = `${process.env.NEXT_PUBLIC_SITE_URL || ""}/w/${data.token}`;
 
   // Email confirmation (ticket + status link)
-  if (email) {
+  if (normalizedEmail) {
     try {
       if (!process.env.RESEND_API_KEY) {
-        console.warn("[kiosk-email] RESEND_API_KEY missing; email not sent", { email });
+        console.warn("[kiosk-email] RESEND_API_KEY missing; email not sent", { email: normalizedEmail });
       } else {
         const { data: biz } = await admin.from("businesses").select("name").eq("id", list.business_id).maybeSingle();
         const businessName = (biz?.name as string | undefined) ?? null;
         await resend.emails.send({
           from: process.env.RESEND_FROM_EMAIL || "WaitQ <noreply@waitq.com>",
           replyTo: process.env.RESEND_REPLY_TO_EMAIL,
-          to: email,
+          to: normalizedEmail,
           subject: `${businessName ? businessName : "WaitQ"} ticket ${typeof data.ticket_number === "number" ? `#${data.ticket_number}` : ""}`.trim(),
           html: buildWaitlistEmailHtml({
             businessName,

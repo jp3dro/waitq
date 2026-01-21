@@ -338,8 +338,8 @@ export default function PrivateSidebarClient({ userName, userEmail, businessLogo
                                                             const res = await fetch("/api/account/delete", { method: "POST" });
                                                             const j = (await res.json().catch(() => ({}))) as { error?: string };
                                                             if (!res.ok) throw new Error(j.error || "Failed to delete account");
-                                                            router.replace("/");
-                                                            router.refresh();
+                                                            // Clear auth cookies/session after deletion
+                                                            window.location.href = "/auth/logout";
                                                         } catch (e) {
                                                             console.error(e);
                                                             alert(e instanceof Error ? e.message : "Failed to delete account");

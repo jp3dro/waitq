@@ -8,6 +8,7 @@ type Entry = {
   id: string;
   customer_name: string | null;
   phone: string | null;
+  email?: string | null;
   created_at: string;
   notified_at: string | null;
 };
@@ -42,7 +43,7 @@ export default async function CustomersPage() {
 
   const { data: rows } = await supabase
     .from("waitlist_entries")
-    .select("id, customer_name, phone, created_at, notified_at")
+    .select("id, customer_name, phone, email, created_at, notified_at")
     .eq("business_id", business.id)
     .order("created_at", { ascending: false })
     .limit(5000);
@@ -53,6 +54,7 @@ export default async function CustomersPage() {
     key: string;
     name: string | null;
     phone: string | null;
+    email: string | null;
     visits: number;
     firstSeen: string;
     lastSeen: string;
@@ -61,17 +63,20 @@ export default async function CustomersPage() {
   };
 
   const normalize = (v: string | null) => (v ? v.replace(/\D+/g, "") : "");
+  const normalizeEmail = (v: string | null | undefined) => (v ? v.trim().toLowerCase() : "");
 
   const map = new Map<string, Customer>();
   for (const r of entries) {
     const phoneKey = normalize(r.phone);
-    const key = phoneKey || (r.customer_name ? `name:${r.customer_name.toLowerCase()}` : `id:${r.id}`);
+    const emailKey = normalizeEmail(r.email);
+    const key = phoneKey || (emailKey ? `email:${emailKey}` : (r.customer_name ? `name:${r.customer_name.toLowerCase()}` : `id:${r.id}`));
     const existing = map.get(key);
     if (!existing) {
       map.set(key, {
         key,
         name: r.customer_name || null,
         phone: r.phone || null,
+        email: r.email || null,
         visits: 1,
         firstSeen: r.created_at,
         lastSeen: r.created_at,
@@ -86,6 +91,7 @@ export default async function CustomersPage() {
         existing.lastSeen = r.created_at;
         if (r.customer_name) existing.name = r.customer_name;
         if (r.phone) existing.phone = r.phone;
+        if (r.email) existing.email = r.email;
       }
     }
   }
@@ -93,12 +99,13 @@ export default async function CustomersPage() {
   // Fetch no-show counts per key
   const { data: nsRows } = await supabase
     .from("waitlist_entries")
-    .select("id, phone, customer_name, status, notified_at")
+    .select("id, phone, email, customer_name, status, notified_at")
     .eq("business_id", business.id)
     .eq("status", "archived");
   for (const r of (nsRows || [])) {
     const phoneKey = normalize((r as any).phone || null);
-    const k = phoneKey || ((r as any).customer_name ? `name:${(r as any).customer_name.toLowerCase()}` : `id:${(r as any).id}`);
+    const emailKey = normalizeEmail((r as any).email || null);
+    const k = phoneKey || (emailKey ? `email:${emailKey}` : ((r as any).customer_name ? `name:${(r as any).customer_name.toLowerCase()}` : `id:${(r as any).id}`));
     const entry = map.get(k);
     if (entry) entry.noShowCount += 1;
   }

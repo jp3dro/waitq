@@ -14,10 +14,10 @@ export default async function ListsIndexPage() {
   if (!user) redirect("/login");
 
   const { data: locations } = await supabase.from("business_locations").select("id, name, regular_hours, timezone").order("created_at", { ascending: true });
-  const { data: lists } = await supabase.from("waitlists").select("id, name, location_id, display_token, kiosk_enabled").order("created_at", { ascending: true });
+  const { data: lists } = await supabase.from("waitlists").select("id, name, location_id, display_token, kiosk_enabled, display_enabled, display_show_name, display_show_qr").order("created_at", { ascending: true });
   const { data: biz } = await supabase.from("businesses").select("name").order("created_at", { ascending: true }).limit(1).maybeSingle();
   const locs = (locations || []) as { id: string; name: string; regular_hours?: unknown; timezone?: string | null }[];
-  const allLists = (lists || []) as { id: string; name: string; location_id: string | null; display_token?: string | null; kiosk_enabled?: boolean | null }[];
+  const allLists = (lists || []) as { id: string; name: string; location_id: string | null; display_token?: string | null; kiosk_enabled?: boolean | null; display_enabled?: boolean | null; display_show_name?: boolean | null; display_show_qr?: boolean | null }[];
 
   const locationOpenById = new Map(
     locs.map((l) => {
@@ -113,6 +113,9 @@ export default async function ListsIndexPage() {
                             businessName={(biz?.name as string | null) || undefined}
                             initialLocationId={l.location_id}
                             kioskEnabled={!!l.kiosk_enabled}
+                            displayEnabled={l.display_enabled !== false}
+                            displayShowName={l.display_show_name === true}
+                            displayShowQr={l.display_show_qr === true}
                             locationIsOpen={locationIsOpen}
                             locations={locs}
                             disableDelete={allLists.length <= 1}

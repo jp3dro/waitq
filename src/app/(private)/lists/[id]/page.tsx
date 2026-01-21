@@ -34,6 +34,9 @@ type WaitlistRow = {
   id: string;
   name: string;
   kiosk_enabled: boolean | null;
+  display_enabled?: boolean | null;
+  display_show_name?: boolean | null;
+  display_show_qr?: boolean | null;
   display_token: string | null;
   location_id: string | null;
   ask_name: boolean | null;
@@ -52,12 +55,13 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
 
   const { id: waitlistId } = await params;
 
-  const { data: waitlist, error } = await supabase
-    .from("waitlists")
-    .select(`
+  const baseSelect = `
       id,
       name,
       kiosk_enabled,
+      display_enabled,
+      display_show_name,
+      display_show_qr,
       display_token,
       location_id,
       ask_name,
@@ -70,11 +74,42 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
         regular_hours,
         timezone
       )
-    `)
+    `;
+  let waitlist = null as unknown as WaitlistRow | null;
+  const { data: wlData, error } = await supabase
+    .from("waitlists")
+    .select(baseSelect)
     .eq("id", waitlistId)
     .single();
-  if (error || !waitlist) redirect("/dashboard");
-  const wl = waitlist as unknown as WaitlistRow;
+  if (error && error.message.toLowerCase().includes("column")) {
+    const { data: fallback } = await supabase
+      .from("waitlists")
+      .select(`
+        id,
+        name,
+        kiosk_enabled,
+        display_token,
+        location_id,
+        ask_name,
+        ask_phone,
+        ask_email,
+        seating_preferences,
+        business_locations (
+          id,
+          name,
+          regular_hours,
+          timezone
+        )
+      `)
+      .eq("id", waitlistId)
+      .single();
+    if (!fallback) redirect("/dashboard");
+    waitlist = { ...(fallback as WaitlistRow), display_enabled: true, display_show_name: false, display_show_qr: false };
+  } else {
+    if (error || !wlData) redirect("/dashboard");
+    waitlist = wlData as WaitlistRow;
+  }
+  const wl = waitlist as WaitlistRow;
 
   // Fetch all locations for the dropdown
   const { data: locations } = await supabase
@@ -154,13 +189,16 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
                 initialName={wl.name}
                 initialLocationId={wl.location_id || wl.business_locations?.id}
                 initialKioskEnabled={!!wl.kiosk_enabled}
+                initialDisplayEnabled={wl.display_enabled !== false}
+                initialDisplayShowName={wl.display_show_name !== false}
+                initialDisplayShowQr={wl.display_show_qr === true}
                 initialAskName={wl.ask_name !== false}
                 initialAskPhone={wl.ask_phone !== false}
                 initialAskEmail={wl.ask_email === true}
                 initialSeatingPreferences={wl.seating_preferences || []}
                 locations={typedLocations}
               />
-              {wl.display_token && (
+              {wl.display_token && wl.display_enabled !== false && (
                 <>
                   <Button asChild variant="outline" size="sm">
                     <a

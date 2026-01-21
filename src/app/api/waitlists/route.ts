@@ -6,12 +6,36 @@ import { getLocationOpenState, type RegularHours } from "@/lib/location-hours";
 
 export async function GET() {
   const supabase = await createRouteClient();
+  const selectFields = "id, name, business_id, location_id, display_token, kiosk_enabled, display_enabled, display_show_name, display_show_qr, list_type, seating_preferences, ask_name, ask_phone, ask_email, created_at, business_locations:location_id(id, name, regular_hours, timezone)";
   const { data, error } = await supabase
     .from("waitlists")
-    .select(
-      "id, name, business_id, location_id, display_token, kiosk_enabled, list_type, seating_preferences, ask_name, ask_phone, ask_email, created_at, business_locations:location_id(id, name, regular_hours, timezone)"
-    )
+    .select(selectFields)
     .order("created_at", { ascending: true });
+  if (error && (error.message.toLowerCase().includes("display_enabled") || error.message.toLowerCase().includes("display_show_name") || error.message.toLowerCase().includes("display_show_qr"))) {
+    const retry = await supabase
+      .from("waitlists")
+      .select(
+        "id, name, business_id, location_id, display_token, kiosk_enabled, list_type, seating_preferences, ask_name, ask_phone, ask_email, created_at, business_locations:location_id(id, name, regular_hours, timezone)"
+      )
+      .order("created_at", { ascending: true });
+    if (retry.error) return NextResponse.json({ error: retry.error.message }, { status: 400 });
+    const waitlists = (retry.data ?? []).map((w) => {
+      const loc = (w as unknown as { business_locations?: { regular_hours?: unknown; timezone?: unknown } | null }).business_locations;
+      const openState = getLocationOpenState({
+        regularHours: (loc?.regular_hours as RegularHours | null) || null,
+        timezone: (typeof loc?.timezone === "string" ? (loc.timezone as string) : null) || null,
+      });
+      return {
+        ...w,
+        display_enabled: true,
+        display_show_name: false,
+        display_show_qr: false,
+        location_is_open: openState.isOpen,
+        location_status_reason: openState.reason,
+      };
+    });
+    return NextResponse.json({ waitlists });
+  }
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
   const waitlists = (data ?? []).map((w) => {
@@ -35,6 +59,9 @@ const postSchema = z.object({
   name: z.string().min(1),
   locationId: z.string().uuid().optional(),
   kioskEnabled: z.boolean().optional().default(false),
+  displayEnabled: z.boolean().optional(),
+  displayShowName: z.boolean().optional(),
+  displayShowQr: z.boolean().optional(),
   seatingPreferences: z.array(z.string()).optional().default([]),
   askName: z.boolean().optional().default(true),
   askPhone: z.boolean().optional().default(true),
@@ -53,10 +80,13 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   let businessId = parse.data.businessId;
-  const { name, kioskEnabled, seatingPreferences, askName, askPhone, askEmail } = parse.data as {
+  const { name, kioskEnabled, displayEnabled, displayShowName, displayShowQr, seatingPreferences, askName, askPhone, askEmail } = parse.data as {
     name: string;
     locationId?: string;
     kioskEnabled?: boolean;
+    displayEnabled?: boolean;
+    displayShowName?: boolean;
+    displayShowQr?: boolean;
     seatingPreferences?: string[];
     askName?: boolean;
     askPhone?: boolean;
@@ -90,13 +120,16 @@ export async function POST(req: NextRequest) {
       name,
       location_id: locationId,
       kiosk_enabled: !!kioskEnabled,
+      display_enabled: displayEnabled !== false,
+      display_show_name: displayShowName !== false,
+      display_show_qr: displayShowQr === true,
       list_type: "restaurants",
       seating_preferences: seatingPreferences || [],
       ask_name: askName !== false,
       ask_phone: askPhone !== false,
       ask_email: askEmail === true,
     })
-    .select("id, name, business_id, location_id, display_token, kiosk_enabled, list_type, seating_preferences, ask_name, ask_phone, ask_email")
+    .select("id, name, business_id, location_id, display_token, kiosk_enabled, display_enabled, display_show_name, display_show_qr, list_type, seating_preferences, ask_name, ask_phone, ask_email")
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ waitlist: data }, { status: 201 });
@@ -194,6 +227,9 @@ const patchSchema = z.object({
   name: z.string().min(1).optional(),
   locationId: z.string().uuid().optional(),
   kioskEnabled: z.boolean().optional(),
+  displayEnabled: z.boolean().optional(),
+  displayShowName: z.boolean().optional(),
+  displayShowQr: z.boolean().optional(),
   seatingPreferences: z.array(z.string()).optional(),
   askName: z.boolean().optional(),
   askPhone: z.boolean().optional(),
@@ -211,11 +247,14 @@ export async function PUT(req: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { id, name, locationId, kioskEnabled, seatingPreferences, askName, askPhone, askEmail } = parse.data;
+  const { id, name, locationId, kioskEnabled, displayEnabled, displayShowName, displayShowQr, seatingPreferences, askName, askPhone, askEmail } = parse.data;
   const payload: Record<string, unknown> = {};
   if (typeof name === "string") payload.name = name;
   if (typeof locationId === "string") payload.location_id = locationId;
   if (typeof kioskEnabled === "boolean") payload.kiosk_enabled = kioskEnabled;
+  if (typeof displayEnabled === "boolean") payload.display_enabled = displayEnabled;
+  if (typeof displayShowName === "boolean") payload.display_show_name = displayShowName;
+  if (typeof displayShowQr === "boolean") payload.display_show_qr = displayShowQr;
   if (Array.isArray(seatingPreferences)) payload.seating_preferences = seatingPreferences;
   if (typeof askName === "boolean") payload.ask_name = askName;
   if (typeof askPhone === "boolean") payload.ask_phone = askPhone;
@@ -227,8 +266,11 @@ export async function PUT(req: NextRequest) {
     .from("waitlists")
     .update(payload)
     .eq("id", id)
-    .select("id, name, business_id, location_id, display_token, kiosk_enabled, list_type, seating_preferences, ask_name, ask_phone, ask_email")
+    .select("id, name, business_id, location_id, display_token, kiosk_enabled, display_enabled, display_show_name, display_show_qr, list_type, seating_preferences, ask_name, ask_phone, ask_email")
     .single();
+  if (error && (error.message.toLowerCase().includes("display_enabled") || error.message.toLowerCase().includes("display_show_name") || error.message.toLowerCase().includes("display_show_qr"))) {
+    return NextResponse.json({ error: "Public display settings are not available in this project. Add the display_* columns first." }, { status: 400 });
+  }
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ waitlist: data });
 }

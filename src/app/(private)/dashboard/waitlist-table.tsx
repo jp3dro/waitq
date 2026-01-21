@@ -559,11 +559,6 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                           </Badge>
                         ) : null}
                       </div>
-                      {typeof e.visits_count === "number" ? (
-                        <span className="text-xs text-muted-foreground">
-                          {e.visits_count <= 0 ? "New customer" : `${e.visits_count} visit${e.visits_count === 1 ? "" : "s"}`}
-                        </span>
-                      ) : null}
                     </div>
                   </td>
                 )}

@@ -26,6 +26,9 @@ export default function ListCard({
   businessName,
   initialLocationId,
   kioskEnabled,
+  displayEnabled,
+  displayShowName,
+  displayShowQr,
   locationIsOpen,
   locations,
   disableDelete,
@@ -38,6 +41,9 @@ export default function ListCard({
   businessName?: string;
   initialLocationId?: string | null;
   kioskEnabled?: boolean | null;
+  displayEnabled?: boolean | null;
+  displayShowName?: boolean | null;
+  displayShowQr?: boolean | null;
   locationIsOpen?: boolean;
   locations?: { id: string; name: string }[];
   disableDelete?: boolean;
@@ -129,21 +135,25 @@ export default function ListCard({
               <Pencil className="h-4 w-4" />
               Edit
             </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <a
-                href={displayToken ? `/display/${encodeURIComponent(displayToken)}` : `/lists/${id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Monitor className="h-4 w-4" />
-                Open public display
-              </a>
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => setQrOpen(true)}>
-              <QrCode className="h-4 w-4" />
-              Open QR code
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
+            {displayEnabled !== false && displayToken ? (
+              <>
+                <DropdownMenuItem asChild>
+                  <a
+                    href={`/display/${encodeURIComponent(displayToken)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Monitor className="h-4 w-4" />
+                    Open public display
+                  </a>
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setQrOpen(true)}>
+                  <QrCode className="h-4 w-4" />
+                  Open QR code
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            ) : null}
             <ClearWaitlistButton waitlistId={id} displayToken={displayToken} variant="menu" />
             <DropdownMenuSeparator />
             <DropdownMenuItem
@@ -160,12 +170,17 @@ export default function ListCard({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      <QRCodeModal open={qrOpen} onClose={() => setQrOpen(false)} listName={name} displayToken={displayToken || undefined} businessName={businessName} />
+      {displayEnabled !== false && displayToken ? (
+        <QRCodeModal open={qrOpen} onClose={() => setQrOpen(false)} listName={name} displayToken={displayToken || undefined} businessName={businessName} />
+      ) : null}
       <EditListButton
         waitlistId={id}
         initialName={name}
         initialLocationId={initialLocationId || undefined}
         initialKioskEnabled={!!kioskEnabled}
+        initialDisplayEnabled={displayEnabled !== false}
+        initialDisplayShowName={displayShowName !== false}
+        initialDisplayShowQr={displayShowQr === true}
         locations={locations || []}
         controlledOpen={editOpen}
         onOpenChange={setEditOpen}

@@ -31,6 +31,27 @@ export default async function OnboardingPage({
         .eq("id", user.id)
         .maybeSingle();
 
+    const { data: ownedBusiness } = await supabase
+        .from("businesses")
+        .select("id")
+        .eq("owner_user_id", user.id)
+        .limit(1)
+        .maybeSingle();
+    const { data: activeMembership } = await supabase
+        .from("memberships")
+        .select("id, status")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .limit(1)
+        .maybeSingle();
+    if (ownedBusiness?.id || activeMembership?.id) {
+        const admin = getAdminClient();
+        await admin
+            .from("profiles")
+            .upsert({ id: user.id, onboarding_completed: true, onboarding_step: 3 }, { onConflict: "id" });
+        redirect("/dashboard");
+    }
+
     // If coming back from Stripe Checkout, try to confirm subscription and complete onboarding.
     // This prevents a loop where `/subscriptions` is gated behind `onboarding_completed`.
     if (checkout === "success") {

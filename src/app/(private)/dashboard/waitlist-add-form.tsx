@@ -4,6 +4,15 @@ import { useForm } from "react-hook-form";
 import { PhoneInput, type Country } from "@/components/ui/phone-input";
 import { toastManager } from "@/hooks/use-toast";
 import { Stepper } from "@/components/ui/stepper";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type FormValues = {
   phone: string;
@@ -19,6 +28,8 @@ type FormValues = {
 export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, businessCountry, formId = "add-waitlist-form", onPendingChange, onBlockedReasonChange }: { onDone?: () => void; defaultWaitlistId?: string; lockWaitlist?: boolean; businessCountry?: Country; formId?: string; onPendingChange?: (pending: boolean) => void; onBlockedReasonChange?: (reason: string | null) => void }) {
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
+  const [duplicateDialog, setDuplicateDialog] = useState<{ open: boolean; message: string }>({ open: false, message: "" });
+  const [smsUsage, setSmsUsage] = useState<{ used: number; limit: number; windowEnd?: string } | null>(null);
   const { register, handleSubmit, reset, watch, setValue, setError, setFocus, formState: { errors } } = useForm<FormValues>({
     defaultValues: { phone: "", email: "", customerName: "", waitlistId: "", sendSms: false, sendEmail: false, partySize: 2 },
   });
@@ -45,11 +56,37 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
     })();
   }, [reset, defaultWaitlistId]);
 
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/plan", { cache: "no-store" });
+        if (!res.ok) return;
+        const j = await res.json().catch(() => ({}));
+        const used = Number(j?.usage?.sms?.used);
+        const limit = Number(j?.usage?.sms?.limit);
+        if (Number.isFinite(used) && Number.isFinite(limit)) {
+          setSmsUsage({
+            used,
+            limit,
+            windowEnd: typeof j?.usage?.window?.end === "string" ? j.usage.window.end : undefined,
+          });
+        }
+      } catch { }
+    })();
+  }, []);
+
   const current = waitlists.find(w => w.id === watch("waitlistId"));
   const blockedReason = current?.location_is_open === false ? (current.location_status_reason || "Restaurant is closed") : null;
   useEffect(() => {
     onBlockedReasonChange?.(blockedReason);
   }, [blockedReason, onBlockedReasonChange]);
+
+  const smsLimitReached = typeof smsUsage?.used === "number" && typeof smsUsage?.limit === "number" && smsUsage.used >= smsUsage.limit;
+  useEffect(() => {
+    if (smsLimitReached) {
+      setValue("sendSms", false);
+    }
+  }, [smsLimitReached, setValue]);
 
   const onSubmit = (values: FormValues) => {
     setMessage(null);
@@ -65,9 +102,11 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
         body: JSON.stringify(values),
       });
       if (res.ok) {
+        const j = await res.json().catch(() => ({}));
+        const ticketNumber = typeof j?.ticketNumber === "number" ? j.ticketNumber : null;
         toastManager.add({
           title: "Success",
-          description: "Customer added to waitlist successfully",
+          description: `Customer added to waitlist successfully${typeof ticketNumber === "number" ? ` #${ticketNumber}` : ""}`,
           type: "success",
         });
         reset({ phone: "", email: "", customerName: "", waitlistId: values.waitlistId, sendSms: false, sendEmail: false, partySize: 2, seatingPreference: undefined });
@@ -89,6 +128,12 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
         } catch { }
         onDone?.();
       } else {
+        if (res.status === 409) {
+          const j = await res.json().catch(() => ({}));
+          const errStr = typeof j?.error === "string" ? j.error : "This person is already waiting.";
+          setDuplicateDialog({ open: true, message: errStr });
+          return;
+        }
         let parsed: unknown = {};
         try {
           parsed = await res.json();
@@ -246,7 +291,7 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
             <label className="text-sm font-medium">Notify via</label>
             {collectPhone ? (
               <div className="flex items-center gap-2">
-                <input id="send-sms" type="checkbox" className="h-4 w-4 rounded border-border text-primary focus:ring-ring" {...register("sendSms")} />
+                <input id="send-sms" type="checkbox" className="h-4 w-4 rounded border-border text-primary focus:ring-ring disabled:opacity-50" disabled={smsLimitReached} {...register("sendSms")} />
                 <label htmlFor="send-sms" className="text-sm">SMS</label>
               </div>
             ) : null}
@@ -258,8 +303,24 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
             ) : null}
           </div>
         )}
+        {collectPhone && smsLimitReached ? (
+          <p className="text-xs text-muted-foreground">SMS limit reached for the current billing period.</p>
+        ) : null}
         {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
       </form>
+      <AlertDialog open={duplicateDialog.open} onOpenChange={(open) => setDuplicateDialog((prev) => ({ ...prev, open }))}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Already waiting</AlertDialogTitle>
+            <AlertDialogDescription>
+              {duplicateDialog.message || "This customer is already waiting in this list."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction>OK</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

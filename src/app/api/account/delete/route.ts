@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createRouteClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
+import { getStripe } from "@/lib/stripe";
 
 export async function POST() {
   const supabase = await createRouteClient();
@@ -23,29 +24,64 @@ export async function POST() {
     .map((b) => (b as unknown as { id?: string }).id)
     .filter((v): v is string => typeof v === "string");
 
-  // Businesses the user is a member of (invites)
-  const { data: memberRows, error: memberErr } = await admin
-    .from("memberships")
-    .select("business_id")
-    .eq("user_id", user.id);
-  if (memberErr) return NextResponse.json({ error: memberErr.message }, { status: 500 });
-
-  const memberBusinessIds = (memberRows ?? [])
-    .map((r) => (r as unknown as { business_id?: string }).business_id)
-    .filter((v): v is string => typeof v === "string");
+  // Best-effort: cancel Stripe subscription(s) and delete customer record.
+  // We try by reading the subscriptions table first; if Stripe isn't configured, we continue deleting DB rows anyway.
+  try {
+    const stripe = getStripe();
+    const { data: subsRows } = await admin
+      .from("subscriptions")
+      .select("stripe_customer_id, stripe_subscription_id")
+      .or(`user_id.eq.${user.id}${ownedBusinessIds.length ? `,business_id.in.(${ownedBusinessIds.join(",")})` : ""}`)
+      .limit(50);
+    const rows = (subsRows || []) as { stripe_customer_id?: string | null; stripe_subscription_id?: string | null }[];
+    const subIds = Array.from(new Set(rows.map((r) => r.stripe_subscription_id).filter((v): v is string => typeof v === "string" && v.length)));
+    const custIds = Array.from(new Set(rows.map((r) => r.stripe_customer_id).filter((v): v is string => typeof v === "string" && v.length)));
+    for (const subId of subIds) {
+      try {
+        await stripe.subscriptions.cancel(subId, { prorate: false });
+      } catch { }
+    }
+    for (const custId of custIds) {
+      try {
+        await stripe.customers.del(custId);
+      } catch { }
+    }
+  } catch {
+    // Stripe not configured or not reachable; ignore.
+  }
 
   // Account deletion semantics:
   // - If the user owns businesses, delete those businesses entirely (cascades waitlists, locations, entries, memberships).
   // - If the user is merely a member of other businesses, remove their memberships only (do not delete shared business data).
   if (ownedBusinessIds.length > 0) {
+    // Do not rely on DB cascades: explicitly delete known dependent rows first.
+    // Waitlists for owned businesses
+    const { data: ownedWaitlists } = await admin
+      .from("waitlists")
+      .select("id")
+      .in("business_id", ownedBusinessIds);
+    const ownedWaitlistIds = (ownedWaitlists ?? [])
+      .map((w) => (w as unknown as { id?: string }).id)
+      .filter((v): v is string => typeof v === "string");
+
+    if (ownedWaitlistIds.length > 0) {
+      await admin.from("waitlist_entries").delete().in("waitlist_id", ownedWaitlistIds);
+      await admin.from("waitlists").delete().in("id", ownedWaitlistIds);
+    }
+
+    await admin.from("business_locations").delete().in("business_id", ownedBusinessIds);
+    await admin.from("memberships").delete().in("business_id", ownedBusinessIds);
+    await admin.from("subscriptions").delete().in("business_id", ownedBusinessIds);
     const { error: bizDelErr } = await admin.from("businesses").delete().in("id", ownedBusinessIds);
     if (bizDelErr) return NextResponse.json({ error: bizDelErr.message }, { status: 500 });
   }
 
-  if (memberBusinessIds.length > 0) {
-    const { error: selfMembershipsErr } = await admin.from("memberships").delete().eq("user_id", user.id);
-    if (selfMembershipsErr) return NextResponse.json({ error: selfMembershipsErr.message }, { status: 500 });
-  }
+  // Always remove the user's memberships (member of other businesses)
+  const { error: selfMembershipsErr } = await admin.from("memberships").delete().eq("user_id", user.id);
+  if (selfMembershipsErr) return NextResponse.json({ error: selfMembershipsErr.message }, { status: 500 });
+
+  // Delete per-user subscription row (if any)
+  await admin.from("subscriptions").delete().eq("user_id", user.id);
 
   // Profile row
   const { error: profileErr } = await admin.from("profiles").delete().eq("id", user.id);

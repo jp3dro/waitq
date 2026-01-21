@@ -44,7 +44,7 @@ export async function PATCH(req: NextRequest) {
   // Fetch candidate rows for this business
   const { data: rows, error: fetchErr } = await admin
     .from("waitlist_entries")
-    .select("id, phone, customer_name, created_at")
+    .select("id, phone, email, customer_name, created_at")
     .eq("business_id", biz.id);
   if (fetchErr) return NextResponse.json({ error: fetchErr.message }, { status: 400 });
 
@@ -53,6 +53,11 @@ export async function PATCH(req: NextRequest) {
     const nameKey = key.slice(5).toLowerCase();
     targetIds = (rows || [])
       .filter((r) => ((r.customer_name || "").toLowerCase() === nameKey))
+      .map((r) => r.id);
+  } else if (key.startsWith("email:")) {
+    const emailKey = key.slice(6).toLowerCase();
+    targetIds = (rows || [])
+      .filter((r) => ((r as any).email || "").toLowerCase() === emailKey)
       .map((r) => r.id);
   } else if (key.startsWith("id:")) {
     const idKey = key.slice(3);
@@ -101,7 +106,7 @@ export async function DELETE(req: NextRequest) {
   // Fetch candidate rows, match by key strategy, and delete by IDs
   const { data: rows, error: fetchErr } = await admin
     .from("waitlist_entries")
-    .select("id, phone, customer_name")
+    .select("id, phone, email, customer_name")
     .eq("business_id", biz.id);
   if (fetchErr) return NextResponse.json({ error: fetchErr.message }, { status: 400 });
 
@@ -110,6 +115,11 @@ export async function DELETE(req: NextRequest) {
     const nameKey = key.slice(5).toLowerCase();
     targetIds = (rows || [])
       .filter((r) => ((r.customer_name || "").toLowerCase() === nameKey))
+      .map((r) => r.id);
+  } else if (key.startsWith("email:")) {
+    const emailKey = key.slice(6).toLowerCase();
+    targetIds = (rows || [])
+      .filter((r) => ((r as any).email || "").toLowerCase() === emailKey)
       .map((r) => r.id);
   } else if (key.startsWith("id:")) {
     const idKey = key.slice(3);

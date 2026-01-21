@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createRouteClient } from "@/lib/supabase/server";
-import { getPlanContext } from "@/lib/plan-limits";
+import { countSmsInPeriod, getPlanContext } from "@/lib/plan-limits";
 
 export async function GET() {
   const supabase = await createRouteClient();
@@ -33,6 +33,20 @@ export async function GET() {
   if (!businessId) return NextResponse.json({ error: "No business found" }, { status: 404 });
 
   const ctx = await getPlanContext(businessId);
-  return NextResponse.json({ planId: ctx.planId, limits: ctx.limits });
+  const usedSms = await countSmsInPeriod(businessId, ctx.window.start, ctx.window.end);
+  return NextResponse.json({
+    planId: ctx.planId,
+    limits: ctx.limits,
+    usage: {
+      sms: {
+        used: usedSms,
+        limit: ctx.limits.messagesPerMonth,
+      },
+      window: {
+        start: ctx.window.start.toISOString(),
+        end: ctx.window.end.toISOString(),
+      },
+    },
+  });
 }
 

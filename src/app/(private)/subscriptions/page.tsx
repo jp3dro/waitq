@@ -6,9 +6,11 @@ import { createClient } from "@/lib/supabase/server";
 import SubscribeButton from "./subscribe-button";
 import { getStripe } from "@/lib/stripe";
 import { getAdminClient } from "@/lib/supabase/admin";
+import { countEntriesInPeriod, countLocations, countSmsInPeriod, getPlanContext } from "@/lib/plan-limits";
 import type Stripe from "stripe";
 import PlanCards from "@/components/subscriptions/PlanCards";
 import SubscriptionReturnRefresh from "@/components/subscription-return-refresh";
+import { Progress } from "@/components/ui/progress";
 
 
 function formatEUR(amount: number) {
@@ -45,6 +47,16 @@ export default async function SubscriptionPage() {
   let uiCustomerId: string | null = null;
   let uiSubscription: Stripe.Subscription | null = null;
   let uiInvoices: Stripe.Invoice[] = [];
+  let usageSummary:
+    | {
+        locations: { used: number; limit: number };
+        users: { used: number; limit: number };
+        reservations: { used: number; limit: number };
+        sms: { used: number; limit: number };
+        windowStart: string;
+        windowEnd: string;
+      }
+    | null = null;
   if (user) {
     // First, read any existing customer link from DB
     const { data: existingRow } = await supabase
@@ -667,6 +679,59 @@ export default async function SubscriptionPage() {
     }
   }
 
+  if (user) {
+    try {
+      const admin = getAdminClient();
+      let businessId: string | null = null;
+      const { data: owned } = await admin
+        .from("businesses")
+        .select("id")
+        .eq("owner_user_id", user.id)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      businessId = (owned?.id as string | undefined) || null;
+      if (!businessId) {
+        const { data: memberOf } = await admin
+          .from("memberships")
+          .select("business_id")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        businessId = (memberOf?.business_id as string | undefined) || null;
+      }
+      if (businessId) {
+        const { data: bizOwner } = await admin
+          .from("businesses")
+          .select("owner_user_id")
+          .eq("id", businessId)
+          .maybeSingle();
+        const ctx = await getPlanContext(businessId);
+        const [usedLocations, usedReservations, usedSms, memberCount] = await Promise.all([
+          countLocations(businessId),
+          countEntriesInPeriod(businessId, ctx.window.start, ctx.window.end),
+          countSmsInPeriod(businessId, ctx.window.start, ctx.window.end),
+          admin
+            .from("memberships")
+            .select("id", { count: "exact", head: true })
+            .eq("business_id", businessId)
+            .eq("status", "active")
+            .then((res) => res.count || 0),
+        ]);
+        const usedUsers = (bizOwner?.owner_user_id ? 1 : 0) + memberCount;
+        usageSummary = {
+          locations: { used: usedLocations, limit: ctx.limits.locations },
+          users: { used: usedUsers, limit: ctx.limits.users },
+          reservations: { used: usedReservations, limit: ctx.limits.reservationsPerMonth },
+          sms: { used: usedSms, limit: ctx.limits.messagesPerMonth },
+          windowStart: ctx.window.start.toISOString(),
+          windowEnd: ctx.window.end.toISOString(),
+        };
+      }
+    } catch { }
+  }
+
   // Determine current plan - consider common paid/trial statuses
   // Exclude 'incomplete' and 'unpaid' so users with failed/pending subs don't see them as active
   const activeLikeStatuses = new Set(["active", "trialing", "past_due"]);
@@ -767,6 +832,37 @@ export default async function SubscriptionPage() {
               </div>
             </div>
           )}
+
+          {usageSummary ? (
+            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-6">
+              <div className="text-lg font-semibold mb-3">Usage</div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                {[
+                  { label: "Locations", value: usageSummary.locations },
+                  { label: "Users", value: usageSummary.users },
+                  { label: "Reservations", value: usageSummary.reservations },
+                  { label: "SMS", value: usageSummary.sms },
+                ].map((item) => {
+                  const pct = item.value.limit > 0 ? Math.min(100, Math.round((item.value.used / item.value.limit) * 100)) : 0;
+                  return (
+                    <div key={item.label} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="text-muted-foreground">{item.label}</div>
+                        <div className="font-medium">{item.value.used} / {item.value.limit}</div>
+                      </div>
+                      <Progress value={pct} />
+                    </div>
+                  );
+                })}
+                <div className="md:col-span-2">
+                  <div className="text-muted-foreground">Usage period</div>
+                  <div className="font-medium">
+                    {new Date(usageSummary.windowStart).toLocaleDateString()} - {new Date(usageSummary.windowEnd).toLocaleDateString()}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : null}
 
           {/* Always show Payment History section, even if empty */}
           <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-6">

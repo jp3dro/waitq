@@ -21,11 +21,6 @@ type AnalyticsData = {
   avgWaitTimeMin: number;
   avgServiceTimeMin: number;
   avgWaitByHour: { hour: number; avgMin: number }[];
-  compare: {
-    dailyVisitors: { label: string; current: number; previous: number }[];
-    avgHourlyVisits: { label: string; current: number; previous: number }[];
-    avgWaitByHour: { label: string; current: number; previous: number }[];
-  };
 };
 
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
@@ -35,18 +30,13 @@ type WaitlistRow = { id: string; name: string; location_id: string | null };
 
 type InteractiveBarChartDatum = {
   label: string;
-  current: number;
-  previous: number;
+  value: number;
 };
 
 const interactiveChartConfig = {
-  current: {
-    label: "Current",
+  value: {
+    label: "Value",
     color: "var(--chart-2)",
-  },
-  previous: {
-    label: "Previous",
-    color: "var(--chart-1)",
   },
 } satisfies ChartConfig;
 
@@ -98,8 +88,7 @@ function ChartBarInteractiveMetric({
             <ChartTooltip
               content={<ChartTooltipContent className="w-[170px]" labelFormatter={(value) => String(value)} />}
             />
-            <Bar dataKey="previous" fill="var(--color-previous)" radius={4} />
-            <Bar dataKey="current" fill="var(--color-current)" radius={4} />
+            <Bar dataKey="value" fill="var(--color-value)" radius={4} />
           </BarChart>
         </ChartContainer>
         {insight ? <p className="mt-3 text-xs text-muted-foreground">{insight}</p> : null}
@@ -210,11 +199,6 @@ export default function AnalyticsPage() {
       const now = new Date();
       const from =
         opts.mode === "today" ? startOfLocalDay(now) : new Date(now.getTime() - opts.days * 24 * 60 * 60 * 1000);
-      const prevTo = new Date(from.getTime());
-      const prevFrom =
-        opts.mode === "today"
-          ? new Date(from.getTime() - 24 * 60 * 60 * 1000)
-          : new Date(from.getTime() - opts.days * 24 * 60 * 60 * 1000);
 
       const makeCreatedQuery = (f: Date, t: Date) => {
         let q = supabase.from("waitlist_entries").select("created_at").gte("created_at", f.toISOString()).lte("created_at", t.toISOString());
@@ -233,32 +217,13 @@ export default function AnalyticsPage() {
         return q.limit(5000);
       };
 
-      const [createdRowsRes, servedRowsRes, createdRowsPrevRes, servedRowsPrevRes] = await Promise.all([
+      const [createdRowsRes, servedRowsRes] = await Promise.all([
         makeCreatedQuery(from, now),
         makeServedQuery(from, now),
-        // Previous range: use [prevFrom, prevTo)
-        (async () => {
-          let q = supabase.from("waitlist_entries").select("created_at").gte("created_at", prevFrom.toISOString()).lt("created_at", prevTo.toISOString());
-          if (opts.waitlistIds && opts.waitlistIds.length) q = q.in("waitlist_id", opts.waitlistIds);
-          return q.limit(5000);
-        })(),
-        (async () => {
-          let q = supabase
-            .from("waitlist_entries")
-            .select("created_at, notified_at, waitlist_id")
-            .in("status", ["notified", "seated"])
-            .not("notified_at", "is", null)
-            .gte("created_at", prevFrom.toISOString())
-            .lt("created_at", prevTo.toISOString());
-          if (opts.waitlistIds && opts.waitlistIds.length) q = q.in("waitlist_id", opts.waitlistIds);
-          return q.limit(5000);
-        })(),
       ]);
 
       const createdRows = (createdRowsRes.data ?? []) as CreatedRow[];
       const servedRows = (servedRowsRes.data ?? []) as ServedRow[];
-      const createdRowsPrev = (createdRowsPrevRes.data ?? []) as CreatedRow[];
-      const servedRowsPrev = (servedRowsPrevRes.data ?? []) as ServedRow[];
 
       // Total visitors
       const totalVisitors = createdRows.length;
@@ -277,18 +242,6 @@ export default function AnalyticsPage() {
       });
       const dailyVisitors = Array.from(dayCounts.entries()).map(([date, count]) => ({ date, count }));
 
-      const dayCountsPrev = new Map<string, number>();
-      for (let d = 0; d < daysCount; d++) {
-        const dt = new Date(prevTo.getTime() - (daysCount - 1 - d) * 86400000);
-        const key = dt.toISOString().slice(0, 10);
-        dayCountsPrev.set(key, 0);
-      }
-      createdRowsPrev.forEach((r) => {
-        const key = new Date(r.created_at).toISOString().slice(0, 10);
-        if (dayCountsPrev.has(key)) dayCountsPrev.set(key, (dayCountsPrev.get(key) || 0) + 1);
-      });
-      const dailyVisitorsPrev = Array.from(dayCountsPrev.entries()).map(([date, count]) => ({ date, count }));
-
       // Daily average (only meaningful when range > 1 day)
       const dailyAvg = (opts.mode === "today" || daysCount <= 1) ? totalVisitors : Math.round(totalVisitors / daysCount);
 
@@ -300,15 +253,6 @@ export default function AnalyticsPage() {
       });
       const avgHourlyVisits = Array.from({ length: 24 }).map((_, h) => ({ hour: h, avg: +(((hourlyTotals[h] || 0) / daysCount) as number).toFixed(2) }));
 
-      const hourlyTotalsPrev: Record<number, number> = {};
-      createdRowsPrev.forEach((r) => {
-        const h = new Date(r.created_at).getHours();
-        hourlyTotalsPrev[h] = (hourlyTotalsPrev[h] || 0) + 1;
-      });
-      const avgHourlyVisitsPrev = Array.from({ length: 24 }).map((_, h) => ({
-        hour: h,
-        avg: +(((hourlyTotalsPrev[h] || 0) / daysCount) as number).toFixed(2),
-      }));
 
       // Average visitors by day of week (0=Sun..6=Sat)
       const weekdayTotals: Record<number, number> = {};
@@ -366,45 +310,6 @@ export default function AnalyticsPage() {
         return { hour: h, avgMin };
       });
 
-      const hourWaitSumsPrev: Record<number, number> = {};
-      const hourWaitCountsPrev: Record<number, number> = {};
-      servedRowsPrev.forEach((r) => {
-        const created = new Date(r.created_at);
-        const notified = r.notified_at ? new Date(r.notified_at) : null;
-        if (!notified) return;
-        const diffMs = notified.getTime() - created.getTime();
-        if (diffMs <= 0 || diffMs > 24 * 60 * 60 * 1000) return;
-        const hour = created.getHours();
-        hourWaitSumsPrev[hour] = (hourWaitSumsPrev[hour] || 0) + diffMs;
-        hourWaitCountsPrev[hour] = (hourWaitCountsPrev[hour] || 0) + 1;
-      });
-      const avgWaitByHourPrev = Array.from({ length: 24 }).map((_, h) => {
-        const sum = hourWaitSumsPrev[h] || 0;
-        const cnt = hourWaitCountsPrev[h] || 0;
-        const avgMin = cnt ? Math.round(sum / cnt / 60000) : 0;
-        return { hour: h, avgMin };
-      });
-
-      const compareDailyVisitors = Array.from({ length: daysCount }).map((_, i) => {
-        const cur = dailyVisitors[i];
-        const prev = dailyVisitorsPrev[i];
-        return { label: cur?.date ?? String(i + 1), current: cur?.count ?? 0, previous: prev?.count ?? 0 };
-      });
-
-      const compareAvgHourlyVisits = Array.from({ length: 24 }).map((_, i) => {
-        const cur = avgHourlyVisits[i];
-        const prev = avgHourlyVisitsPrev[i];
-        const label = `${String(i).padStart(2, "0")}:00`;
-        return { label, current: cur?.avg ?? 0, previous: prev?.avg ?? 0 };
-      });
-
-      const compareAvgWaitByHour = Array.from({ length: 24 }).map((_, i) => {
-        const cur = avgWaitByHour[i];
-        const prev = avgWaitByHourPrev[i];
-        const label = `${String(i).padStart(2, "0")}:00`;
-        return { label, current: cur?.avgMin ?? 0, previous: prev?.avgMin ?? 0 };
-      });
-
       if (requestId !== requestIdRef.current) return;
 
       setAnalytics({
@@ -416,11 +321,6 @@ export default function AnalyticsPage() {
         avgWaitTimeMin,
         avgServiceTimeMin,
         avgWaitByHour,
-        compare: {
-          dailyVisitors: compareDailyVisitors,
-          avgHourlyVisits: compareAvgHourlyVisits,
-          avgWaitByHour: compareAvgWaitByHour,
-        },
       });
       hasLoadedRef.current = true;
 
@@ -611,19 +511,28 @@ export default function AnalyticsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <ChartBarInteractiveMetric
               title={isToday ? "Hourly visits" : "Average hourly visits"}
-              data={analytics.compare.avgHourlyVisits}
+              data={analytics.avgHourlyVisits.map((h) => ({
+                label: fmtHourLabel(h.hour),
+                value: h.avg,
+              }))}
               xTickFormatter={(v) => v}
               insight={insightHourlyVisits}
             />
             <ChartBarInteractiveMetric
               title="Average wait time by time of day"
-              data={analytics.compare.avgWaitByHour}
+              data={analytics.avgWaitByHour.map((h) => ({
+                label: fmtHourLabel(h.hour),
+                value: h.avgMin,
+              }))}
               xTickFormatter={(v) => v}
               insight={insightWaitByHour}
             />
             <ChartBarInteractiveMetric
               title={rangeMode === "today" ? "Daily visitors (today)" : `Daily visitors (last ${rangeMode} days)`}
-              data={analytics.compare.dailyVisitors}
+              data={analytics.dailyVisitors.map((d) => ({
+                label: d.date,
+                value: d.count,
+              }))}
               xTickFormatter={(v) => formatIfISODateLabel(v)}
               insight={insightDailyVisitors}
             />

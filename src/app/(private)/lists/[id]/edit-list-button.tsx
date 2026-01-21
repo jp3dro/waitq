@@ -35,6 +35,9 @@ export default function EditListButton({
   initialAskPhone = true,
   initialAskEmail = false,
   initialSeatingPreferences = [],
+  initialDisplayEnabled = true,
+  initialDisplayShowName = true,
+  initialDisplayShowQr = false,
   triggerId,
   hideTrigger = false,
   controlledOpen,
@@ -45,6 +48,9 @@ export default function EditListButton({
   initialLocationId?: string;
   locations: Location[];
   initialKioskEnabled?: boolean;
+  initialDisplayEnabled?: boolean;
+  initialDisplayShowName?: boolean;
+  initialDisplayShowQr?: boolean;
   initialAskName?: boolean;
   initialAskPhone?: boolean;
   initialAskEmail?: boolean;
@@ -58,6 +64,9 @@ export default function EditListButton({
   const [name, setName] = useState(initialName);
   const [locationId, setLocationId] = useState(initialLocationId || locations[0]?.id || "");
   const [kioskEnabled, setKioskEnabled] = useState<boolean>(initialKioskEnabled);
+  const [displayEnabled, setDisplayEnabled] = useState<boolean>(initialDisplayEnabled);
+  const [displayShowName, setDisplayShowName] = useState<boolean>(initialDisplayShowName);
+  const [displayShowQr, setDisplayShowQr] = useState<boolean>(initialDisplayShowQr);
   const [askName, setAskName] = useState<boolean>(initialAskName);
   const [askPhone, setAskPhone] = useState<boolean>(initialAskPhone);
   const [askEmail, setAskEmail] = useState<boolean>(initialAskEmail);
@@ -70,6 +79,22 @@ export default function EditListButton({
   const askPhoneId = `${baseId}-ask-phone`;
   const askEmailId = `${baseId}-ask-email`;
   const kioskEnabledId = `${baseId}-kiosk-enabled`;
+  const displayEnabledId = `${baseId}-display-enabled`;
+  const displayShowNameId = `${baseId}-display-show-name`;
+  const displayShowQrId = `${baseId}-display-show-qr`;
+
+  useEffect(() => {
+    if (!askName && displayShowName) {
+      setDisplayShowName(false);
+    }
+  }, [askName, displayShowName]);
+
+  useEffect(() => {
+    if (!displayEnabled && (displayShowName || displayShowQr)) {
+      setDisplayShowName(false);
+      setDisplayShowQr(false);
+    }
+  }, [displayEnabled, displayShowName, displayShowQr]);
 
   // If parent controls open state, reset fields when opening
   useEffect(() => {
@@ -78,6 +103,9 @@ export default function EditListButton({
         setName(initialName);
         setLocationId(initialLocationId || locations[0]?.id || "");
         setKioskEnabled(initialKioskEnabled);
+        setDisplayEnabled(initialDisplayEnabled);
+        setDisplayShowName(initialDisplayShowName);
+        setDisplayShowQr(initialDisplayShowQr);
         setAskName(initialAskName);
         setAskPhone(initialAskPhone);
         setAskEmail(initialAskEmail);
@@ -85,7 +113,7 @@ export default function EditListButton({
         setMessage(null);
       }
     }
-  }, [controlledOpen, initialName, initialLocationId, initialKioskEnabled, initialAskName, initialAskPhone, initialAskEmail, initialSeatingPreferences, locations]);
+  }, [controlledOpen, initialName, initialLocationId, initialKioskEnabled, initialDisplayEnabled, initialDisplayShowName, initialDisplayShowQr, initialAskName, initialAskPhone, initialAskEmail, initialSeatingPreferences, locations]);
 
   const setOpen = (v: boolean) => {
     if (typeof controlledOpen === 'boolean' && onOpenChange) onOpenChange(v);
@@ -99,6 +127,9 @@ export default function EditListButton({
     setName(initialName);
     setLocationId(initialLocationId || locations[0]?.id || "");
     setKioskEnabled(initialKioskEnabled);
+    setDisplayEnabled(initialDisplayEnabled);
+    setDisplayShowName(initialDisplayShowName);
+    setDisplayShowQr(initialDisplayShowQr);
     setAskName(initialAskName);
     setAskPhone(initialAskPhone);
     setAskEmail(initialAskEmail);
@@ -111,6 +142,9 @@ export default function EditListButton({
     setName(initialName);
     setLocationId(initialLocationId || locations[0]?.id || "");
     setKioskEnabled(initialKioskEnabled);
+    setDisplayEnabled(initialDisplayEnabled);
+    setDisplayShowName(initialDisplayShowName);
+    setDisplayShowQr(initialDisplayShowQr);
     setAskName(initialAskName);
     setAskPhone(initialAskPhone);
     setAskEmail(initialAskEmail);
@@ -121,7 +155,7 @@ export default function EditListButton({
   const save = () => {
     setMessage(null);
     startTransition(async () => {
-      const payload: { id: string; name?: string; locationId?: string; kioskEnabled?: boolean; askName?: boolean; askPhone?: boolean; askEmail?: boolean; seatingPreferences?: string[] } = { id: waitlistId };
+      const payload: { id: string; name?: string; locationId?: string; kioskEnabled?: boolean; displayEnabled?: boolean; displayShowName?: boolean; displayShowQr?: boolean; askName?: boolean; askPhone?: boolean; askEmail?: boolean; seatingPreferences?: string[] } = { id: waitlistId };
 
       // Only include fields that have changed
       if (name !== initialName) {
@@ -131,12 +165,16 @@ export default function EditListButton({
         payload.locationId = locationId;
       }
       payload.kioskEnabled = kioskEnabled;
+      payload.displayEnabled = displayEnabled;
+      payload.displayShowName = displayEnabled ? displayShowName : false;
+      payload.displayShowQr = displayEnabled ? displayShowQr : false;
       payload.askName = askName;
       payload.askPhone = askPhone;
       payload.askEmail = askEmail;
 
       // Compare arrays for seating preferences
-      const sameSeating = JSON.stringify(seatingPrefs.sort()) === JSON.stringify((initialSeatingPreferences || []).sort());
+      const sameSeating =
+        JSON.stringify([...seatingPrefs].sort()) === JSON.stringify([...(initialSeatingPreferences || [])].sort());
       if (!sameSeating) {
         payload.seatingPreferences = seatingPrefs;
       }
@@ -274,6 +312,58 @@ export default function EditListButton({
                     </TooltipContent>
                   </Tooltip>
                 </div>
+              </div>
+
+              <div className="pt-2 grid gap-3">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Public display</h4>
+                <div className="flex items-center gap-3">
+                  <Switch id={displayEnabledId} checked={displayEnabled} onCheckedChange={setDisplayEnabled} />
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor={displayEnabledId}>Public display</Label>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        Enable the public queue display for this waitlist.
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                </div>
+
+                {displayEnabled && askName ? (
+                  <div className="flex items-center gap-3">
+                    <Switch id={displayShowNameId} checked={displayShowName} onCheckedChange={setDisplayShowName} />
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor={displayShowNameId}>Show name on display</Label>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">
+                          Show customer names on the public display.
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </div>
+                ) : null}
+
+                {displayEnabled ? (
+                  <div className="flex items-center gap-3">
+                    <Switch id={displayShowQrId} checked={displayShowQr} onCheckedChange={setDisplayShowQr} />
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor={displayShowQrId}>Show QR code on display</Label>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">
+                          Show a QR code on the public display for guests to scan and join.
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </div>
+                ) : null}
               </div>
 
               <div className="grid gap-2">
