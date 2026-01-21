@@ -224,7 +224,7 @@ export default function PrivateSidebarClient({ userName, userEmail, businessLogo
                             />
                         ) : null}
                         {isAdmin ? <NavItem href="/locations" icon={MapPin} label="Locations" /> : null}
-                        {isAdmin ? <NavItem href="/users" icon={Users2} label="Users" /> : null}
+                        {isAdmin ? <NavItem href="/users" icon={Users2} label="Staff users" /> : null}
                     </SidebarMenu>
                 </div>
             </SidebarContent>

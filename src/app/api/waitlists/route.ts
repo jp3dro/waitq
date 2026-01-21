@@ -3,6 +3,7 @@ import { createRouteClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { z } from "zod";
 import { getLocationOpenState, type RegularHours } from "@/lib/location-hours";
+import { broadcastRefresh } from "@/lib/realtime-broadcast";
 
 export async function GET() {
   const supabase = await createRouteClient();
@@ -272,6 +273,15 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "Public display settings are not available in this project. Add the display_* columns first." }, { status: 400 });
   }
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+  // Best-effort: notify any public displays for this waitlist so they refetch settings immediately.
+  try {
+    const token = (data as unknown as { display_token?: string | null }).display_token || null;
+    if (token) {
+      await broadcastRefresh(`display-bc-${token}`);
+    }
+  } catch { }
+
   return NextResponse.json({ waitlist: data });
 }
 

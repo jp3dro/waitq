@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata = { title: "Users" };
+export const metadata = { title: "Staff users" };
 
 export default async function UsersPage() {
   const supabase = await createClient();

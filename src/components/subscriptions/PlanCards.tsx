@@ -18,6 +18,8 @@ export default function PlanCards({ mode, currentPlanId, disabled, onFreeAction,
   const isManage = mode === "manage";
   const effectiveCurrentPlanId = isManage ? (currentPlanId ?? "free") : "free";
 
+  const pluralize = (n: number, singular: string, plural?: string) => (n === 1 ? singular : (plural ?? `${singular}s`));
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {orderedPlans.map((plan) => {
@@ -52,10 +54,20 @@ export default function PlanCards({ mode, currentPlanId, disabled, onFreeAction,
                 <p className="mt-2 text-sm text-muted-foreground">{plan.description}</p>
               </div>
               <ul className="text-sm text-foreground/80 space-y-1">
-                <li>{plan.limits.locations} locations</li>
-                <li>{plan.limits.users} users</li>
-                <li>{plan.limits.reservationsPerMonth} reservations/queues per month</li>
-                <li>{plan.limits.messagesPerMonth} SMS/emails per month</li>
+                <li>
+                  {plan.limits.locations} {pluralize(plan.limits.locations, "Location")}
+                </li>
+                <li>
+                  {plan.limits.users} {pluralize(plan.limits.users, "Staff user", "Staff users")}
+                </li>
+                <li>
+                  {plan.limits.reservationsPerMonth} reservations/queues{" "}
+                  {plan.id === "free" ? "total" : "per month"}
+                </li>
+                <li>
+                  {plan.limits.messagesPerMonth} SMS/emails{" "}
+                  {plan.id === "free" ? "total" : "per month"}
+                </li>
                 {plan.features.map((f, idx) => (
                   <li key={idx}>{f}</li>
                 ))}

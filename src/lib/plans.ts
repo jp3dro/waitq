@@ -41,10 +41,7 @@ export const plans: Record<PlanId, PlanDefinition> = {
       messagesPerMonth: 50,
     },
     features: [
-      "Digital Waitlist & Reservations",
-      "Public Status Page",
       "Today analytics only",
-      "Email Support",
     ],
     stripe: {
       productLookupKey: "waitq_free",
@@ -63,11 +60,7 @@ export const plans: Record<PlanId, PlanDefinition> = {
       messagesPerMonth: 1000,
     },
     features: [
-      "Customizable SMS Branding",
       "Advanced analytics up to 30 days",
-      "Detailed Statistics & CSV Export",
-      "Up to 5 Locations",
-      "Standard Support",
     ],
     stripe: {
       productId: process.env.NEXT_PUBLIC_STRIPE_PRODUCT_ID, // Auto-switches per environment
@@ -88,9 +81,6 @@ export const plans: Record<PlanId, PlanDefinition> = {
     },
     features: [
       "Advanced analytics up to 30 days",
-      "Priority Support",
-      "Unlimited Scale",
-      "Dedicated Account Manager",
     ],
     stripe: {
       productId: process.env.NEXT_PUBLIC_STRIPE_PRODUCT_ID, // Auto-switches per environment
@@ -181,7 +171,7 @@ export const pricingFeatures = [
   {
     category: "Communications",
     name: "SMS Notifications",
-    free: "50 / mo",
+    free: "50 total",
     base: "1,000 / mo",
     premium: "5,000 / mo",
   },
