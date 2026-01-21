@@ -124,24 +124,31 @@ export async function POST(req: NextRequest) {
   }
 
   // Resolve business_id for this user: owned first, then membership
+  let businessData: { vat_id_valid?: boolean | null; country_code?: string | null } | null = null;
   try {
     const { data: owned } = await supabase
       .from("businesses")
-      .select("id")
+      .select("id, vat_id_valid, country_code")
       .eq("owner_user_id", user.id)
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle();
     businessId = (owned?.id as string | undefined) || null;
+    businessData = owned ? { vat_id_valid: owned.vat_id_valid, country_code: owned.country_code } : null;
+
     if (!businessId) {
       const { data: memberOf } = await supabase
         .from("memberships")
-        .select("business_id")
+        .select("business_id, businesses!inner(vat_id_valid, country_code)")
         .eq("user_id", user.id)
         .order("created_at", { ascending: true })
         .limit(1)
         .maybeSingle();
       businessId = (memberOf?.business_id as string | undefined) || null;
+      businessData = memberOf?.businesses ? {
+        vat_id_valid: (memberOf.businesses as any).vat_id_valid,
+        country_code: (memberOf.businesses as any).country_code
+      } : null;
     }
   } catch { }
 
@@ -172,6 +179,18 @@ export async function POST(req: NextRequest) {
     } as Stripe.Checkout.SessionCreateParams.LineItem;
   } else {
     return NextResponse.json({ error: "Unable to resolve price" }, { status: 400 });
+  }
+
+  // Set tax exemption for EU businesses with valid VAT IDs
+  if (existingStripeCustomerId && businessData?.vat_id_valid === true) {
+    try {
+      await stripe.customers.update(existingStripeCustomerId, {
+        tax_exempt: 'reverse',
+      });
+    } catch (error) {
+      console.error('Failed to update customer tax exemption:', error);
+      // Continue with checkout even if tax update fails
+    }
   }
 
   const session = await stripe.checkout.sessions.create({

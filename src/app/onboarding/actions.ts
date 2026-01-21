@@ -128,6 +128,7 @@ export async function submitBusinessInfo(formData: FormData) {
 
     const businessName = (formData.get("businessName") as string | null)?.trim() || "";
     const country = (formData.get("country") as string | null)?.trim() || "";
+    const vatId = (formData.get("vatId") as string | null)?.trim() || "";
     if (businessName.length < 2) throw new Error("Business name must be at least 2 characters");
     if (!country) throw new Error("Please select a country");
 
@@ -137,6 +138,37 @@ export async function submitBusinessInfo(formData: FormData) {
         businessName,
         country,
     });
+
+    // Handle VAT data if provided
+    if (vatId) {
+        try {
+            const vatRes = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/vat/validate`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ countryCode: country, vatId }),
+            });
+            const vatData = await vatRes.json();
+
+            const updateData: Record<string, any> = {
+                vat_id: vatId,
+                vat_id_valid: vatData.valid,
+                vat_id_validated_at: new Date().toISOString(),
+            };
+
+            if (vatData.valid) {
+                updateData.vat_id_name = vatData.name;
+                updateData.vat_id_address = vatData.address;
+            }
+
+            await admin
+                .from("businesses")
+                .update(updateData)
+                .eq("id", businessId);
+        } catch (error) {
+            console.error("VAT validation failed:", error);
+            // Continue without VAT data rather than failing the whole process
+        }
+    }
 
     // Membership
     const { error: membershipErr } = await admin
@@ -151,7 +183,7 @@ export async function submitBusinessInfo(formData: FormData) {
     const { error: profileErr } = await supabase
         .from("profiles")
         .upsert(
-            { id: user.id, business_name: businessName, country, onboarding_step: 3 },
+            { id: user.id, business_name: businessName, country, vat_id: vatId || null, onboarding_step: 3 },
             { onConflict: "id" }
         );
     if (profileErr) throw profileErr;

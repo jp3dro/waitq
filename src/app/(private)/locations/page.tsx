@@ -826,7 +826,7 @@ export default function LocationsPage() {
             if (!open) closeEditModal();
           }}
         >
-          <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col">
+          <DialogContent className="sm:max-w-xl max-h-[90vh] flex flex-col">
             <DialogHeader>
               <DialogTitle>Edit location</DialogTitle>
             </DialogHeader>
