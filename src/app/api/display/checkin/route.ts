@@ -153,10 +153,14 @@ export async function POST(req: NextRequest) {
   }
 
   if (list.business_id) {
-    const { limits, window } = await getPlanContext(list.business_id);
-    const usedEntries = await countEntriesInPeriod(list.business_id, window.start, window.end);
-    if (usedEntries >= limits.reservationsPerMonth) {
-      return NextResponse.json({ error: "Monthly waitlist limit reached for your plan" }, { status: 403 });
+    const ctx = await getPlanContext(list.business_id);
+    const usedEntries = await countEntriesInPeriod(list.business_id, ctx.window.start, ctx.window.end);
+    if (usedEntries >= ctx.limits.reservationsPerMonth) {
+      const msg =
+        ctx.planId === "free"
+          ? "Waitlist limit reached for the free plan. Upgrade to add more people."
+          : "Monthly waitlist limit reached for your plan";
+      return NextResponse.json({ error: msg }, { status: 403 });
     }
   }
 

@@ -708,16 +708,22 @@ export default async function SubscriptionPage() {
           .eq("id", businessId)
           .maybeSingle();
         const ctx = await getPlanContext(businessId);
+        const memberCountPromise = (() => {
+          let q = admin
+            .from("memberships")
+            .select("id", { count: "exact", head: true })
+            .eq("business_id", businessId)
+            .eq("status", "active");
+          const ownerId = (bizOwner?.owner_user_id as string | undefined) || null;
+          if (ownerId) q = q.neq("user_id", ownerId);
+          return q.then((res) => res.count || 0);
+        })();
+
         const [usedLocations, usedReservations, usedSms, memberCount] = await Promise.all([
           countLocations(businessId),
           countEntriesInPeriod(businessId, ctx.window.start, ctx.window.end),
           countSmsInPeriod(businessId, ctx.window.start, ctx.window.end),
-          admin
-            .from("memberships")
-            .select("id", { count: "exact", head: true })
-            .eq("business_id", businessId)
-            .eq("status", "active")
-            .then((res) => res.count || 0),
+          memberCountPromise,
         ]);
         const usedUsers = (bizOwner?.owner_user_id ? 1 : 0) + memberCount;
         usageSummary = {
@@ -854,12 +860,14 @@ export default async function SubscriptionPage() {
                     </div>
                   );
                 })}
-                <div className="md:col-span-2">
-                  <div className="text-muted-foreground">Usage period</div>
-                  <div className="font-medium">
-                    {new Date(usageSummary.windowStart).toLocaleDateString()} - {new Date(usageSummary.windowEnd).toLocaleDateString()}
+                {currentPlanId !== "free" ? (
+                  <div className="md:col-span-2">
+                    <div className="text-muted-foreground">Usage period</div>
+                    <div className="font-medium">
+                      {new Date(usageSummary.windowStart).toLocaleDateString()} - {new Date(usageSummary.windowEnd).toLocaleDateString()}
+                    </div>
                   </div>
-                </div>
+                ) : null}
               </div>
             </div>
           ) : null}

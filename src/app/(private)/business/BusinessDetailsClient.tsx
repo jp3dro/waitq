@@ -22,6 +22,7 @@ type Business = {
   accent_color: string | null;
   background_color: string | null;
   country_code: string | null;
+  time_format?: string | null;
   vat_id?: string | null;
   website_url?: string | null;
   instagram_url?: string | null;
@@ -40,6 +41,7 @@ type Props = {
 type Baseline = {
   name: string;
   country_code: string;
+  time_format: "24h" | "12h";
   vat_id: string;
   website_url: string;
   instagram_url: string;
@@ -52,6 +54,7 @@ function toBaseline(biz: Business): Baseline {
   return {
     name: (biz.name || "").trim(),
     country_code: (biz.country_code || "PT").trim().toUpperCase(),
+    time_format: biz.time_format === "12h" ? "12h" : "24h",
     vat_id: ((biz.vat_id as string | null) || "").trim().toUpperCase(),
     website_url: (biz.website_url || "").trim(),
     instagram_url: (biz.instagram_url || "").trim(),
@@ -71,6 +74,7 @@ export default function BusinessDetailsClient({ initial, canEdit }: Props) {
 
   const [name, setName] = useState(baseline.name);
   const [countryCode, setCountryCode] = useState(baseline.country_code);
+  const [timeFormat, setTimeFormat] = useState<"24h" | "12h">(baseline.time_format);
   const [vatId, setVatId] = useState(baseline.vat_id);
   const [vatStatus, setVatStatus] = useState<null | { state: "idle" | "checking" | "valid" | "invalid" | "error"; detail?: string }>(
     null
@@ -86,6 +90,7 @@ export default function BusinessDetailsClient({ initial, canEdit }: Props) {
     const next: Baseline = {
       name: name.trim(),
       country_code: countryCode.trim().toUpperCase(),
+      time_format: timeFormat,
       vat_id: vatId.trim().toUpperCase(),
       website_url: websiteUrl.trim(),
       instagram_url: instagramUrl.trim(),
@@ -94,7 +99,7 @@ export default function BusinessDetailsClient({ initial, canEdit }: Props) {
       menu_url: menuUrl.trim(),
     };
     return JSON.stringify(next) !== JSON.stringify(baseline);
-  }, [baseline, countryCode, facebookUrl, googleMapsUrl, instagramUrl, menuUrl, name, vatId, websiteUrl]);
+  }, [baseline, countryCode, facebookUrl, googleMapsUrl, instagramUrl, menuUrl, name, timeFormat, vatId, websiteUrl]);
 
   const countryOptions = useMemo(() => {
     const codes = getCountries();
@@ -218,6 +223,8 @@ export default function BusinessDetailsClient({ initial, canEdit }: Props) {
       const cc = countryCode.trim().toUpperCase();
       if (cc !== baseline.country_code) payload.countryCode = cc;
 
+      if (timeFormat !== baseline.time_format) payload.timeFormat = timeFormat;
+
       const v = vatId.trim().toUpperCase();
       if (v !== baseline.vat_id) payload.vatId = v || null;
 
@@ -255,6 +262,7 @@ export default function BusinessDetailsClient({ initial, canEdit }: Props) {
           setBaseline(nextBaseline);
           setName(nextBaseline.name);
           setCountryCode(nextBaseline.country_code);
+          setTimeFormat(nextBaseline.time_format);
           setVatId(nextBaseline.vat_id);
           setWebsiteUrl(nextBaseline.website_url);
           setInstagramUrl(nextBaseline.instagram_url);
@@ -341,6 +349,22 @@ export default function BusinessDetailsClient({ initial, canEdit }: Props) {
               </SelectContent>
             </Select>
             <p className="text-sm text-muted-foreground">Used as the default region for phone number formatting.</p>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              Time format
+            </label>
+            <Select value={timeFormat} onValueChange={(v) => setTimeFormat(v as "24h" | "12h")} disabled={!canEdit}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select time format" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="24h">24-hour (e.g. 18:30)</SelectItem>
+                <SelectItem value="12h">12-hour (e.g. 6:30 PM)</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-sm text-muted-foreground">Controls how times are displayed and edited across WaitQ.</p>
           </div>
 
           {isEuCountry(countryCode) ? (

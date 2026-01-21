@@ -22,7 +22,7 @@ export default function CreateListButton() {
   const [isPending, startTransition] = useTransition();
   const [name, setName] = useState("");
   const [nameError, setNameError] = useState(false);
-  const [kioskEnabled, setKioskEnabled] = useState(false);
+  const [kioskEnabled, setKioskEnabled] = useState(true);
   const [askName, setAskName] = useState(true);
   const [askPhone, setAskPhone] = useState(true);
   const [askEmail, setAskEmail] = useState(false);
@@ -37,7 +37,7 @@ export default function CreateListButton() {
   const reset = () => {
     setName("");
     setNameError(false);
-    setKioskEnabled(false);
+    setKioskEnabled(true);
     setAskName(true);
     setAskPhone(true);
     setAskEmail(false);

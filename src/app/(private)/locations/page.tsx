@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/dialog";
 import UpgradeRequiredDialog from "@/components/upgrade-required-dialog";
 import type { PlanId } from "@/lib/plans";
+import { DEFAULT_REGULAR_HOURS, type DayKey, type RegularHours, type TimeRange } from "@/lib/location-hours";
+import { normalizeTimeFormat, type TimeFormat } from "@/lib/time-format";
 
 type Location = {
   id: string;
@@ -42,10 +44,6 @@ type LocationUpdatePayload = {
   regularHours?: RegularHours;
 };
 
-type DayKey = "sun" | "mon" | "tue" | "wed" | "thu" | "fri" | "sat";
-type TimeRange = { start: string; end: string };
-type RegularHours = Record<DayKey, TimeRange[]>;
-
 const dayOptions: { key: DayKey; label: string }[] = [
   { key: "sun", label: "Sun" },
   { key: "mon", label: "Mon" },
@@ -55,16 +53,6 @@ const dayOptions: { key: DayKey; label: string }[] = [
   { key: "fri", label: "Fri" },
   { key: "sat", label: "Sat" },
 ];
-
-const defaultRegularHours: RegularHours = {
-  sun: [{ start: "10:00", end: "23:00" }],
-  mon: [{ start: "10:00", end: "23:00" }],
-  tue: [{ start: "10:00", end: "23:00" }],
-  wed: [{ start: "10:00", end: "23:00" }],
-  thu: [{ start: "10:00", end: "23:00" }],
-  fri: [{ start: "10:00", end: "23:00" }],
-  sat: [{ start: "10:00", end: "23:00" }],
-};
 
 const parseTimeToMinutes = (value: string) => {
   const [h, m] = value.split(":").map((v) => Number(v));
@@ -112,16 +100,92 @@ const validateRegularHours = (hours: RegularHours) => {
   return errors;
 };
 
+function TimeField({
+  value,
+  onChange,
+  timeFormat,
+}: {
+  value: string;
+  onChange: (next: string) => void;
+  timeFormat: TimeFormat;
+}) {
+  if (timeFormat === "24h") {
+    return (
+      <Input
+        type="time"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-28"
+      />
+    );
+  }
+
+  const [hhRaw, mmRaw] = value.split(":");
+  const hh = Number(hhRaw);
+  const mm = Number(mmRaw);
+  const safeH = Number.isFinite(hh) ? Math.max(0, Math.min(23, hh)) : 0;
+  const safeM = Number.isFinite(mm) ? Math.max(0, Math.min(59, mm)) : 0;
+  const ampm: "AM" | "PM" = safeH >= 12 ? "PM" : "AM";
+  const hour12 = ((safeH + 11) % 12) + 1;
+
+  const toHHMM = (h12: number, m: number, mer: "AM" | "PM") => {
+    let h = h12 % 12;
+    if (mer === "PM") h += 12;
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+  };
+
+  const minuteOptions = Array.from({ length: 60 }).map((_, i) => String(i).padStart(2, "0"));
+  const hourOptions = Array.from({ length: 12 }).map((_, i) => String(i + 1));
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <select
+        className="h-9 w-[64px] rounded-md border border-input bg-background px-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        value={String(hour12)}
+        onChange={(e) => onChange(toHHMM(Number(e.target.value), safeM, ampm))}
+      >
+        {hourOptions.map((h) => (
+          <option key={h} value={h}>
+            {h}
+          </option>
+        ))}
+      </select>
+      <span className="text-sm text-muted-foreground">:</span>
+      <select
+        className="h-9 w-[64px] rounded-md border border-input bg-background px-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        value={String(safeM).padStart(2, "0")}
+        onChange={(e) => onChange(toHHMM(hour12, Number(e.target.value), ampm))}
+      >
+        {minuteOptions.map((m) => (
+          <option key={m} value={m}>
+            {m}
+          </option>
+        ))}
+      </select>
+      <select
+        className="h-9 w-[72px] rounded-md border border-input bg-background px-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        value={ampm}
+        onChange={(e) => onChange(toHHMM(hour12, safeM, e.target.value as "AM" | "PM"))}
+      >
+        <option value="AM">AM</option>
+        <option value="PM">PM</option>
+      </select>
+    </div>
+  );
+}
+
 function RegularHoursEditor({
   hours,
   onChange,
   errors,
   setErrors,
+  timeFormat,
 }: {
   hours: RegularHours;
   onChange: (next: RegularHours) => void;
   errors: Record<DayKey, string | null>;
   setErrors: (next: Record<DayKey, string | null>) => void;
+  timeFormat: TimeFormat;
 }) {
   return (
     <div className="space-y-3 pb-3">
@@ -138,7 +202,7 @@ function RegularHoursEditor({
                   checked={isOpen}
                   onCheckedChange={(checked) => {
                     const next: RegularHours = { ...hours };
-                    next[day.key] = checked ? [{ start: "10:00", end: "23:00" }] : [];
+                    next[day.key] = checked ? [...DEFAULT_REGULAR_HOURS[day.key]] : [];
                     onChange(next);
                     setErrors(validateRegularHours(next));
                   }}
@@ -150,32 +214,30 @@ function RegularHoursEditor({
                     <div className="flex flex-col gap-2">
                       {ranges.map((range, idx) => (
                         <div key={`${day.key}-${idx}`} className="flex items-start gap-2 py-1">
-                          <Input
-                            type="time"
+                          <TimeField
                             value={range.start}
-                            onChange={(e) => {
+                            timeFormat={timeFormat}
+                            onChange={(v) => {
                               const next: RegularHours = { ...hours };
                               const dayRanges = [...(next[day.key] || [])];
-                              dayRanges[idx] = { ...dayRanges[idx], start: e.target.value };
+                              dayRanges[idx] = { ...dayRanges[idx], start: v };
                               next[day.key] = dayRanges;
                               onChange(next);
                               setErrors(validateRegularHours(next));
                             }}
-                            className="w-28"
                           />
                           <span className="text-sm text-muted-foreground mt-2">-</span>
-                          <Input
-                            type="time"
+                          <TimeField
                             value={range.end}
-                            onChange={(e) => {
+                            timeFormat={timeFormat}
+                            onChange={(v) => {
                               const next: RegularHours = { ...hours };
                               const dayRanges = [...(next[day.key] || [])];
-                              dayRanges[idx] = { ...dayRanges[idx], end: e.target.value };
+                              dayRanges[idx] = { ...dayRanges[idx], end: v };
                               next[day.key] = dayRanges;
                               onChange(next);
                               setErrors(validateRegularHours(next));
                             }}
-                            className="w-28"
                           />
                           <Button
                             type="button"
@@ -246,8 +308,8 @@ export default function LocationsPage() {
     timezone: "",
     countryCode: "",
   });
-  const [formRegularHours, setFormRegularHours] = useState<RegularHours>(defaultRegularHours);
-  const [formHoursErrors, setFormHoursErrors] = useState<Record<DayKey, string | null>>(validateRegularHours(defaultRegularHours));
+  const [formRegularHours, setFormRegularHours] = useState<RegularHours>(DEFAULT_REGULAR_HOURS);
+  const [formHoursErrors, setFormHoursErrors] = useState<Record<DayKey, string | null>>(validateRegularHours(DEFAULT_REGULAR_HOURS));
   const [openCreate, setOpenCreate] = useState(false);
   const [edit, setEdit] = useState<Location | null>(null);
   const [editForm, setEditForm] = useState<{ name: string; phone: string; address: string; city: string; seatingCapacity: string; timezone: string; countryCode: string }>({
@@ -259,11 +321,12 @@ export default function LocationsPage() {
     timezone: "",
     countryCode: "",
   });
-  const [editRegularHours, setEditRegularHours] = useState<RegularHours>(defaultRegularHours);
-  const [initialRegularHours, setInitialRegularHours] = useState<RegularHours>(defaultRegularHours);
-  const [hoursErrors, setHoursErrors] = useState<Record<DayKey, string | null>>(validateRegularHours(defaultRegularHours));
+  const [editRegularHours, setEditRegularHours] = useState<RegularHours>(DEFAULT_REGULAR_HOURS);
+  const [initialRegularHours, setInitialRegularHours] = useState<RegularHours>(DEFAULT_REGULAR_HOURS);
+  const [hoursErrors, setHoursErrors] = useState<Record<DayKey, string | null>>(validateRegularHours(DEFAULT_REGULAR_HOURS));
   const [editMessage, setEditMessage] = useState<string | null>(null);
   const [businessCountry, setBusinessCountry] = useState<Country>("PT");
+  const [timeFormat, setTimeFormat] = useState<TimeFormat>("24h");
 
   async function load() {
     const res = await fetch("/api/locations", { cache: "no-store" });
@@ -280,6 +343,9 @@ export default function LocationsPage() {
     const bJ = await bRes.json();
     if (bJ.business?.country_code) {
       setBusinessCountry(bJ.business.country_code as Country);
+    }
+    if (typeof bJ.business?.time_format === "string") {
+      setTimeFormat(normalizeTimeFormat(bJ.business.time_format));
     }
 
     const pRes = await fetch("/api/plan", { cache: "no-store" });
@@ -343,8 +409,8 @@ export default function LocationsPage() {
       if (prev.countryCode === nextCountry && prev.timezone === nextTimezone) return prev;
       return { ...prev, countryCode: nextCountry, timezone: nextTimezone };
     });
-    setFormRegularHours(defaultRegularHours);
-    setFormHoursErrors(validateRegularHours(defaultRegularHours));
+    setFormRegularHours(DEFAULT_REGULAR_HOURS);
+    setFormHoursErrors(validateRegularHours(DEFAULT_REGULAR_HOURS));
   }, [openCreate, businessCountry, resolveTimezone]);
 
   const canDelete = useMemo(() => locations.length > 1, [locations.length]);
@@ -412,8 +478,8 @@ export default function LocationsPage() {
       const j = await res.json().catch(() => ({}));
       if (res.ok) {
         setForm({ name: "", phone: "", address: "", city: "", seatingCapacity: "", timezone: "", countryCode: "" });
-        setFormRegularHours(defaultRegularHours);
-        setFormHoursErrors(validateRegularHours(defaultRegularHours));
+        setFormRegularHours(DEFAULT_REGULAR_HOURS);
+        setFormHoursErrors(validateRegularHours(DEFAULT_REGULAR_HOURS));
         setOpenCreate(false);
         await load();
       } else {
@@ -442,7 +508,7 @@ export default function LocationsPage() {
       timezone: resolveTimezone(countryCode, location.timezone || defaultTimezone),
       countryCode,
     });
-    const baseHours = location.regular_hours || defaultRegularHours;
+    const baseHours = location.regular_hours || DEFAULT_REGULAR_HOURS;
     setEditRegularHours(baseHours);
     setInitialRegularHours(baseHours);
     setHoursErrors(validateRegularHours(baseHours));
@@ -452,9 +518,9 @@ export default function LocationsPage() {
   const closeEditModal = () => {
     setEdit(null);
     setEditForm({ name: "", phone: "", address: "", city: "", seatingCapacity: "", timezone: "", countryCode: "" });
-    setEditRegularHours(defaultRegularHours);
-    setInitialRegularHours(defaultRegularHours);
-    setHoursErrors(validateRegularHours(defaultRegularHours));
+    setEditRegularHours(DEFAULT_REGULAR_HOURS);
+    setInitialRegularHours(DEFAULT_REGULAR_HOURS);
+    setHoursErrors(validateRegularHours(DEFAULT_REGULAR_HOURS));
     setEditMessage(null);
     setEditNameError(null);
     setEditSeatingError(null);
@@ -730,6 +796,7 @@ export default function LocationsPage() {
                 onChange={setFormRegularHours}
                 errors={formHoursErrors}
                 setErrors={setFormHoursErrors}
+                timeFormat={timeFormat}
               />
             </div>
             <DialogFooter>
@@ -859,6 +926,7 @@ export default function LocationsPage() {
                 onChange={setEditRegularHours}
                 errors={hoursErrors}
                 setErrors={setHoursErrors}
+                timeFormat={timeFormat}
               />
             </div>
             <DialogFooter>

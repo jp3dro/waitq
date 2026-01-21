@@ -45,14 +45,14 @@ export default async function BusinessPage() {
     ? await supabase
         .from("businesses")
         .select(
-          "id, name, logo_url, cover_url, accent_color, background_color, country_code, owner_user_id, created_at, website_url, instagram_url, facebook_url, google_maps_url, menu_url"
+          "id, name, logo_url, cover_url, accent_color, background_color, country_code, time_format, owner_user_id, created_at, website_url, instagram_url, facebook_url, google_maps_url, menu_url"
         )
         .eq("id", businessId)
         .maybeSingle()
     : await supabase
         .from("businesses")
         .select(
-          "id, name, logo_url, cover_url, accent_color, background_color, country_code, owner_user_id, created_at, website_url, instagram_url, facebook_url, google_maps_url, menu_url"
+          "id, name, logo_url, cover_url, accent_color, background_color, country_code, time_format, owner_user_id, created_at, website_url, instagram_url, facebook_url, google_maps_url, menu_url"
         )
         .order("created_at", { ascending: true })
         .limit(1)
@@ -66,6 +66,7 @@ export default async function BusinessPage() {
     accent_color: string | null;
     background_color: string | null;
     country_code: string | null;
+    time_format?: string | null;
     owner_user_id: string | null;
     created_at: string;
     website_url?: string | null;

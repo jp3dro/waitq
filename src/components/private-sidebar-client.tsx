@@ -55,8 +55,6 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Badge } from "@/components/ui/badge";
-import type { PlanId } from "@/lib/plans";
 
 type Props = {
     userName: string | null;
@@ -64,7 +62,6 @@ type Props = {
     businessLogoUrl: string | null;
     role?: string;
     lists: { id: string; name: string }[];
-    planId?: PlanId;
 };
 
 function NavItem({
@@ -141,7 +138,7 @@ function ExternalNavItem({
     );
 }
 
-export default function PrivateSidebarClient({ userName, userEmail, businessLogoUrl, role, lists, planId }: Props) {
+export default function PrivateSidebarClient({ userName, userEmail, businessLogoUrl, role, lists }: Props) {
     const { setTheme } = useTheme();
     const router = useRouter();
     const canSeeAnalytics = role === "admin" || role === "manager";
@@ -165,15 +162,6 @@ export default function PrivateSidebarClient({ userName, userEmail, businessLogo
         if (userEmail) return userEmail.slice(0, 2).toUpperCase();
         return "??";
     })();
-
-    const planBadge = planId ? (
-        <Badge
-            variant="outline"
-            className="text-[10px] px-1.5 py-0.5 bg-muted/30 text-muted-foreground border-border/70"
-        >
-            {planId.toUpperCase()}
-        </Badge>
-    ) : null;
 
     return (
         <Sidebar variant="floating" collapsible="none" className="border-0">
@@ -233,7 +221,6 @@ export default function PrivateSidebarClient({ userName, userEmail, businessLogo
                                 href="/subscriptions"
                                 icon={CreditCard}
                                 label="Subscription"
-                                rightSlot={planBadge}
                             />
                         ) : null}
                         {isAdmin ? <NavItem href="/locations" icon={MapPin} label="Locations" /> : null}

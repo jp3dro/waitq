@@ -8,6 +8,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { dateToClockLabel, hourToLabel, normalizeTimeFormat, type TimeFormat } from "@/lib/time-format";
 
 type CreatedRow = { created_at: string };
 type ServedRow = { created_at: string; notified_at: string | null; waitlist_id: string | null };
@@ -159,10 +160,6 @@ function startOfLocalDay(d: Date) {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
 }
 
-function fmtHourLabel(hour: number) {
-  return `${String(hour).padStart(2, "0")}:00`;
-}
-
 function maxBy<T>(arr: T[], get: (v: T) => number) {
   let best: T | null = null;
   let bestVal = -Infinity;
@@ -177,6 +174,7 @@ function maxBy<T>(arr: T[], get: (v: T) => number) {
 }
 
 export default function AnalyticsPage() {
+  const [timeFormat, setTimeFormat] = React.useState<TimeFormat>("24h");
   const [analytics, setAnalytics] = React.useState<AnalyticsData | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
@@ -335,6 +333,17 @@ export default function AnalyticsPage() {
   }, [supabase]);
 
   React.useEffect(() => {
+    // Load time format preference (best-effort)
+    (async () => {
+      try {
+        const res = await fetch("/api/business", { cache: "no-store" });
+        const j = await res.json().catch(() => ({}));
+        if (res.ok && typeof j?.business?.time_format === "string") {
+          setTimeFormat(normalizeTimeFormat(j.business.time_format));
+        }
+      } catch { }
+    })();
+
     // Load filter options (client-side, RLS-scoped)
     (async () => {
       try {
@@ -401,8 +410,8 @@ export default function AnalyticsPage() {
   const insightHourlyVisits =
     busiestHour && busiestHour.avg > 0
       ? (isToday
-        ? `Peak hour: ${fmtHourLabel(busiestHour.hour)} (${busiestHour.avg} visits)`
-        : `Peak hour: ${fmtHourLabel(busiestHour.hour)} (avg ${busiestHour.avg} visits/day)`)
+        ? `Peak hour: ${hourToLabel(busiestHour.hour, timeFormat)} (${busiestHour.avg} visits)`
+        : `Peak hour: ${hourToLabel(busiestHour.hour, timeFormat)} (avg ${busiestHour.avg} visits/day)`)
       : "No visits recorded in this period.";
   const insightWeekday =
     busiestWeekday && busiestWeekday.avg > 0
@@ -410,7 +419,7 @@ export default function AnalyticsPage() {
       : "No weekday pattern available for this period.";
   const insightWaitByHour =
     worstWaitHour && worstWaitHour.avgMin > 0
-      ? `Highest average wait: ${fmtHourLabel(worstWaitHour.hour)} (${worstWaitHour.avgMin}m)`
+      ? `Highest average wait: ${hourToLabel(worstWaitHour.hour, timeFormat)} (${worstWaitHour.avgMin}m)`
       : "No wait-time data available for this period.";
   const insightDailyVisitors =
     busiestDay && busiestDay.count > 0 && busiestDayLabel
@@ -492,7 +501,7 @@ export default function AnalyticsPage() {
             ) : (
               <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-3">
                 <p className="text-xs text-muted-foreground">Today (so far)</p>
-                <p className="mt-0.5 text-lg font-semibold">{new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}</p>
+                <p className="mt-0.5 text-lg font-semibold">{dateToClockLabel(new Date(), timeFormat)}</p>
               </div>
             )}
             <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-3">
@@ -512,7 +521,7 @@ export default function AnalyticsPage() {
             <ChartBarInteractiveMetric
               title={isToday ? "Hourly visits" : "Average hourly visits"}
               data={analytics.avgHourlyVisits.map((h) => ({
-                label: fmtHourLabel(h.hour),
+                label: hourToLabel(h.hour, timeFormat),
                 value: h.avg,
               }))}
               xTickFormatter={(v) => v}
@@ -521,7 +530,7 @@ export default function AnalyticsPage() {
             <ChartBarInteractiveMetric
               title="Average wait time by time of day"
               data={analytics.avgWaitByHour.map((h) => ({
-                label: fmtHourLabel(h.hour),
+                label: hourToLabel(h.hour, timeFormat),
                 value: h.avgMin,
               }))}
               xTickFormatter={(v) => v}

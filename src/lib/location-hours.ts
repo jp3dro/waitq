@@ -2,6 +2,16 @@ export type DayKey = "sun" | "mon" | "tue" | "wed" | "thu" | "fri" | "sat";
 export type TimeRange = { start: string; end: string };
 export type RegularHours = Record<DayKey, TimeRange[]>;
 
+export const DEFAULT_REGULAR_HOURS: RegularHours = {
+  sun: [{ start: "00:00", end: "23:59" }],
+  mon: [{ start: "00:00", end: "23:59" }],
+  tue: [{ start: "00:00", end: "23:59" }],
+  wed: [{ start: "00:00", end: "23:59" }],
+  thu: [{ start: "00:00", end: "23:59" }],
+  fri: [{ start: "00:00", end: "23:59" }],
+  sat: [{ start: "00:00", end: "23:59" }],
+};
+
 export type LocationOpenState = {
   isOpen: boolean;
   reason: string | null;
@@ -24,6 +34,8 @@ const WEEKDAY_MAP: Record<string, DayKey> = {
 };
 
 function parseTimeToMinutes(value: string) {
+  // Allow "24:00" as an alias for end-of-day.
+  if (value === "24:00") return 24 * 60;
   const [h, m] = value.split(":").map((v) => Number(v));
   if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
   if (h < 0 || h > 23 || m < 0 || m > 59) return null;
@@ -62,7 +74,8 @@ export function getLocationOpenState(opts: {
   const timezone = (opts.timezone || "UTC").trim() || "UTC";
   const now = opts.now ?? new Date();
   const { weekday, minutesSinceMidnight, timeLabel } = getZonedParts(now, timezone);
-  const hours = opts.regularHours || null;
+  // If hours are missing, assume the defaults (open all day).
+  const hours = opts.regularHours ?? DEFAULT_REGULAR_HOURS;
 
   const emptyState: LocationOpenState = {
     isOpen: false,
@@ -70,14 +83,15 @@ export function getLocationOpenState(opts: {
     local: { timezone, weekday, minutesSinceMidnight, timeLabel },
   };
 
-  if (!hours) return emptyState;
   const ranges = Array.isArray(hours[weekday]) ? hours[weekday] : [];
   if (!ranges.length) return emptyState;
 
   for (const r of ranges) {
     const start = parseTimeToMinutes(r.start);
-    const end = parseTimeToMinutes(r.end);
+    let end = parseTimeToMinutes(r.end);
     if (start === null || end === null) continue;
+    // Treat "23:59" as inclusive end-of-day (i.e. up to 24:00) so "00:00-23:59" is always-open.
+    if (end === 23 * 60 + 59) end = 24 * 60;
     if (start <= minutesSinceMidnight && minutesSinceMidnight < end) {
       return {
         isOpen: true,

@@ -2,16 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createRouteClient } from "@/lib/supabase/server";
 import { countLocations, getPlanContext } from "@/lib/plan-limits";
-
-const defaultRegularHours = {
-  sun: [{ start: "10:00", end: "23:00" }],
-  mon: [{ start: "10:00", end: "23:00" }],
-  tue: [{ start: "10:00", end: "23:00" }],
-  wed: [{ start: "10:00", end: "23:00" }],
-  thu: [{ start: "10:00", end: "23:00" }],
-  fri: [{ start: "10:00", end: "23:00" }],
-  sat: [{ start: "10:00", end: "23:00" }],
-} as const;
+import { DEFAULT_REGULAR_HOURS } from "@/lib/location-hours";
 
 function isMissingColumnError(errMsg: string, column: string) {
   const m = errMsg.toLowerCase();
@@ -121,7 +112,7 @@ export async function POST(req: NextRequest) {
     address: address || null,
     city: city || null,
     seating_capacity: typeof seatingCapacity === "number" ? seatingCapacity : null,
-    regular_hours: regularHours || defaultRegularHours,
+    regular_hours: regularHours || DEFAULT_REGULAR_HOURS,
     timezone: timezone || "UTC",
   } as Record<string, unknown>;
 

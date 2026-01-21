@@ -49,7 +49,7 @@ export async function GET() {
   const { data, error } = await admin
     .from("businesses")
     .select(
-      "id, name, logo_url, accent_color, background_color, country_code, vat_id, owner_user_id, created_at, website_url, instagram_url, facebook_url, google_maps_url, menu_url"
+      "id, name, logo_url, accent_color, background_color, country_code, vat_id, time_format, owner_user_id, created_at, website_url, instagram_url, facebook_url, google_maps_url, menu_url"
     )
     .eq("id", resolved.businessId)
     .maybeSingle();
@@ -76,6 +76,7 @@ const patchSchema = z
     name: z.string().min(1).optional(),
     countryCode: z.string().regex(/^[A-Z]{2}$/, { message: "countryCode must be a 2-letter ISO code (e.g. PT)" }).optional(),
     vatId: z.string().optional().nullable(),
+    timeFormat: z.enum(["12h", "24h"]).optional(),
     logoUrl: z.string().url().optional().nullable(),
     accentColor: z.string().regex(/^#([0-9a-fA-F]{6})$/, { message: "accentColor must be a HEX color (#RRGGBB)" }).optional(),
     backgroundColor: z
@@ -116,6 +117,7 @@ export async function PATCH(req: NextRequest) {
   if (typeof parse.data.name !== "undefined") fields.name = parse.data.name;
   if (typeof parse.data.countryCode !== "undefined") fields.country_code = parse.data.countryCode;
   if (typeof parse.data.vatId !== "undefined") fields.vat_id = asNullIfEmpty(parse.data.vatId);
+  if (typeof parse.data.timeFormat !== "undefined") fields.time_format = parse.data.timeFormat;
   if (typeof parse.data.logoUrl !== "undefined") fields.logo_url = parse.data.logoUrl;
   if (typeof parse.data.accentColor !== "undefined") fields.accent_color = parse.data.accentColor;
   if (typeof parse.data.backgroundColor !== "undefined") fields.background_color = parse.data.backgroundColor;
@@ -133,7 +135,7 @@ export async function PATCH(req: NextRequest) {
     .update(fields)
     .eq("id", resolved.businessId)
     .select(
-      "id, name, logo_url, accent_color, background_color, country_code, vat_id, owner_user_id, created_at, website_url, instagram_url, facebook_url, google_maps_url, menu_url"
+      "id, name, logo_url, accent_color, background_color, country_code, vat_id, time_format, owner_user_id, created_at, website_url, instagram_url, facebook_url, google_maps_url, menu_url"
     )
     .single();
 

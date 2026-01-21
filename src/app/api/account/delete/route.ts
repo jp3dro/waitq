@@ -34,8 +34,12 @@ export async function POST() {
       .or(`user_id.eq.${user.id}${ownedBusinessIds.length ? `,business_id.in.(${ownedBusinessIds.join(",")})` : ""}`)
       .limit(50);
     const rows = (subsRows || []) as { stripe_customer_id?: string | null; stripe_subscription_id?: string | null }[];
-    const subIds = Array.from(new Set(rows.map((r) => r.stripe_subscription_id).filter((v): v is string => typeof v === "string" && v.length)));
-    const custIds = Array.from(new Set(rows.map((r) => r.stripe_customer_id).filter((v): v is string => typeof v === "string" && v.length)));
+    const subIds = Array.from(
+      new Set(rows.map((r) => r.stripe_subscription_id).filter((v): v is string => typeof v === "string" && v.length > 0))
+    );
+    const custIds = Array.from(
+      new Set(rows.map((r) => r.stripe_customer_id).filter((v): v is string => typeof v === "string" && v.length > 0))
+    );
     for (const subId of subIds) {
       try {
         await stripe.subscriptions.cancel(subId, { prorate: false });

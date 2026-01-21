@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useId, useState, useTransition } from "react";
+import { useCallback, useEffect, useId, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Info } from "lucide-react";
 import {
@@ -25,6 +25,8 @@ import { toastManager } from "@/hooks/use-toast";
 
 type Location = { id: string; name: string };
 
+const EMPTY_SEATING: string[] = [];
+
 export default function EditListButton({
   waitlistId,
   initialName,
@@ -34,7 +36,7 @@ export default function EditListButton({
   initialAskName = true,
   initialAskPhone = true,
   initialAskEmail = false,
-  initialSeatingPreferences = [],
+  initialSeatingPreferences,
   initialDisplayEnabled = true,
   initialDisplayShowName = true,
   initialDisplayShowQr = false,
@@ -54,7 +56,7 @@ export default function EditListButton({
   initialAskName?: boolean;
   initialAskPhone?: boolean;
   initialAskEmail?: boolean;
-  initialSeatingPreferences?: string[];
+  initialSeatingPreferences?: string[] | null;
   triggerId?: string;
   hideTrigger?: boolean;
   controlledOpen?: boolean;
@@ -70,7 +72,7 @@ export default function EditListButton({
   const [askName, setAskName] = useState<boolean>(initialAskName);
   const [askPhone, setAskPhone] = useState<boolean>(initialAskPhone);
   const [askEmail, setAskEmail] = useState<boolean>(initialAskEmail);
-  const [seatingPrefs, setSeatingPrefs] = useState<string[]>(initialSeatingPreferences || []);
+  const [seatingPrefs, setSeatingPrefs] = useState<string[]>(initialSeatingPreferences ?? EMPTY_SEATING);
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const router = useRouter();
@@ -109,18 +111,22 @@ export default function EditListButton({
         setAskName(initialAskName);
         setAskPhone(initialAskPhone);
         setAskEmail(initialAskEmail);
-        setSeatingPrefs(initialSeatingPreferences || []);
+        setSeatingPrefs(initialSeatingPreferences ?? EMPTY_SEATING);
         setMessage(null);
       }
     }
   }, [controlledOpen, initialName, initialLocationId, initialKioskEnabled, initialDisplayEnabled, initialDisplayShowName, initialDisplayShowQr, initialAskName, initialAskPhone, initialAskEmail, initialSeatingPreferences, locations]);
 
-  const setOpen = (v: boolean) => {
-    if (typeof controlledOpen === 'boolean' && onOpenChange) onOpenChange(v);
-    else setInternalOpen(v);
-  };
-
-  const getOpen = () => (typeof controlledOpen === 'boolean' ? controlledOpen : internalOpen);
+  const open = typeof controlledOpen === "boolean" ? controlledOpen : internalOpen;
+  // Radix Dialog may re-run effects when `onOpenChange` identity changes.
+  // Keep this handler stable across internal state updates to avoid update loops.
+  const setOpen = useCallback(
+    (v: boolean) => {
+      if (typeof controlledOpen === "boolean") onOpenChange?.(v);
+      else setInternalOpen(v);
+    },
+    [controlledOpen, onOpenChange]
+  );
 
   const openModal = () => {
     setOpen(true);
@@ -133,7 +139,7 @@ export default function EditListButton({
     setAskName(initialAskName);
     setAskPhone(initialAskPhone);
     setAskEmail(initialAskEmail);
-    setSeatingPrefs(initialSeatingPreferences || []);
+    setSeatingPrefs(initialSeatingPreferences ?? EMPTY_SEATING);
     setMessage(null);
   };
 
@@ -148,7 +154,7 @@ export default function EditListButton({
     setAskName(initialAskName);
     setAskPhone(initialAskPhone);
     setAskEmail(initialAskEmail);
-    setSeatingPrefs(initialSeatingPreferences || []);
+    setSeatingPrefs(initialSeatingPreferences ?? EMPTY_SEATING);
     setMessage(null);
   };
 
@@ -227,7 +233,7 @@ export default function EditListButton({
         Edit
       </Button>
 
-      <Dialog open={getOpen()} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Edit list</DialogTitle>

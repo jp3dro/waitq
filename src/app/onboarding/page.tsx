@@ -4,6 +4,7 @@ import OnboardingWizard from "./wizard";
 import { syncSubscriptionForUser } from "@/lib/subscription-sync";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { getStripe } from "@/lib/stripe";
+import { headers } from "next/headers";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -31,24 +32,8 @@ export default async function OnboardingPage({
         .eq("id", user.id)
         .maybeSingle();
 
-    const { data: ownedBusiness } = await supabase
-        .from("businesses")
-        .select("id")
-        .eq("owner_user_id", user.id)
-        .limit(1)
-        .maybeSingle();
-    const { data: activeMembership } = await supabase
-        .from("memberships")
-        .select("id, status")
-        .eq("user_id", user.id)
-        .eq("status", "active")
-        .limit(1)
-        .maybeSingle();
-    if (ownedBusiness?.id || activeMembership?.id) {
-        const admin = getAdminClient();
-        await admin
-            .from("profiles")
-            .upsert({ id: user.id, onboarding_completed: true, onboarding_step: 3 }, { onConflict: "id" });
+    // If onboarding is already completed, skip.
+    if (profile?.onboarding_completed) {
         redirect("/dashboard");
     }
 
@@ -98,7 +83,7 @@ export default async function OnboardingPage({
             const admin = getAdminClient();
             await admin
                 .from("profiles")
-                .upsert({ id: user.id, onboarding_completed: true, onboarding_step: 3 }, { onConflict: "id" });
+                .upsert({ id: user.id, onboarding_completed: true, onboarding_step: 5 }, { onConflict: "id" });
             // redirect() throws NEXT_REDIRECT which is expected Next.js behavior - don't catch it
             redirect("/dashboard");
         }
@@ -139,18 +124,44 @@ export default async function OnboardingPage({
         }
     }
 
+    const clampStep = (s: unknown) => {
+        const n = typeof s === "number" && isFinite(s) ? s : 1;
+        return Math.max(1, Math.min(5, Math.round(n)));
+    };
     const hasSetupData = !!businessId && !!location?.id && !!listName.trim();
+    const inferredStep = (() => {
+        // Prefer persisted step, but if data exists, ensure the user lands at least on plan selection.
+        const persisted = clampStep(profile?.onboarding_step);
+        if (hasSetupData) return Math.max(persisted, 5);
+        return persisted;
+    })();
+
+    // Best-effort country prefill from geo headers (Vercel / Cloudflare / generic proxies).
+    const h = await headers();
+    const inferredCountry = (() => {
+        const raw =
+            h.get("x-vercel-ip-country") ||
+            h.get("cf-ipcountry") ||
+            h.get("x-country-code") ||
+            h.get("x-geo-country") ||
+            null;
+        if (!raw) return null;
+        const c = raw.trim().toUpperCase();
+        if (c.length !== 2) return null;
+        if (c === "XX") return null;
+        return c;
+    })();
 
     const initialData = {
         name: user.user_metadata?.full_name || "",
         businessName: business?.name || profile?.business_name || "",
-        country: business?.country_code || profile?.country || "US",
+        country: business?.country_code || profile?.country || inferredCountry || "US",
         locationName: location?.name || profile?.location_name || "",
         phone: business?.phone || profile?.phone || "",
         listName: listName,
     };
 
     return (
-        <OnboardingWizard initialStep={hasSetupData ? (profile?.onboarding_step || 1) : 1} initialData={initialData} />
+        <OnboardingWizard initialStep={inferredStep} initialData={initialData} />
     );
 }

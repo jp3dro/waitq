@@ -2,13 +2,13 @@
 
 import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { submitSetup, completeOnboarding } from "./actions";
+import { submitUserInfo, submitBusinessInfo, submitLocationInfo, submitWaitlistInfo, completeOnboarding } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PhoneInput } from "@/components/ui/phone-input";
@@ -19,32 +19,48 @@ import { isRedirectError } from "next/dist/client/components/redirect-error";
 
 type CountryOption = { code: Country; name: string };
 
-const setupSchema = z.object({
+const userInfoSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters"),
+});
+const businessInfoSchema = z.object({
     businessName: z.string().min(2, "Business name must be at least 2 characters"),
     country: z.string().min(1, "Please select a country"),
+});
+const locationInfoSchema = z.object({
     locationName: z.string().min(2, "Location name must be at least 2 characters"),
     phone: z.string().min(5, "Please enter a valid phone number"),
+});
+const waitlistInfoSchema = z.object({
     listName: z.string().min(2, "List name must be at least 2 characters"),
 });
 
-type SetupFormValues = z.infer<typeof setupSchema>;
+type SetupFormValues = {
+    name: string;
+    businessName: string;
+    country: string;
+    locationName: string;
+    phone: string;
+    listName: string;
+};
+
+function clampStep(step: unknown) {
+    const n = typeof step === "number" && isFinite(step) ? Math.round(step) : 1;
+    return Math.max(1, Math.min(5, n));
+}
 
 export default function OnboardingWizard({ initialStep, initialData }: { initialStep: number, initialData?: Partial<SetupFormValues> }) {
-    // We now have 2 steps: 1 (Setup), 2 (Plan Selection)
-    // Map existing step numbers to our new 2-step flow
-    const [step, setStep] = useState(initialStep >= 2 ? 2 : 1);
+    const [step, setStep] = useState(clampStep(initialStep));
     const [loading, setLoading] = useState(false);
 
-    // setup form
     const {
         register,
-        handleSubmit,
         setValue,
         watch,
+        getValues,
+        setError,
+        clearErrors,
         formState: { errors },
     } = useForm<SetupFormValues>({
-        resolver: zodResolver(setupSchema),
         defaultValues: {
             name: initialData?.name || "",
             businessName: initialData?.businessName || "",
@@ -81,31 +97,9 @@ export default function OnboardingWizard({ initialStep, initialData }: { initial
         return displayNames?.of(countryCode) || countryCode;
     }, [countryCode]);
 
-    async function onSubmit(data: SetupFormValues) {
-        setLoading(true);
-        const formData = new FormData();
-        formData.append("name", data.name);
-        formData.append("businessName", data.businessName);
-        formData.append("country", data.country);
-        formData.append("locationName", data.locationName);
-        formData.append("phone", data.phone);
-        formData.append("listName", data.listName);
-
-        try {
-            await submitSetup(formData);
-            setStep(2);
-        } catch (error) {
-            console.error(error);
-            const msg =
-                error instanceof Error
-                    ? error.message
-                    : typeof error === "string"
-                        ? error
-                        : "Failed to save info";
-            alert(msg);
-        } finally {
-            setLoading(false);
-        }
+    function ErrorMessage({ message }: { message?: string }) {
+        if (!message) return null;
+        return <p className="text-[0.8rem] font-medium text-destructive">{message}</p>;
     }
 
     async function handleFreeTrial() {
@@ -124,119 +118,91 @@ export default function OnboardingWizard({ initialStep, initialData }: { initial
         }
     }
 
-    function ErrorMessage({ message }: { message?: string }) {
-        if (!message) return null;
-        return <p className="text-[0.8rem] font-medium text-destructive">{message}</p>;
+    const progressValue = Math.round(((step - 1) / 4) * 100);
+
+    const validateAndPersistCurrentStep = async () => {
+        const values = getValues();
+
+        const fail = (schema: z.ZodSchema<any>, fields: (keyof SetupFormValues)[]) => {
+            clearErrors(fields as any);
+            const subset: Record<string, unknown> = {};
+            for (const f of fields) subset[f] = values[f];
+            const parsed = schema.safeParse(subset);
+            if (parsed.success) return { ok: true as const };
+            for (const issue of parsed.error.issues) {
+                const key = issue.path[0];
+                if (typeof key === "string") {
+                    setError(key as any, { type: "validate", message: issue.message });
+                }
+            }
+            return { ok: false as const, message: parsed.error.issues[0]?.message ?? "Please check the form." };
+        };
+
+        if (step === 1) {
+            const check = fail(userInfoSchema, ["name"]);
+            if (!check.ok) return check;
+            const fd = new FormData();
+            fd.append("name", values.name);
+            await submitUserInfo(fd);
+            return { ok: true as const };
+        }
+
+        if (step === 2) {
+            const check = fail(businessInfoSchema, ["businessName", "country"]);
+            if (!check.ok) return check;
+            const fd = new FormData();
+            fd.append("businessName", values.businessName);
+            fd.append("country", values.country);
+            await submitBusinessInfo(fd);
+            return { ok: true as const };
+        }
+
+        if (step === 3) {
+            const check = fail(locationInfoSchema, ["locationName", "phone"]);
+            if (!check.ok) return check;
+            const fd = new FormData();
+            fd.append("locationName", values.locationName);
+            fd.append("phone", values.phone);
+            await submitLocationInfo(fd);
+            return { ok: true as const };
+        }
+
+        if (step === 4) {
+            const check = fail(waitlistInfoSchema, ["listName"]);
+            if (!check.ok) return check;
+            const fd = new FormData();
+            fd.append("listName", values.listName);
+            await submitWaitlistInfo(fd);
+            return { ok: true as const };
+        }
+
+        return { ok: true as const };
+    };
+
+    async function onNext() {
+        if (step >= 5) return;
+        setLoading(true);
+        try {
+            const res = await validateAndPersistCurrentStep();
+            if (!res.ok) return;
+            setStep((s) => Math.min(5, s + 1));
+        } catch (error) {
+            console.error(error);
+            const msg =
+                error instanceof Error
+                    ? error.message
+                    : typeof error === "string"
+                        ? error
+                        : "Failed to save info";
+            alert(msg);
+        } finally {
+            setLoading(false);
+        }
     }
 
     return (
         <>
-            {step === 1 && (
-                <div className="min-h-screen flex flex-col items-center justify-center p-4">
-                    <div className="w-full max-w-lg space-y-8">
-                        <Card className="w-full">
-                            <CardHeader className="flex flex-col items-center">
-                                <img src="/waitq-square.svg" alt="WaitQ Logo" className="h-12 w-12 mb-2" />
-                                <CardTitle>Welcome to WaitQ</CardTitle>
-                            </CardHeader>
-                            <form onSubmit={handleSubmit(onSubmit)}>
-                                <CardContent className="space-y-6">
-
-                            {/* User Info */}
-                            <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="name" className={cn(errors.name && "text-destructive")}>Your Name</Label>
-                                    <Input
-                                        id="name"
-                                        placeholder="Enter your name"
-                                        {...register("name")}
-                                        className={cn(errors.name && "border-destructive focus-visible:ring-destructive")}
-                                    />
-                                    <ErrorMessage message={errors.name?.message} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="businessName" className={cn(errors.businessName && "text-destructive")}>Business Name</Label>
-                                    <Input
-                                        id="businessName"
-                                        placeholder="Enter your business name"
-                                        {...register("businessName")}
-                                        className={cn(errors.businessName && "border-destructive focus-visible:ring-destructive")}
-                                    />
-                                    <ErrorMessage message={errors.businessName?.message} />
-                                </div>                                
-                            </div>
-
-                            {/* First Location Info */}
-                            <div className="space-y-4 border-border border-t pt-4">
-                                <h3 className="text-sm font-medium text-muted-foreground pb-1">Lets create your first location and waitlist</h3>
-                                <div className="space-y-2">
-                                    <Label htmlFor="locationName" className={cn(errors.locationName && "text-destructive")}>Location Name</Label>
-                                    <Input
-                                        id="locationName"
-                                        placeholder="e.g. Downtown Branch"
-                                        {...register("locationName")}
-                                        className={cn(errors.locationName && "border-destructive focus-visible:ring-destructive")}
-                                    />
-                                    <ErrorMessage message={errors.locationName?.message} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label className={cn(errors.country && "text-destructive")}>Country</Label>
-                                    <Select
-                                        value={countryCode}
-                                        onValueChange={(val) => setValue("country", val, { shouldValidate: true })}
-                                    >
-                                        <SelectTrigger className={cn(errors.country && "border-destructive focus:ring-destructive")}>
-                                            <SelectValue placeholder="Select a country">
-                                                {selectedCountryLabel}
-                                            </SelectValue>
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {countryOptions.map((c) => (
-                                                <SelectItem key={c.code} value={c.code}>
-                                                    {c.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    <ErrorMessage message={errors.country?.message} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="phone" className={cn(errors.phone && "text-destructive")}>Location Phone Number</Label>
-                                    <div className={cn(errors.phone && "border-destructive rounded-md border")}>
-                                        <PhoneInput
-                                            value={phoneValue}
-                                            onChange={(val) => setValue("phone", val || "", { shouldValidate: true })}
-                                            defaultCountry={countryCode as Country}
-                                        />
-                                    </div>
-                                    <ErrorMessage message={errors.phone?.message} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="listName" className={cn(errors.listName && "text-destructive")}>Waitlist Name</Label>
-                                    <Input
-                                        id="listName"
-                                        placeholder="e.g. Dinner List"
-                                        {...register("listName")}
-                                        className={cn(errors.listName && "border-destructive focus-visible:ring-destructive")}
-                                    />
-                                    <ErrorMessage message={errors.listName?.message} />
-                                </div>
-                            </div>
-
-                                </CardContent>
-                                <CardFooter>
-                                    <Button type="submit" className="w-full mt-4" disabled={loading}>
-                                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                        Continue
-                                    </Button>
-                                </CardFooter>
-                            </form>
-                        </Card>
-                    </div>
-                </div>
-            )}
-
-            {step === 2 && (
+            {step === 5 ? (
                 <main className="py-5 animate-in fade-in duration-500">
                     <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
                         <div className="flex flex-col items-center text-center space-y-4">
@@ -256,6 +222,143 @@ export default function OnboardingWizard({ initialStep, initialData }: { initial
                         />
                     </div>
                 </main>
+            ) : (
+                <div className="min-h-screen flex flex-col items-center justify-center p-4">
+                    <div className="w-full max-w-lg space-y-6">
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                <span>Step {step} of 5</span>
+                            </div>
+                            <Progress value={progressValue} />
+                        </div>
+
+                        <Card className="w-full">
+                            <CardHeader className="flex flex-col items-center">
+                                <img src="/waitq-square.svg" alt="WaitQ Logo" className="h-12 w-12 mb-2" />
+                                <CardTitle>
+                                    {step === 1
+                                        ? "Tell us about you"
+                                        : step === 2
+                                            ? "Business details"
+                                            : step === 3
+                                                ? "Your first location"
+                                                : "Your first waitlist"}
+                                </CardTitle>
+                            </CardHeader>
+
+                            <form
+                                onSubmit={(e) => {
+                                    e.preventDefault();
+                                    void onNext();
+                                }}
+                            >
+                                <CardContent className="space-y-6">
+                                    {step === 1 ? (
+                                        <div className="space-y-2">
+                                            <Label htmlFor="name" className={cn(errors.name && "text-destructive")}>
+                                                Your Name
+                                            </Label>
+                                            <Input
+                                                id="name"
+                                                placeholder="Enter your name"
+                                                {...register("name")}
+                                                className={cn(errors.name && "border-destructive focus-visible:ring-destructive")}
+                                            />
+                                            <ErrorMessage message={errors.name?.message} />
+                                        </div>
+                                    ) : null}
+
+                                    {step === 2 ? (
+                                        <div className="space-y-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="businessName" className={cn(errors.businessName && "text-destructive")}>
+                                                    Business Name
+                                                </Label>
+                                                <Input
+                                                    id="businessName"
+                                                    placeholder="Enter your business name"
+                                                    {...register("businessName")}
+                                                    className={cn(errors.businessName && "border-destructive focus-visible:ring-destructive")}
+                                                />
+                                                <ErrorMessage message={errors.businessName?.message} />
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label className={cn(errors.country && "text-destructive")}>Country</Label>
+                                                <Select value={countryCode} onValueChange={(val) => setValue("country", val)}>
+                                                    <SelectTrigger className={cn(errors.country && "border-destructive focus:ring-destructive")}>
+                                                        <SelectValue placeholder="Select a country">{selectedCountryLabel}</SelectValue>
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {countryOptions.map((c) => (
+                                                            <SelectItem key={c.code} value={c.code}>
+                                                                {c.name}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                                <ErrorMessage message={errors.country?.message} />
+                                            </div>
+                                        </div>
+                                    ) : null}
+
+                                    {step === 3 ? (
+                                        <div className="space-y-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="locationName" className={cn(errors.locationName && "text-destructive")}>
+                                                    Location Name
+                                                </Label>
+                                                <Input
+                                                    id="locationName"
+                                                    placeholder="e.g. Downtown Branch"
+                                                    {...register("locationName")}
+                                                    className={cn(errors.locationName && "border-destructive focus-visible:ring-destructive")}
+                                                />
+                                                <ErrorMessage message={errors.locationName?.message} />
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label htmlFor="phone" className={cn(errors.phone && "text-destructive")}>
+                                                    Location Phone Number
+                                                </Label>
+                                                <div className={cn(errors.phone && "border-destructive rounded-md border")}>
+                                                    <PhoneInput
+                                                        value={phoneValue}
+                                                        onChange={(val) => setValue("phone", val || "")}
+                                                        defaultCountry={countryCode as Country}
+                                                    />
+                                                </div>
+                                                <ErrorMessage message={errors.phone?.message} />
+                                            </div>
+                                        </div>
+                                    ) : null}
+
+                                    {step === 4 ? (
+                                        <div className="space-y-2">
+                                            <Label htmlFor="listName" className={cn(errors.listName && "text-destructive")}>
+                                                Waitlist Name
+                                            </Label>
+                                            <Input
+                                                id="listName"
+                                                placeholder="e.g. Dinner List"
+                                                {...register("listName")}
+                                                className={cn(errors.listName && "border-destructive focus-visible:ring-destructive")}
+                                            />
+                                            <ErrorMessage message={errors.listName?.message} />
+                                        </div>
+                                    ) : null}
+                                </CardContent>
+
+                                <CardFooter className="flex items-center">
+                                    <Button type="submit" className="w-full" disabled={loading}>
+                                        {loading && <Loader2 className="mr-2 h-4 w-4 mt-2 animate-spin" />}
+                                        Continue
+                                    </Button>
+                                </CardFooter>
+                            </form>
+                        </Card>
+                    </div>
+                </div>
             )}
         </>
     );

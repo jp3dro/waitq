@@ -111,6 +111,7 @@ export default async function ListsIndexPage() {
                             etaDisplay={etaDisplay}
                             displayToken={l.display_token}
                             businessName={(biz?.name as string | null) || undefined}
+                            locationName={loc.name}
                             initialLocationId={l.location_id}
                             kioskEnabled={!!l.kiosk_enabled}
                             displayEnabled={l.display_enabled !== false}

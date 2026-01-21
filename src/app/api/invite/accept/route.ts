@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
   try {
     await admin
       .from("profiles")
-      .upsert({ id: user.id, onboarding_completed: true, onboarding_step: 3 }, { onConflict: "id" });
+      .upsert({ id: user.id, onboarding_completed: true, onboarding_step: 5 }, { onConflict: "id" });
   } catch { }
 
   return NextResponse.json({ ok: true });

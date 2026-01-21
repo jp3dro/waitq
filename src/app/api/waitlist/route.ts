@@ -241,10 +241,14 @@ export async function POST(req: NextRequest) {
   }
 
   if (w.business_id) {
-    const { limits, window } = await getPlanContext(w.business_id);
-    const usedEntries = await countEntriesInPeriod(w.business_id, window.start, window.end);
-    if (usedEntries >= limits.reservationsPerMonth) {
-      return NextResponse.json({ error: "Monthly waitlist limit reached for your plan" }, { status: 403 });
+    const ctx = await getPlanContext(w.business_id);
+    const usedEntries = await countEntriesInPeriod(w.business_id, ctx.window.start, ctx.window.end);
+    if (usedEntries >= ctx.limits.reservationsPerMonth) {
+      const msg =
+        ctx.planId === "free"
+          ? "Waitlist limit reached for the free plan. Upgrade to add more people."
+          : "Monthly waitlist limit reached for your plan";
+      return NextResponse.json({ error: msg }, { status: 403 });
     }
   }
 
@@ -390,10 +394,14 @@ export async function POST(req: NextRequest) {
       const templateParams = built.templateParams;
       if (shouldSendSms && normalizedPhone) {
         if (w.business_id) {
-          const { limits, window } = await getPlanContext(w.business_id);
-          const usedSms = await countSmsInPeriod(w.business_id, window.start, window.end);
-          if (usedSms >= limits.messagesPerMonth) {
-            return NextResponse.json({ error: "Monthly SMS limit reached for your plan" }, { status: 403 });
+          const ctx = await getPlanContext(w.business_id);
+          const usedSms = await countSmsInPeriod(w.business_id, ctx.window.start, ctx.window.end);
+          if (usedSms >= ctx.limits.messagesPerMonth) {
+            const msg =
+              ctx.planId === "free"
+                ? "SMS limit reached for the free plan. Upgrade to send more messages."
+                : "Monthly SMS limit reached for your plan";
+            return NextResponse.json({ error: msg }, { status: 403 });
           }
         }
         try {
@@ -786,10 +794,14 @@ async function handleRetry(
         const { data: wl } = await supabase.from("waitlists").select("business_id").eq("id", entry.waitlist_id).maybeSingle();
         const businessId = (wl?.business_id as string | undefined) || undefined;
         if (businessId) {
-          const { limits, window } = await getPlanContext(businessId);
-          const usedSms = await countSmsInPeriod(businessId, window.start, window.end);
-          if (usedSms >= limits.messagesPerMonth) {
-            return NextResponse.json({ error: "Monthly SMS limit reached for your plan" }, { status: 403 });
+          const ctx = await getPlanContext(businessId);
+          const usedSms = await countSmsInPeriod(businessId, ctx.window.start, ctx.window.end);
+          if (usedSms >= ctx.limits.messagesPerMonth) {
+            const msg =
+              ctx.planId === "free"
+                ? "SMS limit reached for the free plan. Upgrade to send more messages."
+                : "Monthly SMS limit reached for your plan";
+            return NextResponse.json({ error: msg }, { status: 403 });
           }
         }
       }

@@ -43,7 +43,10 @@ type WaitlistRow = {
   ask_phone: boolean | null;
   ask_email?: boolean | null;
   seating_preferences: string[] | null;
-  business_locations: { id: string; name: string; regular_hours?: unknown; timezone?: string | null } | null;
+  business_locations:
+    | { id: string; name: string; regular_hours?: unknown; timezone?: string | null }
+    | { id: string; name: string; regular_hours?: unknown; timezone?: string | null }[]
+    | null;
 };
 
 export default async function ListDetailsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -104,7 +107,17 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
       .eq("id", waitlistId)
       .single();
     if (!fallback) redirect("/dashboard");
-    waitlist = { ...(fallback as WaitlistRow), display_enabled: true, display_show_name: false, display_show_qr: false };
+    const fb = fallback as unknown as Record<string, unknown>;
+    const bl = fb["business_locations"] as unknown;
+    const business_locations =
+      Array.isArray(bl) ? ((bl[0] as any) ?? null) : (bl as any) ?? null;
+    waitlist = {
+      ...(fb as any),
+      business_locations,
+      display_enabled: true,
+      display_show_name: false,
+      display_show_qr: false,
+    } as WaitlistRow;
   } else {
     if (error || !wlData) redirect("/dashboard");
     waitlist = wlData as WaitlistRow;
@@ -134,7 +147,7 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
   const businessName = business?.name;
 
   const locationIsOpen = (() => {
-    const loc = wl.business_locations;
+    const loc = Array.isArray(wl.business_locations) ? wl.business_locations[0] : wl.business_locations;
     if (!loc) return true;
     const st = getLocationOpenState({
       regularHours: (loc.regular_hours as RegularHours | null) || null,
@@ -142,7 +155,13 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
     });
     return st.isOpen;
   })();
-  const isLive = !!wl.kiosk_enabled && locationIsOpen;
+  // Back-compat: older lists may have kiosk_enabled = null; treat that as "enabled by default"
+  const isLive = wl.kiosk_enabled !== false && locationIsOpen;
+  const locationName = (() => {
+    const loc = Array.isArray(wl.business_locations) ? wl.business_locations[0] : wl.business_locations;
+    const name = (loc as { name?: unknown } | null)?.name;
+    return typeof name === "string" ? name : null;
+  })();
 
   return (
     <main className="py-5">
@@ -171,6 +190,11 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
                 Live
               </Badge>
             ) : null}
+            {locationName ? (
+              <Badge variant="outline" className="text-xs">
+                {locationName}
+              </Badge>
+            ) : null}
           </div>
         </div>
 
@@ -187,7 +211,10 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
               <EditListButton
                 waitlistId={wl.id}
                 initialName={wl.name}
-                initialLocationId={wl.location_id || wl.business_locations?.id}
+                initialLocationId={
+                  wl.location_id ||
+                  (Array.isArray(wl.business_locations) ? wl.business_locations[0]?.id : wl.business_locations?.id)
+                }
                 initialKioskEnabled={!!wl.kiosk_enabled}
                 initialDisplayEnabled={wl.display_enabled !== false}
                 initialDisplayShowName={wl.display_show_name !== false}

@@ -24,6 +24,7 @@ export default function ListCard({
   etaDisplay,
   displayToken,
   businessName,
+  locationName,
   initialLocationId,
   kioskEnabled,
   displayEnabled,
@@ -39,6 +40,7 @@ export default function ListCard({
   etaDisplay: string;
   displayToken?: string | null;
   businessName?: string;
+  locationName?: string | null;
   initialLocationId?: string | null;
   kioskEnabled?: boolean | null;
   displayEnabled?: boolean | null;
@@ -92,7 +94,8 @@ export default function ListCard({
   }, [id]);
 
   const isClosed = locationIsOpen === false;
-  const isLive = !!kioskEnabled && !isClosed;
+  // Back-compat: older lists may have kiosk_enabled = null; treat that as "enabled by default"
+  const isLive = kioskEnabled !== false && !isClosed;
 
   return (
     <div className="relative">

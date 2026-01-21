@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
 import PrivateSidebarClient from "@/components/private-sidebar-client";
-import { getPlanContext } from "@/lib/plan-limits";
 
 export default async function PrivateSidebar() {
   const supabase = await createClient();
@@ -53,7 +52,6 @@ export default async function PrivateSidebar() {
     (user?.email === "jp3dro@gmail.com" ? "admin" : undefined);
 
   const businessLogoUrl = (biz?.logo_url as string | null) || null;
-  const planId = biz?.id ? (await getPlanContext(biz.id)).planId : "free";
 
   // Fetch waitlists for the sidebar
   const { data: lists } = biz?.id
@@ -74,7 +72,6 @@ export default async function PrivateSidebar() {
       businessLogoUrl={businessLogoUrl}
       role={role}
       lists={lists || []}
-      planId={planId}
     />
   );
 }

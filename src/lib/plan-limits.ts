@@ -38,19 +38,17 @@ export async function getPlanContext(businessId: string) {
     return { planId, limits, window };
   }
 
-  // If no active subscription, check if there's a canceled one (to confirm they're on free tier)
-  const { data: anySubscription } = await admin
-    .from("subscriptions")
-    .select("status, updated_at")
-    .eq("business_id", businessId)
-    .order("updated_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  // Return free tier (whether there's a canceled sub or no sub at all)
+  // Free tier: usage starts at business creation date and NEVER resets monthly.
   const planId = "free" as const;
   const limits = getPlanById(planId).limits;
-  const window = getMonthWindow();
+  const { data: biz } = await admin
+    .from("businesses")
+    .select("created_at")
+    .eq("id", businessId)
+    .maybeSingle();
+  const start = coerceDate((biz as unknown as { created_at?: string | null } | null)?.created_at) || new Date();
+  const end = new Date();
+  const window = { start, end };
   return { planId, limits, window };
 }
 

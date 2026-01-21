@@ -58,7 +58,7 @@ const postSchema = z.object({
   businessId: z.string().uuid().optional(),
   name: z.string().min(1),
   locationId: z.string().uuid().optional(),
-  kioskEnabled: z.boolean().optional().default(false),
+  kioskEnabled: z.boolean().optional().default(true),
   displayEnabled: z.boolean().optional(),
   displayShowName: z.boolean().optional(),
   displayShowQr: z.boolean().optional(),
