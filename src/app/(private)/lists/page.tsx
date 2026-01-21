@@ -91,7 +91,7 @@ export default async function ListsIndexPage() {
       <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-3xl font-bold tracking-tight">Lists</h1>
-          <CreateListButton />
+          <CreateListButton locations={locs.map((l) => ({ id: l.id, name: l.name }))} />
         </div>
 
         <div className="space-y-6">

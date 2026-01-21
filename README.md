@@ -36,5 +36,5 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Routes
 - Public: `/`, `/pricing`, `/login`, `/w/[token]` (customer status)
-- Private: `/dashboard` (requires Google login)
+- Private: `/lists` (requires Google login)
 - APIs: `POST /api/waitlist`, `POST /api/stripe/checkout`, `POST /api/stripe/webhook`

@@ -56,7 +56,7 @@ export default async function UsersPage() {
 
   const isAdmin = isOwner || (me?.role === 'admin');
   if (!isAdmin) {
-    redirect("/dashboard");
+    redirect("/lists");
   }
 
   // Members are rendered by client component

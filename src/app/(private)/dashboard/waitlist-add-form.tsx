@@ -25,7 +25,45 @@ type FormValues = {
   seatingPreference?: string;
 };
 
-export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, businessCountry, formId = "add-waitlist-form", onPendingChange, onBlockedReasonChange }: { onDone?: () => void; defaultWaitlistId?: string; lockWaitlist?: boolean; businessCountry?: Country; formId?: string; onPendingChange?: (pending: boolean) => void; onBlockedReasonChange?: (reason: string | null) => void }) {
+type WaitlistConfig = {
+  id: string;
+  name: string;
+  seating_preferences?: string[];
+  ask_name?: boolean;
+  ask_phone?: boolean;
+  ask_email?: boolean;
+  location_is_open?: boolean;
+  location_status_reason?: string | null;
+};
+
+type PublicConfig = {
+  displayToken: string;
+  waitlist: WaitlistConfig;
+};
+
+export default function AddForm({
+  onDone,
+  defaultWaitlistId,
+  lockWaitlist,
+  businessCountry,
+  formId = "add-waitlist-form",
+  onPendingChange,
+  onBlockedReasonChange,
+  mode = "internal",
+  publicConfig,
+  onPublicSuccess,
+}: {
+  onDone?: () => void;
+  defaultWaitlistId?: string;
+  lockWaitlist?: boolean;
+  businessCountry?: Country;
+  formId?: string;
+  onPendingChange?: (pending: boolean) => void;
+  onBlockedReasonChange?: (reason: string | null) => void;
+  mode?: "internal" | "public";
+  publicConfig?: PublicConfig;
+  onPublicSuccess?: (payload: { statusUrl?: string; ticketNumber?: number | null }) => void;
+}) {
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const [duplicateDialog, setDuplicateDialog] = useState<{ open: boolean; message: string }>({ open: false, message: "" });
@@ -33,14 +71,27 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
   const { register, handleSubmit, reset, watch, setValue, setError, setFocus, formState: { errors } } = useForm<FormValues>({
     defaultValues: { phone: "", email: "", customerName: "", waitlistId: "", sendSms: false, sendEmail: false, partySize: 2 },
   });
-  const [waitlists, setWaitlists] = useState<{ id: string; name: string; display_token?: string; list_type?: string; seating_preferences?: string[]; ask_name?: boolean; ask_phone?: boolean; ask_email?: boolean; location_is_open?: boolean; location_status_reason?: string | null }[]>([]);
+  const [waitlists, setWaitlists] = useState<WaitlistConfig[]>([]);
   const [fetching, setFetching] = useState(true);
+  const isPublic = mode === "public";
 
   useEffect(() => {
     onPendingChange?.(isPending);
   }, [isPending, onPendingChange]);
 
   useEffect(() => {
+    if (isPublic) {
+      if (!publicConfig) {
+        setWaitlists([]);
+        setFetching(false);
+        return;
+      }
+      setWaitlists([publicConfig.waitlist]);
+      reset((v) => ({ ...v, waitlistId: publicConfig.waitlist.id }));
+      setFetching(false);
+      try { setTimeout(() => setFocus("customerName"), 50); } catch { }
+      return;
+    }
     (async () => {
       const res = await fetch("/api/waitlists", { cache: "no-store" });
       const j = await res.json();
@@ -54,9 +105,10 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
       // Focus the name field when modal opens
       try { setTimeout(() => setFocus("customerName"), 50); } catch { }
     })();
-  }, [reset, defaultWaitlistId]);
+  }, [reset, defaultWaitlistId, isPublic, publicConfig, setFocus]);
 
   useEffect(() => {
+    if (isPublic) return;
     (async () => {
       try {
         const res = await fetch("/api/plan", { cache: "no-store" });
@@ -73,7 +125,7 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
         }
       } catch { }
     })();
-  }, []);
+  }, [isPublic]);
 
   const current = waitlists.find(w => w.id === watch("waitlistId"));
   const blockedReason = current?.location_is_open === false ? (current.location_status_reason || "Restaurant is closed") : null;
@@ -96,6 +148,53 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
       return;
     }
     startTransition(async () => {
+      if (isPublic) {
+        if (!publicConfig?.displayToken) {
+          setMessage("Unable to add right now.");
+          return;
+        }
+        const res = await fetch("/api/display/checkin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            token: publicConfig.displayToken,
+            phone: values.phone || undefined,
+            name: values.customerName || undefined,
+            email: values.email || undefined,
+            partySize: values.partySize,
+            seatingPreference: values.seatingPreference,
+          }),
+        });
+        const j = await res.json().catch(() => ({}));
+        if (res.ok) {
+          reset({ phone: "", email: "", customerName: "", waitlistId: values.waitlistId, sendSms: false, sendEmail: false, partySize: 2, seatingPreference: undefined });
+          setMessage(null);
+          onPublicSuccess?.({ statusUrl: j?.statusUrl, ticketNumber: j?.ticketNumber });
+          return;
+        }
+        if (res.status === 409) {
+          const errStr = typeof j?.error === "string" ? j.error : "This person is already waiting.";
+          setDuplicateDialog({ open: true, message: errStr });
+          return;
+        }
+        const errStr = typeof j?.error === "string" ? j.error : "Failed to add";
+        let hasFieldErrors = false;
+        if (/phone/i.test(errStr)) {
+          setError("phone", { type: "server", message: errStr });
+          hasFieldErrors = true;
+        }
+        if (/name/i.test(errStr)) {
+          setError("customerName", { type: "server", message: errStr });
+          hasFieldErrors = true;
+        }
+        if (/email/i.test(errStr)) {
+          setError("email", { type: "server", message: errStr });
+          hasFieldErrors = true;
+        }
+        if (!hasFieldErrors) setMessage(errStr);
+        return;
+      }
+
       const res = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -286,7 +385,7 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
             </div>
           </div>
         ) : null}
-        {(collectPhone || collectEmail) && (
+        {!isPublic && (collectPhone || collectEmail) && (
           <div className="flex items-center gap-4">
             <label className="text-sm font-medium">Notify via</label>
             {collectPhone ? (
@@ -303,7 +402,7 @@ export default function AddForm({ onDone, defaultWaitlistId, lockWaitlist, busin
             ) : null}
           </div>
         )}
-        {collectPhone && smsLimitReached ? (
+        {!isPublic && collectPhone && smsLimitReached ? (
           <p className="text-xs text-muted-foreground">SMS limit reached for the current billing period.</p>
         ) : null}
         {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}

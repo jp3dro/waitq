@@ -332,5 +332,5 @@ export async function completeOnboarding() {
         .from("profiles")
         .update({ onboarding_completed: true, onboarding_step: 5 })
         .eq("id", user.id);
-    redirect("/dashboard");
+    redirect("/lists");
 }

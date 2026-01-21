@@ -40,7 +40,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
   }
 
   if (membership.status === 'active') {
-     redirect("/dashboard");
+     redirect("/lists");
   }
 
   const { data: business } = await admin

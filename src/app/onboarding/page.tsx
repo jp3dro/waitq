@@ -34,7 +34,7 @@ export default async function OnboardingPage({
 
     // If onboarding is already completed, skip.
     if (profile?.onboarding_completed) {
-        redirect("/dashboard");
+        redirect("/lists");
     }
 
     // If coming back from Stripe Checkout, try to confirm subscription and complete onboarding.
@@ -85,7 +85,7 @@ export default async function OnboardingPage({
                 .from("profiles")
                 .upsert({ id: user.id, onboarding_completed: true, onboarding_step: 5 }, { onConflict: "id" });
             // redirect() throws NEXT_REDIRECT which is expected Next.js behavior - don't catch it
-            redirect("/dashboard");
+            redirect("/lists");
         }
     }
 

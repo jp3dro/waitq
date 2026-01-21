@@ -94,7 +94,7 @@ function ResetPasswordContent() {
         description: "You’re now signed in.",
         type: "success",
       });
-      router.replace("/dashboard");
+      router.replace("/lists");
       router.refresh();
     } finally {
       setLoading(false);

@@ -1,7 +1,6 @@
 "use client";
-import { useCallback, useEffect, useId, useState, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Info } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -10,18 +9,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toastManager } from "@/hooks/use-toast";
+import ListFormFields from "@/app/(private)/lists/list-form-fields";
 
 type Location = { id: string; name: string };
 
@@ -76,15 +65,6 @@ export default function EditListButton({
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const router = useRouter();
-  const baseId = useId();
-  const askNameId = `${baseId}-ask-name`;
-  const askPhoneId = `${baseId}-ask-phone`;
-  const askEmailId = `${baseId}-ask-email`;
-  const kioskEnabledId = `${baseId}-kiosk-enabled`;
-  const displayEnabledId = `${baseId}-display-enabled`;
-  const displayShowNameId = `${baseId}-display-show-name`;
-  const displayShowQrId = `${baseId}-display-show-qr`;
-
   useEffect(() => {
     if (!askName && displayShowName) {
       setDisplayShowName(false);
@@ -239,150 +219,32 @@ export default function EditListButton({
             <DialogTitle>Edit list</DialogTitle>
           </DialogHeader>
 
-          <div className="grid gap-4">
-            <div className="grid gap-2">
-              <Label>Name</Label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} />
-            </div>
-
-            <div className="grid gap-2">
-              <Label>Location</Label>
-              <Select
-                value={locationId}
-                onValueChange={setLocationId}
-                disabled={isPending}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select location" />
-                </SelectTrigger>
-                <SelectContent>
-                  {locations.map((l) => (
-                    <SelectItem key={l.id} value={l.id}>
-                      {l.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid gap-4 mt-2">
-              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">List preferences</h3>
-
-              <div className="flex items-center gap-3">
-                <Switch id={askNameId} checked={askName} onCheckedChange={setAskName} />
-                <div className="flex items-center gap-2">
-                  <Label htmlFor={askNameId}>Collect Name</Label>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">Make name field required when joining</TooltipContent>
-                  </Tooltip>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Switch id={askPhoneId} checked={askPhone} onCheckedChange={setAskPhone} />
-                <div className="flex items-center gap-2">
-                  <Label htmlFor={askPhoneId}>Collect Phone</Label>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">Make phone field required when joining</TooltipContent>
-                  </Tooltip>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Switch id={askEmailId} checked={askEmail} onCheckedChange={setAskEmail} />
-                <div className="flex items-center gap-2">
-                  <Label htmlFor={askEmailId}>Collect Email</Label>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">Show an email field when joining</TooltipContent>
-                  </Tooltip>
-                </div>
-              </div>
-
-              <div className="pt-2 grid gap-3">
-                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Public display</h4>
-                <div className="flex items-center gap-3">
-                  <Switch id={displayEnabledId} checked={displayEnabled} onCheckedChange={setDisplayEnabled} />
-                  <div className="flex items-center gap-2">
-                    <Label htmlFor={displayEnabledId}>Public display</Label>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom">
-                        Enable the public queue display for this waitlist.
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <Switch id={kioskEnabledId} checked={kioskEnabled} onCheckedChange={setKioskEnabled} />
-                  <div className="flex items-center gap-2">
-                    <Label htmlFor={kioskEnabledId}>Users can add themselves to the list</Label>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom">
-                        Shows a button on the public display so guests can join the list themselves.
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                </div>
-
-                {displayEnabled && askName ? (
-                  <div className="flex items-center gap-3">
-                    <Switch id={displayShowNameId} checked={displayShowName} onCheckedChange={setDisplayShowName} />
-                    <div className="flex items-center gap-2">
-                      <Label htmlFor={displayShowNameId}>Show name on display</Label>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom">
-                          Show customer names on the public display.
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
-                  </div>
-                ) : null}
-
-                {displayEnabled ? (
-                  <div className="flex items-center gap-3">
-                    <Switch id={displayShowQrId} checked={displayShowQr} onCheckedChange={setDisplayShowQr} />
-                    <div className="flex items-center gap-2">
-                      <Label htmlFor={displayShowQrId}>Show QR code on display</Label>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom">
-                          Show a QR code on the public display for guests to scan and join.
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-
-              <div className="grid gap-2">
-                <Label>Seating preferences</Label>
-                <SeatingPrefsEditor value={seatingPrefs} onChange={setSeatingPrefs} />
-              </div>
-            </div>
-
-
-            {message ? <p className="text-sm text-destructive">{message}</p> : null}
-          </div>
+          <ListFormFields
+            name={name}
+            onNameChange={setName}
+            nameError={null}
+            locationId={locationId}
+            onLocationChange={setLocationId}
+            locations={locations}
+            isPending={isPending}
+            askName={askName}
+            onAskNameChange={setAskName}
+            askPhone={askPhone}
+            onAskPhoneChange={setAskPhone}
+            askEmail={askEmail}
+            onAskEmailChange={setAskEmail}
+            displayEnabled={displayEnabled}
+            onDisplayEnabledChange={setDisplayEnabled}
+            displayShowName={displayShowName}
+            onDisplayShowNameChange={setDisplayShowName}
+            displayShowQr={displayShowQr}
+            onDisplayShowQrChange={setDisplayShowQr}
+            kioskEnabled={kioskEnabled}
+            onKioskEnabledChange={setKioskEnabled}
+            seatingPrefs={seatingPrefs}
+            onSeatingPrefsChange={setSeatingPrefs}
+          />
+          {message ? <p className="text-sm text-destructive">{message}</p> : null}
 
           <DialogFooter>
             <Button disabled={isPending} onClick={save}>
@@ -395,40 +257,5 @@ export default function EditListButton({
         </DialogContent>
       </Dialog>
     </>
-  );
-}
-
-
-function SeatingPrefsEditor({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
-  const [input, setInput] = useState("");
-  const add = () => {
-    const v = input.trim();
-    if (!v) return;
-    if (value.includes(v)) return;
-    onChange([...value, v]);
-    setInput("");
-  };
-  const remove = (v: string) => onChange(value.filter((x) => x !== v));
-  return (
-    <div className="grid gap-2">
-      <div className="flex gap-2">
-        <Input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Add seating preference" />
-        <Button type="button" onClick={add} size="sm">
-          Add
-        </Button>
-      </div>
-      {value.length ? (
-        <ul className="flex flex-wrap gap-2">
-          {value.map((v) => (
-            <li key={v} className="inline-flex items-center gap-2 rounded-full ring-1 ring-inset ring-border px-3 py-1 text-xs">
-              <span>{v}</span>
-              <button type="button" onClick={() => remove(v)} className="text-muted-foreground hover:opacity-90">
-                ✕
-              </button>
-            </li>
-          ))}
-        </ul>
-      ) : null}
-    </div>
   );
 }

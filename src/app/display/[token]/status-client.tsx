@@ -1,8 +1,9 @@
 "use client";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -15,11 +16,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Stepper } from "@/components/ui/stepper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import PhoneInput, { type Country } from "react-phone-number-input";
-import 'react-phone-number-input/style.css';
+import type { Country } from "@/components/ui/phone-input";
+import AddForm from "@/app/(private)/dashboard/waitlist-add-form";
 import { User, Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useTheme } from "next-themes";
@@ -34,7 +34,6 @@ export default function DisplayClient({ token }: { token: string }) {
   const timer = useRef<number | null>(null);
   const prev = useRef<Payload | null>(null);
   const lastCalledRef = useRef<number | null>(null);
-  const [phoneError, setPhoneError] = useState<string | null>(null);
   const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
   const refreshTimerRef = useRef<number | null>(null);
   const pendingRefreshRef = useRef(false);
@@ -178,15 +177,21 @@ export default function DisplayClient({ token }: { token: string }) {
     lastCalledRef.current = lastCalledNumber;
   }
 
-  const nowServingNumber = nowServing?.ticket_number ?? nowServing?.queue_position ?? lastCalledRef.current ?? null;
   const waiting = data.entries.filter((e) => e.status === "waiting").slice(0, 10);
   const locationIsOpen = data.locationIsOpen !== false;
   const showNameOnDisplay = data.showNameOnDisplay === true;
   const showQrOnDisplay = data.showQrOnDisplay === true;
+  const initials = (() => {
+    const raw = (data.businessName || "").trim();
+    if (!raw) return "WQ";
+    const parts = raw.split(/\s+/);
+    if (parts.length >= 2) return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+    return raw.slice(0, 2).toUpperCase();
+  })();
 
   return (
     <main className="h-screen bg-background text-foreground flex flex-col overflow-hidden">
-      <div className="flex flex-col flex-1 px-4 py-5 sm:px-6 sm:py-8 md:px-10 overflow-hidden">
+      <div className="flex flex-col flex-1 px-4 py-4 sm:py-6 md:px-6 overflow-hidden">
         {!locationIsOpen ? (
           <div className="mb-6 rounded-xl border border-destructive/30 bg-destructive/10 text-destructive px-4 py-3">
             <div className="font-semibold">Restaurant is closed</div>
@@ -195,12 +200,14 @@ export default function DisplayClient({ token }: { token: string }) {
         ) : null}
         <div className="flex w-full flex-col gap-4 md:flex-row md:flex-wrap md:items-center shrink-0">
           <div className="flex items-center gap-3 md:mr-6 md:flex-1">
-            {data.brandLogo ? (
-              <div className="h-10 w-10 sm:h-14 sm:w-14 shrink-0 overflow-hidden rounded-lg border border-border bg-muted">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
+            <div className="h-10 w-10 sm:h-14 sm:w-14 shrink-0 overflow-hidden rounded-lg border border-border bg-muted flex items-center justify-center">
+              {data.brandLogo ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img src={data.brandLogo} alt="Logo" className="h-full w-full object-cover" />
-              </div>
-            ) : null}
+              ) : (
+                <span className="text-xs sm:text-sm font-semibold text-muted-foreground">{initials}</span>
+              )}
+            </div>
             <div className="flex flex-col">
               {data.businessName ? (
                 <p className="text-sm font-medium text-muted-foreground leading-none mb-2">{data.businessName}</p>
@@ -218,11 +225,14 @@ export default function DisplayClient({ token }: { token: string }) {
             <div className="md:ml-auto">
               <KioskButton
                 token={token}
+                waitlistId={data.listId}
                 defaultCountry={data.businessCountry || "PT"}
                 seatingPreferences={data.seatingPreferences || []}
                 askName={data.askName !== false}
                 askPhone={data.askPhone !== false}
                 askEmail={data.askEmail === true}
+                locationIsOpen={locationIsOpen}
+                locationStatusReason={data.locationStatusReason || "Restaurant is closed"}
                 disabled={!locationIsOpen}
                 disabledReason={data.locationStatusReason || "Restaurant is closed"}
               />
@@ -230,10 +240,48 @@ export default function DisplayClient({ token }: { token: string }) {
           ) : null}
         </div>
 
-        <div className="mt-6 sm:mt-8 grid md:grid-cols-[1.2fr_1fr] gap-6 md:gap-8 flex-1 min-h-0">
-          <section className="rounded-2xl bg-card text-card-foreground ring-1 ring-border p-4 sm:p-6 flex flex-col min-h-0 overflow-hidden">
-            <h2 className="text-xl sm:text-2xl font-semibold text-foreground">Up next</h2>
-            <div className="flex-1 overflow-y-auto min-h-0 mt-4 pr-2 custom-scrollbar">
+        <div className="mt-6 grid md:grid-cols-[1.2fr_1fr] gap-6 md:gap-8 flex-1 min-h-0">
+          <section className="rounded-2xl bg-card text-card-foreground ring-1 ring-border flex flex-col min-h-0 overflow-hidden">
+            <div className="flex-1 overflow-y-auto min-h-0 px-6 custom-scrollbar">
+              {/* QR Code - sticky at top */}
+              {showQrOnDisplay ? (
+                <div className="sticky top-0 bg-card z-10">
+                  <div className="hidden md:flex items-center gap-6 py-4">
+                    {qrUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={qrUrl}
+                        alt="QR code"
+                        className="h-24 w-24 bg-white flex-shrink-0"
+                        onError={() => {
+                          const providers = [
+                            (t: string) => `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=2&data=${encodeURIComponent(t)}`,
+                            (t: string) => `https://quickchart.io/qr?size=240&margin=2&text=${encodeURIComponent(t)}`,
+                            (t: string) => `https://chart.googleapis.com/chart?cht=qr&chs=240x240&chld=L|2&chl=${encodeURIComponent(t)}`,
+                          ];
+                          if (qrProviderIndex < providers.length - 1) {
+                            const next = qrProviderIndex + 1;
+                            const base = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== "undefined" ? window.location.origin : "");
+                            const displayUrl = `${base}/display/${encodeURIComponent(token)}`;
+                            setQrProviderIndex(next);
+                            setQrUrl(providers[next](displayUrl));
+                          }
+                        }}
+                      />
+                    ) : (
+                      <div className="h-24 w-24 rounded-xl bg-muted flex-shrink-0" />
+                    )}
+                    <div className="text-xl sm:text-2xl font-semibold text-foreground">Scan to join the waiting list</div>
+                  </div>
+                  <hr className="border-border -mx-6 hidden md:block" />
+                  <h2 className="text-xl sm:text-2xl font-semibold text-foreground pt-6 pb-2">Next in line</h2>
+                </div>
+              ) : (
+                <div className="sticky top-0 bg-card z-10">
+                  <h2 className="text-xl sm:text-2xl font-semibold text-foreground py-4">Up next</h2>
+                </div>
+              )}
+
               {waiting.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-muted-foreground text-lg">No one waiting at the moment</p>
@@ -308,36 +356,6 @@ export default function DisplayClient({ token }: { token: string }) {
           </section>
         </div >
 
-        {/* QR code for joining - only shown on larger screens */}
-        {showQrOnDisplay ? (
-          <div className="hidden lg:flex fixed bottom-6 right-6 z-50 flex-col items-center gap-2 rounded-2xl border border-border bg-card/95 backdrop-blur p-4 shadow-lg">
-            {qrUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={qrUrl}
-                alt="QR code"
-                className="h-32 w-32 rounded-xl bg-white p-2"
-                onError={() => {
-                  const providers = [
-                    (t: string) => `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=2&data=${encodeURIComponent(t)}`,
-                    (t: string) => `https://quickchart.io/qr?size=240&margin=2&text=${encodeURIComponent(t)}`,
-                    (t: string) => `https://chart.googleapis.com/chart?cht=qr&chs=240x240&chld=L|2&chl=${encodeURIComponent(t)}`,
-                  ];
-                  if (qrProviderIndex < providers.length - 1) {
-                    const next = qrProviderIndex + 1;
-                    const base = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== "undefined" ? window.location.origin : "");
-                    const displayUrl = `${base}/display/${encodeURIComponent(token)}`;
-                    setQrProviderIndex(next);
-                    setQrUrl(providers[next](displayUrl));
-                  }
-                }}
-              />
-            ) : (
-              <div className="h-32 w-32 rounded-xl bg-muted" />
-            )}
-            <div className="text-center text-sm font-medium text-muted-foreground">Scan to join</div>
-          </div>
-        ) : null}
 
         <div className="mt-6 flex items-center justify-center shrink-0 gap-1">
           <span className="text-xs font-medium text-muted-foreground">Powered by</span>
@@ -354,87 +372,41 @@ export default function DisplayClient({ token }: { token: string }) {
 
 function KioskButton({
   token,
+  waitlistId,
   defaultCountry,
   seatingPreferences,
   askName,
   askPhone,
   askEmail,
+  locationIsOpen,
+  locationStatusReason,
   disabled,
   disabledReason,
 }: {
   token: string;
+  waitlistId: string;
   defaultCountry: string;
   seatingPreferences: string[];
   askName: boolean;
   askPhone: boolean;
   askEmail: boolean;
+  locationIsOpen: boolean;
+  locationStatusReason?: string | null;
   disabled?: boolean;
   disabledReason?: string | null;
 }) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<"form" | "confirm">("form");
-  const [phone, setPhone] = useState<string | undefined>(undefined);
-  const [name, setName] = useState<string | undefined>(undefined);
-  const [email, setEmail] = useState<string | undefined>(undefined);
-  const [partySize, setPartySize] = useState<number | undefined>(1);
-  const [pref, setPref] = useState<string | undefined>(undefined);
-  const [message, setMessage] = useState<string | null>(null);
   const [duplicateDialog, setDuplicateDialog] = useState<{ open: boolean; message: string }>({ open: false, message: "" });
   const [ticketNumber, setTicketNumber] = useState<number | null>(null);
-  const [isPending, startTransition] = useTransition();
-  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [statusUrl, setStatusUrl] = useState<string | null>(null);
 
   const close = () => {
     setOpen(false);
     setStep("form");
-    setPhone(undefined);
-    setName(undefined);
-    setEmail(undefined);
-    setPartySize(1);
-    setPref(undefined);
-    setMessage(null);
     setTicketNumber(null);
+    setStatusUrl(null);
     setDuplicateDialog({ open: false, message: "" });
-  };
-
-  const submit = () => {
-    setMessage(null);
-    setPhoneError(null);
-    startTransition(async () => {
-      if (askPhone && !phone) {
-        setPhoneError("Please enter your phone number");
-        return;
-      }
-      if (askName && !name) {
-        setMessage("Please enter your name");
-        return;
-      }
-      const res = await fetch("/api/display/checkin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, phone, name, email: askEmail ? email : undefined, partySize, seatingPreference: pref }),
-      });
-      const j = await res.json().catch(() => ({}));
-      if (res.ok) {
-        setTicketNumber(j.ticketNumber ?? null);
-        setStep("confirm");
-      } else {
-        if (res.status === 409) {
-          const errStr = typeof j?.error === "string" ? j.error : "This person is already waiting.";
-          setDuplicateDialog({ open: true, message: errStr });
-          return;
-        }
-        const err = (j && j.error) || "Failed to add to waiting list";
-        // If server returns a structured error for phone, surface it on the field
-        const errStr = typeof err === "string" ? err : "";
-        if (/phone/i.test(errStr)) {
-          setPhoneError(errStr.replace(/^phone:\s*/i, "").trim() || errStr);
-          setMessage(null);
-        } else {
-          setMessage(typeof err === "string" ? err : "Failed to add to waiting list");
-        }
-      }
-    });
   };
 
   return (
@@ -454,108 +426,71 @@ function KioskButton({
       >
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle className="text-2xl sm:text-3xl">
-              {step === "confirm" ? "You're all set!" : "Add to waiting list"}
-            </DialogTitle>
+            <DialogTitle>{step === "confirm" ? "You're all set!" : "Add to waitlist"}</DialogTitle>
           </DialogHeader>
 
           {step === "form" ? (
-            <div className="grid gap-5 text-foreground">
-              <div className="grid gap-2">
-                <label className="text-base font-medium">Number of people</label>
-                <Stepper value={partySize} onChange={setPartySize} min={1} max={20} />
-              </div>
-
-              {Array.isArray(seatingPreferences) && seatingPreferences.length > 0 ? (
-                <div className="grid gap-2">
-                  <label className="text-base font-medium">Seating preference</label>
-                  <div className="flex flex-wrap gap-3">
-                    {seatingPreferences.map((s) => {
-                      const active = pref === s;
-                      return (
-                        <Button
-                          type="button"
-                          key={s}
-                          onClick={() => setPref(s)}
-                          variant={active ? "default" : "secondary"}
-                          className="h-11 sm:h-14 px-4 sm:px-6 rounded-2xl text-base sm:text-lg"
-                        >
-                          {s}
-                        </Button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ) : null}
-
-              {askName && (
-                <div className="grid gap-2">
-                  <label className="text-base font-medium" htmlFor="kiosk-name">Name</label>
-                  <input
-                    id="kiosk-name"
-                    type="text"
-                    value={name || ""}
-                    onChange={(e) => setName(e.target.value)}
-                    className="block w-full rounded-xl border-0 shadow-sm ring-1 ring-inset ring-border px-4 py-3 text-2xl text-foreground focus:ring-2 focus:ring-primary bg-background"
-                    placeholder="Your Name"
-                  />
-                </div>
-              )}
-
-              {askPhone && (
-                <div className="grid gap-2">
-                  <label className="text-base font-medium" htmlFor="kiosk-phone">Phone number</label>
-                  <PhoneInput
-                    id="kiosk-phone"
-                    international
-                    defaultCountry={defaultCountry as Country}
-                    value={phone}
-                    onChange={(value) => { setPhone(value || undefined); setPhoneError(null); }}
-                    withCountryCallingCode
-                    countryCallingCodeEditable={true}
-                    className={`block w-full rounded-xl border-0 shadow-sm ring-1 ring-inset px-4 py-3 text-2xl text-foreground focus:ring-2 ${phoneError ? "ring-red-500 focus:ring-red-600" : "ring-border focus:ring-primary"}`}
-                    aria-invalid={phoneError ? true : false}
-                    aria-describedby={phoneError ? "kiosk-phone-error" : undefined}
-                  />
-                  {phoneError ? (
-                    <p id="kiosk-phone-error" className="text-sm text-red-600">{phoneError}</p>
-                  ) : null}
-                </div>
-              )}
-
-              {askEmail ? (
-                <div className="grid gap-2">
-                  <label className="text-base font-medium" htmlFor="kiosk-email">Email (optional)</label>
-                  <input
-                    id="kiosk-email"
-                    type="email"
-                    value={email || ""}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="block w-full rounded-xl border-0 shadow-sm ring-1 ring-inset ring-border px-4 py-3 text-2xl text-foreground focus:ring-2 focus:ring-primary bg-background"
-                    placeholder="name@example.com"
-                  />
-                </div>
-              ) : null}
-              <Button disabled={isPending} onClick={submit} size="lg" className="w-full h-12 sm:h-14 text-base sm:text-xl rounded-xl disabled:opacity-50">
-                {isPending ? "Submitting…" : "Join waitlist"}
-              </Button>
-              {message ? <p className="text-sm text-red-600">{message}</p> : null}
-            </div>
+            <>
+              <AddForm
+                formId="public-waitlist-form"
+                businessCountry={defaultCountry as Country}
+                lockWaitlist
+                mode="public"
+                publicConfig={{
+                  displayToken: token,
+                  waitlist: {
+                    id: waitlistId,
+                    name: "Waitlist",
+                    ask_name: askName,
+                    ask_phone: askPhone,
+                    ask_email: askEmail,
+                    seating_preferences: seatingPreferences,
+                    location_is_open: locationIsOpen,
+                    location_status_reason: locationStatusReason || null,
+                  },
+                }}
+                onPublicSuccess={({ statusUrl, ticketNumber }) => {
+                  setTicketNumber(typeof ticketNumber === "number" ? ticketNumber : null);
+                  setStatusUrl(typeof statusUrl === "string" ? statusUrl : null);
+                  setStep("confirm");
+                }}
+              />
+              <DialogFooter>
+                <Button type="submit" form="public-waitlist-form">
+                  Add
+                </Button>
+                <Button type="button" variant="outline" onClick={close}>
+                  Cancel
+                </Button>
+              </DialogFooter>
+            </>
           ) : (
-            <div className="grid gap-5 text-center text-foreground">
-              {askEmail && email ? (
-                <p className="text-lg">We sent your ticket details to your email.</p>
-              ) : askPhone ? (
-                <p className="text-lg">We&apos;ll notify you when your table is ready.</p>
-              ) : null}
-              <div>
-                <p className="text-sm text-muted-foreground">Your ticket</p>
-                <div className="mt-2 text-6xl font-extrabold text-foreground">{ticketNumber ?? "-"}</div>
+            <>
+              <div className="grid gap-4 text-center text-foreground">
+                {askEmail ? (
+                  <p className="text-sm text-muted-foreground">We sent your ticket details to your email.</p>
+                ) : askPhone ? (
+                  <p className="text-sm text-muted-foreground">We&apos;ll notify you when your table is ready.</p>
+                ) : null}
+                <div>
+                  <p className="text-sm text-muted-foreground">Your ticket</p>
+                  <div className="mt-2 text-4xl font-extrabold text-foreground">{ticketNumber ?? "-"}</div>
+                </div>
               </div>
-              <Button onClick={close} size="lg" className="w-full h-14 text-xl rounded-xl">
-                Done
-              </Button>
-            </div>
+              <DialogFooter>
+                <Button
+                  onClick={() => {
+                    if (statusUrl) {
+                      window.location.href = statusUrl;
+                      return;
+                    }
+                    close();
+                  }}
+                >
+                  Done
+                </Button>
+              </DialogFooter>
+            </>
           )}
         </DialogContent>
       </Dialog>

@@ -83,7 +83,7 @@ export default function InviteClient({ businessName, email, token }: { businessN
       });
       if (res.ok) {
           toastManager.add({ title: "Welcome!", description: `You have joined ${businessName}`, type: "success" });
-          router.push("/dashboard");
+          router.push("/lists");
       } else {
           const j = await res.json();
           toastManager.add({ title: "Error", description: j.error || "Failed to join", type: "error" });

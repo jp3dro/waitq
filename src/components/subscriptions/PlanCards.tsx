@@ -79,7 +79,7 @@ export default function PlanCards({ mode, currentPlanId, disabled, onFreeAction,
                   // Hide "Included" when user has an active paid plan
                   effectiveCurrentPlanId !== "free" ? null : isCurrentPlan ? null : (
                     <Button asChild className="w-full" disabled={disabled}>
-                      <Link href="/dashboard">Included</Link>
+                      <Link href="/lists">Included</Link>
                     </Button>
                   )
                 ) : (

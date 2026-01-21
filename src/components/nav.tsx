@@ -36,7 +36,7 @@ export default async function Nav() {
             </Button>
           ) : (
             <Button asChild size="sm">
-              <Link href="/dashboard">Dashboard</Link>
+              <Link href="/lists">Lists</Link>
             </Button>
           )}
         </div>

@@ -5,7 +5,6 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import {
-    LayoutDashboard,
     ListChecks,
     Users2,
     LogOut,
@@ -160,7 +159,7 @@ export default function PrivateSidebarClient({ userName, userEmail, businessLogo
     return (
         <Sidebar variant="floating" collapsible="none" className="border-0">
             <SidebarHeader className="py-4">
-                <Link href="/dashboard" className="flex items-center px-2" aria-label="WaitQ dashboard">
+                <Link href="/lists" className="flex items-center px-2" aria-label="WaitQ lists">
                     <Image src="/waitq.svg" alt="WaitQ" className="h-8 w-auto logo-light" width={108} height={32} />
                     <Image src="/waitq-variant.svg" alt="WaitQ" className="h-8 w-auto logo-dark" width={108} height={32} />
                 </Link>
@@ -168,10 +167,28 @@ export default function PrivateSidebarClient({ userName, userEmail, businessLogo
 
             <SidebarContent>
                 <SidebarMenu>
-                    <NavItem href="/dashboard" icon={LayoutDashboard} label="Dashboard" />
                     <NavItem href="/lists" icon={ListChecks} label="Lists" />
                     {canSeeAnalytics ? <NavItem href="/analytics" icon={BarChart3} label="Analytics" /> : null}
                     <NavItem href="/customers" icon={Users2} label="Customers" />
+                </SidebarMenu>
+
+                <div className="px-2 pt-6">
+                    <div className="px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                        Settings
+                    </div>
+                </div>
+
+                <SidebarMenu className="pb-4">
+                    {isAdmin ? <NavItem href="/business" icon={Building2} label="Business" /> : null}
+                    {isAdmin ? (
+                        <NavItem
+                            href="/subscriptions"
+                            icon={CreditCard}
+                            label="Subscription"
+                        />
+                    ) : null}
+                    {isAdmin ? <NavItem href="/locations" icon={MapPin} label="Locations" /> : null}
+                    {isAdmin ? <NavItem href="/users" icon={Users2} label="Staff users" /> : null}
                 </SidebarMenu>
 
                 {canSeeInternalAdminLinks ? (
@@ -200,27 +217,6 @@ export default function PrivateSidebarClient({ userName, userEmail, businessLogo
                         </SidebarMenu>
                     </>
                 ) : null}
-
-                <div className="mt-auto">
-                    <div className="px-2 pt-2">
-                        <div className="px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                            Settings
-                        </div>
-                    </div>
-
-                    <SidebarMenu className="pb-4">
-                        {isAdmin ? <NavItem href="/business" icon={Building2} label="Business" /> : null}
-                        {isAdmin ? (
-                            <NavItem
-                                href="/subscriptions"
-                                icon={CreditCard}
-                                label="Subscription"
-                            />
-                        ) : null}
-                        {isAdmin ? <NavItem href="/locations" icon={MapPin} label="Locations" /> : null}
-                        {isAdmin ? <NavItem href="/users" icon={Users2} label="Staff users" /> : null}
-                    </SidebarMenu>
-                </div>
             </SidebarContent>
 
             <SidebarFooter className="ml-[-8px] mr-[8px]">

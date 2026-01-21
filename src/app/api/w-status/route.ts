@@ -50,6 +50,7 @@ export async function GET(req: NextRequest) {
   const admin = getAdminClient();
 
   let nowServing: number | null = null;
+  let aheadCount: number | null = null;
   let business:
     | {
         name: string | null;
@@ -77,6 +78,19 @@ export async function GET(req: NextRequest) {
       .limit(1)
       .maybeSingle();
     nowServing = data?.ticket_number ?? null;
+
+    // Count how many waiting entries are ahead of this ticket.
+    if (entry?.ticket_number) {
+      const { count } = await admin
+        .from("waitlist_entries")
+        .select("id", { count: "exact", head: true })
+        .eq("waitlist_id", entry.waitlist_id)
+        .eq("status", "waiting")
+        .lt("ticket_number", entry.ticket_number);
+      aheadCount = typeof count === "number" ? count : null;
+    } else if (typeof entry?.queue_position === "number") {
+      aheadCount = Math.max(0, entry.queue_position - 1);
+    }
 
     // Fetch the public display token for this waitlist to support redirects
     const { data: wl } = await admin
@@ -119,7 +133,7 @@ export async function GET(req: NextRequest) {
     };
   }
 
-  return NextResponse.json({ entry, nowServing, business, displayToken, waitlistName, locationPhone });
+  return NextResponse.json({ entry, nowServing, aheadCount, business, displayToken, waitlistName, locationPhone });
 }
 
 

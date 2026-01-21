@@ -106,7 +106,7 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
       `)
       .eq("id", waitlistId)
       .single();
-    if (!fallback) redirect("/dashboard");
+    if (!fallback) redirect("/lists");
     const fb = fallback as unknown as Record<string, unknown>;
     const bl = fb["business_locations"] as unknown;
     const business_locations =
@@ -119,7 +119,7 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
       display_show_qr: false,
     } as WaitlistRow;
   } else {
-    if (error || !wlData) redirect("/dashboard");
+    if (error || !wlData) redirect("/lists");
     waitlist = wlData as WaitlistRow;
   }
   const wl = waitlist as WaitlistRow;
@@ -155,8 +155,7 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
     });
     return st.isOpen;
   })();
-  // Back-compat: older lists may have kiosk_enabled = null; treat that as "enabled by default"
-  const isLive = wl.kiosk_enabled !== false && locationIsOpen;
+  const isLive = locationIsOpen;
   const locationName = (() => {
     const loc = Array.isArray(wl.business_locations) ? wl.business_locations[0] : wl.business_locations;
     const name = (loc as { name?: unknown } | null)?.name;

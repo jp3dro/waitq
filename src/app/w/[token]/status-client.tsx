@@ -40,6 +40,7 @@ export default function ClientStatus({ token }: { token: string }) {
   const [data, setData] = useState<Entry | null>(null);
   const [loading, setLoading] = useState(true);
   const [nowServing, setNowServing] = useState<number | null>(null);
+  const [aheadCount, setAheadCount] = useState<number | null>(null);
   const [business, setBusiness] = useState<Business>(null);
   const [locationPhone, setLocationPhone] = useState<string | null>(null);
   const [isLive, setIsLive] = useState(false);
@@ -82,6 +83,7 @@ export default function ClientStatus({ token }: { token: string }) {
     const entry = (j.entry as Entry) || null;
     setData((prev) => ({ ...(prev || entry || null), ...(entry || {}) } as Entry));
     setNowServing(j.nowServing ?? null);
+    setAheadCount(typeof j.aheadCount === "number" ? j.aheadCount : null);
     setBusiness(j.business || null);
     setLocationPhone(typeof j.locationPhone === "string" && j.locationPhone.trim().length ? j.locationPhone.trim() : null);
     setDisplayToken((j.displayToken as string | null) || null);
@@ -248,6 +250,13 @@ export default function ClientStatus({ token }: { token: string }) {
   ].filter((l) => typeof l.url === "string" && l.url.trim().length > 0);
 
   const telHref = locationPhone ? `tel:${locationPhone.replace(/[^\d+]/g, "")}` : null;
+  const initials = (() => {
+    const raw = (business?.name || "").trim();
+    if (!raw) return "WQ";
+    const parts = raw.split(/\s+/);
+    if (parts.length >= 2) return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+    return raw.slice(0, 2).toUpperCase();
+  })();
   const cancelReservation = async () => {
     setCancelError(null);
     setCancelPending(true);
@@ -274,12 +283,14 @@ export default function ClientStatus({ token }: { token: string }) {
       <header className="border-b border-border bg-card py-4">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            {business?.logo_url ? (
-              <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-border bg-muted">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
+            <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-border bg-muted flex items-center justify-center">
+              {business?.logo_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img src={business.logo_url} alt="Logo" className="h-full w-full object-cover" />
-              </div>
-            ) : null}
+              ) : (
+                <span className="text-sm font-semibold text-muted-foreground">{initials}</span>
+              )}
+            </div>
             <div className="flex flex-col">
               {business?.name ? (
                 <p className="text-sm font-medium text-muted-foreground leading-none mb-1">{business.name}</p>
@@ -311,7 +322,7 @@ export default function ClientStatus({ token }: { token: string }) {
               </p>
               {typeof yourNumber === "number" ? (
                 <div className="mt-6">
-                  <div className="text-sm text-muted-foreground">Your number</div>
+                  <div className="text-sm text-muted-foreground">Your ticket</div>
                   <div className="mt-1 text-6xl font-extrabold text-foreground">{yourNumber}</div>
                 </div>
               ) : null}
@@ -322,7 +333,7 @@ export default function ClientStatus({ token }: { token: string }) {
               <p className="mt-2 text-foreground">Please proceed to {business?.name || "the venue"}</p>
               {typeof yourNumber === 'number' ? (
                 <div className="mt-6">
-                  <div className="text-sm text-foreground">Your number</div>
+                  <div className="text-sm text-foreground">Your ticket</div>
                   <div className="mt-1 text-6xl font-extrabold text-foreground">{yourNumber}</div>
                 </div>
               ) : null}
@@ -338,7 +349,7 @@ export default function ClientStatus({ token }: { token: string }) {
                   </div>
                 ) : null}
 
-                <div className="text-lg font-bold text-foreground">Your number</div>
+                <div className="text-lg font-bold text-foreground">Your ticket</div>
                 <div className="mt-1 text-7xl font-extrabold text-foreground">{typeof yourNumber === 'number' ? yourNumber : '-'}</div>
 
                 <div className="mt-6 flex items-center justify-center gap-4 flex-wrap">
@@ -355,6 +366,33 @@ export default function ClientStatus({ token }: { token: string }) {
 
                 {typeof data.eta_minutes === 'number' && (!(typeof yourNumber === 'number' && typeof nowServing === 'number' && (yourNumber - nowServing <= 1))) ? (
                   <div className="mt-8 text-sm text-foreground">Estimated wait: <span className="font-medium">{data.eta_minutes} min</span></div>
+                ) : null}
+
+                {!isTerminal ? (
+                  <div className="mt-8 flex flex-col items-center gap-2">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" disabled={cancelPending}>
+                          Remove me from the waitlist
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Cancel your reservation?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            You&apos;ll be removed from the waitlist. You can rejoin if needed.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter className="w-full justify-between">
+                          <AlertDialogAction onClick={cancelReservation} disabled={cancelPending}>
+                            {cancelPending ? "Removing…" : "Remove me"}
+                          </AlertDialogAction>
+                          <AlertDialogCancel>Remain in the waitlist</AlertDialogCancel>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                    {cancelError ? <p className="text-xs text-destructive">{cancelError}</p> : null}
+                  </div>
                 ) : null}
               </div>
 
@@ -374,6 +412,11 @@ export default function ClientStatus({ token }: { token: string }) {
                   <span className={isLive ? "text-foreground" : "text-muted-foreground"}>Now serving</span>
                 </div>
                 <div className="mt-1 text-5xl font-bold text-foreground">{typeof nowServing === 'number' ? nowServing : '-'}</div>
+                {typeof aheadCount === "number" ? (
+                  <div className="mt-2 text-sm text-muted-foreground">
+                    {aheadCount === 0 ? "No one ahead of you" : `${aheadCount} ${aheadCount === 1 ? "person" : "people"} ahead of you`}
+                  </div>
+                ) : null}
               </div>
 
               {(links.length || telHref) ? (
@@ -403,33 +446,6 @@ export default function ClientStatus({ token }: { token: string }) {
               ) : null}
             </div>
           )}
-
-          {!isTerminal ? (
-            <div className="mt-6 flex flex-col items-center gap-2">
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="outline" disabled={cancelPending}>
-                    Cancel reservation
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Cancel your reservation?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      You&apos;ll be removed from the waitlist. You can rejoin if needed.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Keep my spot</AlertDialogCancel>
-                    <AlertDialogAction onClick={cancelReservation} disabled={cancelPending}>
-                      {cancelPending ? "Cancelling…" : "Cancel reservation"}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-              {cancelError ? <p className="text-xs text-destructive">{cancelError}</p> : null}
-            </div>
-          ) : null}
 
           <div className="mt-6 flex items-center justify-center">
             <Link href="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground">

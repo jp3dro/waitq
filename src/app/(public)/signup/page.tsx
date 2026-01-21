@@ -67,7 +67,7 @@ function SignupPageContent() {
       return;
     }
     if (data.session) {
-      router.push("/dashboard");
+      router.push("/lists");
       router.refresh();
       return;
     }

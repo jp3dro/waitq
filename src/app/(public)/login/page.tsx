@@ -49,7 +49,7 @@ function LoginPageContent() {
                   body: JSON.stringify({ token: inviteToken })
               });
           }
-          router.push("/dashboard");
+          router.push("/lists");
           router.refresh();
       }
   };

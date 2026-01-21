@@ -47,10 +47,10 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // Default to dashboard if everything is fine (or if code is missing/error)
-  // Ideally, if error, we might want to redirect to login with error, but standard is dashboard/home
+  // Default to lists if everything is fine (or if code is missing/error)
+  // Ideally, if error, we might want to redirect to login with error, but standard is lists/home
   return NextResponse.redirect(
-    new URL(safeNext || "/dashboard", process.env.NEXT_PUBLIC_SITE_URL || req.url)
+    new URL(safeNext || "/lists", process.env.NEXT_PUBLIC_SITE_URL || req.url)
   );
 }
 
