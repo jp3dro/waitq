@@ -9,6 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { dateToClockLabel, hourToLabel, normalizeTimeFormat, type TimeFormat } from "@/lib/time-format";
+import UpgradeRequiredDialog from "@/components/upgrade-required-dialog";
+import type { PlanId } from "@/lib/plans";
 
 type CreatedRow = { created_at: string };
 type ServedRow = { created_at: string; notified_at: string | null; waitlist_id: string | null };
@@ -179,6 +181,8 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = React.useState(true);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [rangeMode, setRangeMode] = React.useState<"today" | "7" | "15" | "30">("today");
+  const [planId, setPlanId] = React.useState<PlanId>("free");
+  const [upgradeOpen, setUpgradeOpen] = React.useState(false);
   const [locations, setLocations] = React.useState<LocationRow[]>([]);
   const [waitlists, setWaitlists] = React.useState<WaitlistRow[]>([]);
   const [locationId, setLocationId] = React.useState<string>("all");
@@ -347,6 +351,10 @@ export default function AnalyticsPage() {
     // Load filter options (client-side, RLS-scoped)
     (async () => {
       try {
+        const pRes = await fetch("/api/plan", { cache: "no-store" });
+        const pJ = await pRes.json().catch(() => ({}));
+        if (pRes.ok && typeof pJ?.planId === "string") setPlanId(pJ.planId as PlanId);
+
         const [locRes, wlRes] = await Promise.all([
           supabase.from("business_locations").select("id, name").order("name"),
           supabase.from("waitlists").select("id, name, location_id").order("created_at", { ascending: true }),
@@ -358,6 +366,11 @@ export default function AnalyticsPage() {
       }
     })();
   }, [supabase]);
+
+  React.useEffect(() => {
+    // Safety: ensure free users never end up in a range mode other than today
+    if (planId === "free" && rangeMode !== "today") setRangeMode("today");
+  }, [planId, rangeMode]);
 
   React.useEffect(() => {
     const days: 7 | 15 | 30 = rangeMode === "15" ? 15 : rangeMode === "30" ? 30 : 7;
@@ -431,7 +444,18 @@ export default function AnalyticsPage() {
       <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
-          <Tabs value={rangeMode} onValueChange={(v) => setRangeMode(v as "today" | "7" | "15" | "30")}>
+          <Tabs
+            value={rangeMode}
+            onValueChange={(v) => {
+              const next = v as "today" | "7" | "15" | "30";
+              if (planId === "free" && next !== "today") {
+                setUpgradeOpen(true);
+                setRangeMode("today");
+                return;
+              }
+              setRangeMode(next);
+            }}
+          >
             <TabsList variant="default">
               <TabsTrigger value="today">Today</TabsTrigger>
               <TabsTrigger value="7">Last 7 days</TabsTrigger>
@@ -558,6 +582,15 @@ export default function AnalyticsPage() {
           </div>
         </div>
       </div>
+
+      <UpgradeRequiredDialog
+        open={upgradeOpen}
+        onOpenChange={setUpgradeOpen}
+        title="Upgrade to unlock advanced analytics"
+        description="Your current plan includes Today analytics only. Upgrade to view advanced analytics up to 30 days."
+        ctaLabel="View plans"
+        ctaHref="/subscriptions"
+      />
     </main>
   );
 }

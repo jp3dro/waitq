@@ -58,10 +58,15 @@ export async function POST(req: NextRequest) {
     const text = await res.text();
 
     // Basic parsing (VIES returns <valid>true|false</valid>, plus optional <name>, <address>)
-    const validMatch = text.match(/<valid>\s*(true|false)\s*<\/valid>/i);
+    // Response tags are usually namespaced (e.g. <ns2:valid>), so allow an optional prefix.
+    const validMatch = text.match(/<(?:(?:[a-z0-9_-]+):)?valid>\s*(true|false)\s*<\/(?:(?:[a-z0-9_-]+):)?valid>/i);
     const valid = validMatch?.[1]?.toLowerCase() === "true";
-    const name = (text.match(/<name>\s*([\s\S]*?)\s*<\/name>/i)?.[1] || "").trim() || null;
-    const address = (text.match(/<address>\s*([\s\S]*?)\s*<\/address>/i)?.[1] || "").trim() || null;
+    const name =
+      (text.match(/<(?:(?:[a-z0-9_-]+):)?name>\s*([\s\S]*?)\s*<\/(?:(?:[a-z0-9_-]+):)?name>/i)?.[1] || "")
+        .trim() || null;
+    const address =
+      (text.match(/<(?:(?:[a-z0-9_-]+):)?address>\s*([\s\S]*?)\s*<\/(?:(?:[a-z0-9_-]+):)?address>/i)?.[1] || "")
+        .trim() || null;
 
     // VIES sometimes returns SOAP faults or non-standard payloads (service unavailable, member state down, etc).
     // Treat these as a non-fatal "unavailable" result so the UI can show a helpful message.

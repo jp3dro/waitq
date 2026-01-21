@@ -43,7 +43,7 @@ export const plans: Record<PlanId, PlanDefinition> = {
     features: [
       "Digital Waitlist & Reservations",
       "Public Status Page",
-      "Basic Statistics",
+      "Today analytics only",
       "Email Support",
     ],
     stripe: {
@@ -64,6 +64,7 @@ export const plans: Record<PlanId, PlanDefinition> = {
     },
     features: [
       "Customizable SMS Branding",
+      "Advanced analytics up to 30 days",
       "Detailed Statistics & CSV Export",
       "Up to 5 Locations",
       "Standard Support",
@@ -86,7 +87,7 @@ export const plans: Record<PlanId, PlanDefinition> = {
       messagesPerMonth: 5000,
     },
     features: [
-      "Advanced Analytics",
+      "Advanced analytics up to 30 days",
       "Priority Support",
       "Unlimited Scale",
       "Dedicated Account Manager",
@@ -201,9 +202,9 @@ export const pricingFeatures = [
   {
     category: "Analytics & Reports",
     name: "Usage Statistics",
-    free: "Basic",
-    base: "Detailed",
-    premium: "Advanced",
+    free: "Today analytics only",
+    base: "Advanced analytics up to 30 days",
+    premium: "Advanced analytics up to 30 days",
   },
   {
     category: "Analytics & Reports",

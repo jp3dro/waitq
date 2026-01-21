@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
 import { getCountries } from "react-phone-number-input";
 import { useRouter } from "next/navigation";
 import { toastManager } from "@/hooks/use-toast";
@@ -141,11 +141,40 @@ export default function BusinessDetailsClient({ initial, canEdit }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ countryCode: cc, vatId: v }),
       });
-      const j = (await res.json().catch(() => ({}))) as { valid?: boolean | null; reason?: string };
+      const j = (await res.json().catch(() => ({}))) as {
+        valid?: boolean | null;
+        reason?: string;
+        name?: string | null;
+        address?: string | null;
+      };
+
+      const nowIso = new Date().toISOString();
+      const persistValidation = async (valid: boolean) => {
+        try {
+          // Best-effort: persist VAT ID and validation result for billing/records.
+          // If the DB schema doesn't include these columns, the API gracefully retries without them.
+          await fetch("/api/business", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              vatId: v,
+              vatIdValid: valid,
+              vatIdValidatedAt: nowIso,
+              vatIdName: j?.name ?? null,
+              vatIdAddress: j?.address ?? null,
+            }),
+          });
+        } catch {
+          // ignore (best-effort persistence)
+        }
+      };
+
       if (res.ok && j?.valid === true) {
         setVatStatus({ state: "valid" });
+        void persistValidation(true);
       } else if (res.ok && j?.valid === false) {
         setVatStatus({ state: "invalid", detail: typeof j?.reason === "string" ? j.reason : undefined });
+        void persistValidation(false);
       } else {
         setVatStatus({ state: "error", detail: typeof j?.reason === "string" ? j.reason : "Unable to validate VAT ID" });
       }
