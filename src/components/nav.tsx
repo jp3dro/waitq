@@ -21,7 +21,7 @@ export default async function Nav() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 px-4 pt-4">
-      <div className="mx-auto max-w-[1200px] backdrop-blur-xl bg-background/90 dark:bg-background/80 rounded-2xl border border-border/50 shadow-lg shadow-black/5">
+      <div className="mx-auto max-w-[1200px] backdrop-blur-xl bg-background/90 dark:bg-background/80 rounded-2xl border border-border shadow-lg shadow-black/5">
         <div className="px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-8 min-w-0">
             <Link href="/" className="flex items-center" aria-label="WaitQ home">
@@ -33,16 +33,16 @@ export default async function Nav() {
             <NavigationMenu>
               <NavigationMenuList>
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="h-9 px-3">Platform</NavigationMenuTrigger>
+                  <NavigationMenuTrigger className="h-7 px-3">Platform</NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <ul className="grid w-[400px] gap-3 p-4">
+                    <ul className="grid w-[400px] gap-2">
                       <li>
                         <NavigationMenuLink asChild>
                           <Link
                             href="/platform/virtual-waitlist"
-                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                            className="block select-none space-y-1 rounded-md p-3 no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                           >
-                            <div className="text-sm font-medium leading-none">Virtual Waitlist</div>
+                            <div className="text-sm font-medium">Virtual Waitlist</div>
                             <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
                               Keep customers in the loop with real-time waitlist updates
                             </p>
@@ -53,9 +53,9 @@ export default async function Nav() {
                         <NavigationMenuLink asChild>
                           <Link
                             href="/use-cases/restaurants"
-                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                            className="block select-none space-y-1 rounded-md p-3 no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                           >
-                            <div className="text-sm font-medium leading-none">For Restaurants</div>
+                            <div className="text-sm font-medium">For Restaurants</div>
                             <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
                               Restaurant-specific queue management solutions
                             </p>
@@ -81,7 +81,7 @@ export default async function Nav() {
             <Button asChild variant="ghost" size="sm" className="hidden md:inline-flex">
               <Link href="/login">Log in</Link>
             </Button>
-            <Button asChild size="sm" className="bg-orange-500 hover:bg-orange-600 text-white">
+            <Button asChild size="sm">
               <Link href="/signup">Try for free</Link>
             </Button>
           </div>
