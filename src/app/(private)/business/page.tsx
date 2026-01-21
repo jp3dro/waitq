@@ -41,22 +41,27 @@ export default async function BusinessPage() {
     canEdit = (member?.role as string | undefined) === "admin";
   }
 
-  const { data: biz } = businessId
-    ? await supabase
-        .from("businesses")
-        .select(
-          "id, name, logo_url, cover_url, accent_color, background_color, country_code, time_format, owner_user_id, created_at, website_url, instagram_url, facebook_url, google_maps_url, menu_url"
-        )
-        .eq("id", businessId)
-        .maybeSingle()
-    : await supabase
-        .from("businesses")
-        .select(
-          "id, name, logo_url, cover_url, accent_color, background_color, country_code, time_format, owner_user_id, created_at, website_url, instagram_url, facebook_url, google_maps_url, menu_url"
-        )
-        .order("created_at", { ascending: true })
-        .limit(1)
-        .maybeSingle();
+  // Some deployments may not have the newest optional columns yet (schema cache lag / missing migrations).
+  // Always fallback to a minimal select so the page still loads.
+  const fullSelect =
+    "id, name, logo_url, cover_url, accent_color, background_color, country_code, time_format, owner_user_id, created_at, website_url, instagram_url, facebook_url, google_maps_url, menu_url, vat_id";
+  const fallbackSelect =
+    "id, name, logo_url, cover_url, accent_color, background_color, country_code, time_format, owner_user_id, created_at";
+
+  const query = businessId
+    ? supabase.from("businesses").select(fullSelect).eq("id", businessId).maybeSingle()
+    : supabase.from("businesses").select(fullSelect).order("created_at", { ascending: true }).limit(1).maybeSingle();
+
+  let biz: any = null;
+  const first = await query;
+  if (first?.error && typeof first.error.message === "string" && first.error.message.toLowerCase().includes("column")) {
+    const retry = businessId
+      ? await supabase.from("businesses").select(fallbackSelect).eq("id", businessId).maybeSingle()
+      : await supabase.from("businesses").select(fallbackSelect).order("created_at", { ascending: true }).limit(1).maybeSingle();
+    biz = retry.data ?? null;
+  } else {
+    biz = first.data ?? null;
+  }
 
   const business = (biz || null) as {
     id: string;

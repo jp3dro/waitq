@@ -245,23 +245,28 @@ export default function EditListButton({
               <Input value={name} onChange={(e) => setName(e.target.value)} />
             </div>
 
-            {locations.length > 1 && (
-              <div className="grid gap-2">
-                <Label>Location</Label>
-                <Select value={locationId} onValueChange={setLocationId} disabled={isPending}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select location" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {locations.map((l) => (
-                      <SelectItem key={l.id} value={l.id}>
-                        {l.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
+            <div className="grid gap-2">
+              <Label>Location</Label>
+              <Select
+                value={locationId}
+                onValueChange={setLocationId}
+                disabled={isPending || locations.length <= 1}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select location" />
+                </SelectTrigger>
+                <SelectContent>
+                  {locations.map((l) => (
+                    <SelectItem key={l.id} value={l.id}>
+                      {l.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {locations.length <= 1 ? (
+                <p className="text-xs text-muted-foreground">Create another location to move this list.</p>
+              ) : null}
+            </div>
 
             <div className="grid gap-4 mt-2">
               <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">List preferences</h3>

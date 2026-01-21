@@ -350,8 +350,8 @@ export default function OnboardingWizard({ initialStep, initialData }: { initial
                                 </CardContent>
 
                                 <CardFooter className="flex items-center">
-                                    <Button type="submit" className="w-full" disabled={loading}>
-                                        {loading && <Loader2 className="mr-2 h-4 w-4 mt-2 animate-spin" />}
+                                    <Button type="submit" className="w-full mt-6" disabled={loading}>
+                                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                         Continue
                                     </Button>
                                 </CardFooter>

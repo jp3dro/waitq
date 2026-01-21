@@ -190,11 +190,6 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
                 Live
               </Badge>
             ) : null}
-            {locationName ? (
-              <Badge variant="outline" className="text-xs">
-                {locationName}
-              </Badge>
-            ) : null}
           </div>
         </div>
 

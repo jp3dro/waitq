@@ -30,6 +30,10 @@ export default function ListCard({
   displayEnabled,
   displayShowName,
   displayShowQr,
+  askName,
+  askPhone,
+  askEmail,
+  seatingPreferences,
   locationIsOpen,
   locations,
   disableDelete,
@@ -46,6 +50,10 @@ export default function ListCard({
   displayEnabled?: boolean | null;
   displayShowName?: boolean | null;
   displayShowQr?: boolean | null;
+  askName?: boolean | null;
+  askPhone?: boolean | null;
+  askEmail?: boolean | null;
+  seatingPreferences?: string[] | null;
   locationIsOpen?: boolean;
   locations?: { id: string; name: string }[];
   disableDelete?: boolean;
@@ -180,10 +188,14 @@ export default function ListCard({
         waitlistId={id}
         initialName={name}
         initialLocationId={initialLocationId || undefined}
-        initialKioskEnabled={!!kioskEnabled}
+        initialKioskEnabled={kioskEnabled !== false}
         initialDisplayEnabled={displayEnabled !== false}
         initialDisplayShowName={displayShowName !== false}
         initialDisplayShowQr={displayShowQr === true}
+        initialAskName={askName !== false}
+        initialAskPhone={askPhone !== false}
+        initialAskEmail={askEmail === true}
+        initialSeatingPreferences={seatingPreferences || []}
         locations={locations || []}
         controlledOpen={editOpen}
         onOpenChange={setEditOpen}
