@@ -2,141 +2,64 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-export const metadata = { 
-  title: "WaitQ - The virtual waitlist that keeps guests from walking away",
-  description: "Modern restaurant waitlist management software with SMS notifications. No app required. Manage queues, reduce wait times, and improve customer experience. Starting at $19/mo.",
+export const metadata = {
+  title: "Virtual Waitlist | WaitQ",
+  description: "The virtual waitlist that keeps customers in the loop. Manage walk-ins, reservations, and SMS updates in one intuitive platform.",
 };
 
-export default function HomePage() {
-  // FAQ structured data for rich snippets
-  const faqStructuredData = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": [
-      {
-        "@type": "Question",
-        "name": "Do guests need an app?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "No. Customers receive SMS text messages with a link to track their place in line. They can view their status from any web browser without downloading anything."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Does it work without WiFi integration?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Yes. WaitQ works on any device with an internet connection. No special hardware or integration required."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Is billing based on each waitlist?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "No, billing is based on your plan tier. You can create unlimited waitlists within your plan limits."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "What are my payment options?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "We accept all major credit cards and can accommodate invoicing for annual plans."
-        }
-      }
-    ]
-  };
-
+export default function VirtualWaitlistPage() {
   return (
     <main>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqStructuredData) }}
-      />
-
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-b from-background via-background to-muted/30">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2Utb3BhY2l0eT0iMC4wNSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-40" />
-        <div className="relative mx-auto max-w-[1200px] px-6 lg:px-8 pt-24 pb-20">
-          <div className="mx-auto max-w-4xl text-center">
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
-              The virtual waitlist that keeps guests from walking away
-            </h1>
-            <p className="mt-6 text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
-              Turn waitlists into warm welcomes. Manage walk-ins, reservations, and SMS updates in one intuitive platform designed for restaurants.
-            </p>
-            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button asChild size="lg" className="bg-orange-500 hover:bg-orange-600 text-white px-8">
-                <Link href="/signup">Try Free</Link>
-              </Button>
-              <Button asChild size="lg" variant="outline">
-                <Link href="/contact">See how it works</Link>
-              </Button>
+      <section className="relative bg-gradient-to-b from-background to-muted/20 pt-20 pb-16">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
+                The virtual waitlist that keeps customers in the loop
+              </h1>
+              <p className="mt-6 text-lg text-muted-foreground">
+                Turn waitlists into warm welcomes. Manage walk-ins, reservations, and SMS updates in one intuitive platform designed for restaurants.
+              </p>
+              <div className="mt-8 flex flex-col sm:flex-row gap-4">
+                <Button asChild size="lg" className="bg-orange-500 hover:bg-orange-600 text-white">
+                  <Link href="/signup">Try Free</Link>
+                </Button>
+                <Button asChild variant="outline" size="lg">
+                  <Link href="/contact">See how it works</Link>
+                </Button>
+              </div>
+              <p className="mt-4 text-sm text-muted-foreground flex items-center gap-2">
+                <svg className="w-4 h-4 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                Trusted by 2,000+ restaurants
+              </p>
             </div>
-            <p className="mt-6 text-sm text-muted-foreground flex items-center justify-center gap-2">
-              <svg className="w-4 h-4 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              Trusted by 2,000+ restaurants
-            </p>
+            <div className="relative">
+              <div className="aspect-[4/3] bg-muted rounded-2xl shadow-2xl overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-transparent" />
+                {/* Placeholder for phone mockup image */}
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center p-8">
+                    <svg className="w-24 h-24 mx-auto text-muted-foreground/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                    <p className="mt-4 text-sm text-muted-foreground">Phone mockup placeholder</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Problem/Solution Section */}
+      {/* Better Guest Experience Section */}
       <section className="py-20 border-t">
-        <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-          <div className="mx-auto max-w-3xl text-center">
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Stop losing revenue to long waits</h2>
-            <p className="mt-4 text-lg text-muted-foreground">
-              Easily manage restaurant queues, send real-time notifications, and SMS updates in one place.
-            </p>
-          </div>
-          <div className="mt-16 grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="mx-auto w-16 h-16 rounded-2xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center mb-4">
-                <svg className="w-8 h-8 text-orange-600 dark:text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold">Front-door chaos</h3>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Crowded lobbies make guests leave, causing you to lose potential revenue.
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="mx-auto w-16 h-16 rounded-2xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center mb-4">
-                <svg className="w-8 h-8 text-orange-600 dark:text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold">Paper waitlists</h3>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Clipboards don't work anymore. Guests expect text updates about their table.
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="mx-auto w-16 h-16 rounded-2xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center mb-4">
-                <svg className="w-8 h-8 text-orange-600 dark:text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold">Poor guest experience</h3>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Keep guests informed with accurate wait times and manage crowds effortlessly.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Better Guest Impressions Section */}
-      <section className="py-20 border-t bg-muted/30">
-        <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="relative">
-              <div className="aspect-[4/3] bg-background rounded-2xl shadow-xl overflow-hidden">
+              <div className="aspect-[4/3] bg-muted rounded-2xl shadow-xl overflow-hidden">
                 {/* Placeholder for restaurant image */}
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center p-8">
@@ -150,7 +73,7 @@ export default function HomePage() {
             </div>
             <div>
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-                Better guest first impressions
+                Better guest experience, better reputation
               </h2>
               <p className="mt-4 text-lg text-muted-foreground">
                 Keep customers informed with accurate wait times as public display or directly on their phone
@@ -160,19 +83,19 @@ export default function HomePage() {
                   <svg className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-muted-foreground">Manage join inflow to the waitlist from their phone or kiosk, or from emails on public display or directly on their phone</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <svg className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-muted-foreground">Let customers informed with text times of public display or directly on their phone</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <svg className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
                   <span className="text-muted-foreground">Customers get honest wait times that update in real time</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-muted-foreground">Anyone can check-in from their phone or kiosk</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-muted-foreground">No app downloads required</span>
                 </li>
               </ul>
             </div>
@@ -180,16 +103,16 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Handling Peak Hours Section */}
-      <section className="py-20 border-t">
-        <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
+      {/* Manage Smart Queues Section */}
+      <section className="py-20 border-t bg-muted/30">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-                Handling of peak hours with ease
+                Manage smart queues without the chaos
               </h2>
               <p className="mt-4 text-lg text-muted-foreground">
-                Keep the front-of-house stress-free and organized
+                Keep the front-of-house stress-free and organized. Know who's waiting and who's next in a glance.
               </p>
               <ul className="mt-8 space-y-4">
                 <li className="flex items-start gap-3">
@@ -229,18 +152,18 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Simple Powerful Solution Section */}
-      <section className="py-20 border-t bg-muted/30">
-        <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
+      {/* How Digital Waitlist Works */}
+      <section className="py-20 border-t">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-              Simple, powerful solution to let guests flow through
+              How our digital waitlist works
             </h2>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {/* Self Check-in */}
-            <div>
-              <div className="aspect-[4/3] bg-background rounded-xl shadow-lg overflow-hidden mb-6">
+            <div className="text-center">
+              <div className="aspect-[4/3] bg-muted rounded-xl shadow-lg overflow-hidden mb-6">
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center p-8">
                     <svg className="w-20 h-20 mx-auto text-muted-foreground/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -249,18 +172,18 @@ export default function HomePage() {
                   </div>
                 </div>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Self check-in</h3>
-              <p className="text-sm text-muted-foreground mb-3">
-                Self check-in or host-check-in: all it takes is a name and phone number, or email.
+              <h3 className="text-xl font-semibold mb-2">Guests are added to the waitlist</h3>
+              <p className="text-sm text-muted-foreground">
+                Self check-in or host check-in: all it takes is a name and phone number or email.
               </p>
-              <Button asChild variant="link" className="p-0 h-auto text-sm">
-                <Link href="/platform/virtual-waitlist">Read about self check-in &rarr;</Link>
+              <Button asChild variant="link" className="mt-2">
+                <Link href="/use-cases/restaurants">Read about self check-in &rarr;</Link>
               </Button>
             </div>
 
             {/* Virtual Waitlist */}
-            <div>
-              <div className="aspect-[4/3] bg-background rounded-xl shadow-lg overflow-hidden mb-6">
+            <div className="text-center">
+              <div className="aspect-[4/3] bg-muted rounded-xl shadow-lg overflow-hidden mb-6">
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center p-8">
                     <svg className="w-20 h-20 mx-auto text-muted-foreground/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -269,18 +192,18 @@ export default function HomePage() {
                   </div>
                 </div>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Virtual waitlist</h3>
-              <p className="text-sm text-muted-foreground mb-3">
-                From the queue the customers wait times are updated on their devices and on kiosks.
+              <h3 className="text-xl font-semibold mb-2">Full transparency for everyone</h3>
+              <p className="text-sm text-muted-foreground">
+                Anyone can see who's waiting, and who's next in a glance.
               </p>
-              <Button asChild variant="link" className="p-0 h-auto text-sm">
-                <Link href="/platform/virtual-waitlist">Read about virtual waitlist &rarr;</Link>
+              <Button asChild variant="link" className="mt-2">
+                <Link href="/use-cases/restaurants">Read about virtual waitlist &rarr;</Link>
               </Button>
             </div>
 
-            {/* Virtual Status Views */}
-            <div>
-              <div className="aspect-[4/3] bg-background rounded-xl shadow-lg overflow-hidden mb-6">
+            {/* Seat with One Tap */}
+            <div className="text-center">
+              <div className="aspect-[4/3] bg-muted rounded-xl shadow-lg overflow-hidden mb-6">
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center p-8">
                     <svg className="w-20 h-20 mx-auto text-muted-foreground/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -289,29 +212,29 @@ export default function HomePage() {
                   </div>
                 </div>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Virtual status views</h3>
-              <p className="text-sm text-muted-foreground mb-3">
-                When a table is ready, notify the guest and mark them with one tap. Simple, fast, and no need or training or hardware needed.
+              <h3 className="text-xl font-semibold mb-2">Seat with one tap</h3>
+              <p className="text-sm text-muted-foreground">
+                When a table is ready, notify the guest and mark them as seated. Simple and fast.
               </p>
-              <Button asChild variant="link" className="p-0 h-auto text-sm">
-                <Link href="/platform/virtual-waitlist">Read about waitlist &rarr;</Link>
+              <Button asChild variant="link" className="mt-2">
+                <Link href="/use-cases/restaurants">Read about waitlist &rarr;</Link>
               </Button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* With All Features Section */}
-      <section className="py-20 border-t">
-        <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
+      {/* All You Need Section */}
+      <section className="py-20 border-t bg-muted/30">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-              With all the features your restaurant needs
+              All you need to manage your waitlist
             </h2>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {/* Multiple Join Methods */}
-            <div>
+            <div className="bg-background rounded-xl p-6 shadow-sm">
               <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mb-4">
                 <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -319,12 +242,12 @@ export default function HomePage() {
               </div>
               <h3 className="font-semibold mb-2">Multiple join methods</h3>
               <p className="text-sm text-muted-foreground">
-                Self check-in, QR codes, email or SMS or host check-in.
+                Self check-in, QR codes, email or SMS or host check-in. Make it easy for guests to join.
               </p>
             </div>
 
             {/* Real-Time Queue */}
-            <div>
+            <div className="bg-background rounded-xl p-6 shadow-sm">
               <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mb-4">
                 <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -332,25 +255,26 @@ export default function HomePage() {
               </div>
               <h3 className="font-semibold mb-2">Real-Time Queue</h3>
               <p className="text-sm text-muted-foreground">
-                See what's happening, who's next, and manage in real-time.
+                See what's happening, who's next, and manage your entire waitlist in real-time.
               </p>
             </div>
 
             {/* Public Display */}
-            <div>
+            <div className="bg-background rounded-xl p-6 shadow-sm">
               <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center mb-4">
                 <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
               </div>
               <h3 className="font-semibold mb-2">Public Display</h3>
+              <h3 className="font-semibold mb-2">Public Display</h3>
               <p className="text-sm text-muted-foreground">
-                Optional gen-fencing or party size limits to prevent abuses.
+                Show current wait times on a TV screen at your entrance or have guests track online.
               </p>
             </div>
 
             {/* Multi-Location */}
-            <div>
+            <div className="bg-background rounded-xl p-6 shadow-sm">
               <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center mb-4">
                 <svg className="w-6 h-6 text-orange-600 dark:text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -362,55 +286,55 @@ export default function HomePage() {
               </p>
             </div>
 
-            {/* SMS Notifications */}
-            <div>
+            {/* Self-Service Kiosk */}
+            <div className="bg-background rounded-xl p-6 shadow-sm">
               <div className="w-12 h-12 bg-pink-100 dark:bg-pink-900/30 rounded-lg flex items-center justify-center mb-4">
                 <svg className="w-6 h-6 text-pink-600 dark:text-pink-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                </svg>
-              </div>
-              <h3 className="font-semibold mb-2">Text & Game</h3>
-              <p className="text-sm text-muted-foreground">
-                Real-time updates, who's next, and manage your entire waitlist.
-              </p>
-            </div>
-
-            {/* Self-Service Kiosk */}
-            <div>
-              <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                 </svg>
               </div>
               <h3 className="font-semibold mb-2">Self-Service Kiosk</h3>
               <p className="text-sm text-muted-foreground">
-                Let guests add themselves to the waitlist on their own.
+                Let guests add themselves to the waitlist via tablet or QR code.
               </p>
             </div>
 
             {/* Analytics */}
-            <div>
-              <div className="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="bg-background rounded-xl p-6 shadow-sm">
+              <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
               <h3 className="font-semibold mb-2">Analytics & Insights</h3>
               <p className="text-sm text-muted-foreground">
-                Track peak hours, wait times, and more with your experience data predictions.
+                Track peak hours, wait times, and customer patterns.
               </p>
             </div>
 
             {/* Accurate Wait Times */}
-            <div>
-              <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="bg-background rounded-xl p-6 shadow-sm">
+              <div className="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <h3 className="font-semibold mb-2">Accurate Wait Times</h3>
               <p className="text-sm text-muted-foreground">
-                Smart estimates based on real-time and historical data.
+                Smart estimates based on real-time data and historical patterns.
+              </p>
+            </div>
+
+            {/* Full control */}
+            <div className="bg-background rounded-xl p-6 shadow-sm">
+              <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                </svg>
+              </div>
+              <h3 className="font-semibold mb-2">Full control</h3>
+              <p className="text-sm text-muted-foreground">
+                Optional gen-fencing or party size limits to prevent abuses.
               </p>
             </div>
           </div>
@@ -418,8 +342,8 @@ export default function HomePage() {
       </section>
 
       {/* Social Proof Section */}
-      <section className="py-20 border-t bg-muted/30">
-        <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
+      <section className="py-20 border-t">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold tracking-tight">Trusted by top restaurants worldwide</h2>
           </div>
@@ -437,8 +361,8 @@ export default function HomePage() {
               <p className="mt-2 text-sm text-muted-foreground">Average customer rating</p>
             </div>
           </div>
-          <div className="mt-16 max-w-3xl mx-auto">
-            <div className="bg-background rounded-xl p-8 shadow-sm">
+          <div className="mt-12 max-w-3xl mx-auto">
+            <div className="bg-muted/50 rounded-xl p-8">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 bg-primary/10 rounded-full flex-shrink-0" />
                 <div>
@@ -453,32 +377,32 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="py-20 border-t">
+      {/* FAQ Section */}
+      <section className="py-20 border-t bg-muted/30">
         <div className="mx-auto max-w-3xl px-6 lg:px-8">
           <h2 className="text-3xl font-bold tracking-tight text-center mb-10">
             Frequently asked questions
           </h2>
           <div className="space-y-4">
-            <details className="group bg-card rounded-lg p-6">
+            <details className="group bg-background rounded-lg p-6">
               <summary className="flex cursor-pointer list-none items-center justify-between font-medium">
-                Do guests need an app?
+                Can I use WaitQ for free?
                 <span className="ml-2 text-muted-foreground group-open:rotate-180 transition">⌄</span>
               </summary>
               <p className="mt-3 text-sm text-muted-foreground">
-                No. Customers receive SMS text messages with a link to track their place in line. They can view their status from any web browser without downloading anything.
+                Yes! We offer a free tier to get started. You can upgrade as your needs grow.
               </p>
             </details>
-            <details className="group bg-card rounded-lg p-6">
+            <details className="group bg-background rounded-lg p-6">
               <summary className="flex cursor-pointer list-none items-center justify-between font-medium">
-                Does it work without WiFi integration?
+                Realistically, what is the expected ROI of WaitQ?
                 <span className="ml-2 text-muted-foreground group-open:rotate-180 transition">⌄</span>
               </summary>
               <p className="mt-3 text-sm text-muted-foreground">
-                Yes. WaitQ works on any device with an internet connection. No special hardware or integration required.
+                Most restaurants see ROI within the first month through increased table turnover and reduced walk-aways.
               </p>
             </details>
-            <details className="group bg-card rounded-lg p-6">
+            <details className="group bg-background rounded-lg p-6">
               <summary className="flex cursor-pointer list-none items-center justify-between font-medium">
                 Is billing based on each waitlist?
                 <span className="ml-2 text-muted-foreground group-open:rotate-180 transition">⌄</span>
@@ -487,7 +411,7 @@ export default function HomePage() {
                 No, billing is based on your plan tier. You can create unlimited waitlists within your plan limits.
               </p>
             </details>
-            <details className="group bg-card rounded-lg p-6">
+            <details className="group bg-background rounded-lg p-6">
               <summary className="flex cursor-pointer list-none items-center justify-between font-medium">
                 What are my payment options?
                 <span className="ml-2 text-muted-foreground group-open:rotate-180 transition">⌄</span>
@@ -500,7 +424,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Final CTA */}
+      {/* CTA Section */}
       <section className="py-20 border-t bg-gradient-to-br from-orange-500 to-orange-600 text-white">
         <div className="mx-auto max-w-4xl px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
