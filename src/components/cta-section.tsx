@@ -1,0 +1,88 @@
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
+
+interface CTASectionProps {
+  variant?: "default" | "compact" | "inline";
+  className?: string;
+}
+
+export function CTASection({ variant = "default", className = "" }: CTASectionProps) {
+  if (variant === "compact") {
+    return (
+      <section
+        className={[
+          "rounded-2xl border border-primary/20 bg-primary text-primary-foreground shadow-sm",
+          "px-5 py-8 sm:px-8 sm:py-10",
+          className,
+        ].join(" ")}
+      >
+        <div className="mx-auto max-w-3xl text-center">
+          <h3 className="text-xl sm:text-2xl font-bold tracking-tight">
+            Smarter queue management starts here
+          </h3>
+          <p className="mt-2 text-sm sm:text-base opacity-90">
+            Start your free trial today. No credit card required.
+          </p>
+          <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Button asChild size="sm" variant="secondary" className="h-10 px-4">
+              <Link href="/signup">Try Free</Link>
+            </Button>
+            <Button
+              asChild
+              size="sm"
+              variant="outline"
+              className="h-10 px-4 border-primary-foreground/30 hover:bg-primary-foreground/10"
+            >
+              <Link href="/contact">Contact Sales</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (variant === "inline") {
+    return (
+      <div className={`flex flex-col sm:flex-row items-center justify-between gap-4 p-6 bg-muted rounded-xl ${className}`}>
+        <div className="flex-1">
+          <h3 className="text-xl font-bold">Smarter queue management starts here</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Start your free trial today. No credit card required.
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button asChild>
+            <Link href="/signup">
+              Try Free <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/contact">Contact Sales</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <section className={`py-20 border-t bg-primary text-primary-foreground ${className}`}>
+      <div className="mx-auto max-w-4xl px-6 lg:px-8 text-center">
+        <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+          Smarter queue management starts here
+        </h2>
+        <p className="mt-4 text-lg opacity-90">
+          Start your free trial today. No credit card required.
+        </p>
+        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <Button asChild size="lg" variant="secondary">
+            <Link href="/signup">Try Free</Link>
+          </Button>
+          <Button asChild size="lg" variant="outline" className="border-primary-foreground/30 hover:bg-primary-foreground/10">
+            <Link href="/contact">Contact Sales</Link>
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+}

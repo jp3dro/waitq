@@ -1,6 +1,14 @@
-import { Check } from "lucide-react";
+import { Check, X } from "lucide-react";
 import Link from "next/link";
+import { Fragment } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { plans, pricingFeatures } from "@/lib/plans";
 
 export const metadata = { 
   title: "Simple, transparent pricing | WaitQ",
@@ -9,45 +17,44 @@ export const metadata = {
 
 export default function PricingPage() {
   return (
-    <main className="container mx-auto py-20 px-4 md:px-6">
+    <main className="py-20">
       {/* Header */}
-      <div className="flex flex-col items-center text-center mb-16 space-y-4">
-        <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-          Simple, transparent pricing
-        </h1>
-        <p className="text-xl text-muted-foreground max-w-[600px]">
-          WaitQ pays for itself with one recovered table a day.
-        </p>
-      </div>
+      <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
+        <div className="flex flex-col items-center text-center mb-16 space-y-4">
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight">Simple, transparent pricing</h1>
+          <p className="text-xl text-muted-foreground max-w-[600px]">
+            WaitQ pays for itself with one recovered table a day.
+          </p>
+        </div>
 
-      {/* Pricing Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-20">
-        {/* Starter Plan */}
+        {/* Pricing Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-[1100px] mx-auto mb-20">
+        {/* Free Plan */}
         <div className="rounded-2xl border border-border bg-card p-8">
           <div>
-            <h3 className="text-2xl font-bold">Starter</h3>
-            <p className="mt-2 text-muted-foreground">Perfect for small restaurants</p>
+            <h3 className="text-2xl font-bold">{plans.free.name}</h3>
+            <p className="mt-2 text-muted-foreground">{plans.free.description}</p>
           </div>
           <div className="mt-6 flex items-baseline gap-2">
-            <span className="text-5xl font-bold">$19</span>
+            <span className="text-5xl font-bold">€0</span>
             <span className="text-lg text-muted-foreground">/mo</span>
           </div>
           <ul className="mt-8 space-y-3">
             <li className="flex items-start gap-3">
               <Check className="h-5 w-5 shrink-0 text-green-600 mt-0.5" />
-              <span className="text-muted-foreground">200 SMS / month</span>
+              <span className="text-muted-foreground">{plans.free.limits.messagesPerMonth} SMS total</span>
             </li>
             <li className="flex items-start gap-3">
               <Check className="h-5 w-5 shrink-0 text-green-600 mt-0.5" />
-              <span className="text-muted-foreground">1 location</span>
+              <span className="text-muted-foreground">{plans.free.limits.locations} location</span>
             </li>
             <li className="flex items-start gap-3">
               <Check className="h-5 w-5 shrink-0 text-green-600 mt-0.5" />
-              <span className="text-muted-foreground">Real-time queue</span>
+              <span className="text-muted-foreground">{plans.free.limits.users} user</span>
             </li>
             <li className="flex items-start gap-3">
               <Check className="h-5 w-5 shrink-0 text-green-600 mt-0.5" />
-              <span className="text-muted-foreground">Basic analytics</span>
+              <span className="text-muted-foreground">Today analytics only</span>
             </li>
           </ul>
           <Button asChild className="w-full mt-8" variant="outline" size="lg">
@@ -55,54 +62,168 @@ export default function PricingPage() {
           </Button>
         </div>
 
-        {/* Pro Plan - Most Popular */}
-        <div className="rounded-2xl border-2 border-orange-500 bg-card p-8 relative shadow-lg">
+        {/* Base Plan - Most Popular */}
+        <div className="rounded-2xl border-2 border-primary bg-card p-8 relative shadow-lg">
           <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-            <span className="bg-orange-500 text-white px-4 py-1 rounded-full text-sm font-medium">
+            <span className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-medium">
               Most Popular
             </span>
           </div>
           <div>
-            <h3 className="text-2xl font-bold">Pro</h3>
-            <p className="mt-2 text-muted-foreground">For busy restaurants</p>
+            <h3 className="text-2xl font-bold">{plans.base.name}</h3>
+            <p className="mt-2 text-muted-foreground">{plans.base.description}</p>
           </div>
           <div className="mt-6 flex items-baseline gap-2">
-            <span className="text-5xl font-bold">$49</span>
+            <span className="text-5xl font-bold">€{plans.base.priceMonthlyEUR}</span>
             <span className="text-lg text-muted-foreground">/mo</span>
           </div>
           <ul className="mt-8 space-y-3">
             <li className="flex items-start gap-3">
               <Check className="h-5 w-5 shrink-0 text-green-600 mt-0.5" />
-              <span className="text-muted-foreground">1,000 SMS / month</span>
+              <span className="text-muted-foreground">{plans.base.limits.messagesPerMonth} SMS / month</span>
             </li>
             <li className="flex items-start gap-3">
               <Check className="h-5 w-5 shrink-0 text-green-600 mt-0.5" />
-              <span className="text-muted-foreground">3 locations</span>
+              <span className="text-muted-foreground">{plans.base.limits.locations} locations</span>
             </li>
             <li className="flex items-start gap-3">
               <Check className="h-5 w-5 shrink-0 text-green-600 mt-0.5" />
-              <span className="text-muted-foreground">Advanced analytics</span>
+              <span className="text-muted-foreground">{plans.base.limits.users} users</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <Check className="h-5 w-5 shrink-0 text-green-600 mt-0.5" />
+              <span className="text-muted-foreground">30-day analytics</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <Check className="h-5 w-5 shrink-0 text-green-600 mt-0.5" />
+              <span className="text-muted-foreground">Bidirectional SMS</span>
+            </li>
+          </ul>
+          <Button asChild className="w-full mt-8" size="lg">
+            <Link href="/signup">Get started</Link>
+          </Button>
+        </div>
+
+        {/* Premium Plan */}
+        <div className="rounded-2xl border border-border bg-card p-8">
+          <div>
+            <h3 className="text-2xl font-bold">{plans.premium.name}</h3>
+            <p className="mt-2 text-muted-foreground">{plans.premium.description}</p>
+          </div>
+          <div className="mt-6 flex items-baseline gap-2">
+            <span className="text-5xl font-bold">€{plans.premium.priceMonthlyEUR}</span>
+            <span className="text-lg text-muted-foreground">/mo</span>
+          </div>
+          <ul className="mt-8 space-y-3">
+            <li className="flex items-start gap-3">
+              <Check className="h-5 w-5 shrink-0 text-green-600 mt-0.5" />
+              <span className="text-muted-foreground">{plans.premium.limits.messagesPerMonth} SMS / month</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <Check className="h-5 w-5 shrink-0 text-green-600 mt-0.5" />
+              <span className="text-muted-foreground">{plans.premium.limits.locations} locations</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <Check className="h-5 w-5 shrink-0 text-green-600 mt-0.5" />
+              <span className="text-muted-foreground">{plans.premium.limits.users} users</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <Check className="h-5 w-5 shrink-0 text-green-600 mt-0.5" />
+              <span className="text-muted-foreground">30-day analytics</span>
             </li>
             <li className="flex items-start gap-3">
               <Check className="h-5 w-5 shrink-0 text-green-600 mt-0.5" />
               <span className="text-muted-foreground">Priority support</span>
             </li>
           </ul>
-          <Button asChild className="w-full mt-8 bg-orange-500 hover:bg-orange-600 text-white" size="lg">
+          <Button asChild className="w-full mt-8" variant="outline" size="lg">
             <Link href="/signup">Get started</Link>
           </Button>
         </div>
       </div>
-
-      <div className="text-center mb-20">
-        <Button asChild variant="link">
-          <Link href="#features">Compare all features &rarr;</Link>
-        </Button>
       </div>
 
+      {/* Feature Comparison Table */}
+      <section className="py-12" id="features">
+        <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
+          <h2 className="text-3xl font-bold tracking-tight text-center mb-10">
+            Compare all features
+          </h2>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-4 px-4 font-semibold">Feature</th>
+                  <th className="text-center py-4 px-4 font-semibold">Free</th>
+                  <th className="text-center py-4 px-4 font-semibold">Base</th>
+                  <th className="text-center py-4 px-4 font-semibold">Premium</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(
+                  pricingFeatures.reduce((acc, feature) => {
+                    if (!acc[feature.category]) {
+                      acc[feature.category] = [];
+                    }
+                    acc[feature.category].push(feature);
+                    return acc;
+                  }, {} as Record<string, typeof pricingFeatures>)
+                ).map(([category, features]) => (
+                  <Fragment key={category}>
+                    <tr className="border-t">
+                      <td colSpan={4} className="py-4 px-4 font-semibold bg-muted/50">
+                        {category}
+                      </td>
+                    </tr>
+                    {features.map((feature) => (
+                      <tr key={`${category}:${feature.name}`} className="border-b border-border/50">
+                        <td className="py-3 px-4 text-sm">{feature.name}</td>
+                        <td className="py-3 px-4 text-center">
+                          {typeof feature.free === "boolean" ? (
+                            feature.free ? (
+                              <Check className="h-5 w-5 text-green-600 mx-auto" />
+                            ) : (
+                              <X className="h-5 w-5 text-muted-foreground/50 mx-auto" />
+                            )
+                          ) : (
+                            <span className="text-sm text-muted-foreground">{feature.free}</span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          {typeof feature.base === "boolean" ? (
+                            feature.base ? (
+                              <Check className="h-5 w-5 text-green-600 mx-auto" />
+                            ) : (
+                              <X className="h-5 w-5 text-muted-foreground/50 mx-auto" />
+                            )
+                          ) : (
+                            <span className="text-sm text-muted-foreground">{feature.base}</span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          {typeof feature.premium === "boolean" ? (
+                            feature.premium ? (
+                              <Check className="h-5 w-5 text-green-600 mx-auto" />
+                            ) : (
+                              <X className="h-5 w-5 text-muted-foreground/50 mx-auto" />
+                            )
+                          ) : (
+                            <span className="text-sm text-muted-foreground">{feature.premium}</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </Fragment>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
       {/* Social Proof */}
-      <section className="py-20 border-t" id="features">
-        <div className="max-w-7xl mx-auto">
+      <section className="py-20" id="social-proof">
+        <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold tracking-tight">Trusted by top restaurants worldwide</h2>
           </div>
@@ -137,68 +258,48 @@ export default function PricingPage() {
       </section>
 
       {/* FAQ */}
-      <section className="py-20 border-t bg-muted/30">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-3xl font-bold tracking-tight text-center mb-10">
-            Frequently asked questions
-          </h2>
-          <div className="space-y-4">
-            <details className="group bg-background rounded-lg p-6">
-              <summary className="flex cursor-pointer list-none items-center justify-between font-medium">
+      <section className="py-20">
+        <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
+          <div className="mx-auto max-w-3xl">
+          <div className="rounded-3xl bg-muted/30 p-6 md:p-10">
+            <h2 className="text-3xl font-bold tracking-tight text-center mb-10">
+              Frequently asked questions
+            </h2>
+            <Accordion type="single" collapsible className="w-full space-y-4">
+            <AccordionItem value="item-1" className="bg-background rounded-lg px-6 border-0">
+              <AccordionTrigger className="text-left font-medium hover:no-underline">
                 Can I use WaitQ for free?
-                <span className="ml-2 text-muted-foreground group-open:rotate-180 transition">⌄</span>
-              </summary>
-              <p className="mt-3 text-sm text-muted-foreground">
+              </AccordionTrigger>
+              <AccordionContent className="text-sm text-muted-foreground">
                 Yes! We offer a free tier to get started. You can upgrade as your needs grow.
-              </p>
-            </details>
-            <details className="group bg-background rounded-lg p-6">
-              <summary className="flex cursor-pointer list-none items-center justify-between font-medium">
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-2" className="bg-background rounded-lg px-6 border-0">
+              <AccordionTrigger className="text-left font-medium hover:no-underline">
                 Realistically, what is the expected ROI of WaitQ?
-                <span className="ml-2 text-muted-foreground group-open:rotate-180 transition">⌄</span>
-              </summary>
-              <p className="mt-3 text-sm text-muted-foreground">
+              </AccordionTrigger>
+              <AccordionContent className="text-sm text-muted-foreground">
                 Most restaurants see ROI within the first month through increased table turnover and reduced walk-aways. With just one additional seated party per day, WaitQ pays for itself.
-              </p>
-            </details>
-            <details className="group bg-background rounded-lg p-6">
-              <summary className="flex cursor-pointer list-none items-center justify-between font-medium">
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-3" className="bg-background rounded-lg px-6 border-0">
+              <AccordionTrigger className="text-left font-medium hover:no-underline">
                 Is billing based on each waitlist?
-                <span className="ml-2 text-muted-foreground group-open:rotate-180 transition">⌄</span>
-              </summary>
-              <p className="mt-3 text-sm text-muted-foreground">
+              </AccordionTrigger>
+              <AccordionContent className="text-sm text-muted-foreground">
                 No, billing is based on your plan tier. You can create unlimited waitlists within your plan limits.
-              </p>
-            </details>
-            <details className="group bg-background rounded-lg p-6">
-              <summary className="flex cursor-pointer list-none items-center justify-between font-medium">
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-4" className="bg-background rounded-lg px-6 border-0">
+              <AccordionTrigger className="text-left font-medium hover:no-underline">
                 What are my payment options?
-                <span className="ml-2 text-muted-foreground group-open:rotate-180 transition">⌄</span>
-              </summary>
-              <p className="mt-3 text-sm text-muted-foreground">
+              </AccordionTrigger>
+              <AccordionContent className="text-sm text-muted-foreground">
                 We accept all major credit cards and can accommodate invoicing for annual plans.
-              </p>
-            </details>
+              </AccordionContent>
+            </AccordionItem>
+            </Accordion>
           </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="py-20 border-t bg-gradient-to-br from-orange-500 to-orange-600 text-white">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-            Smarter queue management starts here
-          </h2>
-          <p className="mt-4 text-lg opacity-90">
-            Start your free trial today. No credit card required.
-          </p>
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button asChild size="lg" variant="secondary">
-              <Link href="/signup">Try Free</Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="bg-transparent text-white border-white hover:bg-white/10">
-              <Link href="/contact">Contact Sales</Link>
-            </Button>
           </div>
         </div>
       </section>

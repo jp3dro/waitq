@@ -1,6 +1,29 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { 
+  Check, 
+  Users, 
+  FileText, 
+  MessageSquare,
+  Zap,
+  Monitor,
+  MapPin,
+  Smartphone,
+  BarChart3,
+  Clock,
+  Play,
+  QrCode,
+  MonitorPlay,
+  Image as ImageIcon
+} from "lucide-react";
+import { YouTubeLightbox } from "@/components/youtube-lightbox";
 
 export const metadata = { 
   title: "WaitQ - The virtual waitlist that keeps guests from walking away",
@@ -8,6 +31,8 @@ export const metadata = {
 };
 
 export default function HomePage() {
+  const demoVideoId = process.env.NEXT_PUBLIC_DEMO_YOUTUBE_ID ?? "dQw4w9WgXcQ";
+
   // FAQ structured data for rich snippets
   const faqStructuredData = {
     "@context": "https://schema.org",
@@ -70,16 +95,19 @@ export default function HomePage() {
               <Button asChild size="lg" className="px-4">
                 <Link href="/signup">Try for free</Link>
               </Button>
-              <Button asChild size="lg" variant="outline">
-                <Link href="/contact">See how it works</Link>
-              </Button>
+              <YouTubeLightbox videoId={demoVideoId} title="WaitQ demo">
+                <Button size="lg" variant="outline" className="gap-2">
+                  <Play className="h-4 w-4" />
+                  See how it works
+                </Button>
+              </YouTubeLightbox>
             </div>
           </div>
         </div>
       </section>
 
       {/* Problem/Solution Section */}
-      <section className="py-16 border-t">
+      <section className="py-16">
         <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
           <div className="mx-auto max-w-3xl text-center">
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Stop losing revenue to long waits</h2>
@@ -90,9 +118,7 @@ export default function HomePage() {
           <div className="mt-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
             <div className="border border-border rounded-2xl p-6 text-left shadow-sm">
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                <svg className="w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
+                <Users className="w-8 h-8 text-primary" />
               </div>
               <h3 className="text-xl font-semibold">Front-door chaos</h3>
               <p className="mt-2 text-sm text-muted-foreground">
@@ -101,9 +127,7 @@ export default function HomePage() {
             </div>
             <div className="border border-border rounded-2xl p-6 text-left shadow-sm">
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                <svg className="w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
+                <FileText className="w-8 h-8 text-primary" />
               </div>
               <h3 className="text-xl font-semibold">Paper waitlists</h3>
               <p className="mt-2 text-sm text-muted-foreground">
@@ -112,9 +136,7 @@ export default function HomePage() {
             </div>
             <div className="border border-border rounded-2xl p-6 text-left shadow-sm">
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                <svg className="w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
-                </svg>
+                <MessageSquare className="w-8 h-8 text-primary" />
               </div>
               <h3 className="text-xl font-semibold">Poor guest experience</h3>
               <p className="mt-2 text-sm text-muted-foreground">
@@ -126,17 +148,16 @@ export default function HomePage() {
       </section>
 
       {/* Better Guest Impressions Section */}
-      <section className="py-20 border-t bg-muted/30">
+      <section className="py-20">
         <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="rounded-3xl bg-muted/30 p-6 md:p-10">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="relative">
               <div className="aspect-[4/3] bg-background rounded-2xl shadow-xl overflow-hidden">
                 {/* Placeholder for restaurant image */}
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center p-8">
-                    <svg className="w-24 h-24 mx-auto text-muted-foreground/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
+                    <ImageIcon className="w-24 h-24 mx-auto text-muted-foreground/20" />
                     <p className="mt-4 text-sm text-muted-foreground">Restaurant image placeholder</p>
                   </div>
                 </div>
@@ -151,31 +172,26 @@ export default function HomePage() {
               </p>
               <ul className="mt-8 space-y-4">
                 <li className="flex items-start gap-3">
-                  <svg className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
+                  <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
                   <span className="text-muted-foreground">Anyone can check-in to the waitlist from their phone or kiosk, no app downloads required</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <svg className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
+                  <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
                   <span className="text-muted-foreground">Keep customers informed with accurate wait times on public display or directly on their phones.</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <svg className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
+                  <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
                   <span className="text-muted-foreground">Customers get honest wait times that update in real time.</span>
                 </li>
               </ul>
+            </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Handling Peak Hours Section */}
-      <section className="py-20 border-t">
+      <section className="py-20">
         <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
@@ -187,21 +203,15 @@ export default function HomePage() {
               </p>
               <ul className="mt-8 space-y-4">
                 <li className="flex items-start gap-3">
-                  <svg className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
+                  <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
                   <span className="text-muted-foreground">See who's waiting, and who's next in a glance.</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <svg className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
+                  <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
                   <span className="text-muted-foreground">Send "table ready" texts and reduce walk-aways.</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <svg className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
+                  <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
                   <span className="text-muted-foreground">Works on the devices you already have. No training nor additional hardware needed.</span>
                 </li>
               </ul>
@@ -211,9 +221,7 @@ export default function HomePage() {
                 {/* Placeholder for phone mockup */}
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center p-8">
-                    <svg className="w-24 h-24 mx-auto text-muted-foreground/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                    </svg>
+                    <Smartphone className="w-24 h-24 mx-auto text-muted-foreground/20" />
                     <p className="mt-4 text-sm text-muted-foreground">Phone mockup placeholder</p>
                   </div>
                 </div>
@@ -224,22 +232,21 @@ export default function HomePage() {
       </section>
 
       {/* Simple Powerful Solution Section */}
-      <section className="py-20 border-t bg-muted/30">
+      <section className="py-20">
         <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-              Simple, powerful solution to let guests flow through
-            </h2>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="rounded-3xl bg-muted/30 p-6 md:p-10">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+                Simple, powerful solution to let guests flow through
+              </h2>
+            </div>
+            <div className="grid md:grid-cols-3 gap-8">
             {/* Self Check-in */}
             <div>
               <div className="aspect-[4/3] bg-background rounded-xl shadow-lg overflow-hidden mb-6">
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center p-8">
-                    <svg className="w-20 h-20 mx-auto text-muted-foreground/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
+                    <QrCode className="w-20 h-20 mx-auto text-muted-foreground/20" />
                   </div>
                 </div>
               </div>
@@ -257,9 +264,7 @@ export default function HomePage() {
               <div className="aspect-[4/3] bg-background rounded-xl shadow-lg overflow-hidden mb-6">
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center p-8">
-                    <svg className="w-20 h-20 mx-auto text-muted-foreground/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                    </svg>
+                    <Users className="w-20 h-20 mx-auto text-muted-foreground/20" />
                   </div>
                 </div>
               </div>
@@ -277,9 +282,7 @@ export default function HomePage() {
               <div className="aspect-[4/3] bg-background rounded-xl shadow-lg overflow-hidden mb-6">
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center p-8">
-                    <svg className="w-20 h-20 mx-auto text-muted-foreground/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
+                    <MonitorPlay className="w-20 h-20 mx-auto text-muted-foreground/20" />
                   </div>
                 </div>
               </div>
@@ -292,21 +295,21 @@ export default function HomePage() {
               </Button>
             </div>
           </div>
+          </div>
         </div>
       </section>
 
       {/* Better Guest Impressions Section */}
-      <section className="py-20 border-t bg-muted/30">
+      <section className="py-20">
         <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="rounded-3xl bg-muted/30 p-6 md:p-10">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="relative">
               <div className="aspect-[4/3] bg-background rounded-2xl shadow-xl overflow-hidden">
                 {/* Placeholder for restaurant image */}
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center p-8">
-                    <svg className="w-24 h-24 mx-auto text-muted-foreground/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
+                    <ImageIcon className="w-24 h-24 mx-auto text-muted-foreground/20" />
                     <p className="mt-4 text-sm text-muted-foreground">Restaurant image placeholder</p>
                   </div>
                 </div>
@@ -321,31 +324,26 @@ export default function HomePage() {
               </p>
               <ul className="mt-8 space-y-4">
                 <li className="flex items-start gap-3">
-                  <svg className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
+                  <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
                   <span className="text-muted-foreground">Track peak hours and average wait time, so you staff smarter.</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <svg className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
+                  <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
                   <span className="text-muted-foreground">Get accurate wait times and trends, so the experience stays predictable.</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <svg className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
+                  <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
                   <span className="text-muted-foreground">Gather customer data for marketing campaigns.</span>
                 </li>
               </ul>
+            </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* With All Features Section */}
-      <section className="py-20 border-t">
+      <section className="py-20">
         <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
@@ -356,9 +354,7 @@ export default function HomePage() {
             {/* Multiple Join Methods */}
             <div>
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
+                <MessageSquare className="w-6 h-6 text-primary" />
               </div>
               <h3 className="font-semibold mb-2">SMS or E-mail notifications</h3>
               <p className="text-sm text-muted-foreground">
@@ -369,9 +365,7 @@ export default function HomePage() {
             {/* Real-Time Queue */}
             <div>
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
+                <Zap className="w-6 h-6 text-primary" />
               </div>
               <h3 className="font-semibold mb-2">Real-Time Queue</h3>
               <p className="text-sm text-muted-foreground">
@@ -382,9 +376,7 @@ export default function HomePage() {
             {/* Public Display */}
             <div>
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
+                <Monitor className="w-6 h-6 text-primary" />
               </div>
               <h3 className="font-semibold mb-2">Virtual Waiting Room</h3>
               <p className="text-sm text-muted-foreground">
@@ -395,9 +387,7 @@ export default function HomePage() {
             {/* Multi-Location */}
             <div>
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
+                <MapPin className="w-6 h-6 text-primary" />
               </div>
               <h3 className="font-semibold mb-2">Multi-Location</h3>
               <p className="text-sm text-muted-foreground">
@@ -408,9 +398,7 @@ export default function HomePage() {
             {/* SMS Notifications */}
             <div>
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                </svg>
+                <Monitor className="w-6 h-6 text-primary" />
               </div>
               <h3 className="font-semibold mb-2">Public Display</h3>
               <p className="text-sm text-muted-foreground">
@@ -421,9 +409,7 @@ export default function HomePage() {
             {/* Self-Service Kiosk */}
             <div>
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
+                <Smartphone className="w-6 h-6 text-primary" />
               </div>
               <h3 className="font-semibold mb-2">Self-Service Kiosk</h3>
               <p className="text-sm text-muted-foreground">
@@ -434,9 +420,7 @@ export default function HomePage() {
             {/* Analytics */}
             <div>
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
+                <BarChart3 className="w-6 h-6 text-primary" />
               </div>
               <h3 className="font-semibold mb-2">Analytics & Insights</h3>
               <p className="text-sm text-muted-foreground">
@@ -447,9 +431,7 @@ export default function HomePage() {
             {/* Accurate Wait Times */}
             <div>
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                <Clock className="w-6 h-6 text-primary" />
               </div>
               <h3 className="font-semibold mb-2">Accurate Wait Times</h3>
               <p className="text-sm text-muted-foreground">
@@ -461,34 +443,36 @@ export default function HomePage() {
       </section>
 
       {/* Social Proof Section */}
-      <section className="py-20 border-t bg-muted/30">
+      <section className="py-20">
         <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold tracking-tight">Trusted by top restaurants worldwide</h2>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            <div className="text-center">
-              <p className="text-5xl font-bold">85%</p>
-              <p className="mt-2 text-sm text-muted-foreground">Reduction in perceived wait time</p>
+          <div className="rounded-3xl bg-muted/30 p-6 md:p-10">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold tracking-tight">Trusted by top restaurants worldwide</h2>
             </div>
-            <div className="text-center">
-              <p className="text-5xl font-bold">2,000+</p>
-              <p className="mt-2 text-sm text-muted-foreground">Restaurants using WaitQ</p>
+            <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+              <div className="text-center">
+                <p className="text-5xl font-bold">85%</p>
+                <p className="mt-2 text-sm text-muted-foreground">Reduction in perceived wait time</p>
+              </div>
+              <div className="text-center">
+                <p className="text-5xl font-bold">2,000+</p>
+                <p className="mt-2 text-sm text-muted-foreground">Restaurants using WaitQ</p>
+              </div>
+              <div className="text-center">
+                <p className="text-5xl font-bold">4.8★</p>
+                <p className="mt-2 text-sm text-muted-foreground">Average customer rating</p>
+              </div>
             </div>
-            <div className="text-center">
-              <p className="text-5xl font-bold">4.8★</p>
-              <p className="mt-2 text-sm text-muted-foreground">Average customer rating</p>
-            </div>
-          </div>
-          <div className="mt-16 max-w-3xl mx-auto">
-            <div className="bg-background rounded-xl p-8 shadow-sm">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex-shrink-0" />
-                <div>
-                  <p className="text-lg italic">
-                    "Qminder cut our wait times by 35%. Guests love the SMS updates and our staff stays organized."
-                  </p>
-                  <p className="mt-3 text-sm font-medium">— Maria, GM at Bistro Verde</p>
+            <div className="mt-16 max-w-3xl mx-auto">
+              <div className="bg-background rounded-xl p-8 shadow-sm">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-primary/10 rounded-full flex-shrink-0" />
+                  <div>
+                    <p className="text-lg italic">
+                      "Qminder cut our wait times by 35%. Guests love the SMS updates and our staff stays organized."
+                    </p>
+                    <p className="mt-3 text-sm font-medium">— Maria, GM at Bistro Verde</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -497,71 +481,48 @@ export default function HomePage() {
       </section>
 
       {/* FAQ */}
-      <section className="py-20 border-t">
+      <section className="py-20">
         <div className="mx-auto max-w-3xl px-6 lg:px-8">
           <h2 className="text-3xl font-bold tracking-tight text-center mb-10">
             Frequently asked questions
           </h2>
-          <div className="space-y-4">
-            <details className="group bg-card rounded-lg p-6">
-              <summary className="flex cursor-pointer list-none items-center justify-between font-medium">
+          <Accordion type="single" collapsible className="w-full space-y-4">
+            <AccordionItem value="item-1" className="bg-card rounded-lg px-6 border-0">
+              <AccordionTrigger className="text-left font-medium hover:no-underline">
                 Do guests need an app?
-                <span className="ml-2 text-muted-foreground group-open:rotate-180 transition">⌄</span>
-              </summary>
-              <p className="mt-3 text-sm text-muted-foreground">
+              </AccordionTrigger>
+              <AccordionContent className="text-sm text-muted-foreground">
                 No. Customers receive SMS text messages with a link to track their place in line. They can view their status from any web browser without downloading anything.
-              </p>
-            </details>
-            <details className="group bg-card rounded-lg p-6">
-              <summary className="flex cursor-pointer list-none items-center justify-between font-medium">
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-2" className="bg-card rounded-lg px-6 border-0">
+              <AccordionTrigger className="text-left font-medium hover:no-underline">
                 Does it work without WiFi integration?
-                <span className="ml-2 text-muted-foreground group-open:rotate-180 transition">⌄</span>
-              </summary>
-              <p className="mt-3 text-sm text-muted-foreground">
+              </AccordionTrigger>
+              <AccordionContent className="text-sm text-muted-foreground">
                 Yes. WaitQ works on any device with an internet connection. No special hardware or integration required.
-              </p>
-            </details>
-            <details className="group bg-card rounded-lg p-6">
-              <summary className="flex cursor-pointer list-none items-center justify-between font-medium">
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-3" className="bg-card rounded-lg px-6 border-0">
+              <AccordionTrigger className="text-left font-medium hover:no-underline">
                 Is billing based on each waitlist?
-                <span className="ml-2 text-muted-foreground group-open:rotate-180 transition">⌄</span>
-              </summary>
-              <p className="mt-3 text-sm text-muted-foreground">
+              </AccordionTrigger>
+              <AccordionContent className="text-sm text-muted-foreground">
                 No, billing is based on your plan tier. You can create unlimited waitlists within your plan limits.
-              </p>
-            </details>
-            <details className="group bg-card rounded-lg p-6">
-              <summary className="flex cursor-pointer list-none items-center justify-between font-medium">
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-4" className="bg-card rounded-lg px-6 border-0">
+              <AccordionTrigger className="text-left font-medium hover:no-underline">
                 What are my payment options?
-                <span className="ml-2 text-muted-foreground group-open:rotate-180 transition">⌄</span>
-              </summary>
-              <p className="mt-3 text-sm text-muted-foreground">
+              </AccordionTrigger>
+              <AccordionContent className="text-sm text-muted-foreground">
                 We accept all major credit cards and can accommodate invoicing for annual plans.
-              </p>
-            </details>
-          </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="py-20 border-t bg-primary text-primary-foreground">
-        <div className="mx-auto max-w-4xl px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-            Smarter queue management starts here
-          </h2>
-          <p className="mt-4 text-lg opacity-90">
-            Start your free trial today. No credit card required.
-          </p>
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button asChild size="lg" variant="secondary">
-              <Link href="/signup">Try Free</Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="border-primary-foreground/30 hover:bg-primary-foreground/10">
-              <Link href="/contact">Contact Sales</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
     </main>
   );
 }

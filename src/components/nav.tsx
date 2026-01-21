@@ -11,13 +11,11 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
-import { cn } from "@/lib/utils";
+import { QrCode, Users, MonitorPlay } from "lucide-react";
 
 export default async function Nav() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  await supabase.auth.getUser();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 px-4 pt-4">
@@ -35,30 +33,64 @@ export default async function Nav() {
                 <NavigationMenuItem>
                   <NavigationMenuTrigger className="h-7 px-3">Platform</NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <ul className="grid w-[400px] gap-2">
+                    <ul className="grid w-[500px] gap-3 p-4">
                       <li>
                         <NavigationMenuLink asChild>
                           <Link
-                            href="/platform/virtual-waitlist"
-                            className="block select-none space-y-1 rounded-md p-3 no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                            href="/platform/self-check-in"
+                            className="group block select-none space-y-1 rounded-lg p-4 no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground border border-transparent hover:border-border"
                           >
-                            <div className="text-sm font-medium">Virtual Waitlist</div>
-                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                              Keep customers in the loop with real-time waitlist updates
-                            </p>
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                <QrCode className="h-5 w-5" />
+                              </div>
+                              <div className="flex-1">
+                                <div className="text-sm font-semibold leading-none mb-1.5">Self Check-in</div>
+                                <p className="line-clamp-2 text-xs leading-snug text-muted-foreground">
+                                  Let guests join the waitlist with QR codes or kiosk check-in
+                                </p>
+                              </div>
+                            </div>
                           </Link>
                         </NavigationMenuLink>
                       </li>
                       <li>
                         <NavigationMenuLink asChild>
                           <Link
-                            href="/use-cases/restaurants"
-                            className="block select-none space-y-1 rounded-md p-3 no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                            href="/platform/virtual-waitlist"
+                            className="group block select-none space-y-1 rounded-lg p-4 no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground border border-transparent hover:border-border"
                           >
-                            <div className="text-sm font-medium">For Restaurants</div>
-                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                              Restaurant-specific queue management solutions
-                            </p>
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                <Users className="h-5 w-5" />
+                              </div>
+                              <div className="flex-1">
+                                <div className="text-sm font-semibold leading-none mb-1.5">Virtual Waitlist</div>
+                                <p className="line-clamp-2 text-xs leading-snug text-muted-foreground">
+                                  Real-time queue management with SMS notifications
+                                </p>
+                              </div>
+                            </div>
+                          </Link>
+                        </NavigationMenuLink>
+                      </li>
+                      <li>
+                        <NavigationMenuLink asChild>
+                          <Link
+                            href="/platform/virtual-waiting-room"
+                            className="group block select-none space-y-1 rounded-lg p-4 no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground border border-transparent hover:border-border"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                <MonitorPlay className="h-5 w-5" />
+                              </div>
+                              <div className="flex-1">
+                                <div className="text-sm font-semibold leading-none mb-1.5">Virtual Waiting Room</div>
+                                <p className="line-clamp-2 text-xs leading-snug text-muted-foreground">
+                                  Public displays and status pages for guests
+                                </p>
+                              </div>
+                            </div>
                           </Link>
                         </NavigationMenuLink>
                       </li>
