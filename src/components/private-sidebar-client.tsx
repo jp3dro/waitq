@@ -61,7 +61,6 @@ type Props = {
     userEmail: string | null;
     businessLogoUrl: string | null;
     role?: string;
-    lists: { id: string; name: string }[];
 };
 
 function NavItem({
@@ -138,18 +137,13 @@ function ExternalNavItem({
     );
 }
 
-export default function PrivateSidebarClient({ userName, userEmail, businessLogoUrl, role, lists }: Props) {
+export default function PrivateSidebarClient({ userName, userEmail, businessLogoUrl, role }: Props) {
     const { setTheme } = useTheme();
     const router = useRouter();
     const canSeeAnalytics = role === "admin" || role === "manager";
     const isAdmin = role === "admin";
     const canSeeInternalAdminLinks = userEmail?.toLowerCase() === "jp3dro@gmail.com";
     const [deleting, setDeleting] = useState(false);
-
-    const listSubItems = lists.map((l) => ({
-        href: `/lists/${l.id}`,
-        label: l.name,
-    }));
 
     const displayName = userName || userEmail?.split("@")[0] || "User";
     const initials = (() => {
@@ -175,7 +169,7 @@ export default function PrivateSidebarClient({ userName, userEmail, businessLogo
             <SidebarContent>
                 <SidebarMenu>
                     <NavItem href="/dashboard" icon={LayoutDashboard} label="Dashboard" />
-                    <NavItem href="/lists" icon={ListChecks} label="Lists" subItems={listSubItems} />
+                    <NavItem href="/lists" icon={ListChecks} label="Lists" />
                     {canSeeAnalytics ? <NavItem href="/analytics" icon={BarChart3} label="Analytics" /> : null}
                     <NavItem href="/customers" icon={Users2} label="Customers" />
                 </SidebarMenu>

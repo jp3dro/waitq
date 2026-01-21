@@ -18,7 +18,7 @@ import {
 import { Stepper } from "@/components/ui/stepper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import PhoneInput, { getCountryCallingCode, type Country } from "react-phone-number-input";
+import PhoneInput, { type Country } from "react-phone-number-input";
 import 'react-phone-number-input/style.css';
 import { User, Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -186,17 +186,17 @@ export default function DisplayClient({ token }: { token: string }) {
 
   return (
     <main className="h-screen bg-background text-foreground flex flex-col overflow-hidden">
-      <div className="flex flex-col flex-1 px-6 py-8 md:px-10 overflow-hidden">
+      <div className="flex flex-col flex-1 px-4 py-5 sm:px-6 sm:py-8 md:px-10 overflow-hidden">
         {!locationIsOpen ? (
           <div className="mb-6 rounded-xl border border-destructive/30 bg-destructive/10 text-destructive px-4 py-3">
             <div className="font-semibold">Restaurant is closed</div>
             <div className="text-sm opacity-90">{data.locationStatusReason || "This location is currently closed based on regular opening hours."}</div>
           </div>
         ) : null}
-        <div className="flex w-full flex-wrap items-center shrink-0">
-          <div className="mr-6 flex items-center gap-4 flex-1">
+        <div className="flex w-full flex-col gap-4 md:flex-row md:flex-wrap md:items-center shrink-0">
+          <div className="flex items-center gap-3 md:mr-6 md:flex-1">
             {data.brandLogo ? (
-              <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-border bg-muted">
+              <div className="h-10 w-10 sm:h-14 sm:w-14 shrink-0 overflow-hidden rounded-lg border border-border bg-muted">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={data.brandLogo} alt="Logo" className="h-full w-full object-cover" />
               </div>
@@ -205,17 +205,17 @@ export default function DisplayClient({ token }: { token: string }) {
               {data.businessName ? (
                 <p className="text-sm font-medium text-muted-foreground leading-none mb-2">{data.businessName}</p>
               ) : null}
-              <h1 className="text-3xl font-bold tracking-tight leading-none">{data.listName}</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight leading-none">{data.listName}</h1>
             </div>
           </div>
           {typeof data.estimatedMs === 'number' ? (
-            <div className="mr-6 flex flex-col">
-              <p className="w-full text-sm text-right text-muted-foreground">Estimated wait time</p>
-              <p className="mt-1 text-3xl font-semibold tracking-tight text-right">{formatDuration(data.estimatedMs)}</p>
+            <div className="md:mr-6 flex flex-col md:items-end">
+              <p className="w-full text-sm md:text-right text-muted-foreground">Estimated wait time</p>
+              <p className="mt-1 text-2xl sm:text-3xl font-semibold tracking-tight md:text-right">{formatDuration(data.estimatedMs)}</p>
             </div>
           ) : null}
           {data.kioskEnabled ? (
-            <div className="">
+            <div className="md:ml-auto">
               <KioskButton
                 token={token}
                 defaultCountry={data.businessCountry || "PT"}
@@ -228,40 +228,11 @@ export default function DisplayClient({ token }: { token: string }) {
               />
             </div>
           ) : null}
-          {showQrOnDisplay ? (
-            <div className="ml-6 flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2">
-              <div className="text-sm text-muted-foreground">Scan to join</div>
-              {qrUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={qrUrl}
-                  alt="QR code"
-                  className="h-20 w-20 rounded-md bg-white p-1"
-                  onError={() => {
-                    const providers = [
-                      (t: string) => `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=2&data=${encodeURIComponent(t)}`,
-                      (t: string) => `https://quickchart.io/qr?size=240&margin=2&text=${encodeURIComponent(t)}`,
-                      (t: string) => `https://chart.googleapis.com/chart?cht=qr&chs=240x240&chld=L|2&chl=${encodeURIComponent(t)}`,
-                    ];
-                    if (qrProviderIndex < providers.length - 1) {
-                      const next = qrProviderIndex + 1;
-                      const base = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== "undefined" ? window.location.origin : "");
-                      const displayUrl = `${base}/display/${encodeURIComponent(token)}`;
-                      setQrProviderIndex(next);
-                      setQrUrl(providers[next](displayUrl));
-                    }
-                  }}
-                />
-              ) : (
-                <div className="h-20 w-20 rounded-md bg-muted" />
-              )}
-            </div>
-          ) : null}
         </div>
 
-        <div className="mt-8 grid md:grid-cols-[1.2fr_1fr] gap-8 flex-1 min-h-0">
-          <section className="rounded-2xl bg-card text-card-foreground ring-1 ring-border p-6 flex flex-col min-h-0 overflow-hidden">
-            <h2 className="text-2xl font-semibold text-foreground">Up next</h2>
+        <div className="mt-6 sm:mt-8 grid md:grid-cols-[1.2fr_1fr] gap-6 md:gap-8 flex-1 min-h-0">
+          <section className="rounded-2xl bg-card text-card-foreground ring-1 ring-border p-4 sm:p-6 flex flex-col min-h-0 overflow-hidden">
+            <h2 className="text-xl sm:text-2xl font-semibold text-foreground">Up next</h2>
             <div className="flex-1 overflow-y-auto min-h-0 mt-4 pr-2 custom-scrollbar">
               {waiting.length === 0 ? (
                 <div className="text-center py-12">
@@ -270,22 +241,22 @@ export default function DisplayClient({ token }: { token: string }) {
               ) : (
                 <ul className="divide-y divide-border">
                   {waiting.map((e) => (
-                    <li key={e.id} className="py-4 flex items-center gap-6">
-                      <span className="w-14 shrink-0 text-left text-4xl font-semibold tabular-nums">
+                    <li key={e.id} className="py-3 sm:py-4 flex items-center gap-4 sm:gap-6">
+                      <span className="w-12 sm:w-14 shrink-0 text-left text-3xl sm:text-4xl font-semibold tabular-nums">
                         {e.ticket_number ?? e.queue_position ?? "-"}
                       </span>
-                      <div className="flex items-center gap-8">
+                      <div className="flex items-center gap-4 sm:gap-8 flex-wrap">
                         {showNameOnDisplay && e.customer_name ? (
                           <div className="text-lg font-medium">{e.customer_name}</div>
                         ) : null}
                         {typeof e.party_size === 'number' ? (
-                          <div className="flex items-center gap-1.5 text-xl font-medium">
+                          <div className="flex items-center gap-1.5 text-lg sm:text-xl font-medium">
                             <User className="h-5 w-5" />
                             <span>{e.party_size}</span>
                           </div>
                         ) : null}
                         {e.seating_preference && (
-                          <Badge variant="secondary" className="text-lg px-3 py-4">{e.seating_preference}</Badge>
+                          <Badge variant="secondary" className="text-sm sm:text-lg px-3 py-1.5 sm:py-4">{e.seating_preference}</Badge>
                         )}
                       </div>
                     </li>
@@ -295,8 +266,8 @@ export default function DisplayClient({ token }: { token: string }) {
             </div>
           </section>
 
-          <section className="rounded-2xl bg-emerald-50 text-emerald-950 ring-1 ring-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-50 dark:ring-emerald-800 p-6 flex flex-col min-h-0 overflow-hidden">
-            <h2 className="text-2xl font-semibold flex items-center gap-2 shrink-0">
+          <section className="rounded-2xl bg-emerald-50 text-emerald-950 ring-1 ring-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-50 dark:ring-emerald-800 p-4 sm:p-6 flex flex-col min-h-0 overflow-hidden">
+            <h2 className="text-xl sm:text-2xl font-semibold flex items-center gap-2 shrink-0">
               <span className="relative flex h-3 w-3">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
@@ -311,22 +282,22 @@ export default function DisplayClient({ token }: { token: string }) {
               ) : (
                 <div className="grid grid-cols-1 gap-4">
                   {notified.map((e) => (
-                    <div key={e.id} className="flex items-center gap-8 rounded-xl p-6 bg-background/50 dark:bg-background/20">
-                      <span className="text-6xl font-extrabold tabular-nums">
+                    <div key={e.id} className="flex items-center gap-4 sm:gap-8 rounded-xl p-4 sm:p-6 bg-background/50 dark:bg-background/20">
+                      <span className="text-5xl sm:text-6xl font-extrabold tabular-nums">
                         {e.ticket_number ?? e.queue_position ?? "-"}
                       </span>
-                      <div className="flex items-center gap-8">
+                      <div className="flex items-center gap-4 sm:gap-8 flex-wrap">
                         {showNameOnDisplay && e.customer_name ? (
-                          <div className="text-2xl font-semibold">{e.customer_name}</div>
+                          <div className="text-xl sm:text-2xl font-semibold">{e.customer_name}</div>
                         ) : null}
                         {typeof e.party_size === 'number' ? (
-                          <div className="flex items-center gap-1.5 text-2xl font-medium">
+                          <div className="flex items-center gap-1.5 text-xl sm:text-2xl font-medium">
                             <User className="h-6 w-6" />
                             <span>{e.party_size}</span>
                           </div>
                         ) : null}
                         {e.seating_preference && (
-                          <Badge variant="secondary" className="text-xl px-3 py-4">{e.seating_preference}</Badge>
+                          <Badge variant="secondary" className="text-sm sm:text-xl px-3 py-1.5 sm:py-4">{e.seating_preference}</Badge>
                         )}
                       </div>
                     </div>
@@ -336,6 +307,37 @@ export default function DisplayClient({ token }: { token: string }) {
             </div>
           </section>
         </div >
+
+        {/* QR code for joining - only shown on larger screens */}
+        {showQrOnDisplay ? (
+          <div className="hidden lg:flex fixed bottom-6 right-6 z-50 flex-col items-center gap-2 rounded-2xl border border-border bg-card/95 backdrop-blur p-4 shadow-lg">
+            {qrUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={qrUrl}
+                alt="QR code"
+                className="h-32 w-32 rounded-xl bg-white p-2"
+                onError={() => {
+                  const providers = [
+                    (t: string) => `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=2&data=${encodeURIComponent(t)}`,
+                    (t: string) => `https://quickchart.io/qr?size=240&margin=2&text=${encodeURIComponent(t)}`,
+                    (t: string) => `https://chart.googleapis.com/chart?cht=qr&chs=240x240&chld=L|2&chl=${encodeURIComponent(t)}`,
+                  ];
+                  if (qrProviderIndex < providers.length - 1) {
+                    const next = qrProviderIndex + 1;
+                    const base = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== "undefined" ? window.location.origin : "");
+                    const displayUrl = `${base}/display/${encodeURIComponent(token)}`;
+                    setQrProviderIndex(next);
+                    setQrUrl(providers[next](displayUrl));
+                  }
+                }}
+              />
+            ) : (
+              <div className="h-32 w-32 rounded-xl bg-muted" />
+            )}
+            <div className="text-center text-sm font-medium text-muted-foreground">Scan to join</div>
+          </div>
+        ) : null}
 
         <div className="mt-6 flex items-center justify-center shrink-0 gap-1">
           <span className="text-xs font-medium text-muted-foreground">Powered by</span>
@@ -370,7 +372,7 @@ function KioskButton({
   disabledReason?: string | null;
 }) {
   const [open, setOpen] = useState(false);
-  const [step, setStep] = useState<"intro" | "form" | "confirm">("intro");
+  const [step, setStep] = useState<"form" | "confirm">("form");
   const [phone, setPhone] = useState<string | undefined>(undefined);
   const [name, setName] = useState<string | undefined>(undefined);
   const [email, setEmail] = useState<string | undefined>(undefined);
@@ -381,11 +383,10 @@ function KioskButton({
   const [ticketNumber, setTicketNumber] = useState<number | null>(null);
   const [isPending, startTransition] = useTransition();
   const [phoneError, setPhoneError] = useState<string | null>(null);
-  const callingCode = getCountryCallingCode(defaultCountry as Country);
 
   const close = () => {
     setOpen(false);
-    setStep("intro");
+    setStep("form");
     setPhone(undefined);
     setName(undefined);
     setEmail(undefined);
@@ -439,9 +440,9 @@ function KioskButton({
   return (
     <>
       <div className="inline-block" title={disabled ? (disabledReason || "Restaurant is closed") : undefined}>
-        <Button onClick={() => setOpen(true)} disabled={!!disabled} size="lg" className="h-14 px-8 text-xl rounded-xl">
-        <Plus className="mr-2 h-8 w-8" />
-        Add to Waiting list
+        <Button onClick={() => setOpen(true)} disabled={!!disabled} size="lg" className="h-12 sm:h-14 px-5 sm:px-8 text-base sm:text-xl rounded-xl">
+        <Plus className="mr-2 h-5 w-5 sm:h-8 sm:w-8" />
+        Add to waiting list
         </Button>
       </div>
       <Dialog
@@ -458,48 +459,35 @@ function KioskButton({
             </DialogTitle>
           </DialogHeader>
 
-          {step === "intro" ? (
+          {step === "form" ? (
             <div className="grid gap-5 text-foreground">
-              <div className="grid gap-6">
-                <div className="grid gap-2">
-                  <label className="text-base font-medium">Number of people</label>
-                  <Stepper value={partySize} onChange={setPartySize} min={1} max={20} />
-                </div>
-                {Array.isArray(seatingPreferences) && seatingPreferences.length > 0 ? (
-                  <div className="grid gap-2">
-                    <label className="text-base font-medium">Seating preference</label>
-                    <div className="flex flex-wrap gap-4">
-                      {seatingPreferences.map((s) => {
-                        const active = pref === s;
-                        return (
-                          <Button
-                            type="button"
-                            key={s}
-                            onClick={() => setPref(s)}
-                            variant={active ? "default" : "secondary"}
-                            className="h-14 px-6 rounded-2xl text-lg"
-                          >
-                            {s}
-                          </Button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ) : null}
+              <div className="grid gap-2">
+                <label className="text-base font-medium">Number of people</label>
+                <Stepper value={partySize} onChange={setPartySize} min={1} max={20} />
               </div>
-              <Button
-                onClick={() => {
-                  if (!askName && !askPhone && !askEmail) submit();
-                  else setStep("form");
-                }}
-                size="lg"
-                className="w-full h-14 text-xl rounded-xl"
-              >
-                {!askName && !askPhone && !askEmail ? "Join Waitlist" : "Continue"}
-              </Button>
-            </div>
-          ) : step === "form" ? (
-            <div className="grid gap-5 text-foreground">
+
+              {Array.isArray(seatingPreferences) && seatingPreferences.length > 0 ? (
+                <div className="grid gap-2">
+                  <label className="text-base font-medium">Seating preference</label>
+                  <div className="flex flex-wrap gap-3">
+                    {seatingPreferences.map((s) => {
+                      const active = pref === s;
+                      return (
+                        <Button
+                          type="button"
+                          key={s}
+                          onClick={() => setPref(s)}
+                          variant={active ? "default" : "secondary"}
+                          className="h-11 sm:h-14 px-4 sm:px-6 rounded-2xl text-base sm:text-lg"
+                        >
+                          {s}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
+
               {askName && (
                 <div className="grid gap-2">
                   <label className="text-base font-medium" htmlFor="kiosk-name">Name</label>
@@ -534,7 +522,6 @@ function KioskButton({
                   ) : null}
                 </div>
               )}
-              {askPhone && <Keypad value={phone} onChange={(v) => { setPhone(v); setPhoneError(null); }} callingCode={callingCode} />}
 
               {askEmail ? (
                 <div className="grid gap-2">
@@ -549,8 +536,8 @@ function KioskButton({
                   />
                 </div>
               ) : null}
-              <Button disabled={isPending} onClick={submit} size="lg" className="w-full h-14 text-xl rounded-xl disabled:opacity-50">
-                {isPending ? "Submitting…" : "Continue"}
+              <Button disabled={isPending} onClick={submit} size="lg" className="w-full h-12 sm:h-14 text-base sm:text-xl rounded-xl disabled:opacity-50">
+                {isPending ? "Submitting…" : "Join waitlist"}
               </Button>
               {message ? <p className="text-sm text-red-600">{message}</p> : null}
             </div>
@@ -586,54 +573,6 @@ function KioskButton({
         </AlertDialogContent>
       </AlertDialog>
     </>
-  );
-}
-
-function Keypad({ value, onChange, callingCode }: { value: string | undefined; onChange: (v: string | undefined) => void; callingCode: string }) {
-  const buttons = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "+", "0", "←"];
-  const defaultPrefix = `+${callingCode}`;
-  const normalize = (v: string | undefined) => {
-    if (!v) return "";
-    return v;
-  };
-  const press = (k: string) => {
-    const cur = normalize(value);
-    if (k === "←") {
-      const next = cur.slice(0, -1);
-      onChange(next.length ? next : undefined);
-    } else {
-      if (k === "+") {
-        if (!cur) onChange("+");
-        else if (cur.startsWith("+")) onChange(cur); // no-op
-        else onChange(`+${cur}`);
-        return;
-      }
-      // Digit
-      if (!cur) {
-        // Convenience: start from the default country if empty
-        onChange(`${defaultPrefix}${k}`);
-        return;
-      }
-      if (cur === "+") {
-        onChange(`+${k}`);
-        return;
-      }
-      onChange(`${cur}${k}`);
-    }
-  };
-  return (
-    <div className="grid grid-cols-3 gap-3">
-      {buttons.map((k) => (
-        <Button
-          key={k}
-          onClick={() => press(k)}
-          variant="secondary"
-          className="h-16 text-2xl font-semibold rounded-xl"
-        >
-          {k}
-        </Button>
-      ))}
-    </div>
   );
 }
 

@@ -53,15 +53,6 @@ export default async function PrivateSidebar() {
 
   const businessLogoUrl = (biz?.logo_url as string | null) || null;
 
-  // Fetch waitlists for the sidebar
-  const { data: lists } = biz?.id
-    ? await supabase
-      .from("waitlists")
-      .select("id, name")
-      .eq("business_id", biz.id)
-      .order("created_at", { ascending: true })
-    : { data: [] };
-
   // Get user's name from onboarding (stored in user_metadata.full_name)
   const userName = user?.user_metadata?.full_name || null;
 
@@ -71,7 +62,6 @@ export default async function PrivateSidebar() {
       userEmail={user?.email ?? null}
       businessLogoUrl={businessLogoUrl}
       role={role}
-      lists={lists || []}
     />
   );
 }

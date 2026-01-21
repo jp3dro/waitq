@@ -250,7 +250,7 @@ export default function EditListButton({
               <Select
                 value={locationId}
                 onValueChange={setLocationId}
-                disabled={isPending || locations.length <= 1}
+                disabled={isPending}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select location" />
@@ -263,9 +263,6 @@ export default function EditListButton({
                   ))}
                 </SelectContent>
               </Select>
-              {locations.length <= 1 ? (
-                <p className="text-xs text-muted-foreground">Create another location to move this list.</p>
-              ) : null}
             </div>
 
             <div className="grid gap-4 mt-2">
@@ -310,21 +307,6 @@ export default function EditListButton({
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <Switch id={kioskEnabledId} checked={kioskEnabled} onCheckedChange={setKioskEnabled} />
-                <div className="flex items-center gap-2">
-                  <Label htmlFor={kioskEnabledId}>Self-checkin kiosk</Label>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      Users will be able to add themselves to the waiting list using your welcome Kiosk screen.
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-              </div>
-
               <div className="pt-2 grid gap-3">
                 <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Public display</h4>
                 <div className="flex items-center gap-3">
@@ -337,6 +319,21 @@ export default function EditListButton({
                       </TooltipTrigger>
                       <TooltipContent side="bottom">
                         Enable the public queue display for this waitlist.
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <Switch id={kioskEnabledId} checked={kioskEnabled} onCheckedChange={setKioskEnabled} />
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor={kioskEnabledId}>Users can add themselves to the list</Label>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        Shows a button on the public display so guests can join the list themselves.
                       </TooltipContent>
                     </Tooltip>
                   </div>
