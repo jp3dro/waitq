@@ -405,7 +405,7 @@ export default function UsersClient() {
           </div>
           <DialogFooter>
             <Button type="button" disabled={isPending} onClick={saveEdit}>
-              {isPending ? "Saving..." : "Save"}
+              {isPending ? "Saving..." : "Save changes"}
             </Button>
             <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
           </DialogFooter>

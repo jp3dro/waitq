@@ -3,6 +3,7 @@ import * as React from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from "recharts";
+import { CircleHelp } from "lucide-react";
 
 import { Spinner } from "@/components/ui/spinner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { dateToClockLabel, hourToLabel, normalizeTimeFormat, type TimeFormat } from "@/lib/time-format";
 import UpgradeRequiredDialog from "@/components/upgrade-required-dialog";
 import type { PlanId } from "@/lib/plans";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 type CreatedRow = { created_at: string };
 type ServedRow = { created_at: string; notified_at: string | null; waitlist_id: string | null };
@@ -49,23 +51,50 @@ function formatIfISODateLabel(value: string) {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
+function formatMinutesAsDuration(m: number) {
+  const minutes = Math.max(0, Math.floor(m || 0));
+  const h = Math.floor(minutes / 60);
+  const mm = minutes % 60;
+  if (h > 0 && mm > 0) return `${h}h ${mm}m`;
+  if (h > 0) return `${h}h`;
+  return `${mm}m`;
+}
+
 function ChartBarInteractiveMetric({
   title,
   data,
   height = 250,
   xTickFormatter,
   insight,
+  helpText,
 }: {
   title: string;
   data: InteractiveBarChartDatum[];
   height?: number;
   xTickFormatter?: (value: string) => string;
   insight?: string | null;
+  helpText?: string | null;
 }) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle>{title}</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <span>{title}</span>
+          {helpText ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  aria-label={`About ${title}`}
+                  className="inline-flex items-center text-muted-foreground hover:text-foreground"
+                >
+                  <CircleHelp className="h-4 w-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">{helpText}</TooltipContent>
+            </Tooltip>
+          ) : null}
+        </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
         <ChartContainer config={interactiveChartConfig} className="aspect-auto w-full" style={{ height }}>
@@ -114,15 +143,33 @@ function ChartBarCustomLabelWeekday({
   title,
   data,
   insight,
+  helpText,
 }: {
   title: string;
   data: { day: string; value: number }[];
   insight?: string | null;
+  helpText?: string | null;
 }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <span>{title}</span>
+          {helpText ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  aria-label={`About ${title}`}
+                  className="inline-flex items-center text-muted-foreground hover:text-foreground"
+                >
+                  <CircleHelp className="h-4 w-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">{helpText}</TooltipContent>
+            </Tooltip>
+          ) : null}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <ChartContainer config={weekdayCustomLabelConfig}>
@@ -439,6 +486,27 @@ export default function AnalyticsPage() {
       ? `Busiest day: ${busiestDayLabel} (${busiestDay.count} visitors)`
       : "No visitors recorded in this period.";
 
+  const tldr = (() => {
+    const period = isToday ? "Today (so far)" : `In the last ${rangeMode} days`;
+    if (!analytics.totalVisitors) return `TL;DR: ${period} there were no visitors for the selected filters.`;
+    const peak = busiestHour && busiestHour.avg > 0 ? hourToLabel(busiestHour.hour, timeFormat) : null;
+    const peakText = peak ? `Peak hour: ${peak}.` : "No clear peak hour yet.";
+    return `TL;DR: ${period} you had ${analytics.totalVisitors.toLocaleString()} visitors, an average wait of ${formatMinutesAsDuration(
+      analytics.avgWaitTimeMin
+    )}, and ${peakText}`;
+  })();
+
+  const helpHourly =
+    (isToday
+      ? "Shows how many people joined the waitlist each hour today (for the selected location/list)."
+      : "Shows the average number of people who joined the waitlist each hour during this period (for the selected location/list).");
+  const helpWaitByHour =
+    "Shows the average time people waited before being called, grouped by the hour they joined (for the selected location/list).";
+  const helpDailyVisitors =
+    "Shows how many people joined the waitlist each day during this period (for the selected location/list).";
+  const helpWeekday =
+    "Shows which weekdays are usually busier, based on the average number of people who joined on each weekday (for the selected location/list).";
+
   return (
     <main className="py-5">
       <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
@@ -468,6 +536,7 @@ export default function AnalyticsPage() {
 
         {/* Analytics content container */}
         <div className="space-y-6">
+          <p className="text-sm text-muted-foreground">{tldr}</p>
           <div className="flex flex-wrap items-center gap-3">
             <div className="w-full sm:w-64">
               <Select
@@ -530,11 +599,11 @@ export default function AnalyticsPage() {
             )}
             <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-3">
               <p className="text-xs text-muted-foreground">Avg wait time</p>
-              <p className="mt-0.5 text-lg font-semibold">{(() => { const m = analytics.avgWaitTimeMin; const h = Math.floor(m/60); const mm = m % 60; return h > 0 ? `${h}h ${mm}m` : `${mm}m`; })()}</p>
+              <p className="mt-0.5 text-lg font-semibold">{formatMinutesAsDuration(analytics.avgWaitTimeMin)}</p>
             </div>
             <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-3">
               <p className="text-xs text-muted-foreground">Avg service time</p>
-              <p className="mt-0.5 text-lg font-semibold">{(() => { const m = analytics.avgServiceTimeMin; const h = Math.floor(m/60); const mm = m % 60; return h > 0 ? `${h}h ${mm}m` : `${mm}m`; })()}</p>
+              <p className="mt-0.5 text-lg font-semibold">{formatMinutesAsDuration(analytics.avgServiceTimeMin)}</p>
             </div>
           </div>
 
@@ -550,6 +619,7 @@ export default function AnalyticsPage() {
               }))}
               xTickFormatter={(v) => v}
               insight={insightHourlyVisits}
+              helpText={helpHourly}
             />
             <ChartBarInteractiveMetric
               title="Average wait time by time of day"
@@ -559,6 +629,7 @@ export default function AnalyticsPage() {
               }))}
               xTickFormatter={(v) => v}
               insight={insightWaitByHour}
+              helpText={helpWaitByHour}
             />
             <ChartBarInteractiveMetric
               title={rangeMode === "today" ? "Daily visitors (today)" : `Daily visitors (last ${rangeMode} days)`}
@@ -568,6 +639,7 @@ export default function AnalyticsPage() {
               }))}
               xTickFormatter={(v) => formatIfISODateLabel(v)}
               insight={insightDailyVisitors}
+              helpText={helpDailyVisitors}
             />
             {!isToday ? (
               <ChartBarCustomLabelWeekday
@@ -577,6 +649,7 @@ export default function AnalyticsPage() {
                   value: w.avg,
                 }))}
                 insight={insightWeekday}
+                helpText={helpWeekday}
               />
             ) : null}
           </div>

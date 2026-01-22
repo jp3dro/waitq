@@ -9,6 +9,7 @@ import EditListButton from "./[id]/edit-list-button";
 import { toastManager } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -104,6 +105,8 @@ export default function ListCard({
   const isClosed = locationIsOpen === false;
   // Back-compat: older lists may have kiosk_enabled = null; treat that as "enabled by default"
   const isLive = kioskEnabled !== false && !isClosed;
+  const liveHelp =
+    "Live means this list is currently within this location’s working hours. You can change working hours in Locations → Edit location.";
 
   return (
     <div className="relative">
@@ -118,13 +121,21 @@ export default function ListCard({
                   Closed
                 </Badge>
               ) : isLive ? (
-                <Badge variant="secondary" className="gap-1 text-xs bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-200 dark:ring-emerald-800">
-                  <span className="relative flex h-2.5 w-2.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                  </span>
-                  Live
-                </Badge>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge
+                      variant="secondary"
+                      className="gap-1 text-xs bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-200 dark:ring-emerald-800 cursor-help"
+                    >
+                      <span className="relative flex h-2.5 w-2.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                      </span>
+                      Live
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">{liveHelp}</TooltipContent>
+                </Tooltip>
               ) : null}
             </div>
             <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">

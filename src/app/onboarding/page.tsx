@@ -92,7 +92,7 @@ export default async function OnboardingPage({
     // Fetch existing business/location/list info if available to pre-fill (canonical tables first)
     const { data: business } = await supabase
         .from("businesses")
-        .select("id, name, phone, country_code")
+        .select("id, name, country_code")
         .eq("owner_user_id", user.id)
         .order("created_at", { ascending: true })
         .limit(1)
@@ -157,7 +157,6 @@ export default async function OnboardingPage({
         businessName: business?.name || profile?.business_name || "",
         country: business?.country_code || profile?.country || inferredCountry || "US",
         locationName: location?.name || profile?.location_name || "",
-        phone: business?.phone || profile?.phone || "",
         listName: listName,
     };
 

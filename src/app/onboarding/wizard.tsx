@@ -11,7 +11,6 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Progress } from "@/components/ui/progress";
 import { Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PhoneInput } from "@/components/ui/phone-input";
 import { cn } from "@/lib/utils";
 import { getCountries, type Country } from "react-phone-number-input";
 import PlanCards from "@/components/subscriptions/PlanCards";
@@ -30,7 +29,6 @@ const businessInfoSchema = z.object({
 });
 const locationInfoSchema = z.object({
     locationName: z.string().min(2, "Location name must be at least 2 characters"),
-    phone: z.string().min(5, "Please enter a valid phone number"),
 });
 const waitlistInfoSchema = z.object({
     listName: z.string().min(2, "List name must be at least 2 characters"),
@@ -42,7 +40,6 @@ type SetupFormValues = {
     country: string;
     vatId: string;
     locationName: string;
-    phone: string;
     listName: string;
 };
 
@@ -76,14 +73,12 @@ export default function OnboardingWizard({ initialStep, initialData }: { initial
             country: initialData?.country || "US",
             vatId: initialData?.vatId || "",
             locationName: initialData?.locationName || "Main Location",
-            phone: initialData?.phone || "",
             listName: initialData?.listName || "Main List",
         },
     });
 
     const countryCode = watch("country");
     const vatIdValue = watch("vatId");
-    const phoneValue = watch("phone");
 
     const countryOptions = useMemo(() => {
         const codes = getCountries();
@@ -170,11 +165,10 @@ export default function OnboardingWizard({ initialStep, initialData }: { initial
         }
 
         if (step === 3) {
-            const check = fail(locationInfoSchema, ["locationName", "phone"]);
+            const check = fail(locationInfoSchema, ["locationName"]);
             if (!check.ok) return check;
             const fd = new FormData();
             fd.append("locationName", values.locationName);
-            fd.append("phone", values.phone);
             await submitLocationInfo(fd);
             return { ok: true as const };
         }
@@ -406,20 +400,6 @@ export default function OnboardingWizard({ initialStep, initialData }: { initial
                                                     className={cn(errors.locationName && "border-destructive focus-visible:ring-destructive")}
                                                 />
                                                 <ErrorMessage message={errors.locationName?.message} />
-                                            </div>
-
-                                            <div className="space-y-2">
-                                                <Label htmlFor="phone" className={cn(errors.phone && "text-destructive")}>
-                                                    Location Phone Number
-                                                </Label>
-                                                <div className={cn(errors.phone && "border-destructive rounded-md border")}>
-                                                    <PhoneInput
-                                                        value={phoneValue}
-                                                        onChange={(val) => setValue("phone", val || "")}
-                                                        defaultCountry={countryCode as Country}
-                                                    />
-                                                </div>
-                                                <ErrorMessage message={errors.phone?.message} />
                                             </div>
                                         </div>
                                     ) : null}

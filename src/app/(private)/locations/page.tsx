@@ -189,7 +189,7 @@ function RegularHoursEditor({
 }) {
   return (
     <div className="space-y-3 pb-3">
-      <Label>Regular weekly hours</Label>
+      <Label>Working hours</Label>
       <div className="space-y-1">
         {dayOptions.map((day) => {
           const ranges = hours[day.key] || [];

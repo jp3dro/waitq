@@ -41,7 +41,7 @@ async function resolveOrCreateBusinessId({
 }) {
     const { data: existingBiz, error } = await admin
         .from("businesses")
-        .select("id, phone")
+        .select("id")
         .eq("owner_user_id", userId)
         .maybeSingle();
     if (error) throw error;
@@ -248,9 +248,7 @@ export async function submitLocationInfo(formData: FormData) {
     const admin = getAdminClient();
 
     const locationName = (formData.get("locationName") as string | null)?.trim() || "";
-    const phone = (formData.get("phone") as string | null)?.trim() || "";
     if (locationName.length < 2) throw new Error("Location name must be at least 2 characters");
-    if (phone.length < 5) throw new Error("Please enter a valid phone number");
 
     // Resolve business
     const { data: business, error: bizErr } = await admin
@@ -266,13 +264,10 @@ export async function submitLocationInfo(formData: FormData) {
 
     await resolveOrCreateFirstLocationId({ admin, businessId, locationName });
 
-    // Update business phone using the location phone (current behavior)
-    await admin.from("businesses").update({ phone }).eq("id", businessId);
-
     const { error: profileErr } = await supabase
         .from("profiles")
         .upsert(
-            { id: user.id, phone, location_name: locationName, onboarding_step: 4 },
+            { id: user.id, location_name: locationName, onboarding_step: 4 },
             { onConflict: "id" }
         );
     if (profileErr) throw profileErr;

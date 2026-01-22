@@ -248,7 +248,7 @@ export default function EditListButton({
 
           <DialogFooter>
             <Button disabled={isPending} onClick={save}>
-              {isPending ? "Saving…" : "Save"}
+              {isPending ? "Saving…" : "Save changes"}
             </Button>
             <Button onClick={closeModal} variant="outline">
               Cancel

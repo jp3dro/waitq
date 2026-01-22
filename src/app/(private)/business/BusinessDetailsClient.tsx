@@ -432,7 +432,7 @@ export default function BusinessDetailsClient({ initial, canEdit }: Props) {
                   <span className="text-muted-foreground">Could not verify VAT ID{vatStatus.detail ? `: ${vatStatus.detail}` : ""}</span>
                 ) : (
                   <span className="text-muted-foreground">
-                    Used for EU VAT (VIES) validation. Portuguese businesses with a valid VIES VAT ID may be VAT-exempt.
+                    VAT (VIES) validation is only available for EU countries.
                   </span>
                 )}
               </div>
@@ -440,84 +440,89 @@ export default function BusinessDetailsClient({ initial, canEdit }: Props) {
           ) : null}
 
           <div className="space-y-6 pt-2">
-            <div className="text-sm font-medium">Links</div>
+            <h3 className="text-base font-semibold">Links</h3>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Website
-              </label>
-              <Input
-                value={websiteUrl}
-                onChange={(e) => setWebsiteUrl(e.target.value)}
-                disabled={!canEdit}
-                placeholder="https://yourdomain.com"
-                inputMode="url"
-                autoCapitalize="none"
-                autoCorrect="off"
-              />
-              <p className="text-sm text-muted-foreground">Shown on the customer wait page.</p>
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* website - menu url */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Website
+                </label>
+                <Input
+                  value={websiteUrl}
+                  onChange={(e) => setWebsiteUrl(e.target.value)}
+                  disabled={!canEdit}
+                  placeholder="https://yourdomain.com"
+                  inputMode="url"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                />
+                <p className="text-sm text-muted-foreground">Shown on the customer wait page.</p>
+              </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Instagram URL
-              </label>
-              <Input
-                value={instagramUrl}
-                onChange={(e) => setInstagramUrl(e.target.value)}
-                disabled={!canEdit}
-                placeholder="https://instagram.com/yourhandle"
-                inputMode="url"
-                autoCapitalize="none"
-                autoCorrect="off"
-              />
-            </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Menu URL
+                </label>
+                <Input
+                  value={menuUrl}
+                  onChange={(e) => setMenuUrl(e.target.value)}
+                  disabled={!canEdit}
+                  placeholder="https://..."
+                  inputMode="url"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                />
+                <p className="text-sm text-muted-foreground">Users will see a “View menu” button while they wait.</p>
+              </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Facebook URL
-              </label>
-              <Input
-                value={facebookUrl}
-                onChange={(e) => setFacebookUrl(e.target.value)}
-                disabled={!canEdit}
-                placeholder="https://facebook.com/yourpage"
-                inputMode="url"
-                autoCapitalize="none"
-                autoCorrect="off"
-              />
-            </div>
+              {/* instagram - facebook */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Instagram
+                </label>
+                <Input
+                  value={instagramUrl}
+                  onChange={(e) => setInstagramUrl(e.target.value)}
+                  disabled={!canEdit}
+                  placeholder="https://instagram.com/yourhandle"
+                  inputMode="url"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                />
+              </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Google Maps URL
-              </label>
-              <Input
-                value={googleMapsUrl}
-                onChange={(e) => setGoogleMapsUrl(e.target.value)}
-                disabled={!canEdit}
-                placeholder="https://maps.app.goo.gl/..."
-                inputMode="url"
-                autoCapitalize="none"
-                autoCorrect="off"
-              />
-              <p className="text-sm text-muted-foreground">Use your Google Maps place link.</p>
-            </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Facebook
+                </label>
+                <Input
+                  value={facebookUrl}
+                  onChange={(e) => setFacebookUrl(e.target.value)}
+                  disabled={!canEdit}
+                  placeholder="https://facebook.com/yourpage"
+                  inputMode="url"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                />
+              </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Digital menu URL
-              </label>
-              <Input
-                value={menuUrl}
-                onChange={(e) => setMenuUrl(e.target.value)}
-                disabled={!canEdit}
-                placeholder="https://..."
-                inputMode="url"
-                autoCapitalize="none"
-                autoCorrect="off"
-              />
-              <p className="text-sm text-muted-foreground">If set, customers will see a “View menu” button while they wait.</p>
+              {/* google maps - (empty) */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Google Maps
+                </label>
+                <Input
+                  value={googleMapsUrl}
+                  onChange={(e) => setGoogleMapsUrl(e.target.value)}
+                  disabled={!canEdit}
+                  placeholder="https://maps.app.goo.gl/..."
+                  inputMode="url"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                />
+                <p className="text-sm text-muted-foreground">Use your Google Maps place link.</p>
+              </div>
             </div>
           </div>
         </div>
