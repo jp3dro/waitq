@@ -30,7 +30,6 @@ export const metadata = {
 };
 
 export default function HomePage() {
-  const demoVideoId = process.env.NEXT_PUBLIC_DEMO_YOUTUBE_ID ?? "dQw4w9WgXcQ";
 
   // FAQ structured data for rich snippets
   const faqStructuredData = {
@@ -80,7 +79,7 @@ export default function HomePage() {
       />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-48 pb-12 -mt-20">
+      <section className="relative overflow-hidden pt-48 lg:pt-60 pb-12 -mt-20">
         {/* Background video */}
         <video
           className="absolute inset-0 h-full w-full object-cover motion-reduce:hidden"
@@ -91,12 +90,12 @@ export default function HomePage() {
           preload="metadata"
           aria-hidden="true"
         >
-          <source src="/video-hero.mp4" type="video/mp4" />
+          <source src="/hero.mp4" type="video/mp4" />
         </video>
 
         {/* Dark overlay for legibility */}
         <div
-          className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/55 to-black/70"
+          className="absolute inset-0 bg-gradient-to-b from-black/50  to-black/70"
           aria-hidden="true"
         />
 
@@ -124,7 +123,7 @@ export default function HomePage() {
               <Button asChild size="lg" className="px-4">
                 <Link href="/signup">Try for free</Link>
               </Button>
-              <YouTubeLightbox videoId={demoVideoId} title="WaitQ demo">
+              <YouTubeLightbox videoId="Jk1ZrZF87UY" title="WaitQ demo">
                 <Button
                   size="lg"
                   variant="outline"
@@ -151,7 +150,7 @@ export default function HomePage() {
           <div className="mt-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
             <div className="border border-border rounded-2xl p-6 text-left shadow-sm">
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                <Users className="w-8 h-8 text-primary" />
+                <Users className="w-6 h-6 text-primary" />
               </div>
               <h3 className="text-xl font-semibold">Front-door chaos</h3>
               <p className="mt-2 text-sm text-muted-foreground">
@@ -160,7 +159,7 @@ export default function HomePage() {
             </div>
             <div className="border border-border rounded-2xl p-6 text-left shadow-sm">
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                <FileText className="w-8 h-8 text-primary" />
+                <FileText className="w-6 h-6 text-primary" />
               </div>
               <h3 className="text-xl font-semibold">Paper waitlists</h3>
               <p className="mt-2 text-sm text-muted-foreground">
@@ -169,7 +168,7 @@ export default function HomePage() {
             </div>
             <div className="border border-border rounded-2xl p-6 text-left shadow-sm">
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                <MessageSquare className="w-8 h-8 text-primary" />
+                <MessageSquare className="w-6 h-6 text-primary" />
               </div>
               <h3 className="text-xl font-semibold">Poor guest experience</h3>
               <p className="mt-2 text-sm text-muted-foreground">
@@ -183,7 +182,7 @@ export default function HomePage() {
       {/* Better Guest Impressions Section */}
       <section className="py-2">
         <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-          <div className="rounded-3xl bg-muted/30 p-6 md:p-10">
+          <div className="rounded-3xl bg-muted dark:bg-muted/30 p-6 md:p-10">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               <div className="relative">
                 <div className="aspect-[4/3] bg-background rounded-2xl shadow-xl overflow-hidden">
@@ -197,7 +196,7 @@ export default function HomePage() {
                 </div>
               </div>
               <div>
-                <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+                <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
                   Better guest first impressions
                 </h2>
                 <p className="mt-4 text-lg text-muted-foreground">
@@ -222,7 +221,7 @@ export default function HomePage() {
 
             <div className="grid lg:grid-cols-2 gap-12 mt-12 items-center">
             <div>
-              <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+              <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
                 Handling of peak hours with ease
               </h2>
               <p className="mt-4 text-lg text-muted-foreground">
@@ -264,7 +263,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
           <div className="">
             <div className="text-center mb-8">
-              <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+              <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
                 Simple, powerful solution to let guests flow through
               </h2>
             </div>
@@ -330,7 +329,7 @@ export default function HomePage() {
       {/* Better Guest Impressions Section */}
       <section className="py-2">
         <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-          <div className="rounded-3xl bg-muted/30 p-6 md:p-10">
+          <div className="rounded-3xl bg-muted dark:bg-muted/30 p-6 md:p-10">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="relative">
               <div className="aspect-[4/3] bg-background rounded-2xl shadow-xl overflow-hidden">
@@ -344,8 +343,8 @@ export default function HomePage() {
               </div>
             </div>
             <div>
-              <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-                Rich analytics that improve your business.
+              <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
+                Rich analytics that improve your business
               </h2>
               <p className="mt-4 text-lg text-muted-foreground">
                 Track the few metrics that actually move revenue and guest experience, then adjust staffing, pacing, and guest messaging based on real data, not gut feel.
@@ -374,7 +373,7 @@ export default function HomePage() {
       <section className="py-20">
         <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
               With all the features your restaurant needs
             </h2>
           </div>
@@ -473,7 +472,7 @@ export default function HomePage() {
       {/* Social Proof Section */}
       <section className="py-2">
         <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-          <div className="rounded-3xl bg-muted/30 p-6 md:p-10">
+          <div className="rounded-3xl bg-muted dark:bg-muted/30 p-6 md:p-10">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold tracking-tight">Trusted by top restaurants worldwide</h2>
             </div>

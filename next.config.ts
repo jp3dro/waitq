@@ -23,6 +23,8 @@ const nextConfig: NextConfig = {
               "base-uri 'self'",
               "form-action 'self'",
               "frame-ancestors 'none'",
+              // Allow embedding trusted third-party iframes (e.g. YouTube lightbox)
+              "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com",
               "object-src 'none'",
               "img-src 'self' data: https:",
               "font-src 'self' data: https:",
