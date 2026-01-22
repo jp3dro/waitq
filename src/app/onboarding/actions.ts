@@ -1,13 +1,26 @@
 'use server';
 
-import { createClient } from "@/lib/supabase/server";
+import { createRouteClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getStripe } from "@/lib/stripe";
 
+function isMissingColumnError(errMsg: string, column: string) {
+    const m = errMsg.toLowerCase();
+    const c = column.toLowerCase();
+    return (
+        m.includes(`could not find the '${c}' column`) ||
+        m.includes(`could not find the "${c}" column`) ||
+        m.includes(`column ${c} does not exist`) ||
+        m.includes(`column "${c}" does not exist`) ||
+        (m.includes("schema cache") && m.includes(c))
+    );
+}
+
 async function requireUser() {
-    const supabase = await createClient();
+    // Write-enabled so Supabase can refresh session cookies in server actions.
+    const supabase = await createRouteClient();
     const {
         data: { user },
     } = await supabase.auth.getUser();
@@ -149,7 +162,7 @@ export async function submitBusinessInfo(formData: FormData) {
             });
             const vatData = await vatRes.json();
 
-            const updateData: Record<string, any> = {
+            const updateData: Record<string, unknown> = {
                 vat_id: vatId,
                 vat_id_valid: vatData.valid,
                 vat_id_validated_at: new Date().toISOString(),
@@ -180,13 +193,23 @@ export async function submitBusinessInfo(formData: FormData) {
     if (membershipErr) throw membershipErr;
 
     // Persist to profile for prefill
-    const { error: profileErr } = await supabase
+    const baseProfile = { id: user.id, business_name: businessName, country, onboarding_step: 3 } as Record<string, unknown>;
+    const attempt1 = await supabase
         .from("profiles")
         .upsert(
-            { id: user.id, business_name: businessName, country, vat_id: vatId || null, onboarding_step: 3 },
+            { ...baseProfile, vat_id: vatId || null },
             { onConflict: "id" }
         );
-    if (profileErr) throw profileErr;
+    if (attempt1.error && isMissingColumnError(attempt1.error.message, "vat_id")) {
+        // Some production DBs may not have `profiles.vat_id` (or PostgREST schema cache is stale).
+        // VAT is persisted on `businesses` anyway; don't block onboarding on this.
+        const attempt2 = await supabase
+            .from("profiles")
+            .upsert(baseProfile, { onConflict: "id" });
+        if (attempt2.error) throw attempt2.error;
+    } else if (attempt1.error) {
+        throw attempt1.error;
+    }
 
     // Stripe customer bootstrap (optional, but helps subscription UX)
     try {
@@ -356,7 +379,7 @@ export async function submitSetup(formData: FormData) {
 }
 
 export async function completeOnboarding() {
-    const supabase = await createClient();
+    const supabase = await createRouteClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Not authenticated");
 
