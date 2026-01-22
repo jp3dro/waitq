@@ -26,15 +26,7 @@ export function CTASection({ variant = "default", className = "" }: CTASectionPr
           </p>
           <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3">
             <Button asChild size="sm" variant="secondary" className="h-10 px-4">
-              <Link href="/signup">Try Free</Link>
-            </Button>
-            <Button
-              asChild
-              size="sm"
-              variant="outline"
-              className="h-10 px-4 border-primary-foreground/30 hover:bg-primary-foreground/10"
-            >
-              <Link href="/contact">Contact Sales</Link>
+              <Link href="/signup">Try for Free</Link>
             </Button>
           </div>
         </div>

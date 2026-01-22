@@ -76,7 +76,7 @@ function SignupPageContent() {
   };
 
   return (
-    <div className="min-h-dvh flex items-center justify-center p-6 bg-background text-foreground">
+    <div className="min-h-dvh pt-24 flex items-center justify-center p-6 bg-background text-foreground">
       <div className="w-full max-w-sm">
         <div className="rounded-2xl bg-card text-card-foreground ring-1 ring-border shadow-sm p-6 space-y-6">
           <div className="text-center">

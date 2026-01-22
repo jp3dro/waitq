@@ -31,7 +31,7 @@ export default function MarketingLayout({
                 Modern virtual waitlist management for restaurants. Keep guests informed and reduce wait times.
               </p>
               <p className="text-xs text-muted-foreground">
-                © {new Date().getFullYear()} Qminder Inc. All rights reserved.
+                © {new Date().getFullYear()} WaitQ Inc. All rights reserved.
               </p>
             </div>
             <div>

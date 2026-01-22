@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -81,14 +80,44 @@ export default function HomePage() {
       />
 
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-b from-background via-background to-muted/30 mt-12">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2Utb3BhY2l0eT0iMC4wNSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-40" />
-        <div className="relative mx-auto max-w-[1200px] px-6 lg:px-8 pt-24 pb-20">
-          <div className="mx-auto max-w-4xl text-center">
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">
+      <section className="relative overflow-hidden pt-48 pb-12 -mt-20">
+        {/* Background video */}
+        <video
+          className="absolute inset-0 h-full w-full object-cover motion-reduce:hidden"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          aria-hidden="true"
+        >
+          <source src="/video-hero.mp4" type="video/mp4" />
+        </video>
+
+        {/* Dark overlay for legibility */}
+        <div
+          className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/55 to-black/70"
+          aria-hidden="true"
+        />
+
+        {/* Subtle grid texture (kept very light) */}
+        <div
+          className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2Utb3BhY2l0eT0iMC4wNSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-15"
+          aria-hidden="true"
+        />
+
+        {/* Fallback background when reduced motion is enabled */}
+        <div
+          className="absolute inset-0 bg-gradient-to-b from-background via-background to-muted/30 motion-reduce:block hidden"
+          aria-hidden="true"
+        />
+
+        <div className="relative mx-auto max-w-[1200px] px-6 lg:px-8 pb-16">
+          <div className="mx-auto max-w-4xl text-center text-white">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight drop-shadow-[0_2px_16px_rgba(0,0,0,0.65)]">
               The virtual waitlist that keeps guests from walking away
             </h1>
-            <p className="mt-6 text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
+            <p className="mt-6 text-lg md:text-xl text-white/80 max-w-3xl mx-auto drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)]">
               Turn waitlists into warm welcomes. Manage walk-ins, reservations, and SMS updates in one intuitive platform designed for restaurants.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -96,7 +125,11 @@ export default function HomePage() {
                 <Link href="/signup">Try for free</Link>
               </Button>
               <YouTubeLightbox videoId={demoVideoId} title="WaitQ demo">
-                <Button size="lg" variant="outline" className="gap-2">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="gap-2 border-white/30 text-white bg-white/5 hover:bg-white/10 hover:text-white"
+                >
                   <Play className="h-4 w-4" />
                   See how it works
                 </Button>
@@ -131,7 +164,7 @@ export default function HomePage() {
               </div>
               <h3 className="text-xl font-semibold">Paper waitlists</h3>
               <p className="mt-2 text-sm text-muted-foreground">
-                Clipboards don't work anymore. Guests expect text updates about their table.
+                Clipboards don&apos;t work anymore. Guests expect text updates about their table.
               </p>
             </div>
             <div className="border border-border rounded-2xl p-6 text-left shadow-sm">
@@ -148,52 +181,46 @@ export default function HomePage() {
       </section>
 
       {/* Better Guest Impressions Section */}
-      <section className="py-20">
+      <section className="py-2">
         <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
           <div className="rounded-3xl bg-muted/30 p-6 md:p-10">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="relative">
-              <div className="aspect-[4/3] bg-background rounded-2xl shadow-xl overflow-hidden">
-                {/* Placeholder for restaurant image */}
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center p-8">
-                    <ImageIcon className="w-24 h-24 mx-auto text-muted-foreground/20" />
-                    <p className="mt-4 text-sm text-muted-foreground">Restaurant image placeholder</p>
+              <div className="relative">
+                <div className="aspect-[4/3] bg-background rounded-2xl shadow-xl overflow-hidden">
+                  {/* Placeholder for restaurant image */}
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center p-8">
+                      <ImageIcon className="w-24 h-24 mx-auto text-muted-foreground/20" />
+                      <p className="mt-4 text-sm text-muted-foreground">Restaurant image placeholder</p>
+                    </div>
                   </div>
                 </div>
               </div>
+              <div>
+                <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+                  Better guest first impressions
+                </h2>
+                <p className="mt-4 text-lg text-muted-foreground">
+                  Replace crowded entrances with calm, accurate updates, so guests don&apos;t walk away.
+                </p>
+                <ul className="mt-8 space-y-4">
+                  <li className="flex items-start gap-3">
+                    <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span className="text-muted-foreground">Anyone can check-in to the waitlist from their phone or kiosk, no app downloads required</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span className="text-muted-foreground">Keep customers informed with accurate wait times on public display or directly on their phones.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span className="text-muted-foreground">Customers get honest wait times that update in real time.</span>
+                  </li>
+                </ul>
+              </div>
             </div>
-            <div>
-              <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-                Better guest first impressions
-              </h2>
-              <p className="mt-4 text-lg text-muted-foreground">
-                Replace crowded entrances with calm, accurate updates, so guests don't walk away.
-              </p>
-              <ul className="mt-8 space-y-4">
-                <li className="flex items-start gap-3">
-                  <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span className="text-muted-foreground">Anyone can check-in to the waitlist from their phone or kiosk, no app downloads required</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span className="text-muted-foreground">Keep customers informed with accurate wait times on public display or directly on their phones.</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span className="text-muted-foreground">Customers get honest wait times that update in real time.</span>
-                </li>
-              </ul>
-            </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* Handling Peak Hours Section */}
-      <section className="py-20">
-        <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="grid lg:grid-cols-2 gap-12 mt-12 items-center">
             <div>
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
                 Handling of peak hours with ease
@@ -204,11 +231,11 @@ export default function HomePage() {
               <ul className="mt-8 space-y-4">
                 <li className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span className="text-muted-foreground">See who's waiting, and who's next in a glance.</span>
+                  <span className="text-muted-foreground">See who&apos;s waiting, and who&apos;s next in a glance.</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span className="text-muted-foreground">Send "table ready" texts and reduce walk-aways.</span>
+                  <span className="text-muted-foreground">Send &quot;table ready&quot; texts and reduce walk-aways.</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
@@ -228,14 +255,15 @@ export default function HomePage() {
               </div>
             </div>
           </div>
+          </div>
         </div>
       </section>
 
       {/* Simple Powerful Solution Section */}
       <section className="py-20">
         <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-          <div className="rounded-3xl bg-muted/30 p-6 md:p-10">
-            <div className="text-center mb-16">
+          <div className="">
+            <div className="text-center mb-8">
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
                 Simple, powerful solution to let guests flow through
               </h2>
@@ -243,7 +271,7 @@ export default function HomePage() {
             <div className="grid md:grid-cols-3 gap-8">
             {/* Self Check-in */}
             <div>
-              <div className="aspect-[4/3] bg-background rounded-xl shadow-lg overflow-hidden mb-6">
+              <div className="aspect-[4/3] bg-red-900 rounded-xl shadow-lg overflow-hidden mb-6">
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center p-8">
                     <QrCode className="w-20 h-20 mx-auto text-muted-foreground/20" />
@@ -261,7 +289,7 @@ export default function HomePage() {
 
             {/* Virtual Waitlist */}
             <div>
-              <div className="aspect-[4/3] bg-background rounded-xl shadow-lg overflow-hidden mb-6">
+              <div className="aspect-[4/3] bg-red-900 rounded-xl shadow-lg overflow-hidden mb-6">
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center p-8">
                     <Users className="w-20 h-20 mx-auto text-muted-foreground/20" />
@@ -279,7 +307,7 @@ export default function HomePage() {
 
             {/* Virtual waiting room */}
             <div>
-              <div className="aspect-[4/3] bg-background rounded-xl shadow-lg overflow-hidden mb-6">
+              <div className="aspect-[4/3] bg-red-900 rounded-xl shadow-lg overflow-hidden mb-6">
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center p-8">
                     <MonitorPlay className="w-20 h-20 mx-auto text-muted-foreground/20" />
@@ -300,7 +328,7 @@ export default function HomePage() {
       </section>
 
       {/* Better Guest Impressions Section */}
-      <section className="py-20">
+      <section className="py-2">
         <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
           <div className="rounded-3xl bg-muted/30 p-6 md:p-10">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -369,7 +397,7 @@ export default function HomePage() {
               </div>
               <h3 className="font-semibold mb-2">Real-Time Queue</h3>
               <p className="text-sm text-muted-foreground">
-                See what's happening, who's next, and manage in real-time.
+                See what&apos;s happening, who&apos;s next, and manage in real-time.
               </p>
             </div>
 
@@ -443,7 +471,7 @@ export default function HomePage() {
       </section>
 
       {/* Social Proof Section */}
-      <section className="py-20">
+      <section className="py-2">
         <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
           <div className="rounded-3xl bg-muted/30 p-6 md:p-10">
             <div className="text-center mb-12">
@@ -469,7 +497,7 @@ export default function HomePage() {
                   <div className="w-12 h-12 bg-primary/10 rounded-full flex-shrink-0" />
                   <div>
                     <p className="text-lg italic">
-                      "Qminder cut our wait times by 35%. Guests love the SMS updates and our staff stays organized."
+                      &ldquo;WaitQ cut our wait times by 35%. Guests love the SMS updates and our staff stays organized.&rdquo;
                     </p>
                     <p className="mt-3 text-sm font-medium">— Maria, GM at Bistro Verde</p>
                   </div>

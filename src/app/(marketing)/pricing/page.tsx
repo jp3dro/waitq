@@ -247,7 +247,7 @@ export default function PricingPage() {
                 <div className="w-12 h-12 bg-primary/10 rounded-full flex-shrink-0" />
                 <div>
                   <p className="text-lg italic">
-                    "Qminder cut our wait times by 35%. Guests love the SMS updates and our staff stays organized."
+                    "WaitQ cut our wait times by 35%. Guests love the SMS updates and our staff stays organized."
                   </p>
                   <p className="mt-3 text-sm font-medium">— Maria, GM at Bistro Verde</p>
                 </div>

@@ -19,7 +19,7 @@ export default async function Nav() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 px-4 pt-4">
-      <div className="mx-auto max-w-[1200px] backdrop-blur-xl bg-background/90 dark:bg-background/80 rounded-2xl border border-border shadow-lg shadow-black/5">
+      <div className="mx-auto max-w-[1136px] backdrop-blur-sm bg-background/70 dark:bg-background/80 rounded-2xl border border-border shadow-lg shadow-black/5">
         <div className="px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-8 min-w-0">
             <Link href="/" className="flex items-center" aria-label="WaitQ home">
@@ -27,17 +27,17 @@ export default async function Nav() {
               <Image src="/waitq-variant.svg" alt="WaitQ" className="h-8 w-auto logo-dark" width={108} height={32} />
             </Link>
           </div>
-          <div className="hidden md:flex items-center gap-6 text-sm text-foreground/80">
+          <div className="hidden md:flex items-center gap-2 text-sm">
             <NavigationMenu>
               <NavigationMenuList>
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="h-7 px-3">Platform</NavigationMenuTrigger>
+                  <NavigationMenuTrigger className="h-7 px-3 bg-transparent">Features</NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <ul className="grid w-[500px] gap-3 p-4">
+                    <ul className="grid w-[400px]">
                       <li>
                         <NavigationMenuLink asChild>
                           <Link
-                            href="/platform/self-check-in"
+                            href="/features/self-check-in"
                             className="group block select-none space-y-1 rounded-lg p-4 no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground border border-transparent hover:border-border"
                           >
                             <div className="flex items-center gap-3">
@@ -47,7 +47,7 @@ export default async function Nav() {
                               <div className="flex-1">
                                 <div className="text-sm font-semibold leading-none mb-1.5">Self Check-in</div>
                                 <p className="line-clamp-2 text-xs leading-snug text-muted-foreground">
-                                  Let guests join the waitlist with QR codes or kiosk check-in
+                                  Let guests join the waitlist from a kiosk or their phones
                                 </p>
                               </div>
                             </div>
@@ -57,7 +57,7 @@ export default async function Nav() {
                       <li>
                         <NavigationMenuLink asChild>
                           <Link
-                            href="/platform/virtual-waitlist"
+                            href="/features/virtual-waitlist"
                             className="group block select-none space-y-1 rounded-lg p-4 no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground border border-transparent hover:border-border"
                           >
                             <div className="flex items-center gap-3">
@@ -77,7 +77,7 @@ export default async function Nav() {
                       <li>
                         <NavigationMenuLink asChild>
                           <Link
-                            href="/platform/virtual-waiting-room"
+                            href="/features/virtual-waiting-room"
                             className="group block select-none space-y-1 rounded-lg p-4 no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground border border-transparent hover:border-border"
                           >
                             <div className="flex items-center gap-3">
@@ -105,7 +105,7 @@ export default async function Nav() {
             </Button>
             
             <Button asChild variant="ghost" size="sm">
-              <Link href="/contact">Resources</Link>
+              <Link href="/contact">Contact</Link>
             </Button>
           </div>
           <div className="flex items-center gap-3">
