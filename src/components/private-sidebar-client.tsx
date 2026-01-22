@@ -305,7 +305,6 @@ export default function PrivateSidebarClient({ userName, userEmail, businessLogo
                                                 </AlertDialogDescription>
                                             </AlertDialogHeader>
                                             <AlertDialogFooter>
-                                                <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
                                                 <AlertDialogAction
                                                     variant="destructive"
                                                     disabled={deleting}
@@ -326,6 +325,7 @@ export default function PrivateSidebarClient({ userName, userEmail, businessLogo
                                                 >
                                                     {deleting ? "Deleting…" : "Delete"}
                                                 </AlertDialogAction>
+                                                <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
                                             </AlertDialogFooter>
                                         </AlertDialogContent>
                                     </AlertDialog>

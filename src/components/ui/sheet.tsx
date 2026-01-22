@@ -90,7 +90,12 @@ function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sheet-footer"
-      className={cn("gap-2 p-4 mt-auto flex flex-col", className)}
+      // Convention: put primary actions first and Cancel last.
+      // We push the last child to the right on larger screens.
+      className={cn(
+        "p-4 mt-auto flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:gap-2 sm:[&>*:last-child:not(:first-child)]:ml-auto",
+        className
+      )}
       {...props}
     />
   )
