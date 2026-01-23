@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createRouteClient } from "@/lib/supabase/server";
 import { countLocations, getPlanContext } from "@/lib/plan-limits";
 import { DEFAULT_REGULAR_HOURS } from "@/lib/location-hours";
+import { resolveCurrentBusinessId } from "@/lib/current-business";
 
 function isMissingColumnError(errMsg: string, column: string) {
   const m = errMsg.toLowerCase();
@@ -16,37 +17,12 @@ function isMissingColumnError(errMsg: string, column: string) {
   );
 }
 
-async function resolveCurrentBusiness(supabase: Awaited<ReturnType<typeof createRouteClient>>, userId: string): Promise<string | null> {
-  // Prefer owned business
-  const { data: owned } = await supabase
-    .from("businesses")
-    .select("id")
-    .eq("owner_user_id", userId)
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-
-  const ownedId = (owned?.id as string | undefined) ?? null;
-  if (ownedId) return ownedId;
-
-  // Else: first membership business
-  const { data: member } = await supabase
-    .from("memberships")
-    .select("business_id")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-
-  return (member?.business_id as string | undefined) ?? null;
-}
-
 export async function GET() {
   const supabase = await createRouteClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const businessId = await resolveCurrentBusiness(supabase, user.id);
+  const businessId = await resolveCurrentBusinessId(supabase as any, user.id);
   if (!businessId) return NextResponse.json({ error: "No business found" }, { status: 404 });
 
   const { data, error } = await supabase
@@ -93,7 +69,7 @@ export async function POST(req: NextRequest) {
   const { name, phone, address, city, seatingCapacity, regularHours, timezone, countryCode } = parse.data;
   
   // Always resolve the correct business for this user (owned first, else membership)
-  const businessId = await resolveCurrentBusiness(supabase, user.id);
+  const businessId = await resolveCurrentBusinessId(supabase as any, user.id);
   if (!businessId) return NextResponse.json({ error: "No business found for user" }, { status: 400 });
 
   // Enforce location limits for ALL tiers (Free = 1, Base = 5, Premium = 100)
@@ -159,7 +135,7 @@ export async function PATCH(req: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const businessId = await resolveCurrentBusiness(supabase, user.id);
+  const businessId = await resolveCurrentBusinessId(supabase as any, user.id);
   if (!businessId) return NextResponse.json({ error: "No business found" }, { status: 404 });
 
   const { id, ...rest } = parse.data;
@@ -226,7 +202,7 @@ export async function DELETE(req: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const businessId = await resolveCurrentBusiness(supabase, user.id);
+  const businessId = await resolveCurrentBusinessId(supabase as any, user.id);
   if (!businessId) return NextResponse.json({ error: "No business found" }, { status: 404 });
 
   // Ensure the location belongs to the user's business

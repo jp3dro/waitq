@@ -139,6 +139,18 @@ export async function submitBusinessInfo(formData: FormData) {
     const { supabase, user } = await requireUser();
     const admin = getAdminClient();
 
+    // Check if user has an active membership - users with memberships cannot create a business
+    const { data: existingMembership } = await supabase
+        .from("memberships")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .maybeSingle();
+
+    if (existingMembership) {
+        throw new Error("You are already a member of an organization and cannot create a new business");
+    }
+
     const businessName = (formData.get("businessName") as string | null)?.trim() || "";
     const country = (formData.get("country") as string | null)?.trim() || "";
     const vatId = (formData.get("vatId") as string | null)?.trim() || "";

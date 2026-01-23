@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createRouteClient } from "@/lib/supabase/server";
 import { countSmsInPeriod, getPlanContext } from "@/lib/plan-limits";
+import { resolveCurrentBusinessId } from "@/lib/current-business";
 
 export async function GET() {
   const supabase = await createRouteClient();
@@ -9,26 +10,7 @@ export async function GET() {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  // Prefer owned business; else first membership business.
-  const { data: owned } = await supabase
-    .from("businesses")
-    .select("id")
-    .eq("owner_user_id", user.id)
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-
-  let businessId = (owned?.id as string | undefined) || null;
-  if (!businessId) {
-    const { data: member } = await supabase
-      .from("memberships")
-      .select("business_id")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
-    businessId = (member?.business_id as string | undefined) || null;
-  }
+  const businessId = await resolveCurrentBusinessId(supabase as any, user.id);
 
   if (!businessId) return NextResponse.json({ error: "No business found" }, { status: 404 });
 

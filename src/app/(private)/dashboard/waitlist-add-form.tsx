@@ -13,6 +13,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import UpgradeRequiredDialog from "@/components/upgrade-required-dialog";
+import type { PlanId } from "@/lib/plans";
 
 type FormValues = {
   phone: string;
@@ -67,6 +69,8 @@ export default function AddForm({
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const [duplicateDialog, setDuplicateDialog] = useState<{ open: boolean; message: string }>({ open: false, message: "" });
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [upgradeTo, setUpgradeTo] = useState<PlanId>("base");
   const [smsUsage, setSmsUsage] = useState<{ used: number; limit: number; windowEnd?: string } | null>(null);
   const { register, handleSubmit, reset, watch, setValue, setError, setFocus, formState: { errors } } = useForm<FormValues>({
     defaultValues: { phone: "", email: "", customerName: "", waitlistId: "", sendSms: false, sendEmail: false, partySize: 2 },
@@ -172,6 +176,7 @@ export default function AddForm({
           onPublicSuccess?.({ statusUrl: j?.statusUrl, ticketNumber: j?.ticketNumber });
           return;
         }
+        // Public mode should never show upgrade prompts (customer-facing).
         if (res.status === 409) {
           const errStr = typeof j?.error === "string" ? j.error : "This person is already waiting.";
           setDuplicateDialog({ open: true, message: errStr });
@@ -237,6 +242,14 @@ export default function AddForm({
         try {
           parsed = await res.json();
         } catch { }
+        if (res.status === 403) {
+          const p = parsed as { upgradeTo?: unknown; error?: unknown };
+          if (p?.upgradeTo === "base" || p?.upgradeTo === "premium") {
+            setUpgradeTo(p.upgradeTo as PlanId);
+            setUpgradeOpen(true);
+            return;
+          }
+        }
         const err = (parsed as { error?: unknown }).error;
         let msg = "Failed to add";
         let hasFieldErrors = false;
@@ -420,6 +433,19 @@ export default function AddForm({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <UpgradeRequiredDialog
+        open={upgradeOpen}
+        onOpenChange={setUpgradeOpen}
+        title={upgradeTo === "premium" ? "Upgrade to add more people" : "Upgrade to add more people"}
+        description={
+          upgradeTo === "premium"
+            ? "You’ve reached your plan’s limit for adding people to the queue. Upgrade to Premium to continue."
+            : "You’ve reached your plan’s limit for adding people to the queue. Upgrade to Base to continue."
+        }
+        ctaLabel={upgradeTo === "premium" ? "Upgrade to Premium" : "Upgrade to Base"}
+        ctaHref="/subscriptions"
+      />
     </div>
   );
 }

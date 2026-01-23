@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
   
   const { data: membership } = await admin
     .from("memberships")
-    .select("id, invitation_email, role, business_id")
+    .select("id, invitation_email, invitation_name, role, business_id")
     .eq("token", token)
     .eq("status", "pending")
     .maybeSingle();
@@ -25,6 +25,53 @@ export async function POST(req: NextRequest) {
   if (membership.invitation_email && membership.invitation_email.toLowerCase() !== user.email?.toLowerCase()) {
       return NextResponse.json({ error: "Invite email does not match logged in user" }, { status: 400 });
   }
+
+  // Check if user owns a business - business owners cannot join other organizations
+  const { data: ownedBusiness } = await admin
+    .from("businesses")
+    .select("id")
+    .eq("owner_user_id", user.id)
+    .maybeSingle();
+
+  if (ownedBusiness) {
+    return NextResponse.json({ 
+      error: "Business owners cannot join other organizations" 
+    }, { status: 400 });
+  }
+
+  // Check if user already has an active membership with any organization
+  const { data: existingMembership } = await admin
+    .from("memberships")
+    .select("id, business_id")
+    .eq("user_id", user.id)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (existingMembership) {
+    // If it's the same business, they're already a member
+    if (existingMembership.business_id === membership.business_id) {
+      return NextResponse.json({ 
+        error: "You are already a member of this organization" 
+      }, { status: 400 });
+    }
+    return NextResponse.json({ 
+      error: "You are already a member of an organization" 
+    }, { status: 400 });
+  }
+
+  // Persist invited display name (if provided by the inviter) onto the user's profile.
+  // This avoids any onboarding step for invited users.
+  try {
+    const invitationName = (membership as any)?.invitation_name;
+    if (typeof invitationName === "string" && invitationName.trim().length >= 2) {
+      await admin.auth.admin.updateUserById(user.id, {
+        user_metadata: {
+          full_name: invitationName.trim(),
+          name: invitationName.trim(),
+        },
+      });
+    }
+  } catch { }
 
   // Accept invite
   const { error } = await admin
@@ -39,7 +86,7 @@ export async function POST(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
-  // Skip onboarding for invited members
+  // Skip onboarding for invited members.
   try {
     await admin
       .from("profiles")

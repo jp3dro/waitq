@@ -59,7 +59,7 @@ type Props = {
     userName: string | null;
     userEmail: string | null;
     businessLogoUrl: string | null;
-    role?: string;
+    role: string;
 };
 
 function NavItem({
@@ -139,7 +139,6 @@ function ExternalNavItem({
 export default function PrivateSidebarClient({ userName, userEmail, businessLogoUrl, role }: Props) {
     const { setTheme } = useTheme();
     const router = useRouter();
-    const canSeeAnalytics = role === "admin" || role === "manager";
     const isAdmin = role === "admin";
     const canSeeInternalAdminLinks = userEmail?.toLowerCase() === "jp3dro@gmail.com";
     const [deleting, setDeleting] = useState(false);
@@ -168,34 +167,36 @@ export default function PrivateSidebarClient({ userName, userEmail, businessLogo
             <SidebarContent>
                 <SidebarMenu>
                     <NavItem href="/lists" icon={ListChecks} label="Lists" />
-                    {canSeeAnalytics ? <NavItem href="/analytics" icon={BarChart3} label="Analytics" /> : null}
                     <NavItem href="/customers" icon={Users2} label="Customers" />
                 </SidebarMenu>
 
-                <div className="px-2 pt-6">
-                    <div className="px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                        Settings
-                    </div>
-                </div>
+                {isAdmin ? (
+                    <>
+                        <div className="px-2 pt-6">
+                            <div className="px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                                Admin
+                            </div>
+                        </div>
 
-                <SidebarMenu className="pb-4">
-                    {isAdmin ? <NavItem href="/business" icon={Building2} label="Business" /> : null}
-                    {isAdmin ? (
-                        <NavItem
-                            href="/subscriptions"
-                            icon={CreditCard}
-                            label="Subscription"
-                        />
-                    ) : null}
-                    {isAdmin ? <NavItem href="/locations" icon={MapPin} label="Locations" /> : null}
-                    {isAdmin ? <NavItem href="/users" icon={Users2} label="Staff users" /> : null}
-                </SidebarMenu>
+                        <SidebarMenu className="pb-4">
+                            <NavItem href="/analytics" icon={BarChart3} label="Analytics" />
+                            <NavItem href="/locations" icon={MapPin} label="Locations" />
+                            <NavItem href="/business" icon={Building2} label="Business" />
+                            <NavItem
+                                href="/subscriptions"
+                                icon={CreditCard}
+                                label="Subscription"
+                            />
+                            <NavItem href="/users" icon={Users2} label="Staff users" />
+                        </SidebarMenu>
+                    </>
+                ) : null}
 
                 {canSeeInternalAdminLinks ? (
                     <>
                         <div className="px-2 pt-2">
                             <div className="px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                                Admin
+                                Developers
                             </div>
                         </div>
                         <SidebarMenu className="pb-4">

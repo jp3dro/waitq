@@ -23,6 +23,7 @@ export default async function PrivateSidebar() {
       .from("memberships")
       .select("business_id")
       .eq("user_id", user.id)
+      .eq("status", "active")
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle()
@@ -42,14 +43,21 @@ export default async function PrivateSidebar() {
     : { data: null };
 
   const { data: me } = biz?.id
-    ? await supabase.from("memberships").select("role").eq("business_id", biz.id).eq("user_id", user?.id || "").maybeSingle()
+    ? await supabase
+      .from("memberships")
+      .select("role")
+      .eq("business_id", biz.id)
+      .eq("user_id", user?.id || "")
+      .eq("status", "active")
+      .maybeSingle()
     : { data: null as any };
 
   const isOwner = !!user?.id && (biz?.owner_user_id as string | null) === user.id;
   const role =
     (me?.role as string | undefined) ||
     (isOwner ? "admin" : undefined) ||
-    (user?.email === "jp3dro@gmail.com" ? "admin" : undefined);
+    (user?.email === "jp3dro@gmail.com" ? "admin" : undefined) ||
+    "staff"; // Default to staff if no role is found
 
   const businessLogoUrl = (biz?.logo_url as string | null) || null;
 

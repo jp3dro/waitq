@@ -37,6 +37,31 @@ export default async function OnboardingPage({
         redirect("/lists");
     }
 
+    // Check if user has an active membership - if so, skip onboarding
+    const { data: membership } = await supabase
+        .from("memberships")
+        .select("id, business_id")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .limit(1)
+        .maybeSingle();
+
+    if (membership?.id) {
+        redirect("/lists");
+    }
+
+    // Also check if user owns a business
+    const { data: ownedBusiness } = await supabase
+        .from("businesses")
+        .select("id")
+        .eq("owner_user_id", user.id)
+        .limit(1)
+        .maybeSingle();
+
+    if (ownedBusiness?.id) {
+        redirect("/lists");
+    }
+
     // If coming back from Stripe Checkout, try to confirm subscription and complete onboarding.
     // This prevents a loop where `/subscriptions` is gated behind `onboarding_completed`.
     if (checkout === "success") {

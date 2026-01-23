@@ -3,6 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Trash2, Pencil, RefreshCw } from "lucide-react";
 import { toastManager } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import UpgradeRequiredDialog from "@/components/upgrade-required-dialog";
+import type { PlanId } from "@/lib/plans";
 import {
   Dialog,
   DialogContent,
@@ -37,13 +39,18 @@ export default function UsersClient() {
   const [editOpen, setEditOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
-  const [role, setRole] = useState<"manager" | "staff">("staff");
+  const [role, setRole] = useState<"admin" | "staff">("staff");
   const [isPending, setIsPending] = useState(false);
+  const [planId, setPlanId] = useState<PlanId>("free");
+  const [userLimit, setUserLimit] = useState<number | null>(null);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [upgradeTo, setUpgradeTo] = useState<PlanId>("base");
+  const [inviteGateStatus, setInviteGateStatus] = useState<"loading" | "ready">("loading");
 
   // Editing state
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [editName, setEditName] = useState("");
-  const [editRole, setEditRole] = useState<"manager" | "staff">("staff");
+  const [editRole, setEditRole] = useState<"admin" | "staff">("staff");
 
   useEffect(() => {
     (async () => {
@@ -62,7 +69,37 @@ export default function UsersClient() {
     })();
   }, []);
 
+  useEffect(() => {
+    (async () => {
+      setInviteGateStatus("loading");
+      try {
+        const res = await fetch("/api/plan", { cache: "no-store" });
+        const j = await res.json().catch(() => ({}));
+        if (res.ok) {
+          if (typeof j?.planId === "string") setPlanId(j.planId as PlanId);
+          const lim = j?.limits?.users;
+          if (typeof lim === "number") setUserLimit(lim);
+          setInviteGateStatus(typeof lim === "number" ? "ready" : "loading");
+        }
+      } catch {
+        setInviteGateStatus("ready");
+      }
+    })();
+  }, []);
+
   const grouped = useMemo(() => members, [members]);
+  const usedSeats = useMemo(() => {
+    // memberships_list includes owner row in most setups; if not, we still enforce server-side.
+    const activeLike = grouped.filter((m) => m.status === "active" || m.status === "pending");
+    return activeLike.length;
+  }, [grouped]);
+  const atLimit = typeof userLimit === "number" && usedSeats >= userLimit;
+
+  const openUpgrade = (next?: unknown) => {
+    const n = next === "premium" ? "premium" : "base";
+    setUpgradeTo(n as PlanId);
+    setUpgradeOpen(true);
+  };
 
   async function invite() {
     if (!email) return;
@@ -121,6 +158,11 @@ export default function UsersClient() {
       });
     } else {
       const j = await res.json().catch(() => ({}));
+      if (res.status === 403 && (j?.upgradeTo === "base" || j?.upgradeTo === "premium")) {
+        setInvOpen(false);
+        openUpgrade(j.upgradeTo);
+        return;
+      }
       toastManager.add({
         title: "Error",
         description: j?.error || "Failed to invite user",
@@ -149,6 +191,10 @@ export default function UsersClient() {
       }
     } else {
       const j = await res.json().catch(() => ({}));
+      if (res.status === 403 && (j?.upgradeTo === "base" || j?.upgradeTo === "premium")) {
+        openUpgrade(j.upgradeTo);
+        return;
+      }
       toastManager.add({ title: "Error", description: j?.error || "Failed to resend", type: "error" });
     }
   }
@@ -246,7 +292,27 @@ export default function UsersClient() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="text-3xl font-bold tracking-tight">Staff users</h1>
-        <Button type="button" onClick={() => setInvOpen(true)}>Invite user</Button>
+        <Button
+          type="button"
+          onClick={() => {
+            if (inviteGateStatus !== "ready") return;
+            if (atLimit) {
+              openUpgrade(planId === "base" ? "premium" : "base");
+              return;
+            }
+            setInvOpen(true);
+          }}
+          disabled={inviteGateStatus !== "ready"}
+          title={
+            inviteGateStatus !== "ready"
+              ? "Loading plan limits…"
+              : atLimit
+                ? "User limit reached for your plan"
+                : undefined
+          }
+        >
+          Invite user
+        </Button>
       </div>
 
       <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl overflow-hidden">
@@ -346,7 +412,7 @@ export default function UsersClient() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="manager">Manager</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="staff">Staff</SelectItem>
                 </SelectContent>
               </Select>
@@ -393,7 +459,7 @@ export default function UsersClient() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="manager">Manager</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
                     <SelectItem value="staff">Staff</SelectItem>
                   </SelectContent>
                 </Select>
@@ -411,6 +477,19 @@ export default function UsersClient() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <UpgradeRequiredDialog
+        open={upgradeOpen}
+        onOpenChange={setUpgradeOpen}
+        title={upgradeTo === "premium" ? "Upgrade to add more staff users" : "Upgrade to invite more staff users"}
+        description={
+          upgradeTo === "premium"
+            ? "Your current plan has reached its user limit. Upgrade to Premium to add more staff users."
+            : "Your current plan has reached its user limit. Upgrade to Base to add more staff users."
+        }
+        ctaLabel={upgradeTo === "premium" ? "Upgrade to Premium" : "Upgrade to Base"}
+        ctaHref="/subscriptions"
+      />
     </div>
   );
 }

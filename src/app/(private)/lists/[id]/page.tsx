@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { getLocationOpenState, type RegularHours } from "@/lib/location-hours";
+import { resolveCurrentBusinessId } from "@/lib/current-business";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const supabase = await createClient();
@@ -56,6 +57,8 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+
+  const businessId = await resolveCurrentBusinessId(supabase as any, user.id);
 
   const { id: waitlistId } = await params;
 
@@ -137,15 +140,12 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
   })) || [];
 
   // Fetch business data for phone input default and QR code
-  const { data: business } = await supabase
-    .from("businesses")
-    .select("name, country_code")
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .single();
-
-  const businessCountry = (business?.country_code || "PT") as Country;
-  const businessName = business?.name;
+  const businessRow =
+    businessId
+      ? await supabase.from("businesses").select("name, country_code").eq("id", businessId).maybeSingle()
+      : { data: null as any };
+  const businessCountry = (((businessRow as any)?.data?.country_code as string | null) || "PT") as Country;
+  const businessName = (((businessRow as any)?.data?.name as string | null) || undefined) as string | undefined;
 
   const locationIsOpen = (() => {
     const loc = Array.isArray(wl.business_locations) ? wl.business_locations[0] : wl.business_locations;

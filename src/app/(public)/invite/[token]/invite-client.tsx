@@ -42,53 +42,33 @@ export default function InviteClient({ businessName, email, token }: { businessN
       email,
       password,
       options: {
-        data: {
-           invite_token: token
-        }
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/lists`
       }
     });
 
     if (error) {
-       // If user already exists, maybe try sign in? 
-       // Or user should be redirected to login.
+       // If user already exists, redirect to login
        if (error.message.includes("already registered")) {
            toastManager.add({
                title: "Account exists",
                description: "Please log in to accept the invite.",
                type: "info"
            });
-           // Redirect to login with next param? Or handle login here?
-           // Ideally we redirect to login page
            router.push(`/login?email=${encodeURIComponent(email)}&invite_token=${token}`);
            return;
        }
        toastManager.add({ title: "Error", description: error.message, type: "error" });
        setLoading(false);
     } else {
-        // Success?
-        // Need to link membership. 
-        // We can do this via a server action or an API call after signup.
-        // But since email verification might be required, the auth/callback handles it usually.
-        // If email verification is disabled or auto-confirmed:
-        // We can call an API to accept invite.
-        await acceptInvite(token);
+        // Redirect to lists - the private layout will auto-accept the pending invite
+        toastManager.add({ 
+          title: "Account created!", 
+          description: `Welcome! You're joining ${businessName}`,
+          type: "success" 
+        });
+        router.push("/lists");
+        router.refresh();
     }
-  };
-
-  async function acceptInvite(t: string) {
-      const res = await fetch("/api/invite/accept", {
-          method: "POST",
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: t })
-      });
-      if (res.ok) {
-          toastManager.add({ title: "Welcome!", description: `You have joined ${businessName}`, type: "success" });
-          router.push("/lists");
-      } else {
-          const j = await res.json();
-          toastManager.add({ title: "Error", description: j.error || "Failed to join", type: "error" });
-          setLoading(false);
-      }
   }
 
   return (

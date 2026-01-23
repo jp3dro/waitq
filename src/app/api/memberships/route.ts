@@ -3,6 +3,8 @@ import { cookies } from "next/headers";
 import { createRouteClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { resend } from "@/lib/resend";
+import { getPlanContext } from "@/lib/plan-limits";
+import { buildInviteEmailHtml as buildInviteEmailHtmlTemplate } from "@/lib/email-templates";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://waitq.com";
 
@@ -25,50 +27,16 @@ function buildInviteEmailHtml({
   businessName: string;
   acceptUrl: string;
 }) {
-  const accent = "#FF9500";
-  const accentText = "#111827";
-  const safeBusiness = escapeHtml(businessName);
-  const safeName = escapeHtml(recipientName);
-  const safeAcceptUrl = escapeHtml(acceptUrl);
-  const greeting = safeName ? `Hi ${safeName},` : "Hi there,";
-  const heroUrl = `${SITE_URL}/waitq-variant.png`;
-
-  return `
-  <body style="margin:0;background-color:#f8fafc;padding:32px 0;font-family:'Inter', 'Helvetica Neue', Arial, sans-serif;">
-    <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
-      <tr>
-        <td align="center">
-          <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:640px;padding:0 24px;">
-            <tr>
-              <td>
-                <div style="background-color:#ffffff;border-radius:28px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 25px 45px rgba(15,23,42,0.12);">
-                  <img src="${heroUrl}" alt="WaitQ" width="100%" style="display:block;max-height:240px;object-fit:cover;" />
-                  <div style="padding:32px 36px 24px;">
-                    <div style="text-transform:uppercase;font-size:12px;letter-spacing:2px;font-weight:600;color:${accent};">You're invited</div>
-                    <h1 style="margin:14px 0 16px;font-size:26px;line-height:1.3;color:#0f172a;">Join ${safeBusiness} on WaitQ</h1>
-                    <p style="margin:0 0 20px;font-size:16px;line-height:1.6;color:#475569;">${greeting} ${safeBusiness} is using WaitQ to coordinate teams, keep guests in the loop, and move the line forward faster.</p>
-                    <div style="margin:28px 0;">
-                      <a href="${safeAcceptUrl}" style="display:inline-flex;align-items:center;justify-content:center;padding:14px 32px;border-radius:999px;background-color:${accent};color:${accentText};font-weight:600;text-decoration:none;border:1px solid #ea580c;box-shadow:0 10px 20px rgba(255,149,0,0.25);">Accept invite</a>
-                    </div>
-                    <p style="margin:0;font-size:14px;line-height:1.6;color:#64748b;">Your invite expires in 48 hours. If the button doesn't work, copy and paste this link:<br /><a href="${safeAcceptUrl}" style="color:${accentText};text-decoration:underline;">${safeAcceptUrl}</a></p>
-                  </div>
-                  <div style="padding:20px 36px 36px;border-top:1px solid #f1f5f9;background-color:#fff7ed;">
-                    <p style="margin:0;font-size:14px;color:#b45309;line-height:1.5;">Need help getting set up? Reply directly or email <a href="mailto:support@waitq.com" style="color:${accentText};text-decoration:none;font-weight:600;">support@waitq.com</a>.</p>
-                  </div>
-                </div>
-                <p style="text-align:center;color:#94a3b8;font-size:12px;margin-top:20px;line-height:1.5;">Powered by WaitQ • ${SITE_URL.replace(/^https?:\/\//, "")}</p>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-  </body>
-  `;
+  return buildInviteEmailHtmlTemplate({
+    recipientName,
+    businessName,
+    acceptUrl,
+    siteUrl: SITE_URL,
+  });
 }
 
-function validateRole(role: unknown): role is 'manager' | 'staff' | 'admin' {
-  return role === 'manager' || role === 'staff' || role === 'admin';
+function validateRole(role: unknown): role is 'staff' | 'admin' {
+  return role === 'staff' || role === 'admin';
 }
 
 async function resolveBusinessId(userId: string) {
@@ -176,18 +144,76 @@ export async function POST(req: NextRequest) {
       inviteeName = updated.invitation_name || "";
     }
   } else {
+      // Enforce user seat limits for this business (owner + active/pending memberships).
+      // We only enforce when creating a NEW invite (not when refreshing an existing invite).
+      try {
+        const ctx = await getPlanContext(businessId);
+        const upgradeTo = ctx.planId === "free" ? "base" : ctx.planId === "base" ? "premium" : null;
+        const { data: bizRow } = await admin.from("businesses").select("owner_user_id").eq("id", businessId).maybeSingle();
+        const ownerUserId = (bizRow?.owner_user_id as string | undefined) || null;
+        let q = admin
+          .from("memberships")
+          .select("id", { count: "exact", head: true })
+          .eq("business_id", businessId)
+          .in("status", ["active", "pending"]);
+        if (ownerUserId) {
+          q = q.or(`user_id.is.null,user_id.neq.${ownerUserId}`);
+        }
+        const { count } = await q;
+        const usedSeats = 1 + (count || 0);
+        if (usedSeats >= ctx.limits.users) {
+          const planLabel = ctx.planId === "base" ? "Base" : ctx.planId === "free" ? "Free" : "your";
+          const upgradeLabel = upgradeTo === "premium" ? "Premium" : "Base";
+          return NextResponse.json(
+            {
+              error: `User limit reached for the ${planLabel} plan. Upgrade to ${upgradeLabel} to invite more staff users.`,
+              upgradeTo,
+            },
+            { status: 403 }
+          );
+        }
+      } catch {
+        // If we fail to compute limits, continue and let downstream constraints apply.
+      }
+
       // ... normal insert ...
       const { data: { users } } = await admin.auth.admin.listUsers();
       const targetUser = users.find(u => u.email === email);
       if (targetUser) {
+        // Check if they own a business
+        const { data: ownedBusiness } = await admin
+          .from("businesses")
+          .select("id")
+          .eq("owner_user_id", targetUser.id)
+          .maybeSingle();
+        
+        if (ownedBusiness) {
+          return NextResponse.json({ 
+            error: "This user owns a business and cannot be invited to join another organization" 
+          }, { status: 400 });
+        }
+
+        // Check for any existing membership
         const { data: existingMember } = await admin
           .from("memberships")
-          .select("id")
+          .select("id, business_id")
           .eq("user_id", targetUser.id)
+          .eq("status", "active")
           .maybeSingle();
+        
         if (existingMember) {
-          return NextResponse.json({ error: "User is already a member of a business" }, { status: 400 });
+          // Check if it's the same business
+          if (existingMember.business_id === businessId) {
+            return NextResponse.json({ 
+              error: "This user is already a member of your organization" 
+            }, { status: 400 });
+          } else {
+            return NextResponse.json({ 
+              error: "This user is already a member of another organization" 
+            }, { status: 400 });
+          }
         }
+
         // Update user name if provided and user exists
         if (name && targetUser.id) {
             await admin.auth.admin.updateUserById(targetUser.id, {

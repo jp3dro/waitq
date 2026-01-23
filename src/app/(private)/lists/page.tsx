@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import CreateListButton from "./create-list-button";
 import ListCard from "./list-card";
 import { getLocationOpenState, type RegularHours } from "@/lib/location-hours";
+import { resolveCurrentBusinessId, resolveCurrentBusinessContext } from "@/lib/current-business";
 
 export const metadata = { title: "Lists" };
 
@@ -13,12 +14,34 @@ export default async function ListsIndexPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: locations } = await supabase.from("business_locations").select("id, name, regular_hours, timezone").order("created_at", { ascending: true });
+  const businessContext = await resolveCurrentBusinessContext(supabase as any, user.id);
+  if (!businessContext) {
+    return (
+      <main className="py-5">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
+          <div className="p-10 text-center ring-1 ring-border rounded-xl bg-card text-card-foreground">
+            <h3 className="text-base font-semibold">No business found</h3>
+            <p className="mt-1 text-sm text-muted-foreground">Create a business to start adding locations and lists.</p>
+          </div>
+        </div>
+      </main>
+    );
+  }
+  
+  const businessId = businessContext.businessId;
+  const canManageLists = businessContext.canEdit; // Only admins can create/edit lists
+
+  const { data: locations } = await supabase
+    .from("business_locations")
+    .select("id, name, regular_hours, timezone, business_id")
+    .eq("business_id", businessId)
+    .order("created_at", { ascending: true });
   const { data: lists } = await supabase
     .from("waitlists")
     .select("id, name, location_id, display_token, kiosk_enabled, display_enabled, display_show_name, display_show_qr, ask_name, ask_phone, ask_email, seating_preferences")
+    .eq("business_id", businessId)
     .order("created_at", { ascending: true });
-  const { data: biz } = await supabase.from("businesses").select("name").order("created_at", { ascending: true }).limit(1).maybeSingle();
+  const { data: biz } = await supabase.from("businesses").select("name").eq("id", businessId).maybeSingle();
   const locs = (locations || []) as { id: string; name: string; regular_hours?: unknown; timezone?: string | null }[];
   const allLists = (lists || []) as {
     id: string;
@@ -91,7 +114,9 @@ export default async function ListsIndexPage() {
       <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-3xl font-bold tracking-tight">Lists</h1>
-          <CreateListButton locations={locs.map((l) => ({ id: l.id, name: l.name }))} />
+          {canManageLists && (
+            <CreateListButton locations={locs.map((l) => ({ id: l.id, name: l.name }))} />
+          )}
         </div>
 
         <div className="space-y-6">

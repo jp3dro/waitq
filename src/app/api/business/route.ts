@@ -2,38 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createRouteClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
-
-type ResolvedBusiness = { businessId: string; canEdit: boolean; role?: string | null };
-
-async function resolveCurrentBusiness(supabase: Awaited<ReturnType<typeof createRouteClient>>, userId: string): Promise<ResolvedBusiness | null> {
-  // Prefer owned business
-  const { data: owned } = await supabase
-    .from("businesses")
-    .select("id")
-    .eq("owner_user_id", userId)
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-
-  const ownedId = (owned?.id as string | undefined) ?? null;
-  if (ownedId) return { businessId: ownedId, canEdit: true, role: "owner" };
-
-  // Else: first membership (admin can still edit)
-  const { data: member } = await supabase
-    .from("memberships")
-    .select("business_id, role")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-
-  const businessId = (member?.business_id as string | undefined) ?? null;
-  if (!businessId) return null;
-
-  const role = (member?.role as string | undefined) ?? null;
-  const canEdit = role === "admin";
-  return { businessId, canEdit, role };
-}
+import { resolveCurrentBusinessContext } from "@/lib/current-business";
 
 export async function GET() {
   const supabase = await createRouteClient();
@@ -42,7 +11,7 @@ export async function GET() {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const resolved = await resolveCurrentBusiness(supabase, user.id);
+  const resolved = await resolveCurrentBusinessContext(supabase as any, user.id);
   if (!resolved) return NextResponse.json({ error: "No business found" }, { status: 404 });
 
   const admin = getAdminClient();
@@ -106,7 +75,7 @@ export async function PATCH(req: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const resolved = await resolveCurrentBusiness(supabase, user.id);
+  const resolved = await resolveCurrentBusinessContext(supabase as any, user.id);
   if (!resolved) return NextResponse.json({ error: "No business found" }, { status: 404 });
   if (!resolved.canEdit) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 

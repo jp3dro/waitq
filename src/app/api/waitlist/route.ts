@@ -9,6 +9,7 @@ import { resend } from "@/lib/resend";
 import { normalizePhone } from "@/lib/phone";
 import { countEntriesInPeriod, countSmsInPeriod, getPlanContext } from "@/lib/plan-limits";
 import { getLocationOpenState, type RegularHours } from "@/lib/location-hours";
+import { buildWaitlistTicketEmailHtml } from "@/lib/email-templates";
 
 function getBulkGateMessageId(resp: unknown): string | null {
   const r = resp as { data?: Record<string, unknown> } | null | undefined;
@@ -63,68 +64,6 @@ async function calculateAndUpdateETA(admin: ReturnType<typeof getAdminClient>, w
       .from("waitlist_entries")
       .upsert(updates, { onConflict: 'id' });
   }
-}
-
-function escapeHtml(value?: string | null) {
-  if (!value) return "";
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-function buildWaitlistEmailHtml(opts: {
-  businessName?: string | null;
-  waitlistName?: string | null;
-  customerName?: string | null;
-  ticketNumber?: number | null;
-  partySize?: number | null;
-  seatingPreference?: string | null;
-  statusUrl: string;
-}) {
-  const safeBiz = escapeHtml((opts.businessName || "").trim());
-  const safeList = escapeHtml((opts.waitlistName || "").trim());
-  const safeName = escapeHtml((opts.customerName || "").trim());
-  const safeUrl = escapeHtml(opts.statusUrl);
-  const ticket = typeof opts.ticketNumber === "number" ? `#${opts.ticketNumber}` : "";
-  const safeTicket = escapeHtml(ticket);
-  const party = typeof opts.partySize === "number" ? String(opts.partySize) : "";
-  const safeParty = escapeHtml(party);
-  const safePref = escapeHtml((opts.seatingPreference || "").trim());
-  return `
-  <body style="margin:0;background-color:#f8fafc;padding:32px 0;font-family:'Inter','Helvetica Neue',Arial,sans-serif;">
-    <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
-      <tr>
-        <td align="center">
-          <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:640px;padding:0 24px;">
-            <tr>
-              <td>
-                <div style="background-color:#ffffff;border-radius:24px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 18px 34px rgba(15,23,42,0.10);">
-                  <div style="padding:28px 28px 20px;">
-                    <div style="text-transform:uppercase;font-size:12px;letter-spacing:2px;font-weight:700;color:#0f172a;">Your ticket</div>
-                    <h1 style="margin:10px 0 8px;font-size:24px;line-height:1.25;color:#0f172a;">${safeBiz ? safeBiz : "WaitQ"} ${safeTicket ? safeTicket : ""}</h1>
-                    ${safeList ? `<p style="margin:0 0 8px;font-size:14px;line-height:1.6;color:#475569;">List: <strong style="color:#0f172a;">${safeList}</strong></p>` : ""}
-                    ${safeName ? `<p style="margin:0 0 8px;font-size:14px;line-height:1.6;color:#475569;">Name: <strong style="color:#0f172a;">${safeName}</strong></p>` : ""}
-                    ${safeParty ? `<p style="margin:0 0 8px;font-size:14px;line-height:1.6;color:#475569;">Party size: <strong style="color:#0f172a;">${safeParty}</strong></p>` : ""}
-                    ${safePref ? `<p style="margin:0 0 8px;font-size:14px;line-height:1.6;color:#475569;">Seating: <strong style="color:#0f172a;">${safePref}</strong></p>` : ""}
-                    <p style="margin:10px 0 18px;font-size:15px;line-height:1.6;color:#475569;">Open the live queue page to follow progress in real time:</p>
-                    <div style="margin:18px 0;">
-                      <a href="${safeUrl}" style="display:inline-flex;align-items:center;justify-content:center;padding:12px 22px;border-radius:999px;background-color:#FF9500;color:#111827;font-weight:700;text-decoration:none;border:1px solid #ea580c;">Open status</a>
-                    </div>
-                    <p style="margin:0;font-size:12px;line-height:1.6;color:#64748b;">If the button doesn't work, copy and paste this link:<br /><a href="${safeUrl}" style="color:#111827;text-decoration:underline;">${safeUrl}</a></p>
-                  </div>
-                </div>
-                <p style="text-align:center;color:#94a3b8;font-size:12px;margin-top:16px;line-height:1.5;">Powered by WaitQ</p>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-  </body>
-  `;
 }
 
 const schema = z.object({
@@ -244,11 +183,14 @@ export async function POST(req: NextRequest) {
     const ctx = await getPlanContext(w.business_id);
     const usedEntries = await countEntriesInPeriod(w.business_id, ctx.window.start, ctx.window.end);
     if (usedEntries >= ctx.limits.reservationsPerMonth) {
+      const upgradeTo = ctx.planId === "free" ? "base" : ctx.planId === "base" ? "premium" : null;
       const msg =
         ctx.planId === "free"
-          ? "Waitlist limit reached for the free plan. Upgrade to add more people."
-          : "Monthly waitlist limit reached for your plan";
-      return NextResponse.json({ error: msg }, { status: 403 });
+          ? "Waitlist limit reached for the Free plan. Upgrade to add more people."
+          : ctx.planId === "base"
+            ? "Waitlist limit reached for the Base plan. Upgrade to Premium to add more people."
+            : "Monthly waitlist limit reached for your plan";
+      return NextResponse.json({ error: msg, upgradeTo }, { status: 403 });
     }
   }
 
@@ -361,12 +303,13 @@ export async function POST(req: NextRequest) {
       if (!process.env.RESEND_API_KEY) {
         console.warn("[waitlist-email] RESEND_API_KEY missing; email not sent", { email: normalizedEmail });
       } else {
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://waitq.com";
         await resend.emails.send({
           from: process.env.RESEND_FROM_EMAIL || "WaitQ <noreply@waitq.com>",
           replyTo: process.env.RESEND_REPLY_TO_EMAIL,
           to: normalizedEmail,
           subject: `${businessName ? businessName : "WaitQ"} ticket ${typeof data.ticket_number === "number" ? `#${data.ticket_number}` : ""}`.trim(),
-          html: buildWaitlistEmailHtml({
+          html: buildWaitlistTicketEmailHtml({
             businessName,
             waitlistName: (w as any)?.name ?? null,
             customerName: customerName ?? null,
@@ -374,6 +317,7 @@ export async function POST(req: NextRequest) {
             partySize: typeof partySize === "number" ? partySize : null,
             seatingPreference: seatingPreference || null,
             statusUrl,
+            siteUrl,
           }),
         });
       }
@@ -397,11 +341,14 @@ export async function POST(req: NextRequest) {
           const ctx = await getPlanContext(w.business_id);
           const usedSms = await countSmsInPeriod(w.business_id, ctx.window.start, ctx.window.end);
           if (usedSms >= ctx.limits.messagesPerMonth) {
+            const upgradeTo = ctx.planId === "free" ? "base" : ctx.planId === "base" ? "premium" : null;
             const msg =
               ctx.planId === "free"
-                ? "SMS limit reached for the free plan. Upgrade to send more messages."
-                : "Monthly SMS limit reached for your plan";
-            return NextResponse.json({ error: msg }, { status: 403 });
+                ? "SMS limit reached for the Free plan. Upgrade to send more messages."
+                : ctx.planId === "base"
+                  ? "SMS limit reached for the Base plan. Upgrade to Premium to send more messages."
+                  : "Monthly SMS limit reached for your plan";
+            return NextResponse.json({ error: msg, upgradeTo }, { status: 403 });
           }
         }
         try {

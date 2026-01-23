@@ -294,6 +294,7 @@ export default function LocationsPage() {
   const [msg, setMsg] = useState<string | null>(null);
   const [planId, setPlanId] = useState<PlanId>("free");
   const [locationLimit, setLocationLimit] = useState<number | null>(null);
+  const [createGateStatus, setCreateGateStatus] = useState<"loading" | "ready" | "error">("loading");
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [formNameError, setFormNameError] = useState<string | null>(null);
   const [editNameError, setEditNameError] = useState<string | null>(null);
@@ -329,6 +330,10 @@ export default function LocationsPage() {
   const [timeFormat, setTimeFormat] = useState<TimeFormat>("24h");
 
   async function load() {
+    // Only enable create flow once we have loaded locations + plan.
+    // Otherwise, users may click "New location" before we can validate limits.
+    setCreateGateStatus("loading");
+
     const res = await fetch("/api/locations", { cache: "no-store" });
     const j = await res.json().catch(() => ({}));
     if (!res.ok) {
@@ -355,6 +360,12 @@ export default function LocationsPage() {
       const lim = pJ?.limits?.locations;
       if (typeof lim === "number") setLocationLimit(lim);
     }
+
+    // Gate create: requires successful locations load + numeric limit from /api/plan.
+    const locationsOk = res.ok;
+    const planOk = pRes.ok && typeof pJ?.limits?.locations === "number";
+    const businessOk = bRes.ok;
+    setCreateGateStatus(locationsOk && planOk && businessOk ? "ready" : "error");
   }
 
   useEffect(() => {
@@ -416,23 +427,11 @@ export default function LocationsPage() {
   const canDelete = useMemo(() => locations.length > 1, [locations.length]);
 
   const openCreateFlow = async () => {
-    // Gate when the user is at/over their plan's location limit (all tiers).
-    // If locationLimit hasn't loaded yet, fetch it now before deciding.
-    let effectiveLimit = locationLimit;
-    if (effectiveLimit === null) {
-      try {
-        const pRes = await fetch("/api/plan", { cache: "no-store" });
-        const pJ = await pRes.json().catch(() => ({}));
-        if (pRes.ok && typeof pJ?.limits?.locations === "number") {
-          effectiveLimit = pJ.limits.locations;
-          setLocationLimit(effectiveLimit);
-        }
-      } catch {
-        // If fetch fails, proceed to open (API will enforce limit anyway)
-      }
-    }
+    // Never allow opening while gating is unresolved.
+    if (createGateStatus !== "ready") return;
 
-    if (typeof effectiveLimit === "number" && locations.length >= effectiveLimit) {
+    // Gate when the user is at/over their plan's location limit (all tiers).
+    if (typeof locationLimit === "number" && locations.length >= locationLimit) {
       setUpgradeOpen(true);
       return;
     }
@@ -638,7 +637,13 @@ export default function LocationsPage() {
       <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-3xl font-bold tracking-tight">Locations</h1>
-          <Button onClick={openCreateFlow}>New location</Button>
+          <Button
+            onClick={openCreateFlow}
+            disabled={createGateStatus !== "ready"}
+            title={createGateStatus === "ready" ? undefined : "Loading plan…"}
+          >
+            New location
+          </Button>
         </div>
 
         <div className="space-y-4">
@@ -684,7 +689,11 @@ export default function LocationsPage() {
                     Edit
                   </Button>
                   {canDelete && (
-                    <button disabled={isPending} onClick={() => remove(l.id)} className="inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium ring-1 ring-inset ring-destructive/40 text-destructive hover:bg-destructive/10 disabled:opacity-50 transition-colors">
+                    <button
+                      disabled={isPending}
+                      onClick={() => remove(l.id)}
+                      className="inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium ring-1 ring-inset ring-destructive/40 text-destructive hover:bg-destructive/10 disabled:opacity-50 transition-colors"
+                    >
                       Delete
                     </button>
                   )}
@@ -695,7 +704,14 @@ export default function LocationsPage() {
         </div>
 
         {/* Create location (shadcn Dialog) */}
-        <Dialog open={openCreate} onOpenChange={setOpenCreate}>
+        <Dialog
+          open={openCreate}
+          onOpenChange={(next) => {
+            // Only allow closing via dialog controls/overlay.
+            // Opening is gated through `openCreateFlow` which validates plan + permissions.
+            if (!next) setOpenCreate(false);
+          }}
+        >
           <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col">
             <DialogHeader>
               <DialogTitle>New location</DialogTitle>

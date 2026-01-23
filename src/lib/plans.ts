@@ -36,7 +36,7 @@ export const plans: Record<PlanId, PlanDefinition> = {
     priceMonthlyEUR: 0,
     limits: {
       locations: 1,
-      users: 1,
+      users: 2,
       reservationsPerMonth: 50,
       messagesPerMonth: 50,
     },
@@ -55,7 +55,7 @@ export const plans: Record<PlanId, PlanDefinition> = {
     priceMonthlyEUR: 49,
     limits: {
       locations: 5,
-      users: 5,
+      users: 10,
       reservationsPerMonth: 1000,
       messagesPerMonth: 1000,
     },

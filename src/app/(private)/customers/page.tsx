@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import CustomersTable from "./table";
+import { resolveCurrentBusinessId } from "@/lib/current-business";
 
 export const metadata = { title: "Customers" };
 
@@ -20,15 +21,8 @@ export default async function CustomersPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: biz } = await supabase
-    .from("businesses")
-    .select("id, name, logo_url")
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-
-  const business = (biz || null) as { id: string; name: string | null; logo_url: string | null } | null;
-  if (!business) {
+  const businessId = await resolveCurrentBusinessId(supabase as any, user.id);
+  if (!businessId) {
     return (
       <main className="py-5">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
@@ -44,7 +38,7 @@ export default async function CustomersPage() {
   const { data: rows } = await supabase
     .from("waitlist_entries")
     .select("id, customer_name, phone, email, created_at, notified_at")
-    .eq("business_id", business.id)
+    .eq("business_id", businessId)
     .order("created_at", { ascending: false })
     .limit(5000);
 
@@ -100,7 +94,7 @@ export default async function CustomersPage() {
   const { data: nsRows } = await supabase
     .from("waitlist_entries")
     .select("id, phone, email, customer_name, status, notified_at")
-    .eq("business_id", business.id)
+    .eq("business_id", businessId)
     .eq("status", "archived");
   for (const r of (nsRows || [])) {
     const phoneKey = normalize((r as any).phone || null);
