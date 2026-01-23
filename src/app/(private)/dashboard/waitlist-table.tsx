@@ -505,9 +505,150 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
     </div>
   );
 
+  const renderRowMenuItems = (e: Entry) => (
+    <>
+      <DropdownMenuItem disabled={isPending} onSelect={() => edit(e.id)}>
+        <Pencil className="h-4 w-4" />
+        Edit
+      </DropdownMenuItem>
+      {showPhone && (e.sms_status === "failed" || e.whatsapp_status === "failed") ? (
+        <>
+          {e.sms_status === "failed" ? (
+            <DropdownMenuItem disabled={isPending} onSelect={() => retryMessage(e.id, "sms")}>
+              <RefreshCw className="h-4 w-4" />
+              Retry SMS
+            </DropdownMenuItem>
+          ) : null}
+          {e.whatsapp_status === "failed" ? (
+            <DropdownMenuItem disabled={isPending} onSelect={() => retryMessage(e.id, "whatsapp")}>
+              <RefreshCw className="h-4 w-4" />
+              Retry WhatsApp
+            </DropdownMenuItem>
+          ) : null}
+        </>
+      ) : null}
+      <DropdownMenuItem disabled={isPending} onSelect={() => archive(e.id)}>
+        <Archive className="h-4 w-4" />
+        Archive
+      </DropdownMenuItem>
+      <DropdownMenuSeparator />
+      <DropdownMenuItem
+        disabled={isPending}
+        onSelect={() => remove(e.id)}
+        className="text-destructive focus:text-destructive"
+      >
+        <Trash2 className="h-4 w-4" />
+        Delete
+      </DropdownMenuItem>
+    </>
+  );
+
   return (
     <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl overflow-hidden" ref={tableRef}>
-      <div className="overflow-x-auto">
+      {/* Mobile (xs/sm): card list */}
+      <div className="md:hidden">
+        <ul className="divide-y divide-border">
+          {entries.map((e) => {
+            const number = e.ticket_number ?? e.queue_position ?? null;
+            return (
+              <li key={e.id} className={highlightIds.has(e.id) ? "row-flash" : ""}>
+                <div className="p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Badge variant="secondary" className="text-xs">
+                          #{number ?? "—"}
+                        </Badge>
+                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                          <Clock className="h-3.5 w-3.5" />
+                          <span>{getWaitTime(e.created_at)}</span>
+                        </div>
+                        {e.is_returning ? (
+                          <Badge variant="secondary" className="text-[10px] px-2 py-0.5">
+                            Returning
+                          </Badge>
+                        ) : null}
+                      </div>
+
+                      {showName ? (
+                        <div className="mt-2 text-sm font-medium truncate">
+                          {e.customer_name ?? "—"}
+                        </div>
+                      ) : null}
+                      {showPhone ? (
+                        <div className="mt-0.5 text-sm text-muted-foreground truncate">
+                          {e.phone}
+                        </div>
+                      ) : null}
+                    </div>
+
+                    <div className="shrink-0 inline-flex items-center gap-2">
+                      <Button
+                        onClick={() => copyPersonalUrl(e.token)}
+                        variant="outline"
+                        size="icon"
+                        title="Copy personal page URL"
+                        aria-label="Copy personal page URL"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" aria-label="Open menu">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {renderRowMenuItems(e)}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <div className="inline-flex items-center gap-1.5 text-sm">
+                      <User className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span>{typeof e.party_size === "number" ? e.party_size : "—"}</span>
+                    </div>
+                    {e.seating_preference ? <Badge variant="secondary">{e.seating_preference}</Badge> : null}
+                    {showPhone ? (
+                      <div className="text-xs">
+                        {getNotificationDisplay(e.send_sms, e.send_whatsapp, e.sms_status, e.whatsapp_status)}
+                      </div>
+                    ) : null}
+                  </div>
+
+                  <div className="grid gap-2">
+                    {e.status === "waiting" ? (
+                      <Button disabled={isPending} onClick={() => call(e.id)} size="sm" className="w-full">
+                        Call
+                      </Button>
+                    ) : null}
+                    {e.status === "notified" ? (
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button
+                          disabled={isPending}
+                          onClick={() => checkIn(e.id)}
+                          size="sm"
+                          className="bg-emerald-500 text-black hover:bg-emerald-500/90"
+                        >
+                          Check-in
+                        </Button>
+                        <Button disabled={isPending} onClick={() => noShow(e.id)} size="sm" variant="destructive">
+                          No show
+                        </Button>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+
+      {/* Desktop (md+): table */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-muted sticky top-0 z-10">
             <tr>
@@ -611,39 +752,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem disabled={isPending} onSelect={() => edit(e.id)}>
-                          <Pencil className="h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        {showPhone && (e.sms_status === "failed" || e.whatsapp_status === "failed") ? (
-                          <>
-                            {e.sms_status === "failed" ? (
-                              <DropdownMenuItem disabled={isPending} onSelect={() => retryMessage(e.id, "sms")}>
-                                <RefreshCw className="h-4 w-4" />
-                                Retry SMS
-                              </DropdownMenuItem>
-                            ) : null}
-                            {e.whatsapp_status === "failed" ? (
-                              <DropdownMenuItem disabled={isPending} onSelect={() => retryMessage(e.id, "whatsapp")}>
-                                <RefreshCw className="h-4 w-4" />
-                                Retry WhatsApp
-                              </DropdownMenuItem>
-                            ) : null}
-                          </>
-                        ) : null}
-                        <DropdownMenuItem disabled={isPending} onSelect={() => archive(e.id)}>
-                          <Archive className="h-4 w-4" />
-                          Archive
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          disabled={isPending}
-                          onSelect={() => remove(e.id)}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
+                        {renderRowMenuItems(e)}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>

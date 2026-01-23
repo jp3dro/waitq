@@ -31,6 +31,7 @@ export default function EditListButton({
   initialDisplayShowQr = false,
   triggerId,
   hideTrigger = false,
+  buttonClassName,
   controlledOpen,
   onOpenChange,
 }: {
@@ -48,6 +49,7 @@ export default function EditListButton({
   initialSeatingPreferences?: string[] | null;
   triggerId?: string;
   hideTrigger?: boolean;
+  buttonClassName?: string;
   controlledOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
 }) {
@@ -208,6 +210,7 @@ export default function EditListButton({
         onClick={openModal}
         variant="outline"
         size="sm"
+        className={buttonClassName}
         style={hideTrigger ? { display: "none" } : undefined}
       >
         Edit

@@ -35,10 +35,10 @@ export default async function AdminBusinessesPage() {
 
   return (
     <main className="py-5">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Businesses</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Businesses</h1>
 
           </div>
         </div>

@@ -4,6 +4,7 @@ import AddForm from "./waitlist-add-form";
 import { Plus } from "lucide-react";
 import type { Country } from "react-phone-number-input";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -18,12 +19,14 @@ export default function AddButton({
   businessCountry,
   disabled,
   disabledReason,
+  className,
 }: {
   defaultWaitlistId?: string;
   lockWaitlist?: boolean;
   businessCountry?: Country;
   disabled?: boolean;
   disabledReason?: string | null;
+  className?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
@@ -32,7 +35,12 @@ export default function AddButton({
   return (
     <>
       <div className="inline-block" title={effectiveBlockedReason || undefined}>
-        <Button onClick={() => setOpen(true)} disabled={!!effectiveBlockedReason} size="sm" className="gap-2">
+        <Button
+          onClick={() => setOpen(true)}
+          disabled={!!effectiveBlockedReason}
+          size="sm"
+          className={cn("gap-2", className)}
+        >
           <Plus className="h-4 w-4" />
           Add to waitlist
         </Button>
@@ -53,13 +61,19 @@ export default function AddButton({
             onBlockedReasonChange={setBlockedReason}
           />
 
-          <DialogFooter>
-            <div className="inline-block" title={effectiveBlockedReason || undefined}>
-              <Button type="submit" form="add-waitlist-form" disabled={pending || !!effectiveBlockedReason}>
+          <DialogFooter className="flex-col sm:flex-row">
+            {/* Primary first, Cancel last (esp. on mobile) */}
+            <div className="w-full" title={effectiveBlockedReason || undefined}>
+              <Button
+                type="submit"
+                form="add-waitlist-form"
+                disabled={pending || !!effectiveBlockedReason}
+                className="w-full"
+              >
                 {pending ? "Adding…" : "Add"}
               </Button>
             </div>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} className="w-full sm:w-auto">
               Cancel
             </Button>
           </DialogFooter>

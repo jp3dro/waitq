@@ -30,7 +30,7 @@ export default async function UsersPage() {
   if (!bizId) {
     return (
       <main className="py-5">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-10 text-center">
             <h3 className="text-base font-semibold">No business found</h3>
           </div>
@@ -63,7 +63,7 @@ export default async function UsersPage() {
 
   return (
     <main className="py-5">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <ClientWrapper />
       </div>
     </main>

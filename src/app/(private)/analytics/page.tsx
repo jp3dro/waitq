@@ -432,7 +432,7 @@ export default function AnalyticsPage() {
   if (loading && !analytics) {
     return (
       <main className="py-5">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="animate-pulse space-y-6">
           <div className="h-8 bg-muted rounded w-48"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -449,7 +449,7 @@ export default function AnalyticsPage() {
   if (!analytics) {
     return (
       <main className="py-5">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-10 text-center">
             <h3 className="text-base font-semibold">No analytics</h3>
             <p className="mt-1 text-sm text-muted-foreground">Unable to load analytics data</p>
@@ -509,9 +509,9 @@ export default function AnalyticsPage() {
 
   return (
     <main className="py-5">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8">
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Analytics</h1>
           <Tabs
             value={rangeMode}
             onValueChange={(v) => {
@@ -537,7 +537,7 @@ export default function AnalyticsPage() {
         {/* Analytics content container */}
         <div className="space-y-6">
           <p className="text-sm text-muted-foreground">{tldr}</p>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="grid grid-cols-2 gap-4 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
             <div className="w-full sm:w-64">
               <Select
                 value={locationId}
@@ -581,29 +581,29 @@ export default function AnalyticsPage() {
           
 
           {/* Key Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-3">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-2 sm:p-3">
               <p className="text-xs text-muted-foreground">{isToday ? "Visitors today" : "Total visitors"}</p>
-              <p className="mt-0.5 text-lg font-semibold">{analytics.totalVisitors.toLocaleString()}</p>
+              <p className="mt-0.5 text-base sm:text-lg font-semibold">{analytics.totalVisitors.toLocaleString()}</p>
             </div>
             {!isToday ? (
-              <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-3">
+              <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-2 sm:p-3">
                 <p className="text-xs text-muted-foreground">Daily average</p>
-                <p className="mt-0.5 text-lg font-semibold">{analytics.dailyAvg}</p>
+                <p className="mt-0.5 text-base sm:text-lg font-semibold">{analytics.dailyAvg}</p>
               </div>
             ) : (
-              <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-3">
+              <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-2 sm:p-3">
                 <p className="text-xs text-muted-foreground">Today (so far)</p>
-                <p className="mt-0.5 text-lg font-semibold">{dateToClockLabel(new Date(), timeFormat)}</p>
+                <p className="mt-0.5 text-base sm:text-lg font-semibold">{dateToClockLabel(new Date(), timeFormat)}</p>
               </div>
             )}
-            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-3">
+            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-2 sm:p-3">
               <p className="text-xs text-muted-foreground">Avg wait time</p>
-              <p className="mt-0.5 text-lg font-semibold">{formatMinutesAsDuration(analytics.avgWaitTimeMin)}</p>
+              <p className="mt-0.5 text-base sm:text-lg font-semibold">{formatMinutesAsDuration(analytics.avgWaitTimeMin)}</p>
             </div>
-            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-3">
+            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-2 sm:p-3">
               <p className="text-xs text-muted-foreground">Avg service time</p>
-              <p className="mt-0.5 text-lg font-semibold">{formatMinutesAsDuration(analytics.avgServiceTimeMin)}</p>
+              <p className="mt-0.5 text-base sm:text-lg font-semibold">{formatMinutesAsDuration(analytics.avgServiceTimeMin)}</p>
             </div>
           </div>
 

@@ -634,9 +634,9 @@ export default function LocationsPage() {
 
   return (
     <main className="py-5">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8">
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-3xl font-bold tracking-tight">Locations</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Locations</h1>
           <Button
             onClick={openCreateFlow}
             disabled={createGateStatus !== "ready"}

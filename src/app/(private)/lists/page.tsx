@@ -18,7 +18,7 @@ export default async function ListsIndexPage() {
   if (!businessContext) {
     return (
       <main className="py-5">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8">
           <div className="p-10 text-center ring-1 ring-border rounded-xl bg-card text-card-foreground">
             <h3 className="text-base font-semibold">No business found</h3>
             <p className="mt-1 text-sm text-muted-foreground">Create a business to start adding locations and lists.</p>
@@ -111,9 +111,9 @@ export default async function ListsIndexPage() {
 
   return (
     <main className="py-5">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8">
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-3xl font-bold tracking-tight">Lists</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Lists</h1>
           {canManageLists && (
             <CreateListButton locations={locs.map((l) => ({ id: l.id, name: l.name }))} />
           )}

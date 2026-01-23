@@ -167,17 +167,19 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
 
   return (
     <main className="py-5">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8">
         <ToastOnQuery />
-        <div className="flex items-center gap-6">
-          <Button asChild variant="outline" size="sm" className="gap-2">
-            <Link href="/lists">
-              <ArrowLeft className="h-4 w-4" />
-              Back to Lists
-            </Link>
-          </Button>
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold tracking-tight">{wl.name}</h1>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <Button asChild variant="ghost" size="icon-sm" className="shrink-0">
+                <Link href="/lists" aria-label="Back to lists">
+                  <ArrowLeft className="h-4 w-4" />
+                </Link>
+              </Button>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight truncate">{wl.name}</h1>
+            </div>
+            <div className="mt-2 flex items-center gap-2 flex-wrap">
             {!locationIsOpen ? (
               <Badge variant="secondary" className="gap-1 bg-destructive/10 text-destructive ring-1 ring-inset ring-destructive/30">
                 <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-destructive"></span>
@@ -200,11 +202,71 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
                 <TooltipContent side="bottom">{liveHelp}</TooltipContent>
               </Tooltip>
             ) : null}
+            </div>
           </div>
         </div>
 
         <div className="text-card-foreground rounded-xl space-y-6">
-          <div className="flex items-center justify-between gap-4">
+          {/* Actions: mobile grid (xs/sm) */}
+          <div className="md:hidden grid gap-2">
+            <AddButton
+              defaultWaitlistId={wl.id}
+              lockWaitlist
+              businessCountry={businessCountry}
+              disabled={!locationIsOpen}
+              disabledReason="Restaurant is closed"
+              className="w-full justify-center"
+            />
+            <div className="grid grid-cols-2 gap-2">
+              <EditListButton
+                waitlistId={wl.id}
+                initialName={wl.name}
+                initialLocationId={
+                  wl.location_id ||
+                  (Array.isArray(wl.business_locations) ? wl.business_locations[0]?.id : wl.business_locations?.id)
+                }
+                initialKioskEnabled={!!wl.kiosk_enabled}
+                initialDisplayEnabled={wl.display_enabled !== false}
+                initialDisplayShowName={wl.display_show_name !== false}
+                initialDisplayShowQr={wl.display_show_qr === true}
+                initialAskName={wl.ask_name !== false}
+                initialAskPhone={wl.ask_phone !== false}
+                initialAskEmail={wl.ask_email === true}
+                initialSeatingPreferences={wl.seating_preferences || []}
+                locations={typedLocations}
+                buttonClassName="w-full justify-center"
+              />
+              <ClearWaitlistButton
+                waitlistId={wl.id}
+                displayToken={wl.display_token}
+                variant="button"
+                className="w-full justify-center"
+              />
+              {wl.display_token && wl.display_enabled !== false ? (
+                <>
+                  <Button asChild variant="outline" size="sm" className="w-full justify-center">
+                    <a
+                      href={`/display/${encodeURIComponent(wl.display_token)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Public display
+                    </a>
+                  </Button>
+                  <QRCodeButton
+                    listName={wl.name}
+                    displayToken={wl.display_token}
+                    businessName={businessName}
+                    variant="button"
+                    className="w-full justify-center"
+                  />
+                </>
+              ) : null}
+            </div>
+          </div>
+
+          {/* Actions: desktop row (md+) */}
+          <div className="hidden md:flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <AddButton
                 defaultWaitlistId={wl.id}

@@ -25,7 +25,7 @@ export default async function CustomersPage() {
   if (!businessId) {
     return (
       <main className="py-5">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="bg-white dark:bg-neutral-800 ring-1 ring-black/5 dark:ring-neutral-700 rounded-xl shadow-sm p-10 text-center">
             <h3 className="text-base font-semibold">No business found</h3>
             <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">Create a business to view customers.</p>
@@ -110,9 +110,9 @@ export default async function CustomersPage() {
 
   return (
     <main className="py-5">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Customers</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Customers</h1>
         </div>
 
         <CustomersTable initialCustomers={customers} />
