@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import PrivateSidebar from "@/components/private-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { getAdminClient } from "@/lib/supabase/admin";
+import PrivateMobileHeader from "@/components/private-mobile-header";
 
 export default async function PrivateLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -156,6 +157,7 @@ export default async function PrivateLayout({ children }: { children: React.Reac
     <SidebarProvider defaultOpen>
       <PrivateSidebar />
       <SidebarInset className="min-h-dvh bg-background">
+        <PrivateMobileHeader />
         {children}
       </SidebarInset>
     </SidebarProvider>

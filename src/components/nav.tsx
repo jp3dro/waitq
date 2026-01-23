@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import MarketingMobileMenu from "@/components/marketing-mobile-menu";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -110,20 +111,26 @@ export default async function Nav() {
           </div>
           <div className="flex items-center gap-3">
             <ThemeToggle />
-            {user ? (
-              <Button asChild size="sm">
-                <Link href="/lists">Open WaitQ</Link>
-              </Button>
-            ) : (
-              <>
-                <Button asChild variant="ghost" size="sm" className="hidden md:inline-flex">
-                  <Link href="/login">Log in</Link>
-                </Button>
+            <div className="hidden md:flex items-center gap-3">
+              {user ? (
                 <Button asChild size="sm">
-                  <Link href="/signup">Try for free</Link>
+                  <Link href="/lists">Open WaitQ</Link>
                 </Button>
-              </>
-            )}
+              ) : (
+                <>
+                  <Button asChild variant="ghost" size="sm">
+                    <Link href="/login">Log in</Link>
+                  </Button>
+                  <Button asChild size="sm">
+                    <Link href="/signup">Try for free</Link>
+                  </Button>
+                </>
+              )}
+            </div>
+
+            <div className="md:hidden">
+              <MarketingMobileMenu isAuthed={!!user} />
+            </div>
           </div>
         </div>
       </div>
