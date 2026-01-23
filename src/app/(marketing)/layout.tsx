@@ -15,7 +15,7 @@ export default function MarketingLayout({
       {/* Add top padding to account for fixed header */}
       <div className="flex-1 pt-20">
         {children}
-        <div className="mx-auto max-w-[1200px] px-6 lg:px-8 py-12">
+        <div className="mx-auto max-w-[1200px] px-6 lg:px-8 pb-8">
           <CTASection variant="compact" />
         </div>
       </div>

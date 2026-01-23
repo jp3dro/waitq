@@ -20,7 +20,7 @@ export default async function Nav() {
   return (
     <header className="fixed top-0 left-0 right-0 z-40 px-4 pt-4">
       <div className="mx-auto max-w-[1136px] backdrop-blur-sm bg-background/90 dark:bg-background/80 rounded-2xl border border-border shadow-lg shadow-black/5">
-        <div className="px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div className="px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-8 min-w-0">
             <Link href="/" className="flex items-center" aria-label="WaitQ home">
               <Image src="/waitq.svg" alt="WaitQ" className="h-8 w-auto logo-light" width={108} height={32} />

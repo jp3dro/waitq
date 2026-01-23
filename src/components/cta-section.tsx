@@ -12,21 +12,22 @@ export function CTASection({ variant = "default", className = "" }: CTASectionPr
     return (
       <section
         className={[
-          "rounded-2xl border border-primary/20 bg-primary text-primary-foreground shadow-sm",
-          "px-5 py-8 sm:px-8 sm:py-10",
+          "rounded-2xl border border-primary bg-primary text-primary-foreground shadow-md px-6 py-5",
           className,
         ].join(" ")}
       >
-        <div className="mx-auto max-w-3xl text-center">
-          <h3 className="text-xl sm:text-2xl font-bold tracking-tight">
-            Smarter queue management starts here
-          </h3>
-          <p className="mt-2 text-sm sm:text-base opacity-90">
-            Start your free trial today. No credit card required.
-          </p>
-          <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col flex-1">
+            <h3 className="text-xl sm:text-2xl font-bold tracking-tight">
+              Smarter queue management starts here
+            </h3>
+            <p className="mt-1 text-sm sm:text-base opacity-90">
+              Start your free trial today. No credit card required.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row justify-end md:self-center">
             <Button asChild size="sm" variant="secondary" className="h-10 px-4">
-              <Link href="/signup">Try for Free</Link>
+              <Link href="/signup">Try for Free</Link>              
             </Button>
           </div>
         </div>
