@@ -167,42 +167,43 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
 
   return (
     <main className="py-5">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-8">
         <ToastOnQuery />
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <Button asChild variant="ghost" size="icon-sm" className="shrink-0">
                 <Link href="/lists" aria-label="Back to lists">
                   <ArrowLeft className="h-4 w-4" />
                 </Link>
               </Button>
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight truncate">{wl.name}</h1>
+              <div className="flex items-center gap-2 flex-wrap">
+              {!locationIsOpen ? (
+                <Badge variant="secondary" className="gap-1 bg-destructive/10 text-destructive ring-1 ring-inset ring-destructive/30">
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-destructive"></span>
+                  Closed
+                </Badge>
+              ) : isLive ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge
+                      variant="secondary"
+                      className="gap-1 bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-200 dark:ring-emerald-800 cursor-help"
+                    >
+                      <span className="relative flex h-2.5 w-2.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                      </span>
+                      Live
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">{liveHelp}</TooltipContent>
+                </Tooltip>
+              ) : null}
+              </div>
             </div>
-            <div className="mt-2 flex items-center gap-2 flex-wrap">
-            {!locationIsOpen ? (
-              <Badge variant="secondary" className="gap-1 bg-destructive/10 text-destructive ring-1 ring-inset ring-destructive/30">
-                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-destructive"></span>
-                Closed
-              </Badge>
-            ) : isLive ? (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Badge
-                    variant="secondary"
-                    className="gap-1 bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-200 dark:ring-emerald-800 cursor-help"
-                  >
-                    <span className="relative flex h-2.5 w-2.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                    </span>
-                    Live
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">{liveHelp}</TooltipContent>
-              </Tooltip>
-            ) : null}
-            </div>
+            
           </div>
         </div>
 
