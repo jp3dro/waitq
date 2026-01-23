@@ -15,7 +15,7 @@ import { QrCode, Users, MonitorPlay } from "lucide-react";
 
 export default async function Nav() {
   const supabase = await createClient();
-  await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 px-4 pt-4">
@@ -110,12 +110,20 @@ export default async function Nav() {
           </div>
           <div className="flex items-center gap-3">
             <ThemeToggle />
-            <Button asChild variant="ghost" size="sm" className="hidden md:inline-flex">
-              <Link href="/login">Log in</Link>
-            </Button>
-            <Button asChild size="sm">
-              <Link href="/signup">Try for free</Link>
-            </Button>
+            {user ? (
+              <Button asChild size="sm">
+                <Link href="/lists">Open WaitQ</Link>
+              </Button>
+            ) : (
+              <>
+                <Button asChild variant="ghost" size="sm" className="hidden md:inline-flex">
+                  <Link href="/login">Log in</Link>
+                </Button>
+                <Button asChild size="sm">
+                  <Link href="/signup">Try for free</Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>
