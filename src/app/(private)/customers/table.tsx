@@ -1,23 +1,8 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { Pencil, Trash2, MoreHorizontal } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { differenceInMinutes } from "date-fns";
+import { Badge } from "@/components/ui/badge";
+import { Crown } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -25,210 +10,334 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PhoneInput, type Country } from "@/components/ui/phone-input";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import VisitDetailModal from "@/components/visit-detail-modal";
+import { HoverClickTooltip } from "@/components/ui/hover-click-tooltip";
 
-type Customer = {
-  key: string;
-  name: string | null;
-  phone: string | null;
-  email: string | null;
-  visits: number;
-  firstSeen: string;
-  lastSeen: string;
-  servedCount: number;
-  noShowCount?: number;
+type Location = {
+  id: string;
+  name: string;
 };
 
-export default function CustomersTable({ initialCustomers }: { initialCustomers: Customer[] }) {
-  const [query, setQuery] = useState("");
-  const [sortKey, setSortKey] = useState<"lastSeen" | "visits" | "served">("lastSeen");
-  const [customers, setCustomers] = useState<Customer[]>(initialCustomers);
-  useEffect(() => { setCustomers(initialCustomers); }, [initialCustomers]);
+type Waitlist = {
+  id: string;
+  name: string;
+  location_id: string | null;
+};
 
-  const [isPending, setIsPending] = useState(false);
-  const [editing, setEditing] = useState<{ open: boolean; key: string; name: string; phone: string } | null>(null);
+type VisitEntry = {
+  id: string;
+  customer_name: string | null;
+  phone: string | null;
+  email: string | null;
+  party_size: number | null;
+  seating_preference: string | null;
+  visits_count?: number | null;
+  is_returning?: boolean | null;
+  status: string;
+  created_at: string;
+  notified_at: string | null;
+  waitlist_id: string | null;
+};
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const list = q
-      ? customers.filter((c) =>
-        (c.name || "").toLowerCase().includes(q) ||
-        (c.phone || "").toLowerCase().includes(q) ||
-        (c.email || "").toLowerCase().includes(q)
-      )
-      : customers;
-    const sorted = [...list].sort((a, b) => {
-      if (sortKey === "lastSeen") return new Date(b.lastSeen).getTime() - new Date(a.lastSeen).getTime();
-      if (sortKey === "visits") return b.visits - a.visits;
-      return b.servedCount - a.servedCount;
-    });
-    return sorted;
-  }, [customers, query, sortKey]);
+function getWaitTime(createdAt: string, notifiedAt: string | null) {
+  const start = new Date(createdAt);
+  const end = notifiedAt ? new Date(notifiedAt) : new Date();
+  const totalMinutes = differenceInMinutes(end, start);
 
-  const onEdit = (c: Customer) => {
-    setEditing({ open: true, key: c.key, name: c.name || "", phone: c.phone || "" });
-  };
+  if (totalMinutes < 1) return "< 1m";
 
-  const saveEdit = async () => {
-    if (!editing) return;
-    try {
-      setIsPending(true);
-      const res = await fetch("/api/customers", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: editing.key, name: editing.name || null, newPhone: editing.phone || null })
-      });
-      if (!res.ok) {
-        const text = await res.text().catch(() => "");
-        throw new Error(text || `HTTP ${res.status}`);
-      }
-      await res.json().catch(() => ({}));
-      setCustomers((prev) => prev.map((c) => (c.key === editing.key ? ({ ...c, name: editing.name || null, phone: editing.phone || null } as Customer) : c)));
-      setEditing({ ...editing, open: false });
-    } catch (err) {
-      console.error("Failed to save customer", err);
-      alert(`Save failed: ${(err as Error)?.message || String(err)}`);
-    } finally {
-      setIsPending(false);
+  const days = Math.floor(totalMinutes / (60 * 24));
+  const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+  const minutes = totalMinutes % 60;
+
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
+}
+
+function getStatusBadge(status: string, notifiedAt: string | null) {
+  if (status === "seated") {
+    return <Badge className="bg-emerald-500 text-white">Showed</Badge>;
+  }
+  if (status === "cancelled") {
+    return <Badge variant="secondary">Cancelled</Badge>;
+  }
+  if (status === "archived") {
+    // If notified but archived, it's a no-show
+    if (notifiedAt) {
+      return <Badge variant="destructive">No show</Badge>;
     }
+    return <Badge variant="secondary">Archived</Badge>;
+  }
+  if (status === "notified") {
+    return <Badge className="bg-blue-500 text-white">Called</Badge>;
+  }
+  return <Badge variant="secondary">Waiting</Badge>;
+}
+
+export default function CustomersTable({
+  businessId,
+  locations,
+  waitlists,
+}: {
+  businessId: string;
+  locations: Location[];
+  waitlists: Waitlist[];
+}) {
+  const [visits, setVisits] = useState<VisitEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [locationId, setLocationId] = useState<string>("all");
+  const [waitlistId, setWaitlistId] = useState<string>("all");
+  const [dateRange, setDateRange] = useState<"today" | "yesterday" | "7" | "15" | "30">("today");
+  const [selectedVisit, setSelectedVisit] = useState<VisitEntry | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 50;
+  const loyaltyTooltip = (visit: VisitEntry) => {
+    const total = typeof visit.visits_count === "number" ? visit.visits_count : null;
+    const prior = total !== null ? Math.max(0, total - 1) : null;
+    return (
+      <div className="space-y-1">
+        <div className="font-medium">Loyalty user</div>
+        <div className="text-xs opacity-90">
+          Returning visitor{prior !== null ? ` • ${prior} prior check-in${prior === 1 ? "" : "s"}` : ""}
+        </div>
+      </div>
+    );
   };
 
-  const onDelete = async (c: Customer) => {
-    setIsPending(true);
-    try {
-      const res = await fetch(`/api/customers?key=${encodeURIComponent(c.key)}`, { method: "DELETE" });
-      if (res.ok) {
-        setCustomers((prev) => prev.filter((cc) => cc.key !== c.key));
+  useEffect(() => {
+    async function fetchVisits() {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams({
+          locationId,
+          waitlistId,
+          dateRange,
+          page: String(page),
+          pageSize: String(pageSize),
+        });
+        const res = await fetch(`/api/customer-visits?${params.toString()}`, { cache: "no-store" });
+        const j = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setVisits([]);
+          setTotalCount(0);
+        } else {
+          setVisits((j.visits || []) as VisitEntry[]);
+          setTotalCount(typeof j.count === "number" ? j.count : 0);
+        }
+      } catch {
+        setVisits([]);
+        setTotalCount(0);
       }
-    } finally {
-      setIsPending(false);
+      setLoading(false);
     }
-  };
+
+    fetchVisits();
+  }, [businessId, locationId, waitlistId, dateRange, page]);
+
+  const filteredWaitlists = useMemo(() => {
+    if (locationId === "all") return waitlists;
+    return waitlists.filter(w => w.location_id === locationId);
+  }, [locationId, waitlists]);
+
+  // Reset waitlist filter when location changes
+  useEffect(() => {
+    if (locationId !== "all" && waitlistId !== "all") {
+      const waitlistExists = filteredWaitlists.some(w => w.id === waitlistId);
+      if (!waitlistExists) {
+        setWaitlistId("all");
+      }
+    }
+  }, [locationId, waitlistId, filteredWaitlists]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [locationId, waitlistId, dateRange]);
+
+  if (loading) {
+    return (
+      <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-6">
+        <p className="text-sm text-muted-foreground">Loading visits...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl overflow-hidden">
-      <div className="border-b border-border px-4 py-3">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search name, phone, or email..."
-            className="w-full sm:w-80"
-          />
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-muted-foreground">Sort:</span>
-            <div className="w-40">
-              <Select value={sortKey} onValueChange={(v) => setSortKey(v as typeof sortKey)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="lastSeen">Last seen</SelectItem>
-                  <SelectItem value="visits">Visits</SelectItem>
-                  <SelectItem value="served">Served</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+    <div className="space-y-4">
+      {/* Filters */}
+      <div className="flex items-center gap-4 overflow-x-auto flex-nowrap">
+        <Tabs value={dateRange} onValueChange={(v) => setDateRange(v as typeof dateRange)}>
+          <TabsList variant="default">
+            <TabsTrigger value="today">Today</TabsTrigger>
+            <TabsTrigger value="yesterday">Yesterday</TabsTrigger>
+            <TabsTrigger value="7">Last 7 days</TabsTrigger>
+            <TabsTrigger value="15">Last 15 days</TabsTrigger>
+            <TabsTrigger value="30">Last 30 days</TabsTrigger>
+          </TabsList>
+        </Tabs>
+
+        <div className="w-56 shrink-0">
+          <Select
+            value={locationId}
+            onValueChange={(v) => {
+              setLocationId(v);
+              setWaitlistId("all");
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Location" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All locations</SelectItem>
+              {locations.map((l) => (
+                <SelectItem key={l.id} value={l.id}>
+                  {l.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="w-56 shrink-0">
+          <Select value={waitlistId} onValueChange={setWaitlistId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Waitlist" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All lists</SelectItem>
+              {filteredWaitlists.map((w) => (
+                <SelectItem key={w.id} value={w.id}>
+                  {w.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-muted sticky top-0 z-10">
-            <tr>
-              <th className="text-left font-medium text-foreground px-4 py-2">Name</th>
-              <th className="text-left font-medium text-foreground px-4 py-2">Phone</th>
-              <th className="text-left font-medium text-foreground px-4 py-2">Email</th>
-              <th className="text-left font-medium text-foreground px-4 py-2">Visits</th>
-              <th className="text-left font-medium text-foreground px-4 py-2">Served</th>
-              <th className="text-left font-medium text-foreground px-4 py-2">No show</th>
-              <th className="text-left font-medium text-foreground px-4 py-2">First seen</th>
-              <th className="text-left font-medium text-foreground px-4 py-2">Last seen</th>
-              <th className="text-left font-medium text-foreground px-4 py-2"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((c) => (
-              <tr key={c.key} className="border-t border-border hover:bg-muted odd:bg-muted/50">
-                <td className="px-4 py-2">{c.name || "—"}</td>
-                <td className="px-4 py-2">{c.phone || "—"}</td>
-                <td className="px-4 py-2">{c.email || "—"}</td>
-                <td className="px-4 py-2">{c.visits}</td>
-                <td className="px-4 py-2">{c.servedCount}</td>
-                <td className="px-4 py-2">{c.noShowCount ?? 0}</td>
-                <td className="px-4 py-2">{new Date(c.firstSeen).toLocaleString()}</td>
-                <td className="px-4 py-2">{new Date(c.lastSeen).toLocaleString()}</td>
-                <td className="px-4 py-2 text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" aria-label="Open menu">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onSelect={() => onEdit(c)}>
-                        <Pencil className="h-4 w-4" />
-                        Edit details
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onSelect={() => void onDelete(c)}
-                        className="text-destructive focus:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        Delete customer
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </td>
-              </tr>
-            ))}
-            {filtered.length === 0 ? (
-              <tr>
-                <td className="px-4 py-6 text-muted-foreground" colSpan={8}>No customers found</td>
-              </tr>
-            ) : null}
-          </tbody>
-        </table>
+      {/* Table */}
+      <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl overflow-hidden">
+        {visits.length === 0 ? (
+          <div className="p-10 text-center">
+            <h3 className="text-base font-semibold">No visits found</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              No customer visits in the selected period.
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-muted sticky top-0 z-10">
+                <tr>
+                  <th className="text-left font-medium text-foreground px-4 py-2">Customer</th>
+                  <th className="text-left font-medium text-foreground px-4 py-2">Preferences</th>
+                  <th className="text-left font-medium text-foreground px-4 py-2">Party</th>
+                  <th className="text-left font-medium text-foreground px-4 py-2">Began waiting</th>
+                  <th className="text-left font-medium text-foreground px-4 py-2">Wait time</th>
+                  <th className="text-left font-medium text-foreground px-4 py-2">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visits.map((visit) => (
+                  <tr
+                    key={visit.id}
+                    className="border-t border-border hover:bg-muted odd:bg-muted/50 cursor-pointer"
+                    onClick={() => setSelectedVisit(visit)}
+                  >
+                    <td className="px-4 py-2">
+                      <div className="flex flex-col">
+                        <span className="font-medium inline-flex items-center gap-2">
+                          <span>{visit.customer_name || "—"}</span>
+                          {visit.is_returning ? (
+                            <HoverClickTooltip content={loyaltyTooltip(visit)} side="bottom" align="start">
+                              <button
+                                type="button"
+                                className="inline-flex items-center"
+                                aria-label="Loyalty user"
+                                title="Loyalty user"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <Crown className="h-4 w-4 text-orange-500" />
+                              </button>
+                            </HoverClickTooltip>
+                          ) : null}
+                        </span>
+                        {visit.phone && (
+                          <span className="text-xs text-muted-foreground">{visit.phone}</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-2">
+                      {visit.seating_preference ? (
+                        <Badge variant="secondary">{visit.seating_preference}</Badge>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                    <td className="px-4 py-2">{visit.party_size || "—"}</td>
+                    <td className="px-4 py-2">
+                      {new Date(visit.created_at).toLocaleString()}
+                    </td>
+                    <td className="px-4 py-2">
+                      {getWaitTime(visit.created_at, visit.notified_at)}
+                    </td>
+                    <td className="px-4 py-2">
+                      {getStatusBadge(visit.status, visit.notified_at)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
-      <Dialog open={!!editing?.open} onOpenChange={(v) => (!v ? setEditing(null) : undefined)}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Edit customer</DialogTitle>
-          </DialogHeader>
+      {/* Footer: count + pagination */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="text-sm text-muted-foreground">
+          {(() => {
+            const start = totalCount === 0 ? 0 : (page - 1) * pageSize + 1;
+            const end = Math.min(totalCount, page * pageSize);
+            return (
+              <>
+                Showing <span className="font-medium text-foreground tabular-nums">{start}-{end}</span>{" "}
+                of <span className="font-medium text-foreground tabular-nums">{totalCount}</span>
+              </>
+            );
+          })()}
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className="inline-flex items-center rounded-md px-3 py-1.5 text-sm ring-1 ring-inset ring-border hover:bg-muted disabled:opacity-50"
+            disabled={page <= 1}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+          >
+            Previous
+          </button>
+          <span className="text-sm text-muted-foreground tabular-nums">
+            Page {page} / {Math.max(1, Math.ceil(totalCount / pageSize))}
+          </span>
+          <button
+            type="button"
+            className="inline-flex items-center rounded-md px-3 py-1.5 text-sm ring-1 ring-inset ring-border hover:bg-muted disabled:opacity-50"
+            disabled={page >= Math.max(1, Math.ceil(totalCount / pageSize))}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            Next
+          </button>
+        </div>
+      </div>
 
-          <div className="grid gap-4">
-            <div className="grid gap-2">
-              <Label>Name</Label>
-              <Input
-                value={editing?.name || ""}
-                onChange={(e) => setEditing((prev) => (prev ? { ...prev, name: e.target.value } : prev))}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label>Phone</Label>
-              <PhoneInput
-                defaultCountry={"PT" as Country}
-                value={editing?.phone || ""}
-                onChange={(value) => setEditing((prev) => (prev ? { ...prev, phone: value } : prev))}
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button onClick={saveEdit} disabled={isPending}>
-              {isPending ? "Saving…" : "Save changes"}
-            </Button>
-            <Button type="button" variant="outline" onClick={() => setEditing(null)}>
-              Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Visit Detail Modal */}
+      <VisitDetailModal
+        visit={selectedVisit}
+        open={!!selectedVisit}
+        onOpenChange={(open) => !open && setSelectedVisit(null)}
+      />
     </div>
   );
 }
-
-

@@ -114,8 +114,13 @@ function SignupPageContent() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  inputMode="email"
+                  autoComplete="email"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
                   aria-invalid={attemptedSubmit && !email ? true : undefined}
-                  className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:ring-2 focus:ring-primary focus:outline-none"
+                  className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-base md:text-sm shadow-sm focus:ring-2 focus:ring-primary focus:outline-none"
                 />
               </div>
               <div>
@@ -125,9 +130,10 @@ function SignupPageContent() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  autoComplete="new-password"
                   aria-invalid={attemptedSubmit && !passwordMeetsRequirements ? true : undefined}
                   className={[
-                    "mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm shadow-sm focus:ring-2 focus:ring-primary focus:outline-none",
+                    "mt-1 block w-full rounded-md border bg-background px-3 py-2 text-base md:text-sm shadow-sm focus:ring-2 focus:ring-primary focus:outline-none",
                     attemptedSubmit && !passwordMeetsRequirements ? "border-destructive focus:ring-destructive" : "border-input",
                   ].join(" ")}
                 />
@@ -155,9 +161,10 @@ function SignupPageContent() {
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
                   required
+                  autoComplete="new-password"
                   aria-invalid={attemptedSubmit && !passwordsMatch ? true : undefined}
                   className={[
-                    "mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm shadow-sm focus:ring-2 focus:ring-primary focus:outline-none",
+                    "mt-1 block w-full rounded-md border bg-background px-3 py-2 text-base md:text-sm shadow-sm focus:ring-2 focus:ring-primary focus:outline-none",
                     attemptedSubmit && !passwordsMatch ? "border-destructive focus:ring-destructive" : "border-input",
                   ].join(" ")}
                 />

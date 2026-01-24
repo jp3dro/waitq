@@ -72,7 +72,7 @@ export default function AddForm({
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeTo, setUpgradeTo] = useState<PlanId>("base");
   const [smsUsage, setSmsUsage] = useState<{ used: number; limit: number; windowEnd?: string } | null>(null);
-  const { register, handleSubmit, reset, watch, setValue, setError, setFocus, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, reset, watch, setValue, setError, clearErrors, setFocus, formState: { errors } } = useForm<FormValues>({
     defaultValues: { phone: "", email: "", customerName: "", waitlistId: "", sendSms: false, sendEmail: false, partySize: 2 },
   });
   const [waitlists, setWaitlists] = useState<WaitlistConfig[]>([]);
@@ -97,8 +97,13 @@ export default function AddForm({
       return;
     }
     (async () => {
-      const res = await fetch("/api/waitlists", { cache: "no-store" });
-      const j = await res.json();
+      let j: any = {};
+      try {
+        const res = await fetch("/api/waitlists", { cache: "no-store" });
+        j = await res.json().catch(() => ({}));
+      } catch {
+        j = {};
+      }
       setWaitlists(j.waitlists || []);
       if (defaultWaitlistId) {
         reset((v) => ({ ...v, waitlistId: defaultWaitlistId }));
@@ -146,6 +151,7 @@ export default function AddForm({
 
   const onSubmit = (values: FormValues) => {
     setMessage(null);
+    clearErrors(["phone", "email", "customerName"]);
     // Client-side guard (server will also enforce): avoid sending when location is closed.
     if (blockedReason) {
       setMessage(blockedReason);
@@ -178,8 +184,14 @@ export default function AddForm({
         }
         // Public mode should never show upgrade prompts (customer-facing).
         if (res.status === 409) {
-          const errStr = typeof j?.error === "string" ? j.error : "This person is already waiting.";
-          setDuplicateDialog({ open: true, message: errStr });
+          const errStr = typeof j?.error === "string" ? j.error : "This customer is already waiting in this list.";
+          const friendly =
+            /email/i.test(errStr)
+              ? "This email address is already waiting in this waitlist."
+              : /phone/i.test(errStr)
+                ? "This phone number is already waiting in this waitlist."
+                : "This customer is already waiting in this waitlist.";
+          setDuplicateDialog({ open: true, message: friendly });
           return;
         }
         const errStr = typeof j?.error === "string" ? j.error : "Failed to add";
@@ -234,8 +246,14 @@ export default function AddForm({
       } else {
         if (res.status === 409) {
           const j = await res.json().catch(() => ({}));
-          const errStr = typeof j?.error === "string" ? j.error : "This person is already waiting.";
-          setDuplicateDialog({ open: true, message: errStr });
+          const errStr = typeof j?.error === "string" ? j.error : "This customer is already waiting in this list.";
+          const friendly =
+            /email/i.test(errStr)
+              ? "This email address is already waiting in this waitlist."
+              : /phone/i.test(errStr)
+                ? "This phone number is already waiting in this waitlist."
+                : "This customer is already waiting in this waitlist.";
+          setDuplicateDialog({ open: true, message: friendly });
           return;
         }
         let parsed: unknown = {};
@@ -320,7 +338,11 @@ export default function AddForm({
         {lockWaitlist ? null : (
           <div className="grid gap-2">
             <label className="text-sm font-medium">Waitlist</label>
-            <select disabled={!!lockWaitlist} className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm disabled:opacity-50" {...register("waitlistId", { required: true })}>
+            <select
+              disabled={!!lockWaitlist}
+              className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-base md:text-sm disabled:opacity-50"
+              {...register("waitlistId", { required: true })}
+            >
               {waitlists.map((w) => (
                 <option key={w.id} value={w.id}>{w.name}</option>
               ))}
@@ -333,25 +355,33 @@ export default function AddForm({
         {(waitlists.find(w => w.id === watch("waitlistId"))?.ask_name !== false) && (
           <div className="grid gap-2">
             <label className="text-sm font-medium">Customer name</label>
-            <input className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm" placeholder="Full name" {...register("customerName", { required: true })} />
+            <input
+              className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-base md:text-sm"
+              placeholder="Full name"
+              autoComplete="name"
+              {...register("customerName", { required: true })}
+            />
             {errors.customerName && (
               <p className="text-sm text-red-600">{errors.customerName.message}</p>
             )}
           </div>
         )}
-        <div className="flex gap-6">
-          <div className="flex-none grid gap-2">
+        <div className="grid gap-4">
+          <div className="grid gap-2">
             <label className="text-sm font-medium">Number of people</label>
-            <Stepper
-              value={watch("partySize")}
-              onChange={(value) => setValue("partySize", value)}
-              min={1}
-              max={20}
-            />
+            <div className="w-fit">
+              <Stepper
+                value={watch("partySize")}
+                onChange={(value) => setValue("partySize", value)}
+                min={1}
+                max={20}
+              />
+            </div>
           </div>
+
           {collectPhone && (
-            <div className="flex-1 grid gap-2">
-              <label className="text-sm font-medium">Phone</label>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Phone (optional)</label>
               <PhoneInput
                 defaultCountry={businessCountry}
                 value={watch("phone")}
@@ -369,7 +399,12 @@ export default function AddForm({
             <label className="text-sm font-medium">Email</label>
             <input
               type="email"
-              className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-sm"
+              inputMode="email"
+              autoComplete="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-base md:text-sm"
               placeholder="name@example.com"
               {...register("email")}
             />

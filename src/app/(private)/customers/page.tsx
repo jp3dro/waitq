@@ -3,16 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import CustomersTable from "./table";
 import { resolveCurrentBusinessId } from "@/lib/current-business";
 
-export const metadata = { title: "Customers" };
-
-type Entry = {
-  id: string;
-  customer_name: string | null;
-  phone: string | null;
-  email?: string | null;
-  created_at: string;
-  notified_at: string | null;
-};
+export const metadata = { title: "Customer Visits" };
 
 export default async function CustomersPage() {
   const supabase = await createClient();
@@ -26,96 +17,40 @@ export default async function CustomersPage() {
     return (
       <main className="py-5">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="bg-white dark:bg-neutral-800 ring-1 ring-black/5 dark:ring-neutral-700 rounded-xl shadow-sm p-10 text-center">
+          <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-10 text-center">
             <h3 className="text-base font-semibold">No business found</h3>
-            <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">Create a business to view customers.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Create a business to view customer visits.</p>
           </div>
         </div>
       </main>
     );
   }
 
-  const { data: rows } = await supabase
-    .from("waitlist_entries")
-    .select("id, customer_name, phone, email, created_at, notified_at")
+  // Fetch locations and waitlists for filter options
+  const { data: locations } = await supabase
+    .from("business_locations")
+    .select("id, name")
     .eq("business_id", businessId)
-    .order("created_at", { ascending: false })
-    .limit(5000);
+    .order("created_at", { ascending: true });
 
-  const entries = (rows || []) as Entry[];
-
-  type Customer = {
-    key: string;
-    name: string | null;
-    phone: string | null;
-    email: string | null;
-    visits: number;
-    firstSeen: string;
-    lastSeen: string;
-    servedCount: number;
-    noShowCount: number;
-  };
-
-  const normalize = (v: string | null) => (v ? v.replace(/\D+/g, "") : "");
-  const normalizeEmail = (v: string | null | undefined) => (v ? v.trim().toLowerCase() : "");
-
-  const map = new Map<string, Customer>();
-  for (const r of entries) {
-    const phoneKey = normalize(r.phone);
-    const emailKey = normalizeEmail(r.email);
-    const key = phoneKey || (emailKey ? `email:${emailKey}` : (r.customer_name ? `name:${r.customer_name.toLowerCase()}` : `id:${r.id}`));
-    const existing = map.get(key);
-    if (!existing) {
-      map.set(key, {
-        key,
-        name: r.customer_name || null,
-        phone: r.phone || null,
-        email: r.email || null,
-        visits: 1,
-        firstSeen: r.created_at,
-        lastSeen: r.created_at,
-        servedCount: r.notified_at ? 1 : 0,
-        noShowCount: 0,
-      });
-    } else {
-      existing.visits += 1;
-      if (r.notified_at) existing.servedCount += 1;
-      if (new Date(r.created_at) < new Date(existing.firstSeen)) existing.firstSeen = r.created_at;
-      if (new Date(r.created_at) > new Date(existing.lastSeen)) {
-        existing.lastSeen = r.created_at;
-        if (r.customer_name) existing.name = r.customer_name;
-        if (r.phone) existing.phone = r.phone;
-        if (r.email) existing.email = r.email;
-      }
-    }
-  }
-
-  // Fetch no-show counts per key
-  const { data: nsRows } = await supabase
-    .from("waitlist_entries")
-    .select("id, phone, email, customer_name, status, notified_at")
+  const { data: waitlists } = await supabase
+    .from("waitlists")
+    .select("id, name, location_id")
     .eq("business_id", businessId)
-    .eq("status", "archived");
-  for (const r of (nsRows || [])) {
-    const phoneKey = normalize((r as any).phone || null);
-    const emailKey = normalizeEmail((r as any).email || null);
-    const k = phoneKey || (emailKey ? `email:${emailKey}` : ((r as any).customer_name ? `name:${(r as any).customer_name.toLowerCase()}` : `id:${(r as any).id}`));
-    const entry = map.get(k);
-    if (entry) entry.noShowCount += 1;
-  }
-
-  const customers = Array.from(map.values()).sort(
-    (a, b) => new Date(b.lastSeen).getTime() - new Date(a.lastSeen).getTime()
-  );
+    .order("created_at", { ascending: true });
 
   return (
     <main className="py-5">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Customers</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Customer Visits</h1>
         </div>
 
-        <CustomersTable initialCustomers={customers} />
+        <CustomersTable 
+          businessId={businessId}
+          locations={locations || []} 
+          waitlists={waitlists || []} 
+        />
       </div>
     </main>
   );

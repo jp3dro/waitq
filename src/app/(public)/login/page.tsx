@@ -94,7 +94,12 @@ function LoginPageContent() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
-                        className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:ring-2 focus:ring-primary focus:outline-none"
+                        inputMode="email"
+                        autoComplete="email"
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        spellCheck={false}
+                        className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-base md:text-sm shadow-sm focus:ring-2 focus:ring-primary focus:outline-none"
                     />
                 </div>
                 <div>
@@ -109,7 +114,8 @@ function LoginPageContent() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
-                        className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:ring-2 focus:ring-primary focus:outline-none"
+                        autoComplete="current-password"
+                        className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-base md:text-sm shadow-sm focus:ring-2 focus:ring-primary focus:outline-none"
                     />
                 </div>
                 <button

@@ -12,9 +12,10 @@
    SelectValue,
  } from "@/components/ui/select";
  import { Switch } from "@/components/ui/switch";
- import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { HoverClickTooltip } from "@/components/ui/hover-click-tooltip";
  
  type Location = { id: string; name: string };
+const MAX_LIST_NAME_LEN = 30;
  
  type ListFormFieldsProps = {
    name: string;
@@ -36,11 +37,9 @@
    onDisplayShowNameChange: (v: boolean) => void;
    displayShowQr: boolean;
    onDisplayShowQrChange: (v: boolean) => void;
-   kioskEnabled: boolean;
-   onKioskEnabledChange: (v: boolean) => void;
-   seatingPrefs: string[];
-   onSeatingPrefsChange: (v: string[]) => void;
- };
+  kioskEnabled: boolean;
+  onKioskEnabledChange: (v: boolean) => void;
+};
  
  export default function ListFormFields({
    name,
@@ -60,13 +59,11 @@
    onDisplayEnabledChange,
    displayShowName,
    onDisplayShowNameChange,
-   displayShowQr,
-   onDisplayShowQrChange,
-   kioskEnabled,
-   onKioskEnabledChange,
-   seatingPrefs,
-   onSeatingPrefsChange,
- }: ListFormFieldsProps) {
+  displayShowQr,
+  onDisplayShowQrChange,
+  kioskEnabled,
+  onKioskEnabledChange,
+}: ListFormFieldsProps) {
    const baseId = useId();
    const askNameId = `${baseId}-ask-name`;
    const askPhoneId = `${baseId}-ask-phone`;
@@ -75,18 +72,27 @@
    const displayEnabledId = `${baseId}-display-enabled`;
    const displayShowNameId = `${baseId}-display-show-name`;
    const displayShowQrId = `${baseId}-display-show-qr`;
+  const nameLen = name.length;
+  const remainingName = Math.max(0, MAX_LIST_NAME_LEN - nameLen);
  
    return (
      <div className="grid gap-4">
        <div className="grid gap-2">
-         <Label>Name</Label>
+        <div className="flex items-center justify-between gap-3">
+          <Label>Name</Label>
+          <span className="text-xs text-muted-foreground tabular-nums">
+            {remainingName} left
+          </span>
+        </div>
          <Input
            value={name}
-           onChange={(e) => onNameChange(e.target.value)}
+          maxLength={MAX_LIST_NAME_LEN}
+          onChange={(e) => onNameChange(e.target.value.slice(0, MAX_LIST_NAME_LEN))}
            placeholder="Enter list name"
            aria-invalid={nameError ? true : undefined}
            className={nameError ? "border-destructive focus-visible:ring-destructive" : undefined}
          />
+        <p className="text-xs text-muted-foreground tabular-nums">{nameLen}/{MAX_LIST_NAME_LEN}</p>
          {nameError ? <p className="text-xs text-destructive">{nameError}</p> : null}
        </div>
  
@@ -113,12 +119,11 @@
            <Switch id={askNameId} checked={askName} onCheckedChange={onAskNameChange} />
            <div className="flex items-center gap-2">
              <Label htmlFor={askNameId}>Collect Name</Label>
-             <Tooltip>
-               <TooltipTrigger asChild>
-                 <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-               </TooltipTrigger>
-               <TooltipContent side="bottom">Make name field required when joining</TooltipContent>
-             </Tooltip>
+            <HoverClickTooltip content="Make name field required when joining" side="bottom">
+              <button type="button" className="inline-flex items-center" aria-label="About Collect Name">
+                <Info className="h-4 w-4 text-muted-foreground" />
+              </button>
+            </HoverClickTooltip>
            </div>
          </div>
  
@@ -126,12 +131,11 @@
            <Switch id={askPhoneId} checked={askPhone} onCheckedChange={onAskPhoneChange} />
            <div className="flex items-center gap-2">
              <Label htmlFor={askPhoneId}>Collect Phone</Label>
-             <Tooltip>
-               <TooltipTrigger asChild>
-                 <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-               </TooltipTrigger>
-               <TooltipContent side="bottom">Make phone field required when joining</TooltipContent>
-             </Tooltip>
+            <HoverClickTooltip content="Make phone field required when joining" side="bottom">
+              <button type="button" className="inline-flex items-center" aria-label="About Collect Phone">
+                <Info className="h-4 w-4 text-muted-foreground" />
+              </button>
+            </HoverClickTooltip>
            </div>
          </div>
  
@@ -139,12 +143,11 @@
            <Switch id={askEmailId} checked={askEmail} onCheckedChange={onAskEmailChange} />
            <div className="flex items-center gap-2">
              <Label htmlFor={askEmailId}>Collect Email</Label>
-             <Tooltip>
-               <TooltipTrigger asChild>
-                 <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-               </TooltipTrigger>
-               <TooltipContent side="bottom">Show an email field when joining</TooltipContent>
-             </Tooltip>
+            <HoverClickTooltip content="Show an email field when joining" side="bottom">
+              <button type="button" className="inline-flex items-center" aria-label="About Collect Email">
+                <Info className="h-4 w-4 text-muted-foreground" />
+              </button>
+            </HoverClickTooltip>
            </div>
          </div>
  
@@ -154,14 +157,11 @@
            <Switch id={displayEnabledId} checked={displayEnabled} onCheckedChange={onDisplayEnabledChange} />
            <div className="flex items-center gap-2">
              <Label htmlFor={displayEnabledId}>Public display</Label>
-             <Tooltip>
-               <TooltipTrigger asChild>
-                 <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-               </TooltipTrigger>
-               <TooltipContent side="bottom">
-                 Enable the public queue display for this waitlist.
-               </TooltipContent>
-             </Tooltip>
+            <HoverClickTooltip content="Enable the public queue display for this waitlist." side="bottom">
+              <button type="button" className="inline-flex items-center" aria-label="About Public display">
+                <Info className="h-4 w-4 text-muted-foreground" />
+              </button>
+            </HoverClickTooltip>
            </div>
          </div>
  
@@ -169,14 +169,14 @@
            <Switch id={kioskEnabledId} checked={kioskEnabled} onCheckedChange={onKioskEnabledChange} />
            <div className="flex items-center gap-2">
              <Label htmlFor={kioskEnabledId}>Users can add themselves to the list</Label>
-             <Tooltip>
-               <TooltipTrigger asChild>
-                 <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-               </TooltipTrigger>
-               <TooltipContent side="bottom">
-                 Shows a button on the public display so guests can join the list themselves.
-               </TooltipContent>
-             </Tooltip>
+            <HoverClickTooltip
+              content="Shows a button on the public display so guests can join the list themselves."
+              side="bottom"
+            >
+              <button type="button" className="inline-flex items-center" aria-label="About self check-in">
+                <Info className="h-4 w-4 text-muted-foreground" />
+              </button>
+            </HoverClickTooltip>
            </div>
          </div>
  
@@ -185,14 +185,11 @@
              <Switch id={displayShowNameId} checked={displayShowName} onCheckedChange={onDisplayShowNameChange} />
              <div className="flex items-center gap-2">
                <Label htmlFor={displayShowNameId}>Show name on display</Label>
-               <Tooltip>
-                 <TooltipTrigger asChild>
-                   <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                 </TooltipTrigger>
-                 <TooltipContent side="bottom">
-                   Show customer names on the public display.
-                 </TooltipContent>
-               </Tooltip>
+              <HoverClickTooltip content="Show customer names on the public display." side="bottom">
+                <button type="button" className="inline-flex items-center" aria-label="About Show name on display">
+                  <Info className="h-4 w-4 text-muted-foreground" />
+                </button>
+              </HoverClickTooltip>
              </div>
            </div>
          ) : null}
@@ -202,57 +199,15 @@
              <Switch id={displayShowQrId} checked={displayShowQr} onCheckedChange={onDisplayShowQrChange} />
              <div className="flex items-center gap-2">
                <Label htmlFor={displayShowQrId}>Show QR code on display</Label>
-               <Tooltip>
-                 <TooltipTrigger asChild>
-                   <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                 </TooltipTrigger>
-                 <TooltipContent side="bottom">
-                   Show a QR code on the public display for guests to scan and join.
-                 </TooltipContent>
-               </Tooltip>
-             </div>
-           </div>
-         ) : null}
- 
-         <div className="grid gap-2">
-           <Label>Seating preferences</Label>
-           <SeatingPrefsEditor value={seatingPrefs} onChange={onSeatingPrefsChange} />
-         </div>
-       </div>
-     </div>
-   );
- }
- 
- function SeatingPrefsEditor({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
-   const [input, setInput] = useState("");
-   const add = () => {
-     const v = input.trim();
-     if (!v) return;
-     if (value.includes(v)) return;
-     onChange([...value, v]);
-     setInput("");
-   };
-   const remove = (v: string) => onChange(value.filter((x) => x !== v));
-   return (
-     <div className="grid gap-2">
-       <div className="flex gap-2">
-         <Input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Add seating preference" />
-         <Button type="button" onClick={add} size="sm">
-           Add
-         </Button>
-       </div>
-       {value.length ? (
-         <ul className="flex flex-wrap gap-2">
-           {value.map((v) => (
-             <li key={v} className="inline-flex items-center gap-2 rounded-full ring-1 ring-inset ring-border px-3 py-1 text-xs">
-               <span>{v}</span>
-               <button type="button" onClick={() => remove(v)} className="text-muted-foreground hover:opacity-90">
-                 ✕
-               </button>
-             </li>
-           ))}
-         </ul>
-       ) : null}
-     </div>
-   );
- }
+              <HoverClickTooltip content="Show a QR code on the public display for guests to scan and join." side="bottom">
+                <button type="button" className="inline-flex items-center" aria-label="About Show QR code on display">
+                  <Info className="h-4 w-4 text-muted-foreground" />
+                </button>
+              </HoverClickTooltip>
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}

@@ -4,24 +4,36 @@ import { getAdminClient } from "@/lib/supabase/admin";
 import { z } from "zod";
 import { getLocationOpenState, type RegularHours } from "@/lib/location-hours";
 import { broadcastRefresh } from "@/lib/realtime-broadcast";
+import { resolveCurrentBusinessId } from "@/lib/current-business";
 
 export async function GET() {
   const supabase = await createRouteClient();
-  const selectFields = "id, name, business_id, location_id, display_token, kiosk_enabled, display_enabled, display_show_name, display_show_qr, list_type, seating_preferences, ask_name, ask_phone, ask_email, created_at, business_locations:location_id(id, name, regular_hours, timezone)";
-  const { data, error } = await supabase
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const businessId = await resolveCurrentBusinessId(supabase as any, user.id);
+  if (!businessId) return NextResponse.json({ error: "No business found" }, { status: 404 });
+
+  const admin = getAdminClient();
+  const selectFields = "id, name, business_id, location_id, display_token, kiosk_enabled, display_enabled, display_show_name, display_show_qr, list_type, ask_name, ask_phone, ask_email, created_at, business_locations:location_id(id, name, regular_hours, timezone, seating_preferences)";
+  const { data, error } = await admin
     .from("waitlists")
     .select(selectFields)
+    .eq("business_id", businessId)
     .order("created_at", { ascending: true });
   if (error && (error.message.toLowerCase().includes("display_enabled") || error.message.toLowerCase().includes("display_show_name") || error.message.toLowerCase().includes("display_show_qr"))) {
-    const retry = await supabase
+    const retry = await admin
       .from("waitlists")
       .select(
-        "id, name, business_id, location_id, display_token, kiosk_enabled, list_type, seating_preferences, ask_name, ask_phone, ask_email, created_at, business_locations:location_id(id, name, regular_hours, timezone)"
+        "id, name, business_id, location_id, display_token, kiosk_enabled, list_type, ask_name, ask_phone, ask_email, created_at, business_locations:location_id(id, name, regular_hours, timezone, seating_preferences)"
       )
+      .eq("business_id", businessId)
       .order("created_at", { ascending: true });
     if (retry.error) return NextResponse.json({ error: retry.error.message }, { status: 400 });
     const waitlists = (retry.data ?? []).map((w) => {
-      const loc = (w as unknown as { business_locations?: { regular_hours?: unknown; timezone?: unknown } | null }).business_locations;
+      const loc = (w as unknown as { business_locations?: { regular_hours?: unknown; timezone?: unknown; seating_preferences?: unknown } | null }).business_locations;
       const openState = getLocationOpenState({
         regularHours: (loc?.regular_hours as RegularHours | null) || null,
         timezone: (typeof loc?.timezone === "string" ? (loc.timezone as string) : null) || null,
@@ -31,6 +43,7 @@ export async function GET() {
         display_enabled: true,
         display_show_name: false,
         display_show_qr: false,
+        seating_preferences: Array.isArray(loc?.seating_preferences) ? loc.seating_preferences : [],
         location_is_open: openState.isOpen,
         location_status_reason: openState.reason,
       };
@@ -40,13 +53,14 @@ export async function GET() {
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
   const waitlists = (data ?? []).map((w) => {
-    const loc = (w as unknown as { business_locations?: { regular_hours?: unknown; timezone?: unknown } | null }).business_locations;
+    const loc = (w as unknown as { business_locations?: { regular_hours?: unknown; timezone?: unknown; seating_preferences?: unknown } | null }).business_locations;
     const openState = getLocationOpenState({
       regularHours: (loc?.regular_hours as RegularHours | null) || null,
       timezone: (typeof loc?.timezone === "string" ? (loc.timezone as string) : null) || null,
     });
     return {
       ...w,
+      seating_preferences: Array.isArray(loc?.seating_preferences) ? loc.seating_preferences : [],
       location_is_open: openState.isOpen,
       location_status_reason: openState.reason,
     };
@@ -57,7 +71,7 @@ export async function GET() {
 
 const postSchema = z.object({
   businessId: z.string().uuid().optional(),
-  name: z.string().min(1),
+  name: z.string().min(1).max(30, "Name must be 30 characters or fewer"),
   locationId: z.string().uuid().optional(),
   kioskEnabled: z.boolean().optional().default(true),
   displayEnabled: z.boolean().optional(),
@@ -81,14 +95,13 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   let businessId = parse.data.businessId;
-  const { name, kioskEnabled, displayEnabled, displayShowName, displayShowQr, seatingPreferences, askName, askPhone, askEmail } = parse.data as {
+  const { name, kioskEnabled, displayEnabled, displayShowName, displayShowQr, askName, askPhone, askEmail } = parse.data as {
     name: string;
     locationId?: string;
     kioskEnabled?: boolean;
     displayEnabled?: boolean;
     displayShowName?: boolean;
     displayShowQr?: boolean;
-    seatingPreferences?: string[];
     askName?: boolean;
     askPhone?: boolean;
     askEmail?: boolean;
@@ -125,12 +138,11 @@ export async function POST(req: NextRequest) {
       display_show_name: displayShowName !== false,
       display_show_qr: displayShowQr === true,
       list_type: "restaurants",
-      seating_preferences: seatingPreferences || [],
       ask_name: askName !== false,
       ask_phone: askPhone !== false,
       ask_email: askEmail === true,
     })
-    .select("id, name, business_id, location_id, display_token, kiosk_enabled, display_enabled, display_show_name, display_show_qr, list_type, seating_preferences, ask_name, ask_phone, ask_email")
+    .select("id, name, business_id, location_id, display_token, kiosk_enabled, display_enabled, display_show_name, display_show_qr, list_type, ask_name, ask_phone, ask_email")
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ waitlist: data }, { status: 201 });
@@ -225,7 +237,7 @@ export async function PATCH(req: NextRequest) {
 
 const patchSchema = z.object({
   id: z.string().uuid(),
-  name: z.string().min(1).optional(),
+  name: z.string().min(1).max(30, "Name must be 30 characters or fewer").optional(),
   locationId: z.string().uuid().optional(),
   kioskEnabled: z.boolean().optional(),
   displayEnabled: z.boolean().optional(),
@@ -248,7 +260,10 @@ export async function PUT(req: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { id, name, locationId, kioskEnabled, displayEnabled, displayShowName, displayShowQr, seatingPreferences, askName, askPhone, askEmail } = parse.data;
+  const businessId = await resolveCurrentBusinessId(supabase as any, user.id);
+  if (!businessId) return NextResponse.json({ error: "No business found" }, { status: 404 });
+
+  const { id, name, locationId, kioskEnabled, displayEnabled, displayShowName, displayShowQr, askName, askPhone, askEmail } = parse.data;
   const payload: Record<string, unknown> = {};
   if (typeof name === "string") payload.name = name;
   if (typeof locationId === "string") payload.location_id = locationId;
@@ -256,23 +271,26 @@ export async function PUT(req: NextRequest) {
   if (typeof displayEnabled === "boolean") payload.display_enabled = displayEnabled;
   if (typeof displayShowName === "boolean") payload.display_show_name = displayShowName;
   if (typeof displayShowQr === "boolean") payload.display_show_qr = displayShowQr;
-  if (Array.isArray(seatingPreferences)) payload.seating_preferences = seatingPreferences;
   if (typeof askName === "boolean") payload.ask_name = askName;
   if (typeof askPhone === "boolean") payload.ask_phone = askPhone;
   if (typeof askEmail === "boolean") payload.ask_email = askEmail;
 
   if (Object.keys(payload).length === 0) return NextResponse.json({ error: "No fields to update" }, { status: 400 });
 
-  const { data, error } = await supabase
+  // Use admin client for staff members; enforce business scoping ourselves.
+  const admin = getAdminClient();
+  const { data, error } = await admin
     .from("waitlists")
     .update(payload)
     .eq("id", id)
-    .select("id, name, business_id, location_id, display_token, kiosk_enabled, display_enabled, display_show_name, display_show_qr, list_type, seating_preferences, ask_name, ask_phone, ask_email")
-    .single();
+    .eq("business_id", businessId)
+    .select("id, name, business_id, location_id, display_token, kiosk_enabled, display_enabled, display_show_name, display_show_qr, list_type, ask_name, ask_phone, ask_email")
+    .maybeSingle();
   if (error && (error.message.toLowerCase().includes("display_enabled") || error.message.toLowerCase().includes("display_show_name") || error.message.toLowerCase().includes("display_show_qr"))) {
     return NextResponse.json({ error: "Public display settings are not available in this project. Add the display_* columns first." }, { status: 400 });
   }
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  if (!data) return NextResponse.json({ error: "List not found or access denied" }, { status: 404 });
 
   // Best-effort: notify any public displays for this waitlist so they refetch settings immediately.
   try {

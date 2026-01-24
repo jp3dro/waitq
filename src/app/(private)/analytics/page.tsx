@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { dateToClockLabel, hourToLabel, normalizeTimeFormat, type TimeFormat } from "@/lib/time-format";
 import UpgradeRequiredDialog from "@/components/upgrade-required-dialog";
 import type { PlanId } from "@/lib/plans";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { HoverClickTooltip } from "@/components/ui/hover-click-tooltip";
 
 type CreatedRow = { created_at: string };
 type ServedRow = { created_at: string; notified_at: string | null; waitlist_id: string | null };
@@ -75,24 +75,31 @@ function ChartBarInteractiveMetric({
   insight?: string | null;
   helpText?: string | null;
 }) {
+  const valueFormatter = React.useCallback((v: unknown) => {
+    const n = typeof v === "number" ? v : Number(v);
+    if (!Number.isFinite(n) || n === 0) return "";
+    // Reduce clutter: keep integers as-is, otherwise show up to 1 decimal.
+    return Number.isInteger(n) ? String(n) : String(Number(n.toFixed(1)));
+  }, []);
+
   return (
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2">
           <span>{title}</span>
           {helpText ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  aria-label={`About ${title}`}
-                  className="inline-flex items-center text-muted-foreground hover:text-foreground"
-                >
-                  <CircleHelp className="h-4 w-4" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">{helpText}</TooltipContent>
-            </Tooltip>
+            <HoverClickTooltip
+              content={helpText}
+              side="bottom"
+            >
+              <button
+                type="button"
+                aria-label={`About ${title}`}
+                className="inline-flex items-center text-muted-foreground hover:text-foreground"
+              >
+                <CircleHelp className="h-4 w-4" />
+              </button>
+            </HoverClickTooltip>
           ) : null}
         </CardTitle>
       </CardHeader>
@@ -120,7 +127,16 @@ function ChartBarInteractiveMetric({
             <ChartTooltip
               content={<ChartTooltipContent className="w-[170px]" labelFormatter={(value) => String(value)} />}
             />
-            <Bar dataKey="value" fill="var(--color-value)" radius={4} />
+            <Bar dataKey="value" fill="var(--color-value)" radius={4}>
+              <LabelList
+                dataKey="value"
+                position="top"
+                offset={6}
+                className="fill-foreground"
+                fontSize={10}
+                formatter={valueFormatter}
+              />
+            </Bar>
           </BarChart>
         </ChartContainer>
         {insight ? <p className="mt-3 text-xs text-muted-foreground">{insight}</p> : null}
@@ -156,18 +172,15 @@ function ChartBarCustomLabelWeekday({
         <CardTitle className="flex items-center gap-2">
           <span>{title}</span>
           {helpText ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  aria-label={`About ${title}`}
-                  className="inline-flex items-center text-muted-foreground hover:text-foreground"
-                >
-                  <CircleHelp className="h-4 w-4" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">{helpText}</TooltipContent>
-            </Tooltip>
+            <HoverClickTooltip content={helpText} side="bottom">
+              <button
+                type="button"
+                aria-label={`About ${title}`}
+                className="inline-flex items-center text-muted-foreground hover:text-foreground"
+              >
+                <CircleHelp className="h-4 w-4" />
+              </button>
+            </HoverClickTooltip>
           ) : null}
         </CardTitle>
       </CardHeader>
@@ -536,9 +549,16 @@ export default function AnalyticsPage() {
 
         {/* Analytics content container */}
         <div className="space-y-6">
-          <p className="text-sm text-muted-foreground">{tldr}</p>
-          <div className="grid grid-cols-2 gap-4 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
-            <div className="w-full sm:w-64">
+          <div className="rounded-xl ring-1 ring-border bg-muted/40 p-4">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Quick insights</div>
+              <div className="text-xs text-muted-foreground">{isToday ? "Today" : `Last ${rangeMode} days`}</div>
+            </div>
+            <p className="mt-2 text-sm text-foreground">{tldr}</p>
+          </div>
+
+          <div className="flex items-center gap-4 overflow-x-auto flex-nowrap">
+            <div className="w-56 shrink-0">
               <Select
                 value={locationId}
                 onValueChange={(v) => {
@@ -560,7 +580,7 @@ export default function AnalyticsPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="w-full sm:w-64">
+            <div className="w-56 shrink-0">
               <Select value={waitlistId} onValueChange={(v) => setWaitlistId(v)}>
                 <SelectTrigger>
                   <SelectValue placeholder="List" />
@@ -581,7 +601,7 @@ export default function AnalyticsPage() {
           
 
           {/* Key Metrics */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+          <div className="grid grid-cols-4 gap-2">
             <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-2 sm:p-3">
               <p className="text-xs text-muted-foreground">{isToday ? "Visitors today" : "Total visitors"}</p>
               <p className="mt-0.5 text-base sm:text-lg font-semibold">{analytics.totalVisitors.toLocaleString()}</p>
@@ -631,16 +651,18 @@ export default function AnalyticsPage() {
               insight={insightWaitByHour}
               helpText={helpWaitByHour}
             />
-            <ChartBarInteractiveMetric
-              title={rangeMode === "today" ? "Daily visitors (today)" : `Daily visitors (last ${rangeMode} days)`}
-              data={analytics.dailyVisitors.map((d) => ({
-                label: d.date,
-                value: d.count,
-              }))}
-              xTickFormatter={(v) => formatIfISODateLabel(v)}
-              insight={insightDailyVisitors}
-              helpText={helpDailyVisitors}
-            />
+            {!isToday ? (
+              <ChartBarInteractiveMetric
+                title={`Daily visitors (last ${rangeMode} days)`}
+                data={analytics.dailyVisitors.map((d) => ({
+                  label: d.date,
+                  value: d.count,
+                }))}
+                xTickFormatter={(v) => formatIfISODateLabel(v)}
+                insight={insightDailyVisitors}
+                helpText={helpDailyVisitors}
+              />
+            ) : null}
             {!isToday ? (
               <ChartBarCustomLabelWeekday
                 title="Average visitors by day of week"

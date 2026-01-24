@@ -88,7 +88,8 @@ export default function InviteClient({ businessName, email, token }: { businessN
               type="email"
               value={email}
               disabled
-              className="mt-1 block w-full rounded-md border border-input bg-muted px-3 py-2 text-sm shadow-sm opacity-75 cursor-not-allowed"
+              autoComplete="email"
+              className="mt-1 block w-full rounded-md border border-input bg-muted px-3 py-2 text-base md:text-sm shadow-sm opacity-75 cursor-not-allowed"
             />
           </div>
 
@@ -99,7 +100,10 @@ export default function InviteClient({ businessName, email, token }: { businessN
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="block w-full rounded-md border border-input bg-background px-3 py-2 pr-10 text-sm shadow-sm focus:ring-2 focus:ring-primary focus:outline-none"
+                autoComplete="new-password"
+                autoCapitalize="none"
+                autoCorrect="off"
+                className="block w-full rounded-md border border-input bg-background px-3 py-2 pr-10 text-base md:text-sm shadow-sm focus:ring-2 focus:ring-primary focus:outline-none"
                 placeholder="••••••••"
               />
               <button

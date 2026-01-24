@@ -168,6 +168,7 @@ export default function PrivateSidebarClient({ userName, userEmail, businessLogo
                 <SidebarMenu>
                     <NavItem href="/lists" icon={ListChecks} label="Lists" />
                     <NavItem href="/customers" icon={Users2} label="Customers" />
+                    <NavItem href="/analytics" icon={BarChart3} label="Analytics" />
                 </SidebarMenu>
 
                 {isAdmin ? (
@@ -179,7 +180,6 @@ export default function PrivateSidebarClient({ userName, userEmail, businessLogo
                         </div>
 
                         <SidebarMenu className="pb-4">
-                            <NavItem href="/analytics" icon={BarChart3} label="Analytics" />
                             <NavItem href="/locations" icon={MapPin} label="Locations" />
                             <NavItem href="/business" icon={Building2} label="Business" />
                             <NavItem

@@ -44,10 +44,11 @@ export function Stepper({
 
     return (
         <div className={cn("flex items-center", className)}>
-            <div className="flex h-9 w-20 items-center rounded-md rounded-r-none border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-within:ring-1 focus-within:ring-ring">
+            <div className="flex h-9 w-20 items-center rounded-md rounded-r-none border border-input bg-transparent px-3 py-1 text-base md:text-sm shadow-sm transition-colors focus-within:ring-1 focus-within:ring-ring">
                 <User className="mr-2 h-4 w-4 text-muted-foreground shrink-0" />
                 <input
                     type="number"
+                    inputMode="numeric"
                     min={min}
                     max={max}
                     value={value || ""}

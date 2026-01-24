@@ -95,47 +95,61 @@ export default function QRCodeModal({ open, onClose, listName, displayToken, bus
 
   return (
     <Dialog open={open} onOpenChange={(v) => (!v ? onClose() : undefined)}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>QR code</DialogTitle>
-        </DialogHeader>
-      <div className="grid gap-4">
-        {!displayUrl ? (
-          <p className="text-sm text-muted-foreground">No public display token is configured for this list.</p>
-        ) : (
-          <>
-            <div ref={printRef} className="wrap">
-              <div className="title print:block hidden">{businessName ? `${businessName} – ${listName}` : listName}</div>
-              {imgUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img id="qr-img" src={imgUrl} alt="QR code" className="qr"
-                  onError={() => {
-                    const providers = [
-                      (t: string) => `https://api.qrserver.com/v1/create-qr-code/?size=512x512&margin=2&data=${encodeURIComponent(t)}`,
-                      (t: string) => `https://quickchart.io/qr?size=512&margin=2&text=${encodeURIComponent(t)}`,
-                      (t: string) => `https://chart.googleapis.com/chart?cht=qr&chs=512x512&chld=L|2&chl=${encodeURIComponent(t)}`,
-                    ];
-                    if (displayUrl && providerIndex < providers.length - 1) {
-                      const next = providerIndex + 1;
-                      setProviderIndex(next);
-                      setImgUrl(providers[next](displayUrl));
-                    }
-                  }}
-                />
+      <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
+        <div className="flex max-h-[90vh] flex-col">
+          <div className="px-6 pt-6">
+            <DialogHeader>
+              <DialogTitle>QR code</DialogTitle>
+            </DialogHeader>
+          </div>
+
+          <div className="flex-1 overflow-y-auto px-6 pb-6">
+            <div className="grid gap-4">
+              {!displayUrl ? (
+                <p className="text-sm text-muted-foreground">No public display token is configured for this list.</p>
               ) : (
-                <div className="qr flex items-center justify-center">Generating…</div>
+                <>
+                  <div ref={printRef} className="wrap">
+                    <div className="title print:block hidden">{businessName ? `${businessName} – ${listName}` : listName}</div>
+                    {imgUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        id="qr-img"
+                        src={imgUrl}
+                        alt="QR code"
+                        className="qr"
+                        onError={() => {
+                          const providers = [
+                            (t: string) => `https://api.qrserver.com/v1/create-qr-code/?size=512x512&margin=2&data=${encodeURIComponent(t)}`,
+                            (t: string) => `https://quickchart.io/qr?size=512&margin=2&text=${encodeURIComponent(t)}`,
+                            (t: string) => `https://chart.googleapis.com/chart?cht=qr&chs=512x512&chld=L|2&chl=${encodeURIComponent(t)}`,
+                          ];
+                          if (displayUrl && providerIndex < providers.length - 1) {
+                            const next = providerIndex + 1;
+                            setProviderIndex(next);
+                            setImgUrl(providers[next](displayUrl));
+                          }
+                        }}
+                      />
+                    ) : (
+                      <div className="qr flex items-center justify-center">Generating…</div>
+                    )}
+                    {/* URL intentionally hidden per requirements */}
+                  </div>
+                </>
               )}
-              {/* URL intentionally hidden per requirements */}
             </div>
-          </>
-        )}
-      </div>
-        <DialogFooter>
-          <Button onClick={() => onPrint()}>Print</Button>
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-        </DialogFooter>
+          </div>
+
+          <div className="sticky bottom-0 border-t border-border bg-background/95 px-6 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+            <DialogFooter className="p-0">
+              <Button onClick={() => onPrint()}>Print</Button>
+              <Button variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+            </DialogFooter>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );

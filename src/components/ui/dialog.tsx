@@ -6,67 +6,25 @@ import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { XIcon } from "lucide-react"
-import { useIsMobile } from "@/hooks/use-mobile"
-import {
-    Drawer,
-    DrawerClose,
-    DrawerContent,
-    DrawerDescription,
-    DrawerFooter,
-    DrawerHeader,
-    DrawerTitle,
-    DrawerTrigger,
-} from "@/components/ui/drawer"
-
-const DialogVariantContext = React.createContext<{ isMobile: boolean } | null>(null)
-
-function useDialogVariant() {
-    const ctx = React.useContext(DialogVariantContext)
-    return ctx ?? { isMobile: false }
-}
-
-function Dialog({
-    ...props
-}: React.ComponentProps<typeof DialogPrimitive.Root>) {
-    const isMobile = useIsMobile()
-    if (isMobile) {
-        return (
-            <DialogVariantContext.Provider value={{ isMobile }}>
-                <Drawer data-slot="dialog" direction="bottom" {...(props as any)} />
-            </DialogVariantContext.Provider>
-        )
-    }
-    return (
-        <DialogVariantContext.Provider value={{ isMobile }}>
-            <DialogPrimitive.Root data-slot="dialog" {...props} />
-        </DialogVariantContext.Provider>
-    )
+function Dialog({ ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
+    return <DialogPrimitive.Root data-slot="dialog" {...props} />
 }
 
 function DialogTrigger({
     ...props
 }: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
-    const { isMobile } = useDialogVariant()
-    if (isMobile) {
-        return <DrawerTrigger data-slot="dialog-trigger" {...(props as any)} />
-    }
     return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />
 }
 
 function DialogPortal({
     ...props
 }: React.ComponentProps<typeof DialogPrimitive.Portal>) {
-    // No-op on mobile drawer; kept for API parity.
     return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />
 }
 
 function DialogClose({
     ...props
 }: React.ComponentProps<typeof DialogPrimitive.Close>) {
-    const { isMobile } = useDialogVariant()
-    if (isMobile) {
-        return <DrawerClose data-slot="dialog-close" {...(props as any)} />
-    }
     return <DialogPrimitive.Close data-slot="dialog-close" {...props} />
 }
 
@@ -74,7 +32,6 @@ function DialogOverlay({
     className,
     ...props
 }: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
-    // Drawer provides its own overlay; keep this for desktop only.
     return (
         <DialogPrimitive.Overlay
             data-slot="dialog-overlay"
@@ -92,27 +49,6 @@ function DialogContent({
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
     showCloseButton?: boolean
 }) {
-    const { isMobile } = useDialogVariant()
-    if (isMobile) {
-        return (
-            <DrawerContent
-                data-slot="dialog-content"
-                className={cn("gap-4 px-6 pb-6 pt-2", className)}
-                {...(props as any)}
-            >
-                {/* Close button (top-right) */}
-                {showCloseButton && (
-                    <DrawerClose asChild>
-                        <Button variant="ghost" className="absolute top-4 right-4" size="icon-sm">
-                            <XIcon />
-                            <span className="sr-only">Close</span>
-                        </Button>
-                    </DrawerClose>
-                )}
-                {children}
-            </DrawerContent>
-        )
-    }
     return (
         <DialogPortal>
             <DialogOverlay />
@@ -140,16 +76,6 @@ function DialogContent({
 }
 
 function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
-    const { isMobile } = useDialogVariant()
-    if (isMobile) {
-        return (
-            <DrawerHeader
-                data-slot="dialog-header"
-                className={cn("p-0 flex flex-col gap-1.5 text-center sm:text-left", className)}
-                {...(props as any)}
-            />
-        )
-    }
     return (
         <div
             data-slot="dialog-header"
@@ -167,22 +93,6 @@ function DialogFooter({
 }: React.ComponentProps<"div"> & {
     showCloseButton?: boolean
 }) {
-    const { isMobile } = useDialogVariant()
-    if (isMobile) {
-        return (
-            <DrawerFooter
-                data-slot="dialog-footer"
-                className={cn(
-                    // Mobile convention: primary first, cancel last (stacked).
-                    "gap-2 p-0 mt-0 flex flex-col",
-                    className
-                )}
-                {...(props as any)}
-            >
-                {children}
-            </DrawerFooter>
-        )
-    }
     return (
         <div
             data-slot="dialog-footer"
@@ -208,16 +118,6 @@ function DialogTitle({
     className,
     ...props
 }: React.ComponentProps<typeof DialogPrimitive.Title>) {
-    const { isMobile } = useDialogVariant()
-    if (isMobile) {
-        return (
-            <DrawerTitle
-                data-slot="dialog-title"
-                className={cn("text-lg font-semibold leading-none tracking-tight", className)}
-                {...(props as any)}
-            />
-        )
-    }
     return (
         <DialogPrimitive.Title
             data-slot="dialog-title"
@@ -231,16 +131,6 @@ function DialogDescription({
     className,
     ...props
 }: React.ComponentProps<typeof DialogPrimitive.Description>) {
-    const { isMobile } = useDialogVariant()
-    if (isMobile) {
-        return (
-            <DrawerDescription
-                data-slot="dialog-description"
-                className={cn("text-muted-foreground *:[a]:hover:text-foreground text-sm *:[a]:underline *:[a]:underline-offset-3", className)}
-                {...(props as any)}
-            />
-        )
-    }
     return (
         <DialogPrimitive.Description
             data-slot="dialog-description"

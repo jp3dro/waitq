@@ -9,7 +9,7 @@ import EditListButton from "./[id]/edit-list-button";
 import { toastManager } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { HoverClickTooltip } from "@/components/ui/hover-click-tooltip";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -121,8 +121,8 @@ export default function ListCard({
                   Closed
                 </Badge>
               ) : isLive ? (
-                <Tooltip>
-                  <TooltipTrigger asChild>
+                <HoverClickTooltip content={liveHelp} side="bottom">
+                  <button type="button" className="inline-flex items-center" aria-label="What does Live mean?">
                     <Badge
                       variant="secondary"
                       className="gap-1 text-xs bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-200 dark:ring-emerald-800 cursor-help"
@@ -133,9 +133,8 @@ export default function ListCard({
                       </span>
                       Live
                     </Badge>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">{liveHelp}</TooltipContent>
-                </Tooltip>
+                  </button>
+                </HoverClickTooltip>
               ) : null}
             </div>
             <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">

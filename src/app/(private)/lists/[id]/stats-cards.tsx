@@ -161,17 +161,17 @@ export default function StatsCards({ waitlistId }: { waitlistId: string }) {
   }, [waitlistId]);
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2 sm:gap-4">
-      <div className="col-span-2 sm:col-span-1 bg-primary/10 text-card-foreground ring-1 ring-primary rounded-xl p-2 sm:p-3">
-        <p className="text-[11px] sm:text-xs font-medium text-primary">Now serving</p>
+    <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+      <div className="sm:col-span-1 bg-primary/10 text-card-foreground ring-1 ring-border rounded-xl p-2 sm:p-3">
+        <p className="text-[11px] sm:text-xs font-medium text-primary">Last called</p>
         <p className="mt-0.5 text-lg sm:text-xl font-bold text-foreground">{servingNumbers || "—"}</p>
       </div>
       <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-2 sm:p-3">
-        <p className="text-[11px] sm:text-xs text-muted-foreground">Estimated wait</p>
+        <p className="text-[11px] sm:text-xs text-muted-foreground">Waiting time</p>
         <p className="mt-0.5 text-base sm:text-lg font-semibold">{etaDisplay || "—"}</p>
       </div>
       <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-2 sm:p-3">
-        <p className="text-[11px] sm:text-xs text-muted-foreground">Waiting</p>
+        <p className="text-[11px] sm:text-xs text-muted-foreground">Waiting queue</p>
         <p className="mt-0.5 text-base sm:text-lg font-semibold">{queueLength}</p>
       </div>
       <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-2 sm:p-3">

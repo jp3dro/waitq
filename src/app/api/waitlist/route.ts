@@ -10,6 +10,7 @@ import { normalizePhone } from "@/lib/phone";
 import { countEntriesInPeriod, countSmsInPeriod, getPlanContext } from "@/lib/plan-limits";
 import { getLocationOpenState, type RegularHours } from "@/lib/location-hours";
 import { buildWaitlistTicketEmailHtml } from "@/lib/email-templates";
+import { resolveCurrentBusinessId } from "@/lib/current-business";
 
 function getBulkGateMessageId(resp: unknown): string | null {
   const r = resp as { data?: Record<string, unknown> } | null | undefined;
@@ -68,7 +69,8 @@ async function calculateAndUpdateETA(admin: ReturnType<typeof getAdminClient>, w
 
 const schema = z.object({
   waitlistId: z.string().uuid(),
-  phone: z.string().optional().refine((val) => !val || val.length >= 8, "Phone must be at least 8 characters"),
+  // Phone is optional. We validate the actual number later via `normalizePhone`.
+  phone: z.string().optional(),
   customerName: z.string().optional(),
   email: z
     .string()
@@ -109,23 +111,28 @@ export async function POST(req: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  const businessId = await resolveCurrentBusinessId(supabase as any, user.id);
+  if (!businessId) return NextResponse.json({ error: "No business found" }, { status: 404 });
+
   const token = nanoid(16);
   const { waitlistId, phone, customerName, email, sendSms: shouldSendSms, sendWhatsapp: shouldSendWhatsapp, sendEmail: shouldSendEmail, partySize, seatingPreference } = parse.data;
   const normalizedEmail = typeof email === "string" && email.trim().length ? email.trim().toLowerCase() : undefined;
 
   // Look up business_id and settings from waitlist
-  const { data: w, error: wErr } = await supabase
+  const admin = getAdminClient();
+  const { data: w, error: wErr } = await admin
     .from("waitlists")
     .select("business_id, name, ask_name, ask_phone, ask_email, location_id")
     .eq("id", waitlistId)
-    .single();
+    .eq("business_id", businessId)
+    .maybeSingle();
   if (wErr) return NextResponse.json({ error: wErr.message }, { status: 400 });
+  if (!w) return NextResponse.json({ error: "Waitlist not found or access denied" }, { status: 404 });
 
   // Enforce location regular hours: do not accept new entries when closed.
   try {
     const locationId = (w as unknown as { location_id?: string | null }).location_id || null;
     if (locationId) {
-      const admin = getAdminClient();
       const { data: loc } = await admin
         .from("business_locations")
         .select("regular_hours, timezone")
@@ -153,16 +160,20 @@ export async function POST(req: NextRequest) {
       }
     }, { status: 400 });
   }
-  if (w.ask_phone !== false && !phone) {
+  // Phone is optional (even when configured to collect phone). Only require it if user opted into SMS/WhatsApp.
+  const rawPhone = typeof phone === "string" ? phone.trim() : "";
+  const digits = rawPhone.replace(/\D/g, "");
+  const hasMeaningfulPhone = digits.length >= 8; // avoid failing when the input only contains country prefix
+  const normalizedPhone = hasMeaningfulPhone ? normalizePhone(rawPhone) : null;
+  if ((shouldSendSms || shouldSendWhatsapp) && !normalizedPhone) {
     return NextResponse.json({
       error: {
-        fieldErrors: { phone: ["Phone is required"] },
-        message: "Phone is required"
+        fieldErrors: { phone: ["Phone is required to send SMS/WhatsApp"] },
+        message: "Phone is required to send SMS/WhatsApp",
       }
     }, { status: 400 });
   }
-  const normalizedPhone = normalizePhone(phone);
-  if (phone && !normalizedPhone) {
+  if (hasMeaningfulPhone && !normalizedPhone) {
     return NextResponse.json({
       error: {
         fieldErrors: { phone: ["Invalid phone number"] },
@@ -195,7 +206,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (normalizedPhone) {
-    const { data: existing } = await supabase
+    const { data: existing } = await admin
       .from("waitlist_entries")
       .select("id")
       .eq("waitlist_id", waitlistId)
@@ -209,7 +220,7 @@ export async function POST(req: NextRequest) {
     }
   }
   if (normalizedEmail) {
-    const { data: existing } = await supabase
+    const { data: existing } = await admin
       .from("waitlist_entries")
       .select("id")
       .eq("waitlist_id", waitlistId)
@@ -224,7 +235,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Compute next ticket number within this waitlist
-  const { data: maxRow } = await supabase
+  const { data: maxRow } = await admin
     .from("waitlist_entries")
     .select("ticket_number")
     .eq("waitlist_id", waitlistId)
@@ -249,7 +260,7 @@ export async function POST(req: NextRequest) {
     seating_preference: seatingPreference || null,
   };
 
-  let { data, error } = await supabase
+  let { data, error } = await admin
     .from("waitlist_entries")
     .insert(insertData)
     .select("id, token, ticket_number")
@@ -269,7 +280,7 @@ export async function POST(req: NextRequest) {
       seating_preference: seatingPreference || null,
     };
 
-    const retryResult = await supabase
+    const retryResult = await admin
       .from("waitlist_entries")
       .insert(insertData)
       .select("id, token, ticket_number")
@@ -283,7 +294,6 @@ export async function POST(req: NextRequest) {
   if (!data) return NextResponse.json({ error: "Failed to create entry" }, { status: 500 });
 
   // Calculate ETA for all entries in this waitlist
-  const admin = getAdminClient();
   await calculateAndUpdateETA(admin, waitlistId);
 
   const statusUrl = `${process.env.NEXT_PUBLIC_SITE_URL || ""}/w/${data.token}`;
@@ -292,7 +302,7 @@ export async function POST(req: NextRequest) {
   let businessName: string | null = null;
   if ((shouldSendSms || shouldSendWhatsapp || shouldSendEmail) && w.business_id) {
     try {
-      const { data: biz } = await supabase.from("businesses").select("name").eq("id", w.business_id).maybeSingle();
+      const { data: biz } = await admin.from("businesses").select("name").eq("id", w.business_id).maybeSingle();
       businessName = (biz?.name as string | undefined) ?? null;
     } catch { }
   }

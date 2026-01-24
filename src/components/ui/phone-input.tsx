@@ -21,6 +21,9 @@ const PhoneInputComponent = React.forwardRef<
                 defaultCountry={defaultCountry}
                 value={value}
                 onChange={(v) => onChange?.(v || "")}
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
                 className={cn(
                     "flex h-9 w-full items-center rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-[color,box-shadow] focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
                     "inner-phone-input",

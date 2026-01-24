@@ -28,7 +28,6 @@ export default function CreateListButton({ locations }: { locations: Location[] 
   const [displayEnabled, setDisplayEnabled] = useState(true);
   const [displayShowName, setDisplayShowName] = useState(true);
   const [displayShowQr, setDisplayShowQr] = useState(false);
-  const [seatingPrefs, setSeatingPrefs] = useState<string[]>([]);
   const [message, setMessage] = useState<string | null>(null);
 
   const reset = () => {
@@ -42,7 +41,6 @@ export default function CreateListButton({ locations }: { locations: Location[] 
     setDisplayEnabled(true);
     setDisplayShowName(true);
     setDisplayShowQr(false);
-    setSeatingPrefs([]);
     setMessage(null);
   };
 
@@ -68,7 +66,6 @@ export default function CreateListButton({ locations }: { locations: Location[] 
           askName,
           askPhone,
           askEmail,
-          seatingPreferences: seatingPrefs,
         }),
       });
       const j = await res.json().catch(() => ({}));
@@ -102,57 +99,63 @@ export default function CreateListButton({ locations }: { locations: Location[] 
           if (!v) reset();
         }}
       >
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Create list</DialogTitle>
-          </DialogHeader>
+        <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
+          <div className="flex max-h-[90vh] flex-col">
+            <div className="px-6 pt-6">
+              <DialogHeader>
+                <DialogTitle>Create list</DialogTitle>
+              </DialogHeader>
+            </div>
 
-          <>
-            <ListFormFields
-              name={name}
-              onNameChange={(v) => {
-                setName(v);
-                if (nameError && v.trim()) setNameError(false);
-              }}
-              nameError={nameError ? "Name is required." : null}
-              locationId={locationId}
-              onLocationChange={setLocationId}
-              locations={locations}
-              isPending={isPending}
-              askName={askName}
-              onAskNameChange={setAskName}
-              askPhone={askPhone}
-              onAskPhoneChange={setAskPhone}
-              askEmail={askEmail}
-              onAskEmailChange={setAskEmail}
-              displayEnabled={displayEnabled}
-              onDisplayEnabledChange={setDisplayEnabled}
-              displayShowName={displayShowName}
-              onDisplayShowNameChange={setDisplayShowName}
-              displayShowQr={displayShowQr}
-              onDisplayShowQrChange={setDisplayShowQr}
-              kioskEnabled={kioskEnabled}
-              onKioskEnabledChange={setKioskEnabled}
-              seatingPrefs={seatingPrefs}
-              onSeatingPrefsChange={setSeatingPrefs}
-            />
-            {message ? <p className="text-sm text-destructive">{message}</p> : null}
-          </>
+            <div className="flex-1 overflow-y-auto px-6 pb-6">
+              <div className="grid gap-4">
+                <ListFormFields
+                  name={name}
+                  onNameChange={(v) => {
+                    setName(v);
+                    if (nameError && v.trim()) setNameError(false);
+                  }}
+                  nameError={nameError ? "Name is required." : null}
+                  locationId={locationId}
+                  onLocationChange={setLocationId}
+                  locations={locations}
+                  isPending={isPending}
+                  askName={askName}
+                  onAskNameChange={setAskName}
+                  askPhone={askPhone}
+                  onAskPhoneChange={setAskPhone}
+                  askEmail={askEmail}
+                  onAskEmailChange={setAskEmail}
+                  displayEnabled={displayEnabled}
+                  onDisplayEnabledChange={setDisplayEnabled}
+                  displayShowName={displayShowName}
+                  onDisplayShowNameChange={setDisplayShowName}
+                  displayShowQr={displayShowQr}
+                  onDisplayShowQrChange={setDisplayShowQr}
+                  kioskEnabled={kioskEnabled}
+                  onKioskEnabledChange={setKioskEnabled}
+                />
+                {message ? <p className="text-sm text-destructive">{message}</p> : null}
+              </div>
+            </div>
 
-          <DialogFooter>
-            <Button disabled={isPending} onClick={onCreate}>
-              {isPending ? "Creating…" : "Create"}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setOpen(false);
-                reset();
-              }}
-            >
-              Cancel
-            </Button>
-          </DialogFooter>
+            <div className="sticky bottom-0 border-t border-border bg-background/95 px-6 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+              <DialogFooter className="p-0">
+                <Button disabled={isPending} onClick={onCreate}>
+                  {isPending ? "Creating…" : "Create"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setOpen(false);
+                    reset();
+                  }}
+                >
+                  Cancel
+                </Button>
+              </DialogFooter>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </>

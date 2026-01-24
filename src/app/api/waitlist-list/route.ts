@@ -79,18 +79,36 @@ export async function GET(req: Request) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
-  // Add visit counts (based on phone/email match) for admins/owners in list detail.
-  if (isAdmin && Array.isArray(data) && data.length > 0) {
+  // Add visit counts (based on phone/email match) for any active member.
+  // We compute using the admin client but only attach derived fields (visits_count / is_returning),
+  // without exposing phone/email to non-admin staff.
+  if (isActiveMember && Array.isArray(data) && data.length > 0) {
     try {
       const admin = getAdminClient();
       const seatedCache = new Map<string, number>();
       const anyCache = new Map<string, number>();
+
+      // Fetch phone/email for these entry ids (admin-only), to compute loyalty without leaking PII.
+      const ids = (data as any[]).map((e) => e.id).filter(Boolean);
+      const { data: piiRows } = await admin
+        .from("waitlist_entries")
+        .select("id, phone, email")
+        .in("id", ids);
+      const piiById = new Map<string, { phone: string | null; email: string | null }>();
+      (piiRows ?? []).forEach((r: any) => {
+        piiById.set(String(r.id), {
+          phone: typeof r.phone === "string" && r.phone.trim().length ? r.phone.trim() : null,
+          email: typeof r.email === "string" && r.email.trim().length ? r.email.trim() : null,
+        });
+      });
+
       const entriesWithCounts = await Promise.all(
         (data as any[]).map(async (e) => {
-          const phone = typeof e.phone === "string" && e.phone.trim().length ? e.phone.trim() : null;
-          const email = typeof e.email === "string" && e.email.trim().length ? e.email.trim() : null;
+          const pii = piiById.get(String(e.id));
+          const phone = pii?.phone ?? null;
+          const email = pii?.email ?? null;
           const key = `${phone || ""}::${email || ""}`;
-          if (!phone && !email) return { ...e, visits_count: 0 };
+          if (!phone && !email) return { ...e, visits_count: 0, is_returning: false };
           const cachedSeated = seatedCache.get(key);
           const cachedAny = anyCache.get(key);
           if (typeof cachedSeated === "number" && typeof cachedAny === "number") {

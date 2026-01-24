@@ -27,7 +27,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("business_locations")
-    .select("id, name, phone, address, city, seating_capacity, business_id, regular_hours, timezone, country_code, created_at")
+    .select("id, name, phone, address, city, seating_capacity, business_id, regular_hours, timezone, country_code, seating_preferences, created_at")
     .eq("business_id", businessId)
     .order("created_at", { ascending: true });
   if (error && (error.message.includes("column") || error.message.includes("schema cache"))) {
@@ -45,7 +45,7 @@ export async function GET() {
 
 const createSchema = z.object({
   businessId: z.string().uuid().optional(),
-  name: z.string().min(1),
+  name: z.string().min(1).max(30, "Name must be 30 characters or fewer"),
   phone: z.string().optional().nullable(),
   address: z.string().optional().nullable(),
   city: z.string().optional().nullable(),
@@ -53,6 +53,7 @@ const createSchema = z.object({
   regularHours: z.record(z.string(), z.array(z.object({ start: z.string(), end: z.string() }))).optional(),
   timezone: z.string().min(1).optional(),
   countryCode: z.string().min(2).max(2).optional(),
+  seatingPreferences: z.array(z.string()).optional().default([]),
 });
 
 export async function POST(req: NextRequest) {
@@ -66,7 +67,7 @@ export async function POST(req: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { name, phone, address, city, seatingCapacity, regularHours, timezone, countryCode } = parse.data;
+  const { name, phone, address, city, seatingCapacity, regularHours, timezone, countryCode, seatingPreferences } = parse.data;
   
   // Always resolve the correct business for this user (owned first, else membership)
   const businessId = await resolveCurrentBusinessId(supabase as any, user.id);
@@ -90,19 +91,20 @@ export async function POST(req: NextRequest) {
     seating_capacity: typeof seatingCapacity === "number" ? seatingCapacity : null,
     regular_hours: regularHours || DEFAULT_REGULAR_HOURS,
     timezone: timezone || "UTC",
+    seating_preferences: seatingPreferences || [],
   } as Record<string, unknown>;
 
   const attempt1 = await supabase
     .from("business_locations")
     .insert({ ...insertBase, country_code: countryCode || null })
-    .select("id, name, phone, address, city, seating_capacity, business_id, regular_hours, timezone, country_code")
+    .select("id, name, phone, address, city, seating_capacity, business_id, regular_hours, timezone, country_code, seating_preferences")
     .single();
 
   if (attempt1.error && isMissingColumnError(attempt1.error.message, "country_code")) {
     const attempt2 = await supabase
       .from("business_locations")
       .insert(insertBase)
-      .select("id, name, phone, address, city, seating_capacity, business_id, regular_hours, timezone")
+      .select("id, name, phone, address, city, seating_capacity, business_id, regular_hours, timezone, seating_preferences")
       .single();
     if (attempt2.error) return NextResponse.json({ error: attempt2.error.message }, { status: 400 });
     return NextResponse.json({ location: attempt2.data }, { status: 201 });
@@ -114,7 +116,7 @@ export async function POST(req: NextRequest) {
 
 const updateSchema = z.object({
   id: z.string().uuid(),
-  name: z.string().min(1).optional(),
+  name: z.string().min(1).max(30, "Name must be 30 characters or fewer").optional(),
   phone: z.string().optional().nullable(),
   address: z.string().optional().nullable(),
   city: z.string().optional().nullable(),
@@ -122,6 +124,7 @@ const updateSchema = z.object({
   regularHours: z.record(z.string(), z.array(z.object({ start: z.string(), end: z.string() }))).optional(),
   timezone: z.string().min(1).optional(),
   countryCode: z.string().min(2).max(2).optional(),
+  seatingPreferences: z.array(z.string()).optional(),
 });
 
 export async function PATCH(req: NextRequest) {
@@ -159,13 +162,14 @@ export async function PATCH(req: NextRequest) {
   if (typeof rest.regularHours !== "undefined") payload.regular_hours = rest.regularHours;
   if (typeof rest.timezone !== "undefined") payload.timezone = rest.timezone;
   if (typeof rest.countryCode !== "undefined") payload.country_code = rest.countryCode;
+  if (typeof rest.seatingPreferences !== "undefined") payload.seating_preferences = rest.seatingPreferences;
   if (Object.keys(payload).length === 0) return NextResponse.json({ error: "No fields to update" }, { status: 400 });
 
   const attempt1 = await supabase
     .from("business_locations")
     .update(payload)
     .eq("id", id)
-    .select("id, name, phone, address, city, seating_capacity, business_id, regular_hours, timezone, country_code")
+    .select("id, name, phone, address, city, seating_capacity, business_id, regular_hours, timezone, country_code, seating_preferences")
     .single();
   if (attempt1.error && isMissingColumnError(attempt1.error.message, "country_code")) {
     // Retry without the unsupported column
@@ -181,7 +185,7 @@ export async function PATCH(req: NextRequest) {
       .from("business_locations")
       .update(payload2)
       .eq("id", id)
-      .select("id, name, phone, address, city, seating_capacity, business_id, regular_hours, timezone")
+      .select("id, name, phone, address, city, seating_capacity, business_id, regular_hours, timezone, seating_preferences")
       .single();
     if (attempt2.error) return NextResponse.json({ error: attempt2.error.message }, { status: 400 });
     return NextResponse.json({ location: attempt2.data });

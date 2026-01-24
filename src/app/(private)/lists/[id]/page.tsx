@@ -13,9 +13,10 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { HoverClickTooltip } from "@/components/ui/hover-click-tooltip";
 import { getLocationOpenState, type RegularHours } from "@/lib/location-hours";
 import { resolveCurrentBusinessId } from "@/lib/current-business";
+import MobileListActions from "./mobile-actions";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const supabase = await createClient();
@@ -185,8 +186,8 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
                   Closed
                 </Badge>
               ) : isLive ? (
-                <Tooltip>
-                  <TooltipTrigger asChild>
+                <HoverClickTooltip content={liveHelp} side="bottom">
+                  <button type="button" className="inline-flex items-center" aria-label="What does Live mean?">
                     <Badge
                       variant="secondary"
                       className="gap-1 bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-200 dark:ring-emerald-800 cursor-help"
@@ -197,9 +198,8 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
                       </span>
                       Live
                     </Badge>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">{liveHelp}</TooltipContent>
-                </Tooltip>
+                  </button>
+                </HoverClickTooltip>
               ) : null}
               </div>
             </div>
@@ -208,63 +208,30 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
         </div>
 
         <div className="text-card-foreground rounded-xl space-y-6">
-          {/* Actions: mobile grid (xs/sm) */}
-          <div className="md:hidden grid gap-2">
-            <AddButton
-              defaultWaitlistId={wl.id}
-              lockWaitlist
-              businessCountry={businessCountry}
-              disabled={!locationIsOpen}
-              disabledReason="Restaurant is closed"
-              className="w-full justify-center"
-            />
-            <div className="grid grid-cols-2 gap-2">
-              <EditListButton
-                waitlistId={wl.id}
-                initialName={wl.name}
-                initialLocationId={
-                  wl.location_id ||
-                  (Array.isArray(wl.business_locations) ? wl.business_locations[0]?.id : wl.business_locations?.id)
-                }
-                initialKioskEnabled={!!wl.kiosk_enabled}
-                initialDisplayEnabled={wl.display_enabled !== false}
-                initialDisplayShowName={wl.display_show_name !== false}
-                initialDisplayShowQr={wl.display_show_qr === true}
-                initialAskName={wl.ask_name !== false}
-                initialAskPhone={wl.ask_phone !== false}
-                initialAskEmail={wl.ask_email === true}
-                initialSeatingPreferences={wl.seating_preferences || []}
-                locations={typedLocations}
-                buttonClassName="w-full justify-center"
-              />
-              <ClearWaitlistButton
-                waitlistId={wl.id}
-                displayToken={wl.display_token}
-                variant="button"
-                className="w-full justify-center"
-              />
-              {wl.display_token && wl.display_enabled !== false ? (
-                <>
-                  <Button asChild variant="outline" size="sm" className="w-full justify-center">
-                    <a
-                      href={`/display/${encodeURIComponent(wl.display_token)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Public display
-                    </a>
-                  </Button>
-                  <QRCodeButton
-                    listName={wl.name}
-                    displayToken={wl.display_token}
-                    businessName={businessName}
-                    variant="button"
-                    className="w-full justify-center"
-                  />
-                </>
-              ) : null}
-            </div>
-          </div>
+          {/* Actions: mobile (xs/sm) */}
+          <MobileListActions
+            waitlistId={wl.id}
+            waitlistName={wl.name}
+            locationId={
+              wl.location_id ||
+              (Array.isArray(wl.business_locations) ? wl.business_locations[0]?.id : wl.business_locations?.id) ||
+              ""
+            }
+            kioskEnabled={!!wl.kiosk_enabled}
+            displayEnabled={wl.display_enabled !== false}
+            displayShowName={wl.display_show_name !== false}
+            displayShowQr={wl.display_show_qr === true}
+            askName={wl.ask_name !== false}
+            askPhone={wl.ask_phone !== false}
+            askEmail={wl.ask_email === true}
+            seatingPreferences={wl.seating_preferences || []}
+            displayToken={wl.display_token}
+            businessName={businessName}
+            businessCountry={businessCountry}
+            disabled={!locationIsOpen}
+            disabledReason="Restaurant is closed"
+            locations={typedLocations}
+          />
 
           {/* Actions: desktop row (md+) */}
           <div className="hidden md:flex items-center justify-between gap-4">

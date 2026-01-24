@@ -392,89 +392,109 @@ export default function UsersClient() {
 
       {/* Invite Modal */}
       <Dialog open={invOpen} onOpenChange={setInvOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Invite user</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-3">
-            <div className="grid gap-2">
-              <Label>Name</Label>
-              <Input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" />
+        <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
+          <div className="flex max-h-[90vh] flex-col">
+            <div className="px-6 pt-6">
+              <DialogHeader>
+                <DialogTitle>Invite user</DialogTitle>
+              </DialogHeader>
             </div>
-            <div className="grid gap-2">
-              <Label>Email</Label>
-              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="user@example.com" />
+
+            <div className="flex-1 overflow-y-auto px-6 pb-6">
+              <div className="grid gap-3">
+                <div className="grid gap-2">
+                  <Label>Name</Label>
+                  <Input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" />
+                </div>
+                <div className="grid gap-2">
+                  <Label>Email</Label>
+                  <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="user@example.com" />
+                </div>
+                <div className="grid gap-2">
+                  <Label>Role</Label>
+                  <Select value={role} onValueChange={(v) => setRole(v as any)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="staff">Staff</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
-            <div className="grid gap-2">
-              <Label>Role</Label>
-              <Select value={role} onValueChange={(v) => setRole(v as any)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="staff">Staff</SelectItem>
-                </SelectContent>
-              </Select>
+
+            <div className="sticky bottom-0 border-t border-border bg-background/95 px-6 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+              <DialogFooter className="p-0">
+                <Button type="button" disabled={isPending} onClick={invite}>
+                  {isPending ? "Sending..." : "Invite"}
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setInvOpen(false)}>Cancel</Button>
+              </DialogFooter>
             </div>
           </div>
-          <DialogFooter>
-            <Button type="button" disabled={isPending} onClick={invite}>
-              {isPending ? "Sending..." : "Invite"}
-            </Button>
-            <Button type="button" variant="outline" onClick={() => setInvOpen(false)}>Cancel</Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 
        {/* Edit Modal */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Edit user</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-3">
-            <div className="grid gap-2">
-              <Label>Name</Label>
-              <Input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Full name" />
+        <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
+          <div className="flex max-h-[90vh] flex-col">
+            <div className="px-6 pt-6">
+              <DialogHeader>
+                <DialogTitle>Edit user</DialogTitle>
+              </DialogHeader>
             </div>
-            <div className="grid gap-2">
-              <Label>Email</Label>
-              <Input
-                type="email"
-                value={editingMember?.email || editingMember?.user_id || ""}
-                disabled
-              />
-              <p className="text-xs text-muted-foreground">E-mail addresses can't be modified.</p>
-            </div>
-            <div className="grid gap-2">
-              <Label>Role</Label>
-              {editingMember?.role === "admin" ? (
-                <div className="text-sm text-muted-foreground rounded-md border border-border bg-muted/50 px-3 py-2">
-                  Owner / Admin
+
+            <div className="flex-1 overflow-y-auto px-6 pb-6">
+              <div className="grid gap-3">
+                <div className="grid gap-2">
+                  <Label>Name</Label>
+                  <Input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Full name" />
                 </div>
-              ) : (
-                <Select value={editRole} onValueChange={(v) => setEditRole(v as any)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="staff">Staff</SelectItem>
-                  </SelectContent>
-                </Select>
-              )}
-              {editingMember?.role === "admin" ? (
-                <p className="text-xs text-muted-foreground">Owner role cannot be changed.</p>
-              ) : null}
+                <div className="grid gap-2">
+                  <Label>Email</Label>
+                  <Input
+                    type="email"
+                    value={editingMember?.email || editingMember?.user_id || ""}
+                    disabled
+                  />
+                  <p className="text-xs text-muted-foreground">E-mail addresses can't be modified.</p>
+                </div>
+                <div className="grid gap-2">
+                  <Label>Role</Label>
+                  {editingMember?.role === "admin" ? (
+                    <div className="text-sm text-muted-foreground rounded-md border border-border bg-muted/50 px-3 py-2">
+                      Owner / Admin
+                    </div>
+                  ) : (
+                    <Select value={editRole} onValueChange={(v) => setEditRole(v as any)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="staff">Staff</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                  {editingMember?.role === "admin" ? (
+                    <p className="text-xs text-muted-foreground">Owner role cannot be changed.</p>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+
+            <div className="sticky bottom-0 border-t border-border bg-background/95 px-6 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+              <DialogFooter className="p-0">
+                <Button type="button" disabled={isPending} onClick={saveEdit}>
+                  {isPending ? "Saving..." : "Save changes"}
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
+              </DialogFooter>
             </div>
           </div>
-          <DialogFooter>
-            <Button type="button" disabled={isPending} onClick={saveEdit}>
-              {isPending ? "Saving..." : "Save changes"}
-            </Button>
-            <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 

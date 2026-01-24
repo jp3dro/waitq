@@ -125,6 +125,8 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -157,6 +159,7 @@ button { cursor: pointer; }
 html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  touch-action: manipulation; /* Only allows scrolling and tapping */
 }
 
 /* Subtle row flash on new entries */
@@ -279,4 +282,13 @@ input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
   border-color: var(--ring);
+}
+
+/* Prevent iOS Safari zoom on focus: keep inputs >= 16px on mobile */
+@media (max-width: 640px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
 }

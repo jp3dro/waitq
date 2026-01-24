@@ -14,8 +14,6 @@ import ListFormFields from "@/app/(private)/lists/list-form-fields";
 
 type Location = { id: string; name: string };
 
-const EMPTY_SEATING: string[] = [];
-
 export default function EditListButton({
   waitlistId,
   initialName,
@@ -25,7 +23,7 @@ export default function EditListButton({
   initialAskName = true,
   initialAskPhone = true,
   initialAskEmail = false,
-  initialSeatingPreferences,
+  initialSeatingPreferences = [],
   initialDisplayEnabled = true,
   initialDisplayShowName = true,
   initialDisplayShowQr = false,
@@ -46,7 +44,7 @@ export default function EditListButton({
   initialAskName?: boolean;
   initialAskPhone?: boolean;
   initialAskEmail?: boolean;
-  initialSeatingPreferences?: string[] | null;
+  initialSeatingPreferences?: string[];
   triggerId?: string;
   hideTrigger?: boolean;
   buttonClassName?: string;
@@ -63,7 +61,6 @@ export default function EditListButton({
   const [askName, setAskName] = useState<boolean>(initialAskName);
   const [askPhone, setAskPhone] = useState<boolean>(initialAskPhone);
   const [askEmail, setAskEmail] = useState<boolean>(initialAskEmail);
-  const [seatingPrefs, setSeatingPrefs] = useState<string[]>(initialSeatingPreferences ?? EMPTY_SEATING);
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const router = useRouter();
@@ -93,11 +90,10 @@ export default function EditListButton({
         setAskName(initialAskName);
         setAskPhone(initialAskPhone);
         setAskEmail(initialAskEmail);
-        setSeatingPrefs(initialSeatingPreferences ?? EMPTY_SEATING);
         setMessage(null);
       }
     }
-  }, [controlledOpen, initialName, initialLocationId, initialKioskEnabled, initialDisplayEnabled, initialDisplayShowName, initialDisplayShowQr, initialAskName, initialAskPhone, initialAskEmail, initialSeatingPreferences, locations]);
+  }, [controlledOpen, initialName, initialLocationId, initialKioskEnabled, initialDisplayEnabled, initialDisplayShowName, initialDisplayShowQr, initialAskName, initialAskPhone, initialAskEmail, locations]);
 
   const open = typeof controlledOpen === "boolean" ? controlledOpen : internalOpen;
   // Radix Dialog may re-run effects when `onOpenChange` identity changes.
@@ -121,7 +117,6 @@ export default function EditListButton({
     setAskName(initialAskName);
     setAskPhone(initialAskPhone);
     setAskEmail(initialAskEmail);
-    setSeatingPrefs(initialSeatingPreferences ?? EMPTY_SEATING);
     setMessage(null);
   };
 
@@ -136,14 +131,13 @@ export default function EditListButton({
     setAskName(initialAskName);
     setAskPhone(initialAskPhone);
     setAskEmail(initialAskEmail);
-    setSeatingPrefs(initialSeatingPreferences ?? EMPTY_SEATING);
     setMessage(null);
   };
 
   const save = () => {
     setMessage(null);
     startTransition(async () => {
-      const payload: { id: string; name?: string; locationId?: string; kioskEnabled?: boolean; displayEnabled?: boolean; displayShowName?: boolean; displayShowQr?: boolean; askName?: boolean; askPhone?: boolean; askEmail?: boolean; seatingPreferences?: string[] } = { id: waitlistId };
+      const payload: { id: string; name?: string; locationId?: string; kioskEnabled?: boolean; displayEnabled?: boolean; displayShowName?: boolean; displayShowQr?: boolean; askName?: boolean; askPhone?: boolean; askEmail?: boolean } = { id: waitlistId };
 
       // Only include fields that have changed
       if (name !== initialName) {
@@ -159,13 +153,6 @@ export default function EditListButton({
       payload.askName = askName;
       payload.askPhone = askPhone;
       payload.askEmail = askEmail;
-
-      // Compare arrays for seating preferences
-      const sameSeating =
-        JSON.stringify([...seatingPrefs].sort()) === JSON.stringify([...(initialSeatingPreferences || [])].sort());
-      if (!sameSeating) {
-        payload.seatingPreferences = seatingPrefs;
-      }
 
       // If no fields changed, just close modal and show success
       if (Object.keys(payload).length === 1) {
@@ -217,46 +204,54 @@ export default function EditListButton({
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Edit list</DialogTitle>
-          </DialogHeader>
+        <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
+          <div className="flex max-h-[90vh] flex-col">
+            <div className="px-6 pt-6">
+              <DialogHeader>
+                <DialogTitle>Edit list</DialogTitle>
+              </DialogHeader>
+            </div>
 
-          <ListFormFields
-            name={name}
-            onNameChange={setName}
-            nameError={null}
-            locationId={locationId}
-            onLocationChange={setLocationId}
-            locations={locations}
-            isPending={isPending}
-            askName={askName}
-            onAskNameChange={setAskName}
-            askPhone={askPhone}
-            onAskPhoneChange={setAskPhone}
-            askEmail={askEmail}
-            onAskEmailChange={setAskEmail}
-            displayEnabled={displayEnabled}
-            onDisplayEnabledChange={setDisplayEnabled}
-            displayShowName={displayShowName}
-            onDisplayShowNameChange={setDisplayShowName}
-            displayShowQr={displayShowQr}
-            onDisplayShowQrChange={setDisplayShowQr}
-            kioskEnabled={kioskEnabled}
-            onKioskEnabledChange={setKioskEnabled}
-            seatingPrefs={seatingPrefs}
-            onSeatingPrefsChange={setSeatingPrefs}
-          />
-          {message ? <p className="text-sm text-destructive">{message}</p> : null}
+            <div className="flex-1 overflow-y-auto px-6 pb-6">
+              <div className="grid gap-4">
+                <ListFormFields
+                  name={name}
+                  onNameChange={setName}
+                  nameError={null}
+                  locationId={locationId}
+                  onLocationChange={setLocationId}
+                  locations={locations}
+                  isPending={isPending}
+                  askName={askName}
+                  onAskNameChange={setAskName}
+                  askPhone={askPhone}
+                  onAskPhoneChange={setAskPhone}
+                  askEmail={askEmail}
+                  onAskEmailChange={setAskEmail}
+                  displayEnabled={displayEnabled}
+                  onDisplayEnabledChange={setDisplayEnabled}
+                  displayShowName={displayShowName}
+                  onDisplayShowNameChange={setDisplayShowName}
+                  displayShowQr={displayShowQr}
+                  onDisplayShowQrChange={setDisplayShowQr}
+                  kioskEnabled={kioskEnabled}
+                  onKioskEnabledChange={setKioskEnabled}
+                />
+                {message ? <p className="text-sm text-destructive">{message}</p> : null}
+              </div>
+            </div>
 
-          <DialogFooter>
-            <Button disabled={isPending} onClick={save}>
-              {isPending ? "Saving…" : "Save changes"}
-            </Button>
-            <Button onClick={closeModal} variant="outline">
-              Cancel
-            </Button>
-          </DialogFooter>
+            <div className="sticky bottom-0 border-t border-border bg-background/95 px-6 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+              <DialogFooter className="p-0">
+                <Button disabled={isPending} onClick={save}>
+                  {isPending ? "Saving…" : "Save changes"}
+                </Button>
+                <Button onClick={closeModal} variant="outline">
+                  Cancel
+                </Button>
+              </DialogFooter>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </>

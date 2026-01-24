@@ -31,6 +31,7 @@ type Location = {
   regular_hours?: RegularHours | null;
   timezone?: string | null;
   country_code?: string | null;
+  seating_preferences?: string[] | null;
 };
 
 type LocationUpdatePayload = {
@@ -42,7 +43,10 @@ type LocationUpdatePayload = {
   timezone?: string;
   countryCode?: string;
   regularHours?: RegularHours;
+  seatingPreferences?: string[];
 };
+
+const MAX_LOCATION_NAME_LEN = 30;
 
 const dayOptions: { key: DayKey; label: string }[] = [
   { key: "sun", label: "Sun" },
@@ -140,7 +144,7 @@ function TimeField({
   return (
     <div className="flex items-center gap-1.5">
       <select
-        className="h-9 w-[64px] rounded-md border border-input bg-background px-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        className="h-9 w-[64px] rounded-md border border-input bg-background px-2 text-base md:text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         value={String(hour12)}
         onChange={(e) => onChange(toHHMM(Number(e.target.value), safeM, ampm))}
       >
@@ -152,7 +156,7 @@ function TimeField({
       </select>
       <span className="text-sm text-muted-foreground">:</span>
       <select
-        className="h-9 w-[64px] rounded-md border border-input bg-background px-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        className="h-9 w-[64px] rounded-md border border-input bg-background px-2 text-base md:text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         value={String(safeM).padStart(2, "0")}
         onChange={(e) => onChange(toHHMM(hour12, Number(e.target.value), ampm))}
       >
@@ -163,7 +167,7 @@ function TimeField({
         ))}
       </select>
       <select
-        className="h-9 w-[72px] rounded-md border border-input bg-background px-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        className="h-9 w-[72px] rounded-md border border-input bg-background px-2 text-base md:text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         value={ampm}
         onChange={(e) => onChange(toHHMM(hour12, safeM, e.target.value as "AM" | "PM"))}
       >
@@ -288,6 +292,40 @@ function RegularHoursEditor({
   );
 }
 
+function SeatingPrefsEditor({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
+  const [input, setInput] = useState("");
+  const add = () => {
+    const v = input.trim();
+    if (!v) return;
+    if (value.includes(v)) return;
+    onChange([...value, v]);
+    setInput("");
+  };
+  const remove = (v: string) => onChange(value.filter((x) => x !== v));
+  return (
+    <div className="grid gap-2">
+      <div className="flex gap-2">
+        <Input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Add seating preference" />
+        <Button type="button" onClick={add} size="sm">
+          Add
+        </Button>
+      </div>
+      {value.length ? (
+        <ul className="flex flex-wrap gap-2">
+          {value.map((v) => (
+            <li key={v} className="inline-flex items-center gap-2 rounded-full ring-1 ring-inset ring-border px-3 py-1 text-xs">
+              <span>{v}</span>
+              <button type="button" onClick={() => remove(v)} className="text-muted-foreground hover:opacity-90">
+                ✕
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
+  );
+}
+
 export default function LocationsPage() {
   const [locations, setLocations] = useState<Location[]>([]);
   const [isPending, startTransition] = useTransition();
@@ -311,6 +349,7 @@ export default function LocationsPage() {
   });
   const [formRegularHours, setFormRegularHours] = useState<RegularHours>(DEFAULT_REGULAR_HOURS);
   const [formHoursErrors, setFormHoursErrors] = useState<Record<DayKey, string | null>>(validateRegularHours(DEFAULT_REGULAR_HOURS));
+  const [formSeatingPrefs, setFormSeatingPrefs] = useState<string[]>([]);
   const [openCreate, setOpenCreate] = useState(false);
   const [edit, setEdit] = useState<Location | null>(null);
   const [editForm, setEditForm] = useState<{ name: string; phone: string; address: string; city: string; seatingCapacity: string; timezone: string; countryCode: string }>({
@@ -326,6 +365,8 @@ export default function LocationsPage() {
   const [initialRegularHours, setInitialRegularHours] = useState<RegularHours>(DEFAULT_REGULAR_HOURS);
   const [hoursErrors, setHoursErrors] = useState<Record<DayKey, string | null>>(validateRegularHours(DEFAULT_REGULAR_HOURS));
   const [editMessage, setEditMessage] = useState<string | null>(null);
+  const [editSeatingPrefs, setEditSeatingPrefs] = useState<string[]>([]);
+  const [initialSeatingPrefs, setInitialSeatingPrefs] = useState<string[]>([]);
   const [businessCountry, setBusinessCountry] = useState<Country>("PT");
   const [timeFormat, setTimeFormat] = useState<TimeFormat>("24h");
 
@@ -422,6 +463,7 @@ export default function LocationsPage() {
     });
     setFormRegularHours(DEFAULT_REGULAR_HOURS);
     setFormHoursErrors(validateRegularHours(DEFAULT_REGULAR_HOURS));
+    setFormSeatingPrefs([]);
   }, [openCreate, businessCountry, resolveTimezone]);
 
   const canDelete = useMemo(() => locations.length > 1, [locations.length]);
@@ -472,6 +514,7 @@ export default function LocationsPage() {
           countryCode: form.countryCode || businessCountry,
           timezone: resolveTimezone(form.countryCode || businessCountry, form.timezone.trim()),
           regularHours: formRegularHours,
+          seatingPreferences: formSeatingPrefs,
         }),
       });
       const j = await res.json().catch(() => ({}));
@@ -479,6 +522,7 @@ export default function LocationsPage() {
         setForm({ name: "", phone: "", address: "", city: "", seatingCapacity: "", timezone: "", countryCode: "" });
         setFormRegularHours(DEFAULT_REGULAR_HOURS);
         setFormHoursErrors(validateRegularHours(DEFAULT_REGULAR_HOURS));
+        setFormSeatingPrefs([]);
         setOpenCreate(false);
         await load();
       } else {
@@ -511,6 +555,9 @@ export default function LocationsPage() {
     setEditRegularHours(baseHours);
     setInitialRegularHours(baseHours);
     setHoursErrors(validateRegularHours(baseHours));
+    const basePrefs = location.seating_preferences || [];
+    setEditSeatingPrefs(basePrefs);
+    setInitialSeatingPrefs(basePrefs);
     setEditMessage(null);
   };
 
@@ -520,6 +567,8 @@ export default function LocationsPage() {
     setEditRegularHours(DEFAULT_REGULAR_HOURS);
     setInitialRegularHours(DEFAULT_REGULAR_HOURS);
     setHoursErrors(validateRegularHours(DEFAULT_REGULAR_HOURS));
+    setEditSeatingPrefs([]);
+    setInitialSeatingPrefs([]);
     setEditMessage(null);
     setEditNameError(null);
     setEditSeatingError(null);
@@ -579,6 +628,9 @@ export default function LocationsPage() {
       }
       if (JSON.stringify(editRegularHours) !== JSON.stringify(initialRegularHours)) {
         updates.regularHours = editRegularHours;
+      }
+      if (JSON.stringify(editSeatingPrefs) !== JSON.stringify(initialSeatingPrefs)) {
+        updates.seatingPreferences = editSeatingPrefs;
       }
 
       // If no fields changed, just close modal and show success
@@ -712,117 +764,138 @@ export default function LocationsPage() {
             if (!next) setOpenCreate(false);
           }}
         >
-          <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col">
-            <DialogHeader>
-              <DialogTitle>New location</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 overflow-y-auto pr-1">
-              {msg ? <p className="text-sm text-destructive">{msg}</p> : null}
-              <div className="grid gap-2">
-                <Label>Name</Label>
-                <Input
-                  value={form.name}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setForm((f) => ({ ...f, name: v }));
-                    if (formNameError && v.trim()) setFormNameError(null);
-                  }}
-                  aria-invalid={formNameError ? true : undefined}
-                  className={formNameError ? "border-destructive focus-visible:ring-destructive" : undefined}
-                />
-                {formNameError ? <p className="text-xs text-destructive">{formNameError}</p> : null}
+          <DialogContent className="sm:max-w-4xl p-0 overflow-hidden">
+            <div className="flex max-h-[90vh] flex-col">
+              <div className="px-6 pt-6">
+                <DialogHeader>
+                  <DialogTitle>New location</DialogTitle>
+                </DialogHeader>
               </div>
-              <div className="grid gap-2">
-                <Label>Phone</Label>
-                <PhoneInput
-                  defaultCountry={businessCountry}
-                  value={form.phone}
-                  onChange={(v: string) => setForm((f) => ({ ...f, phone: v }))}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label>Seating capacity</Label>
-                <Input
-                  inputMode="numeric"
-                  value={form.seatingCapacity}
-                  onChange={(e) => setForm((f) => ({ ...f, seatingCapacity: e.target.value }))}
-                  placeholder="e.g. 80"
-                  aria-invalid={formSeatingError ? true : undefined}
-                  className={formSeatingError ? "border-destructive focus-visible:ring-destructive" : undefined}
-                />
-                {formSeatingError ? <p className="text-xs text-destructive">{formSeatingError}</p> : null}
-              </div>
-              <div className="grid gap-2">
-                <Label>Address</Label>
-                <Input
-                  value={form.address}
-                  onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label>City</Label>
-                <Input
-                  value={form.city}
-                  onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
-                />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="grid gap-2">
-                  <Label>Country</Label>
-                  <Select
-                    value={form.countryCode || businessCountry}
-                    onValueChange={(value) => {
-                      const nextTimezone = resolveTimezone(value, form.timezone);
-                      setForm((f) => ({ ...f, countryCode: value, timezone: nextTimezone }));
-                    }}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select country" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {countryOptions.map((country) => (
-                        <SelectItem key={country.code} value={country.code}>
-                          {country.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+
+              <div className="flex-1 overflow-y-auto px-6 pb-6">
+                <div className="grid gap-4">
+                  {msg ? <p className="text-sm text-destructive">{msg}</p> : null}
+                  <div className="grid gap-2">
+                    <div className="flex items-center justify-between gap-3">
+                      <Label>Name</Label>
+                      <span className="text-xs text-muted-foreground tabular-nums">
+                        {Math.max(0, MAX_LOCATION_NAME_LEN - form.name.length)} left
+                      </span>
+                    </div>
+                    <Input
+                      value={form.name}
+                      maxLength={MAX_LOCATION_NAME_LEN}
+                      onChange={(e) => {
+                        const v = e.target.value.slice(0, MAX_LOCATION_NAME_LEN);
+                        setForm((f) => ({ ...f, name: v }));
+                        if (formNameError && v.trim()) setFormNameError(null);
+                      }}
+                      aria-invalid={formNameError ? true : undefined}
+                      className={formNameError ? "border-destructive focus-visible:ring-destructive" : undefined}
+                    />
+                    <p className="text-xs text-muted-foreground tabular-nums">{form.name.length}/{MAX_LOCATION_NAME_LEN}</p>
+                    {formNameError ? <p className="text-xs text-destructive">{formNameError}</p> : null}
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Phone</Label>
+                    <PhoneInput
+                      defaultCountry={businessCountry}
+                      value={form.phone}
+                      onChange={(v: string) => setForm((f) => ({ ...f, phone: v }))}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Seating capacity</Label>
+                    <Input
+                      inputMode="numeric"
+                      value={form.seatingCapacity}
+                      onChange={(e) => setForm((f) => ({ ...f, seatingCapacity: e.target.value }))}
+                      placeholder="e.g. 80"
+                      aria-invalid={formSeatingError ? true : undefined}
+                      className={formSeatingError ? "border-destructive focus-visible:ring-destructive" : undefined}
+                    />
+                    {formSeatingError ? <p className="text-xs text-destructive">{formSeatingError}</p> : null}
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Address</Label>
+                    <Input
+                      value={form.address}
+                      onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>City</Label>
+                    <Input
+                      value={form.city}
+                      onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="grid gap-2">
+                      <Label>Country</Label>
+                      <Select
+                        value={form.countryCode || businessCountry}
+                        onValueChange={(value) => {
+                          const nextTimezone = resolveTimezone(value, form.timezone);
+                          setForm((f) => ({ ...f, countryCode: value, timezone: nextTimezone }));
+                        }}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select country" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {countryOptions.map((country) => (
+                            <SelectItem key={country.code} value={country.code}>
+                              {country.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label>Timezone</Label>
+                      <Select
+                        value={form.timezone}
+                        onValueChange={(value) => setForm((f) => ({ ...f, timezone: value }))}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select timezone" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {getTimezoneOptions(form.countryCode || businessCountry, form.timezone).map((tz) => (
+                            <SelectItem key={tz.name} value={tz.name}>
+                              {tz.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <RegularHoursEditor
+                    hours={formRegularHours}
+                    onChange={setFormRegularHours}
+                    errors={formHoursErrors}
+                    setErrors={setFormHoursErrors}
+                    timeFormat={timeFormat}
+                  />
+                  <div className="grid gap-2">
+                    <Label>Seating preferences</Label>
+                    <SeatingPrefsEditor value={formSeatingPrefs} onChange={setFormSeatingPrefs} />
+                  </div>
                 </div>
-                <div className="grid gap-2">
-                  <Label>Timezone</Label>
-                  <Select
-                    value={form.timezone}
-                    onValueChange={(value) => setForm((f) => ({ ...f, timezone: value }))}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select timezone" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {getTimezoneOptions(form.countryCode || businessCountry, form.timezone).map((tz) => (
-                        <SelectItem key={tz.name} value={tz.name}>
-                          {tz.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
-              <RegularHoursEditor
-                hours={formRegularHours}
-                onChange={setFormRegularHours}
-                errors={formHoursErrors}
-                setErrors={setFormHoursErrors}
-                timeFormat={timeFormat}
-              />
+
+              <div className="sticky bottom-0 border-t border-border bg-background/95 px-6 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                <DialogFooter className="p-0">
+                  <Button type="button" onClick={create} disabled={isPending}>
+                    Create
+                  </Button>
+                  <Button type="button" variant="outline" onClick={() => setOpenCreate(false)}>
+                    Cancel
+                  </Button>
+                </DialogFooter>
+              </div>
             </div>
-            <DialogFooter>
-              <Button type="button" onClick={create} disabled={isPending}>
-                Create
-              </Button>
-              <Button type="button" variant="outline" onClick={() => setOpenCreate(false)}>
-                Cancel
-              </Button>
-            </DialogFooter>
           </DialogContent>
         </Dialog>
 
@@ -842,117 +915,138 @@ export default function LocationsPage() {
             if (!open) closeEditModal();
           }}
         >
-          <DialogContent className="sm:max-w-xl max-h-[90vh] flex flex-col">
-            <DialogHeader>
-              <DialogTitle>Edit location</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 overflow-y-auto pr-1">
-              {editMessage ? <p className="text-sm text-destructive">{editMessage}</p> : null}
-              <div className="grid gap-2">
-                <Label>Name</Label>
-                <Input
-                  value={editForm.name}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setEditForm((f) => ({ ...f, name: v }));
-                    if (editNameError && v.trim()) setEditNameError(null);
-                  }}
-                  aria-invalid={editNameError ? true : undefined}
-                  className={editNameError ? "border-destructive focus-visible:ring-destructive" : undefined}
-                />
-                {editNameError ? <p className="text-xs text-destructive">{editNameError}</p> : null}
+          <DialogContent className="sm:max-w-xl p-0 overflow-hidden">
+            <div className="flex max-h-[90vh] flex-col">
+              <div className="px-6 pt-6">
+                <DialogHeader>
+                  <DialogTitle>Edit location</DialogTitle>
+                </DialogHeader>
               </div>
-              <div className="grid gap-2">
-                <Label>Phone</Label>
-                <PhoneInput
-                  defaultCountry={businessCountry}
-                  value={editForm.phone}
-                  onChange={(v: string) => setEditForm((f) => ({ ...f, phone: v }))}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label>Seating capacity</Label>
-                <Input
-                  inputMode="numeric"
-                  value={editForm.seatingCapacity}
-                  onChange={(e) => setEditForm((f) => ({ ...f, seatingCapacity: e.target.value }))}
-                  placeholder="e.g. 80"
-                  aria-invalid={editSeatingError ? true : undefined}
-                  className={editSeatingError ? "border-destructive focus-visible:ring-destructive" : undefined}
-                />
-                {editSeatingError ? <p className="text-xs text-destructive">{editSeatingError}</p> : null}
-              </div>
-              <div className="grid gap-2">
-                <Label>Address</Label>
-                <Input
-                  value={editForm.address}
-                  onChange={(e) => setEditForm((f) => ({ ...f, address: e.target.value }))}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label>City</Label>
-                <Input
-                  value={editForm.city}
-                  onChange={(e) => setEditForm((f) => ({ ...f, city: e.target.value }))}
-                />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="grid gap-2">
-                  <Label>Country</Label>
-                  <Select
-                    value={editForm.countryCode || businessCountry}
-                    onValueChange={(value) => {
-                      const nextTimezone = resolveTimezone(value, editForm.timezone);
-                      setEditForm((f) => ({ ...f, countryCode: value, timezone: nextTimezone }));
-                    }}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select country" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {countryOptions.map((country) => (
-                        <SelectItem key={country.code} value={country.code}>
-                          {country.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+
+              <div className="flex-1 overflow-y-auto px-6 pb-6">
+                <div className="grid gap-4">
+                  {editMessage ? <p className="text-sm text-destructive">{editMessage}</p> : null}
+                  <div className="grid gap-2">
+                    <div className="flex items-center justify-between gap-3">
+                      <Label>Name</Label>
+                      <span className="text-xs text-muted-foreground tabular-nums">
+                        {Math.max(0, MAX_LOCATION_NAME_LEN - editForm.name.length)} left
+                      </span>
+                    </div>
+                    <Input
+                      value={editForm.name}
+                      maxLength={MAX_LOCATION_NAME_LEN}
+                      onChange={(e) => {
+                        const v = e.target.value.slice(0, MAX_LOCATION_NAME_LEN);
+                        setEditForm((f) => ({ ...f, name: v }));
+                        if (editNameError && v.trim()) setEditNameError(null);
+                      }}
+                      aria-invalid={editNameError ? true : undefined}
+                      className={editNameError ? "border-destructive focus-visible:ring-destructive" : undefined}
+                    />
+                    <p className="text-xs text-muted-foreground tabular-nums">{editForm.name.length}/{MAX_LOCATION_NAME_LEN}</p>
+                    {editNameError ? <p className="text-xs text-destructive">{editNameError}</p> : null}
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Phone</Label>
+                    <PhoneInput
+                      defaultCountry={businessCountry}
+                      value={editForm.phone}
+                      onChange={(v: string) => setEditForm((f) => ({ ...f, phone: v }))}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Seating capacity</Label>
+                    <Input
+                      inputMode="numeric"
+                      value={editForm.seatingCapacity}
+                      onChange={(e) => setEditForm((f) => ({ ...f, seatingCapacity: e.target.value }))}
+                      placeholder="e.g. 80"
+                      aria-invalid={editSeatingError ? true : undefined}
+                      className={editSeatingError ? "border-destructive focus-visible:ring-destructive" : undefined}
+                    />
+                    {editSeatingError ? <p className="text-xs text-destructive">{editSeatingError}</p> : null}
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Address</Label>
+                    <Input
+                      value={editForm.address}
+                      onChange={(e) => setEditForm((f) => ({ ...f, address: e.target.value }))}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>City</Label>
+                    <Input
+                      value={editForm.city}
+                      onChange={(e) => setEditForm((f) => ({ ...f, city: e.target.value }))}
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="grid gap-2">
+                      <Label>Country</Label>
+                      <Select
+                        value={editForm.countryCode || businessCountry}
+                        onValueChange={(value) => {
+                          const nextTimezone = resolveTimezone(value, editForm.timezone);
+                          setEditForm((f) => ({ ...f, countryCode: value, timezone: nextTimezone }));
+                        }}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select country" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {countryOptions.map((country) => (
+                            <SelectItem key={country.code} value={country.code}>
+                              {country.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label>Timezone</Label>
+                      <Select
+                        value={editForm.timezone}
+                        onValueChange={(value) => setEditForm((f) => ({ ...f, timezone: value }))}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select timezone" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {getTimezoneOptions(editForm.countryCode || businessCountry, editForm.timezone).map((tz) => (
+                            <SelectItem key={tz.name} value={tz.name}>
+                              {tz.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <RegularHoursEditor
+                    hours={editRegularHours}
+                    onChange={setEditRegularHours}
+                    errors={hoursErrors}
+                    setErrors={setHoursErrors}
+                    timeFormat={timeFormat}
+                  />
+                  <div className="grid gap-2">
+                    <Label>Seating preferences</Label>
+                    <SeatingPrefsEditor value={editSeatingPrefs} onChange={setEditSeatingPrefs} />
+                  </div>
                 </div>
-                <div className="grid gap-2">
-                  <Label>Timezone</Label>
-                  <Select
-                    value={editForm.timezone}
-                    onValueChange={(value) => setEditForm((f) => ({ ...f, timezone: value }))}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select timezone" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {getTimezoneOptions(editForm.countryCode || businessCountry, editForm.timezone).map((tz) => (
-                        <SelectItem key={tz.name} value={tz.name}>
-                          {tz.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
-              <RegularHoursEditor
-                hours={editRegularHours}
-                onChange={setEditRegularHours}
-                errors={hoursErrors}
-                setErrors={setHoursErrors}
-                timeFormat={timeFormat}
-              />
+
+              <div className="sticky bottom-0 border-t border-border bg-background/95 px-6 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                <DialogFooter className="p-0">
+                  <Button type="button" onClick={saveEdit} disabled={isPending}>
+                    Save changes
+                  </Button>
+                  <Button type="button" variant="outline" onClick={closeEditModal}>
+                    Cancel
+                  </Button>
+                </DialogFooter>
+              </div>
             </div>
-            <DialogFooter>
-              <Button type="button" onClick={saveEdit} disabled={isPending}>
-                Save changes
-              </Button>
-              <Button type="button" variant="outline" onClick={closeEditModal}>
-                Cancel
-              </Button>
-            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>

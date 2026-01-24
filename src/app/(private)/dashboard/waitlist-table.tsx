@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { differenceInMinutes } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import { toastManager } from "@/hooks/use-toast";
-import { RefreshCw, Archive, Pencil, Trash2, MoreHorizontal, Copy, Clock, User, MessageSquare } from "lucide-react";
+import { RefreshCw, Archive, Pencil, Trash2, MoreHorizontal, Copy, Clock, User, MessageSquare, Crown } from "lucide-react";
 import { Stepper } from "@/components/ui/stepper";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { HoverClickTooltip } from "@/components/ui/hover-click-tooltip";
 
 type Entry = {
   id: string;
@@ -543,6 +544,19 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
     </>
   );
 
+  const loyaltyTooltip = (e: Entry) => {
+    const total = typeof e.visits_count === "number" ? e.visits_count : null;
+    const prior = total !== null ? Math.max(0, total - 1) : null;
+    return (
+      <div className="space-y-1">
+        <div className="font-medium">Loyalty user</div>
+        <div className="text-xs opacity-90">
+          Returning visitor{prior !== null ? ` • ${prior} prior check-in${prior === 1 ? "" : "s"}` : ""}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl overflow-hidden" ref={tableRef}>
       {/* Mobile (xs/sm): card list */}
@@ -564,15 +578,36 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                           <span>{getWaitTime(e.created_at)}</span>
                         </div>
                         {e.is_returning ? (
-                          <Badge variant="secondary" className="text-[10px] px-2 py-0.5">
-                            Returning
-                          </Badge>
+                          <HoverClickTooltip content={loyaltyTooltip(e)} side="bottom" align="start">
+                            <button
+                              type="button"
+                              className="inline-flex items-center"
+                              aria-label="Loyalty user"
+                              title="Loyalty user"
+                            >
+                              <Crown className="h-4 w-4 text-orange-500" />
+                            </button>
+                          </HoverClickTooltip>
                         ) : null}
                       </div>
 
                       {showName ? (
                         <div className="mt-2 text-sm font-medium truncate">
-                          {e.customer_name ?? "—"}
+                          <span className="inline-flex items-center gap-2 min-w-0">
+                            <span className="truncate">{e.customer_name ?? "—"}</span>
+                            {e.is_returning ? (
+                              <HoverClickTooltip content={loyaltyTooltip(e)} side="bottom" align="start">
+                                <button
+                                  type="button"
+                                  className="inline-flex items-center shrink-0"
+                                  aria-label="Loyalty user"
+                                  title="Loyalty user"
+                                >
+                                  <Crown className="h-4 w-4 text-orange-500" />
+                                </button>
+                              </HoverClickTooltip>
+                            ) : null}
+                          </span>
                         </div>
                       ) : null}
                       {showPhone ? (
@@ -657,9 +692,9 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
               {showName && <th className="text-left font-medium text-foreground px-4 py-2">Name</th>}
               {showPhone && <th className="text-left font-medium text-foreground px-4 py-2">Phone</th>}
               <th className="text-left font-medium text-foreground px-4 py-2">Party</th>
-              <th className="text-left font-medium text-foreground px-4 py-2">Seating</th>
-              {showPhone && <th className="text-left font-medium text-foreground px-4 py-2">Notifications</th>}
-              <th className="text-left font-medium text-foreground px-4 py-2">Waiting time</th>
+              <th className="text-left font-medium text-foreground px-4 py-2">Preference</th>
+              {showPhone && <th className="text-left font-medium text-foreground px-4 py-2">Alerts</th>}
+              <th className="text-left font-medium text-foreground px-4 py-2">Wait time</th>
               <th className="text-left font-medium text-foreground px-4 py-2"></th>
             </tr>
           </thead>
@@ -695,9 +730,16 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                       <div className="flex items-center gap-2">
                         <span>{e.customer_name ?? "—"}</span>
                         {e.is_returning ? (
-                          <Badge variant="secondary" className="text-[10px] px-2 py-0.5">
-                            Returning visitor
-                          </Badge>
+                          <HoverClickTooltip content={loyaltyTooltip(e)} side="bottom" align="start">
+                            <button
+                              type="button"
+                              className="inline-flex items-center"
+                              aria-label="Loyalty user"
+                              title="Loyalty user"
+                            >
+                              <Crown className="h-4 w-4 text-orange-500" />
+                            </button>
+                          </HoverClickTooltip>
                         ) : null}
                       </div>
                     </div>
@@ -722,10 +764,10 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <div className="flex items-center gap-1.5 w-fit cursor-default">
+                        <button type="button" className="flex items-center gap-1.5 w-fit cursor-default">
                           <Clock className="h-3.5 w-3.5 text-muted-foreground" />
                           <span>{getWaitTime(e.created_at)}</span>
-                        </div>
+                        </button>
                       </TooltipTrigger>
                       <TooltipContent>
                         <p>{new Date(e.created_at).toLocaleString()}</p>
@@ -767,76 +809,84 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
 
       {/* Edit entry */}
       <Dialog open={!!editingId} onOpenChange={(v) => (!v ? setEditingId(null) : undefined)}>
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Edit entry</DialogTitle>
-          </DialogHeader>
-
-          <form className="grid gap-4">
-            {showName && (
-              <div className="grid gap-2">
-                <Label>Customer name</Label>
-                <Input
-                  type="text"
-                  value={editForm.customerName}
-                  onChange={(e) => setEditForm(prev => ({ ...prev, customerName: e.target.value }))}
-                  placeholder="Full name"
-                />
-              </div>
-            )}
-
-            <div className="flex gap-6">
-              <div className="flex-none grid gap-2">
-                <label className="text-sm font-medium">Number of people</label>
-                <Stepper
-                  value={editForm.partySize ? parseInt(editForm.partySize, 10) : undefined}
-                  onChange={(value) => setEditForm(prev => ({ ...prev, partySize: value?.toString() || "" }))}
-                  min={1}
-                  max={20}
-                />
-              </div>
-              {showPhone && (
-                <div className="flex-1 grid gap-2">
-                  <Label>Phone</Label>
-                  <PhoneInput
-                    defaultCountry="PT"
-                    value={editForm.phone}
-                    onChange={(value) => setEditForm(prev => ({ ...prev, phone: value }))}
-                  />
-                </div>
-              )}
+        <DialogContent className="sm:max-w-2xl p-0 overflow-hidden">
+          <div className="flex max-h-[90vh] flex-col">
+            <div className="px-6 pt-6">
+              <DialogHeader>
+                <DialogTitle>Edit entry</DialogTitle>
+              </DialogHeader>
             </div>
 
-            {(waitlists.find(w => w.id === waitlistId)?.seating_preferences || []).length > 0 && (
-              <div className="grid gap-2">
-                <Label>Seating preference</Label>
-                <div className="flex flex-wrap gap-2">
-                  {(waitlists.find(w => w.id === waitlistId)?.seating_preferences || []).map((s) => {
-                    const selected = editForm.seatingPreference === s;
-                    return (
-                      <button
-                        type="button"
-                        key={s}
-                        onClick={() => setEditForm(prev => ({ ...prev, seatingPreference: s }))}
-                        className={`inline-flex items-center rounded-full px-3 py-1 text-xs ring-1 ring-inset transition ${selected ? "bg-primary text-primary-foreground ring-primary" : "bg-card text-foreground ring-border hover:bg-muted"}`}
-                      >
-                        {s}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </form>
+            <div className="flex-1 overflow-y-auto px-6 pb-6">
+              <form className="grid gap-4">
+                {showName && (
+                  <div className="grid gap-2">
+                    <Label>Customer name</Label>
+                    <Input
+                      type="text"
+                      value={editForm.customerName}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, customerName: e.target.value }))}
+                      placeholder="Full name"
+                    />
+                  </div>
+                )}
 
-          <DialogFooter>
-            <Button type="button" disabled={isPending} onClick={saveEdit}>
-              {isPending ? "Saving…" : "Save changes"}
-            </Button>
-            <Button type="button" variant="outline" onClick={() => setEditingId(null)}>
-              Cancel
-            </Button>
-          </DialogFooter>
+                <div className="flex gap-6">
+                  <div className="flex-none grid gap-2">
+                    <label className="text-sm font-medium">Number of people</label>
+                    <Stepper
+                      value={editForm.partySize ? parseInt(editForm.partySize, 10) : undefined}
+                      onChange={(value) => setEditForm(prev => ({ ...prev, partySize: value?.toString() || "" }))}
+                      min={1}
+                      max={20}
+                    />
+                  </div>
+                  {showPhone && (
+                    <div className="flex-1 grid gap-2">
+                      <Label>Phone</Label>
+                      <PhoneInput
+                        defaultCountry="PT"
+                        value={editForm.phone}
+                        onChange={(value) => setEditForm(prev => ({ ...prev, phone: value }))}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {(waitlists.find(w => w.id === waitlistId)?.seating_preferences || []).length > 0 && (
+                  <div className="grid gap-2">
+                    <Label>Seating preference</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {(waitlists.find(w => w.id === waitlistId)?.seating_preferences || []).map((s) => {
+                        const selected = editForm.seatingPreference === s;
+                        return (
+                          <button
+                            type="button"
+                            key={s}
+                            onClick={() => setEditForm(prev => ({ ...prev, seatingPreference: s }))}
+                            className={`inline-flex items-center rounded-full px-3 py-1 text-xs ring-1 ring-inset transition ${selected ? "bg-primary text-primary-foreground ring-primary" : "bg-card text-foreground ring-border hover:bg-muted"}`}
+                          >
+                            {s}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </form>
+            </div>
+
+            <div className="sticky bottom-0 border-t border-border bg-background/95 px-6 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+              <DialogFooter className="p-0">
+                <Button type="button" disabled={isPending} onClick={saveEdit}>
+                  {isPending ? "Saving…" : "Save changes"}
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setEditingId(null)}>
+                  Cancel
+                </Button>
+              </DialogFooter>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
