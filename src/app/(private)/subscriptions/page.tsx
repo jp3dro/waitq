@@ -11,6 +11,7 @@ import type Stripe from "stripe";
 import PlanCards from "@/components/subscriptions/PlanCards";
 import SubscriptionReturnRefresh from "@/components/subscription-return-refresh";
 import { Progress } from "@/components/ui/progress";
+import { DateTimeText } from "@/components/date-time-text";
 
 
 function formatEUR(amount: number) {
@@ -831,7 +832,7 @@ export default async function SubscriptionPage() {
                     {(() => {
                       const lastPaid = uiInvoices.find((inv) => inv.status === "paid");
                       const paidAt = (lastPaid?.status_transitions?.paid_at as number | undefined) || (lastPaid?.created as number | undefined);
-                      return paidAt ? new Date(paidAt * 1000).toLocaleString() : "No payments yet";
+                      return paidAt ? <DateTimeText value={paidAt * 1000} /> : "No payments yet";
                     })()}
                   </div>
                 </div>
@@ -889,7 +890,7 @@ export default async function SubscriptionPage() {
                   <tbody>
                     {uiInvoices.map((inv) => (
                       <tr key={inv.id} className="border-t border-border/60">
-                        <td className="py-2 pr-4">{new Date((inv.created || 0) * 1000).toLocaleString()}</td>
+                        <td className="py-2 pr-4"><DateTimeText value={(inv.created || 0) * 1000} /></td>
                         <td className="py-2 pr-4">{formatEUR(((inv.amount_paid || inv.amount_due || 0) as number) / 100)}</td>
                         <td className="py-2 pr-4 capitalize">{inv.status as string}</td>
                         <td className="py-2 pr-4">

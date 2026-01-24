@@ -292,3 +292,27 @@ textarea:focus-visible {
     font-size: 16px !important;
   }
 }
+
+/* Ensure tables respect container width */
+.overflow-x-auto {
+  max-width: 100%;
+}
+
+/* Custom scrollbar for tables and scrollable areas */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}

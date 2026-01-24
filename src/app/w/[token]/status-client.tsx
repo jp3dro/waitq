@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { User, Utensils, Globe, Instagram, Facebook, MapPin, PhoneCall } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
@@ -10,6 +9,7 @@ import { useTheme } from "next-themes";
 import {
   AlertDialog,
   AlertDialogAction,
+  AlertDialogBody,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -214,20 +214,9 @@ export default function ClientStatus({ token }: { token: string }) {
   }, [loading, data, router]);
 
   if (loading || !data) return (
-    <div className="min-h-dvh bg-background text-foreground">
-      <header className="border-b border-border bg-card">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8 h-14 flex items-center justify-between">
-          <span className="font-semibold text-lg tracking-tight">&nbsp;</span>
-        </div>
-      </header>
-      <main className="p-8">
-        <div className="max-w-xl mx-auto">
-          <div className="rounded-2xl bg-card text-card-foreground ring-1 ring-border shadow-sm p-6">
-            <p className="text-sm text-muted-foreground">Loading…</p>
-          </div>
-        </div>
-      </main>
-    </div>
+    <main className="min-h-dvh bg-background text-foreground flex items-center justify-center">
+      <p className="text-muted-foreground">Loading...</p>
+    </main>
   );
 
   // Apply brand color only in personal status page (public facing)
@@ -279,78 +268,81 @@ export default function ClientStatus({ token }: { token: string }) {
   };
 
   return (
-    <div className="min-h-dvh bg-background text-foreground">
-      <header className="border-b border-border bg-card py-4">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-border bg-muted flex items-center justify-center">
-              {business?.logo_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={business.logo_url} alt="Logo" className="h-full w-full object-cover" />
-              ) : (
-                <span className="text-sm font-semibold text-muted-foreground">{initials}</span>
-              )}
+    <main className="min-h-dvh bg-background text-foreground flex flex-col">
+      <div className="flex-1 flex flex-col px-4 py-6 sm:py-10">
+        <div className="mx-auto w-full max-w-md flex flex-col flex-1">
+          {/* Header */}
+          <div className="flex items-center justify-between gap-3 mb-6">
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-border bg-muted flex items-center justify-center">
+                {business?.logo_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={business.logo_url} alt="Logo" className="h-full w-full object-cover" />
+                ) : (
+                  <span className="text-sm font-semibold text-muted-foreground">{initials}</span>
+                )}
+              </div>
+              <div className="flex flex-col">
+                {business?.name ? (
+                  <p className="text-sm font-medium text-muted-foreground leading-none mb-1">{business.name}</p>
+                ) : null}
+                {waitlistName ? (
+                  <h1 className="text-xl sm:text-2xl font-bold tracking-tight leading-none">{waitlistName}</h1>
+                ) : null}
+              </div>
             </div>
-            <div className="flex flex-col">
-              {business?.name ? (
-                <p className="text-sm font-medium text-muted-foreground leading-none mb-1">{business.name}</p>
-              ) : null}
-              {waitlistName ? (
-                <h1 className="text-xl font-bold tracking-tight leading-none">{waitlistName}</h1>
-              ) : null}
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
             {business?.menu_url && business.menu_url.trim() && !isTerminal ? (
               <a href={business.menu_url.trim()} target="_blank" rel="noopener noreferrer">
                 <Button size="sm" className="text-xs px-3 py-1.5 sm:text-sm sm:px-4 sm:py-2">
                   <Utensils className="w-4 h-4 mr-2" />
-                  View menu
+                  Menu
                 </Button>
               </a>
             ) : null}
           </div>
-        </div>
-      </header>
-      <main className="p-4 sm:p-8">
-        <div className="max-w-xl mx-auto">
           {isTerminal ? (
-            <div className="rounded-2xl ring-1 shadow-sm p-4 sm:p-6 bg-card ring-border text-center">
+            <div className="bg-card ring-1 ring-border rounded-xl p-6 text-center">
               <h2 className="text-2xl font-bold text-foreground">This ticket is closed</h2>
               <p className="mt-2 text-muted-foreground">
                 Your number was called and marked as <span className="font-medium text-foreground">{terminalLabel}</span>.
               </p>
               {typeof yourNumber === "number" ? (
-                <div className="mt-6">
-                  <div className="text-sm text-muted-foreground">Your ticket</div>
-                  <div className="mt-1 text-6xl font-extrabold text-foreground">{yourNumber}</div>
+                <div className="py-6 border-y border-border mt-6">
+                  <p className="text-sm text-muted-foreground">Your ticket number</p>
+                  <div className="mt-2 text-5xl font-extrabold text-foreground">{yourNumber}</div>
                 </div>
               ) : null}
             </div>
           ) : isUserTurn ? (
-            <div className="rounded-2xl ring-1 shadow-sm p-4 sm:p-6 bg-accent/10 ring-primary/50 text-center">
-              <h2 className="text-2xl font-bold text-primary">It&apos;s your turn!</h2>
+            <div className="bg-emerald-50 dark:bg-emerald-950/30 ring-1 ring-emerald-200 dark:ring-emerald-800 rounded-xl p-6 text-center">
+              <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 mb-4">
+                <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">It&apos;s your turn!</h2>
               <p className="mt-2 text-foreground">Please proceed to {business?.name || "the venue"}</p>
               {typeof yourNumber === 'number' ? (
-                <div className="mt-6">
-                  <div className="text-sm text-foreground">Your ticket</div>
-                  <div className="mt-1 text-6xl font-extrabold text-foreground">{yourNumber}</div>
+                <div className="py-6 border-y border-emerald-200 dark:border-emerald-800 mt-6">
+                  <p className="text-sm text-muted-foreground">Your ticket number</p>
+                  <div className="mt-2 text-5xl font-extrabold text-foreground">{yourNumber}</div>
                 </div>
               ) : null}
             </div>
           ) : (
-            <div className="space-y-4 sm:space-y-6">
-              {/* Your info */}
-              <div className="rounded-2xl bg-card text-card-foreground ring-1 ring-border shadow-sm p-4 sm:p-6 text-center">
-                {typeof yourNumber === 'number' && typeof nowServing === 'number' && (yourNumber - nowServing === 1) ? (
-                  <div className="mb-8 p-4 bg-yellow-100/10 border border-yellow-500/50 rounded-xl">
-                    <h3 className="text-lg font-bold text-yellow-600 dark:text-yellow-500 mb-1">Almost your turn!</h3>
-                    <p className="text-foreground">Please head back to the restaurant.</p>
-                  </div>
-                ) : null}
+            <div className="space-y-4">
+              {/* Almost your turn alert */}
+              {typeof yourNumber === 'number' && typeof nowServing === 'number' && (yourNumber - nowServing === 1) ? (
+                <div className="rounded-xl border border-yellow-500/50 bg-yellow-50 dark:bg-yellow-950/30 text-yellow-800 dark:text-yellow-200 px-4 py-3">
+                  <div className="font-semibold">Almost your turn!</div>
+                  <div className="text-sm opacity-90">Please head back to the restaurant.</div>
+                </div>
+              ) : null}
 
-                <div className="text-lg font-bold text-foreground">Your ticket</div>
-                <div className="mt-1 text-7xl font-extrabold text-foreground">{typeof yourNumber === 'number' ? yourNumber : '-'}</div>
+              {/* Your ticket */}
+              <div className="bg-card ring-1 ring-border rounded-xl p-6 text-center">
+                <p className="text-sm text-muted-foreground">Your ticket number</p>
+                <div className="mt-2 text-6xl font-extrabold text-foreground">{typeof yourNumber === 'number' ? yourNumber : '-'}</div>
 
                 <div className="mt-6 flex items-center justify-center gap-4 flex-wrap">
                   {typeof data.party_size === 'number' ? (
@@ -365,39 +357,15 @@ export default function ClientStatus({ token }: { token: string }) {
                 </div>
 
                 {typeof data.eta_minutes === 'number' && (!(typeof yourNumber === 'number' && typeof nowServing === 'number' && (yourNumber - nowServing <= 1))) ? (
-                  <div className="mt-8 text-sm text-foreground">Estimated wait: <span className="font-medium">{data.eta_minutes} min</span></div>
-                ) : null}
-
-                {!isTerminal ? (
-                  <div className="mt-8 flex flex-col items-center gap-2">
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="outline" disabled={cancelPending}>
-                          Remove me from the waitlist
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Cancel your reservation?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            You&apos;ll be removed from the waitlist. You can rejoin if needed.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter className="w-full justify-between">
-                          <AlertDialogAction onClick={cancelReservation} disabled={cancelPending}>
-                            {cancelPending ? "Removing…" : "Remove me"}
-                          </AlertDialogAction>
-                          <AlertDialogCancel>Remain in the waitlist</AlertDialogCancel>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                    {cancelError ? <p className="text-xs text-destructive">{cancelError}</p> : null}
+                  <div className="mt-6 rounded-xl bg-muted/50 ring-1 ring-border p-4">
+                    <p className="text-sm text-muted-foreground">Estimated wait time</p>
+                    <p className="mt-1 text-2xl font-semibold">{data.eta_minutes} min</p>
                   </div>
                 ) : null}
               </div>
 
-              {/* Restaurant info */}
-              <div className="rounded-2xl bg-card text-card-foreground ring-1 ring-border shadow-sm p-4 sm:p-6 text-center">
+              {/* Now serving */}
+              <div className="bg-card ring-1 ring-border rounded-xl p-6 text-center">
                 <div className="flex items-center justify-center gap-2 text-sm font-semibold">
                   <span className="relative flex h-3 w-3">
                     {isLive ? (
@@ -411,7 +379,7 @@ export default function ClientStatus({ token }: { token: string }) {
                   </span>
                   <span className={isLive ? "text-foreground" : "text-muted-foreground"}>Now serving</span>
                 </div>
-                <div className="mt-1 text-5xl font-bold text-foreground">{typeof nowServing === 'number' ? nowServing : '-'}</div>
+                <div className="mt-2 text-4xl font-bold text-foreground">{typeof nowServing === 'number' ? nowServing : '-'}</div>
                 {typeof aheadCount === "number" ? (
                   <div className="mt-2 text-sm text-muted-foreground">
                     {aheadCount === 0 ? "No one ahead of you" : `${aheadCount} ${aheadCount === 1 ? "person" : "people"} ahead of you`}
@@ -419,6 +387,7 @@ export default function ClientStatus({ token }: { token: string }) {
                 ) : null}
               </div>
 
+              {/* Links */}
               {(links.length || telHref) ? (
                 <div className="flex flex-wrap justify-center gap-2">
                   {links.map((l) => (
@@ -444,21 +413,50 @@ export default function ClientStatus({ token }: { token: string }) {
                   ) : null}
                 </div>
               ) : null}
+
+              {/* Cancel button */}
+              {!isTerminal ? (
+                <div className="flex flex-col items-center gap-2 pt-2">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="sm" className="text-muted-foreground" disabled={cancelPending}>
+                        Remove me from the waitlist
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent showCloseButton={false}>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Cancel your reservation?</AlertDialogTitle>
+                      </AlertDialogHeader>
+                      <AlertDialogBody>
+                        <AlertDialogDescription>
+                          You&apos;ll be removed from the waitlist. You can rejoin if needed.
+                        </AlertDialogDescription>
+                      </AlertDialogBody>
+                      <AlertDialogFooter>
+                        <AlertDialogAction onClick={cancelReservation} disabled={cancelPending}>
+                          {cancelPending ? "Removing…" : "Remove me"}
+                        </AlertDialogAction>
+                        <AlertDialogCancel>Remain in the waitlist</AlertDialogCancel>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                  {cancelError ? <p className="text-xs text-destructive">{cancelError}</p> : null}
+                </div>
+              ) : null}
             </div>
           )}
 
-          <div className="mt-6 flex items-center justify-center">
-            <Link href="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground">
-              <span className="text-sm">Powered by</span>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/waitq.svg" alt="WaitQ" className="h-4 w-auto logo-light" />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/waitq-variant.svg" alt="WaitQ" className="h-4 w-auto logo-dark" />
-            </Link>
+          {/* Footer */}
+          <div className="mt-8 flex items-center justify-center gap-1">
+            <span className="text-xs font-medium text-muted-foreground">Powered by</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/waitq.svg" alt="WaitQ" className="h-4 w-auto logo-light" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/waitq-variant.svg" alt="WaitQ" className="h-4 w-auto logo-dark" />
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }
 

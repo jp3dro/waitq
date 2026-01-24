@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -23,7 +22,8 @@ export default function QRCodeModal({ open, onClose, listName, displayToken, bus
   const displayUrl = useMemo(() => {
     if (!displayToken) return null;
     const base = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : "");
-    return `${base}/display/${encodeURIComponent(displayToken)}`;
+    // QR codes now point to the dedicated self-check-in page
+    return `${base}/join/${encodeURIComponent(displayToken)}`;
   }, [displayToken]);
 
   useEffect(() => {
@@ -97,13 +97,13 @@ export default function QRCodeModal({ open, onClose, listName, displayToken, bus
     <Dialog open={open} onOpenChange={(v) => (!v ? onClose() : undefined)}>
       <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
         <div className="flex max-h-[90vh] flex-col">
-          <div className="px-6 pt-6">
+          <div className="h-12 border-b border-border px-6 flex items-center">
             <DialogHeader>
-              <DialogTitle>QR code</DialogTitle>
+              <DialogTitle className="truncate">QR code</DialogTitle>
             </DialogHeader>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-6 pb-6">
+          <div className="flex-1 overflow-y-auto px-6 py-4">
             <div className="grid gap-4">
               {!displayUrl ? (
                 <p className="text-sm text-muted-foreground">No public display token is configured for this list.</p>
@@ -141,13 +141,13 @@ export default function QRCodeModal({ open, onClose, listName, displayToken, bus
             </div>
           </div>
 
-          <div className="sticky bottom-0 border-t border-border bg-background/95 px-6 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <DialogFooter className="p-0">
-              <Button onClick={() => onPrint()}>Print</Button>
+          <div className="sticky bottom-0 h-12 border-t border-border bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center">
+            <div className="ml-auto flex items-center gap-2">
               <Button variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-            </DialogFooter>
+              <Button onClick={() => onPrint()}>Print</Button>
+            </div>
           </div>
         </div>
       </DialogContent>

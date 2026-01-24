@@ -6,8 +6,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Clock, User, MapPin, Phone, Mail, CheckCircle2, XCircle, Bell } from "lucide-react";
+import { Clock, User, Phone, Mail, CheckCircle2, XCircle, Bell } from "lucide-react";
 import { differenceInMinutes } from "date-fns";
+import { useTimeFormat } from "@/components/time-format-provider";
+import { formatDateTime } from "@/lib/date-time";
 
 type VisitEntry = {
   id: string;
@@ -47,21 +49,21 @@ function getWaitTime(createdAt: string, notifiedAt: string | null) {
 
 function getStatusDisplay(status: string, notifiedAt: string | null) {
   if (status === "seated") {
-    return { label: "Showed", color: "text-emerald-600", bgColor: "bg-emerald-50" };
+    return { label: "Showed", color: "text-emerald-600 dark:text-emerald-400", bgColor: "bg-emerald-50 dark:bg-emerald-950/30" };
   }
   if (status === "cancelled") {
-    return { label: "Cancelled", color: "text-gray-600", bgColor: "bg-gray-50" };
+    return { label: "Cancelled", color: "text-muted-foreground", bgColor: "bg-muted" };
   }
   if (status === "archived") {
     if (notifiedAt) {
-      return { label: "No Show", color: "text-red-600", bgColor: "bg-red-50" };
+      return { label: "No Show", color: "text-red-600 dark:text-red-400", bgColor: "bg-red-50 dark:bg-red-950/30" };
     }
-    return { label: "Archived", color: "text-gray-600", bgColor: "bg-gray-50" };
+    return { label: "Archived", color: "text-muted-foreground", bgColor: "bg-muted" };
   }
   if (status === "notified") {
-    return { label: "Called", color: "text-blue-600", bgColor: "bg-blue-50" };
+    return { label: "Called", color: "text-blue-600 dark:text-blue-400", bgColor: "bg-blue-50 dark:bg-blue-950/30" };
   }
-  return { label: "Waiting", color: "text-yellow-600", bgColor: "bg-yellow-50" };
+  return { label: "Waiting", color: "text-yellow-600 dark:text-yellow-400", bgColor: "bg-yellow-50 dark:bg-yellow-950/30" };
 }
 
 export default function VisitDetailModal({
@@ -75,6 +77,7 @@ export default function VisitDetailModal({
 }) {
   if (!visit) return null;
 
+  const timeFormat = useTimeFormat();
   const statusDisplay = getStatusDisplay(visit.status, visit.notified_at);
   const waitTime = getWaitTime(visit.created_at, visit.notified_at);
 
@@ -83,7 +86,7 @@ export default function VisitDetailModal({
     {
       icon: User,
       label: "Joined waitlist",
-      time: new Date(visit.created_at).toLocaleString(),
+      time: formatDateTime(visit.created_at, timeFormat),
       completed: true,
     },
   ];
@@ -92,7 +95,7 @@ export default function VisitDetailModal({
     timelineEvents.push({
       icon: Bell,
       label: "Called",
-      time: new Date(visit.notified_at).toLocaleString(),
+      time: formatDateTime(visit.notified_at, timeFormat),
       completed: true,
     });
   }
@@ -101,7 +104,7 @@ export default function VisitDetailModal({
     timelineEvents.push({
       icon: CheckCircle2,
       label: "Checked in",
-      time: new Date(visit.notified_at || visit.created_at).toLocaleString(),
+      time: formatDateTime(visit.notified_at || visit.created_at, timeFormat),
       completed: true,
     });
   } else if (visit.status === "archived" && visit.notified_at) {
@@ -124,13 +127,13 @@ export default function VisitDetailModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl p-0 overflow-hidden">
         <div className="flex max-h-[90vh] flex-col">
-          <div className="px-6 pt-6">
+          <div className="h-12 border-b border-border px-6 flex items-center">
             <DialogHeader>
-              <DialogTitle>Visit Details</DialogTitle>
+              <DialogTitle className="truncate">Visit Details</DialogTitle>
             </DialogHeader>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-6 pb-6">
+          <div className="flex-1 overflow-y-auto px-6 py-4">
             <div className="space-y-6">
           {/* Customer Info Header */}
           <div className={`rounded-lg p-4 ${statusDisplay.bgColor}`}>
@@ -163,9 +166,7 @@ export default function VisitDetailModal({
           {/* Visit Details Grid */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <div className="text-xs text-muted-foreground uppercase tracking-wider">
-                Party Size
-              </div>
+              <div className="text-sm text-muted-foreground">Party size</div>
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm font-medium">
@@ -175,9 +176,7 @@ export default function VisitDetailModal({
             </div>
 
             <div className="space-y-1">
-              <div className="text-xs text-muted-foreground uppercase tracking-wider">
-                Wait Time
-              </div>
+              <div className="text-sm text-muted-foreground">Wait time</div>
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm font-medium">{waitTime}</span>
@@ -186,42 +185,30 @@ export default function VisitDetailModal({
 
             {visit.seating_preference && (
               <div className="space-y-1 col-span-2">
-                <div className="text-xs text-muted-foreground uppercase tracking-wider">
-                  Seating Preference
-                </div>
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <Badge variant="secondary">{visit.seating_preference}</Badge>
-                </div>
+                <div className="text-sm text-muted-foreground">Seating preference</div>
+                <Badge variant="secondary">{visit.seating_preference}</Badge>
               </div>
             )}
           </div>
 
           {/* Activity Timeline */}
           <div className="space-y-2">
-            <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-              Activity Timeline
-            </h4>
-            <div className="space-y-3">
+            <h4 className="text-sm font-medium">Activity</h4>
+            <div className="space-y-1">
               {timelineEvents.map((event, index) => {
                 const Icon = event.icon;
                 return (
-                  <div key={index} className="flex gap-3">
+                  <div key={index} className="flex gap-2 items-start">
                     <div className="flex flex-col items-center">
-                      <div
-                        className={`
-                          rounded-full p-1.5 ring-1 ring-orange-200 bg-transparent
-                          ${event.completed ? "text-orange-500" : "text-orange-500/70"}
-                        `}
-                      >
+                      <div className="rounded-full p-1 text-primary">
                         <Icon className="h-3.5 w-3.5" />
                       </div>
                       {index < timelineEvents.length - 1 && (
-                        <div className="w-0.5 h-8 bg-border mt-1" />
+                        <div className="w-0.5 h-4 bg-border" />
                       )}
                     </div>
-                    <div className="flex-1 pt-0.5">
-                      <div className="text-sm font-medium">{event.label}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm">{event.label}</div>
                       <div className="text-xs text-muted-foreground">
                         {event.time}
                       </div>

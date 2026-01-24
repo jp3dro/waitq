@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -57,6 +56,8 @@ export default function EditListButton({
   const [kioskEnabled, setKioskEnabled] = useState<boolean>(initialKioskEnabled);
   const [displayEnabled, setDisplayEnabled] = useState<boolean>(initialDisplayEnabled);
   const [displayShowName, setDisplayShowName] = useState<boolean>(initialDisplayShowName);
+  // kioskQrEnabled is derived from displayShowQr - if QR is shown on display, QR feature is enabled
+  const [kioskQrEnabled, setKioskQrEnabled] = useState<boolean>(initialDisplayShowQr);
   const [displayShowQr, setDisplayShowQr] = useState<boolean>(initialDisplayShowQr);
   const [askName, setAskName] = useState<boolean>(initialAskName);
   const [askPhone, setAskPhone] = useState<boolean>(initialAskPhone);
@@ -86,6 +87,7 @@ export default function EditListButton({
         setKioskEnabled(initialKioskEnabled);
         setDisplayEnabled(initialDisplayEnabled);
         setDisplayShowName(initialDisplayShowName);
+        setKioskQrEnabled(initialDisplayShowQr);
         setDisplayShowQr(initialDisplayShowQr);
         setAskName(initialAskName);
         setAskPhone(initialAskPhone);
@@ -113,6 +115,7 @@ export default function EditListButton({
     setKioskEnabled(initialKioskEnabled);
     setDisplayEnabled(initialDisplayEnabled);
     setDisplayShowName(initialDisplayShowName);
+    setKioskQrEnabled(initialDisplayShowQr);
     setDisplayShowQr(initialDisplayShowQr);
     setAskName(initialAskName);
     setAskPhone(initialAskPhone);
@@ -127,6 +130,7 @@ export default function EditListButton({
     setKioskEnabled(initialKioskEnabled);
     setDisplayEnabled(initialDisplayEnabled);
     setDisplayShowName(initialDisplayShowName);
+    setKioskQrEnabled(initialDisplayShowQr);
     setDisplayShowQr(initialDisplayShowQr);
     setAskName(initialAskName);
     setAskPhone(initialAskPhone);
@@ -206,13 +210,13 @@ export default function EditListButton({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
           <div className="flex max-h-[90vh] flex-col">
-            <div className="px-6 pt-6">
+            <div className="h-12 border-b border-border px-6 flex items-center">
               <DialogHeader>
-                <DialogTitle>Edit list</DialogTitle>
+                <DialogTitle className="truncate">Edit list</DialogTitle>
               </DialogHeader>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-6 pb-6">
+            <div className="flex-1 overflow-y-auto px-6 py-4">
               <div className="grid gap-4">
                 <ListFormFields
                   name={name}
@@ -232,6 +236,12 @@ export default function EditListButton({
                   onDisplayEnabledChange={setDisplayEnabled}
                   displayShowName={displayShowName}
                   onDisplayShowNameChange={setDisplayShowName}
+                  kioskQrEnabled={kioskQrEnabled}
+                  onKioskQrEnabledChange={(v) => {
+                    setKioskQrEnabled(v);
+                    // When disabling QR, also disable showing it on display
+                    if (!v) setDisplayShowQr(false);
+                  }}
                   displayShowQr={displayShowQr}
                   onDisplayShowQrChange={setDisplayShowQr}
                   kioskEnabled={kioskEnabled}
@@ -241,15 +251,15 @@ export default function EditListButton({
               </div>
             </div>
 
-            <div className="sticky bottom-0 border-t border-border bg-background/95 px-6 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-              <DialogFooter className="p-0">
-                <Button disabled={isPending} onClick={save}>
-                  {isPending ? "Saving…" : "Save changes"}
-                </Button>
+            <div className="sticky bottom-0 h-12 border-t border-border bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center">
+              <div className="ml-auto flex items-center gap-2">
                 <Button onClick={closeModal} variant="outline">
                   Cancel
                 </Button>
-              </DialogFooter>
+                <Button disabled={isPending} onClick={save}>
+                  {isPending ? "Saving…" : "Save changes"}
+                </Button>
+              </div>
             </div>
           </div>
         </DialogContent>

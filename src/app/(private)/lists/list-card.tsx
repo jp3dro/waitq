@@ -8,8 +8,6 @@ import QRCodeModal from "./qr-code-modal";
 import EditListButton from "./[id]/edit-list-button";
 import { toastManager } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { HoverClickTooltip } from "@/components/ui/hover-click-tooltip";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -102,41 +100,12 @@ export default function ListCard({
     return () => window.removeEventListener('wl:open-edit', handler as EventListener);
   }, [id]);
 
-  const isClosed = locationIsOpen === false;
-  // Back-compat: older lists may have kiosk_enabled = null; treat that as "enabled by default"
-  const isLive = kioskEnabled !== false && !isClosed;
-  const liveHelp =
-    "Live means this list is currently within this location’s working hours. You can change working hours in Locations → Edit location.";
-
   return (
     <div className="relative">
       <Link href={`/lists/${id}`} className="block bg-card text-card-foreground ring-1 ring-border rounded-xl shadow-sm p-5 hover:shadow hover:bg-muted transition cursor-pointer">
         <div className="flex items-start justify-between gap-2">
           <div>
-            <div className="flex items-center gap-2">
-              <p className="font-medium">{name}</p>
-              {isClosed ? (
-                <Badge variant="secondary" className="gap-1 text-xs bg-destructive/10 text-destructive ring-1 ring-inset ring-destructive/30">
-                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-destructive"></span>
-                  Closed
-                </Badge>
-              ) : isLive ? (
-                <HoverClickTooltip content={liveHelp} side="bottom">
-                  <button type="button" className="inline-flex items-center" aria-label="What does Live mean?">
-                    <Badge
-                      variant="secondary"
-                      className="gap-1 text-xs bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-200 dark:ring-emerald-800 cursor-help"
-                    >
-                      <span className="relative flex h-2.5 w-2.5">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                      </span>
-                      Live
-                    </Badge>
-                  </button>
-                </HoverClickTooltip>
-              ) : null}
-            </div>
+            <p className="font-medium">{name}</p>
             <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
               <span>Waiting: {waiting}</span>
               <span>ETA: {etaDisplay}</span>
@@ -214,4 +183,3 @@ export default function ListCard({
     </div>
   );
 }
-

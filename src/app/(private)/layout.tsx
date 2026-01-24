@@ -4,6 +4,7 @@ import PrivateSidebar from "@/components/private-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { getAdminClient } from "@/lib/supabase/admin";
 import PrivateMobileHeader from "@/components/private-mobile-header";
+import { TimeFormatProvider } from "@/components/time-format-provider";
 
 export default async function PrivateLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -158,7 +159,7 @@ export default async function PrivateLayout({ children }: { children: React.Reac
       <PrivateSidebar />
       <SidebarInset className="min-h-dvh bg-background">
         <PrivateMobileHeader />
-        {children}
+        <TimeFormatProvider>{children}</TimeFormatProvider>
       </SidebarInset>
     </SidebarProvider>
   );

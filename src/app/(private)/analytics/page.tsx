@@ -16,6 +16,7 @@ import { HoverClickTooltip } from "@/components/ui/hover-click-tooltip";
 
 type CreatedRow = { created_at: string };
 type ServedRow = { created_at: string; notified_at: string | null; waitlist_id: string | null };
+type OutcomeRow = { status: string; notified_at: string | null };
 
 type AnalyticsData = {
   totalVisitors: number;
@@ -26,6 +27,8 @@ type AnalyticsData = {
   avgWaitTimeMin: number;
   avgServiceTimeMin: number;
   avgWaitByHour: { hour: number; avgMin: number }[];
+  seatedCount: number;
+  noShowCount: number;
 };
 
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
@@ -279,13 +282,26 @@ export default function AnalyticsPage() {
         return q.limit(5000);
       };
 
-      const [createdRowsRes, servedRowsRes] = await Promise.all([
+      const makeOutcomeQuery = (f: Date, t: Date) => {
+        let q = supabase
+          .from("waitlist_entries")
+          .select("status, notified_at")
+          .in("status", ["seated", "archived"])
+          .gte("created_at", f.toISOString())
+          .lte("created_at", t.toISOString());
+        if (opts.waitlistIds && opts.waitlistIds.length) q = q.in("waitlist_id", opts.waitlistIds);
+        return q.limit(5000);
+      };
+
+      const [createdRowsRes, servedRowsRes, outcomeRowsRes] = await Promise.all([
         makeCreatedQuery(from, now),
         makeServedQuery(from, now),
+        makeOutcomeQuery(from, now),
       ]);
 
       const createdRows = (createdRowsRes.data ?? []) as CreatedRow[];
       const servedRows = (servedRowsRes.data ?? []) as ServedRow[];
+      const outcomeRows = (outcomeRowsRes.data ?? []) as OutcomeRow[];
 
       // Total visitors
       const totalVisitors = createdRows.length;
@@ -372,6 +388,10 @@ export default function AnalyticsPage() {
         return { hour: h, avgMin };
       });
 
+      // Count seated vs no-shows (archived after being notified)
+      const seatedCount = outcomeRows.filter((r) => r.status === "seated").length;
+      const noShowCount = outcomeRows.filter((r) => r.status === "archived" && r.notified_at !== null).length;
+
       if (requestId !== requestIdRef.current) return;
 
       setAnalytics({
@@ -383,6 +403,8 @@ export default function AnalyticsPage() {
         avgWaitTimeMin,
         avgServiceTimeMin,
         avgWaitByHour,
+        seatedCount,
+        noShowCount,
       });
       hasLoadedRef.current = true;
 
@@ -501,10 +523,10 @@ export default function AnalyticsPage() {
 
   const tldr = (() => {
     const period = isToday ? "Today (so far)" : `In the last ${rangeMode} days`;
-    if (!analytics.totalVisitors) return `TL;DR: ${period} there were no visitors for the selected filters.`;
+    if (!analytics.totalVisitors) return `${period} there were no visitors for the selected filters.`;
     const peak = busiestHour && busiestHour.avg > 0 ? hourToLabel(busiestHour.hour, timeFormat) : null;
     const peakText = peak ? `Peak hour: ${peak}.` : "No clear peak hour yet.";
-    return `TL;DR: ${period} you had ${analytics.totalVisitors.toLocaleString()} visitors, an average wait of ${formatMinutesAsDuration(
+    return `${period} you had ${analytics.totalVisitors.toLocaleString()} visitors, an average wait of ${formatMinutesAsDuration(
       analytics.avgWaitTimeMin
     )}, and ${peakText}`;
   })();
@@ -523,8 +545,10 @@ export default function AnalyticsPage() {
   return (
     <main className="py-5">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8">
-        <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Analytics</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Analytics</h1>
+
+        {/* Filters row */}
+        <div className="flex flex-wrap items-center gap-4">
           <Tabs
             value={rangeMode}
             onValueChange={(v) => {
@@ -544,64 +568,60 @@ export default function AnalyticsPage() {
               <TabsTrigger value="30">Last 30 days</TabsTrigger>
             </TabsList>
           </Tabs>
+
+          <Select
+            value={locationId}
+            onValueChange={(v) => {
+              setLocationId(v);
+              // When changing location, reset list filter (to avoid selecting a list from another location)
+              setWaitlistId("all");
+            }}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Location" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All locations</SelectItem>
+              {locations.map((l) => (
+                <SelectItem key={l.id} value={l.id}>
+                  {l.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={waitlistId} onValueChange={(v) => setWaitlistId(v)}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="List" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All lists</SelectItem>
+              {waitlists
+                .filter((w) => (locationId === "all" ? true : w.location_id === locationId))
+                .map((w) => (
+                  <SelectItem key={w.id} value={w.id}>
+                    {w.name}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
+
           {isRefreshing ? <Spinner className="ml-1" /> : null}
         </div>
 
         {/* Analytics content container */}
         <div className="space-y-6">
-          <div className="rounded-xl ring-1 ring-border bg-muted/40 p-4">
-            <div className="flex items-center justify-between gap-3 flex-wrap">
+          {/* Quick Insights - Apple Intelligence style gradient border */}
+          <div className="relative rounded-xl p-[1px] bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500">
+            <div className="rounded-[11px] bg-background p-4">
               <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Quick insights</div>
-              <div className="text-xs text-muted-foreground">{isToday ? "Today" : `Last ${rangeMode} days`}</div>
-            </div>
-            <p className="mt-2 text-sm text-foreground">{tldr}</p>
-          </div>
-
-          <div className="flex items-center gap-4 overflow-x-auto flex-nowrap">
-            <div className="w-56 shrink-0">
-              <Select
-                value={locationId}
-                onValueChange={(v) => {
-                  setLocationId(v);
-                  // When changing location, reset list filter (to avoid selecting a list from another location)
-                  setWaitlistId("all");
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Location" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All locations</SelectItem>
-                  {locations.map((l) => (
-                    <SelectItem key={l.id} value={l.id}>
-                      {l.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="w-56 shrink-0">
-              <Select value={waitlistId} onValueChange={(v) => setWaitlistId(v)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="List" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All lists</SelectItem>
-                  {waitlists
-                    .filter((w) => (locationId === "all" ? true : w.location_id === locationId))
-                    .map((w) => (
-                      <SelectItem key={w.id} value={w.id}>
-                        {w.name}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
+              <p className="mt-2 text-sm text-foreground">{tldr}</p>
             </div>
           </div>
           
 
           {/* Key Metrics */}
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
             <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-2 sm:p-3">
               <p className="text-xs text-muted-foreground">{isToday ? "Visitors today" : "Total visitors"}</p>
               <p className="mt-0.5 text-base sm:text-lg font-semibold">{analytics.totalVisitors.toLocaleString()}</p>
@@ -624,6 +644,21 @@ export default function AnalyticsPage() {
             <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-2 sm:p-3">
               <p className="text-xs text-muted-foreground">Avg service time</p>
               <p className="mt-0.5 text-base sm:text-lg font-semibold">{formatMinutesAsDuration(analytics.avgServiceTimeMin)}</p>
+            </div>
+            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-2 sm:p-3">
+              <div className="flex items-center gap-1">
+                <p className="text-xs text-muted-foreground">No-show rate</p>
+                <HoverClickTooltip content={`${analytics.seatedCount} showed, ${analytics.noShowCount} no-shows`} side="bottom">
+                  <button type="button" className="inline-flex items-center" aria-label="No-show details">
+                    <CircleHelp className="h-3 w-3 text-muted-foreground" />
+                  </button>
+                </HoverClickTooltip>
+              </div>
+              <p className="mt-0.5 text-base sm:text-lg font-semibold">
+                {analytics.seatedCount + analytics.noShowCount > 0
+                  ? `${Math.round((analytics.noShowCount / (analytics.seatedCount + analytics.noShowCount)) * 100)}%`
+                  : "—"}
+              </p>
             </div>
           </div>
 

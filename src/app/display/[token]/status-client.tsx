@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -127,14 +126,15 @@ export default function DisplayClient({ token }: { token: string }) {
       return;
     }
     const base = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== "undefined" ? window.location.origin : "");
-    const displayUrl = `${base}/display/${encodeURIComponent(token)}`;
+    // QR codes now point to the dedicated self-check-in page
+    const joinUrl = `${base}/join/${encodeURIComponent(token)}`;
     const providers = [
       (t: string) => `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=2&data=${encodeURIComponent(t)}`,
       (t: string) => `https://quickchart.io/qr?size=240&margin=2&text=${encodeURIComponent(t)}`,
       (t: string) => `https://chart.googleapis.com/chart?cht=qr&chs=240x240&chld=L|2&chl=${encodeURIComponent(t)}`,
     ];
     setQrProviderIndex(0);
-    setQrUrl(providers[0](displayUrl));
+    setQrUrl(providers[0](joinUrl));
   }, [data?.showQrOnDisplay, token]);
 
   // NOTE: We subscribe only to broadcast refresh events (no payload), then refetch via /api/display.
@@ -193,7 +193,7 @@ export default function DisplayClient({ token }: { token: string }) {
     <main className="h-screen bg-background text-foreground flex flex-col overflow-hidden">
       <div className="flex flex-col flex-1 px-4 py-4 sm:py-6 md:px-6 overflow-hidden">
         {!locationIsOpen ? (
-          <div className="mb-6 rounded-xl border border-destructive/30 bg-destructive/10 text-destructive px-4 py-3">
+          <div className="mb-4 rounded-xl border border-destructive/30 bg-destructive/10 text-destructive px-4 py-3 shrink-0">
             <div className="font-semibold">Restaurant is closed</div>
             <div className="text-sm opacity-90">{data.locationStatusReason || "This location is currently closed based on regular opening hours."}</div>
           </div>
@@ -240,48 +240,12 @@ export default function DisplayClient({ token }: { token: string }) {
           ) : null}
         </div>
 
-        <div className="mt-6 grid md:grid-cols-[1.2fr_1fr] gap-6 md:gap-8 flex-1 min-h-0">
+        <div className="mt-4 grid md:grid-cols-[1.2fr_1fr] gap-4 md:gap-6 flex-1 min-h-0 overflow-hidden">
           <section className="rounded-2xl bg-card text-card-foreground ring-1 ring-border flex flex-col min-h-0 overflow-hidden">
+            <div className="px-6 py-4 border-b border-border shrink-0">
+              <h2 className="text-xl sm:text-2xl font-semibold text-foreground">Next in line</h2>
+            </div>
             <div className="flex-1 overflow-y-auto min-h-0 px-6 custom-scrollbar">
-              {/* QR Code - sticky at top */}
-              {showQrOnDisplay ? (
-                <div className="sticky top-0 bg-card z-10">
-                  <div className="hidden md:flex items-center gap-6 py-4">
-                    {qrUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={qrUrl}
-                        alt="QR code"
-                        className="h-24 w-24 bg-white flex-shrink-0"
-                        onError={() => {
-                          const providers = [
-                            (t: string) => `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=2&data=${encodeURIComponent(t)}`,
-                            (t: string) => `https://quickchart.io/qr?size=240&margin=2&text=${encodeURIComponent(t)}`,
-                            (t: string) => `https://chart.googleapis.com/chart?cht=qr&chs=240x240&chld=L|2&chl=${encodeURIComponent(t)}`,
-                          ];
-                          if (qrProviderIndex < providers.length - 1) {
-                            const next = qrProviderIndex + 1;
-                            const base = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== "undefined" ? window.location.origin : "");
-                            const displayUrl = `${base}/display/${encodeURIComponent(token)}`;
-                            setQrProviderIndex(next);
-                            setQrUrl(providers[next](displayUrl));
-                          }
-                        }}
-                      />
-                    ) : (
-                      <div className="h-24 w-24 rounded-xl bg-muted flex-shrink-0" />
-                    )}
-                    <div className="text-xl sm:text-2xl font-semibold text-foreground">Scan to join the waiting list</div>
-                  </div>
-                  <hr className="border-border -mx-6 hidden md:block" />
-                  <h2 className="text-xl sm:text-2xl font-semibold text-foreground pt-6 pb-2">Next in line</h2>
-                </div>
-              ) : (
-                <div className="sticky top-0 bg-card z-10">
-                  <h2 className="text-xl sm:text-2xl font-semibold text-foreground py-4">Up next</h2>
-                </div>
-              )}
-
               {waiting.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-muted-foreground text-lg">No one waiting at the moment</p>
@@ -314,15 +278,17 @@ export default function DisplayClient({ token }: { token: string }) {
             </div>
           </section>
 
-          <section className="rounded-2xl bg-emerald-50 text-emerald-950 ring-1 ring-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-50 dark:ring-emerald-800 p-4 sm:p-6 flex flex-col min-h-0 overflow-hidden">
-            <h2 className="text-xl sm:text-2xl font-semibold flex items-center gap-2 shrink-0">
-              <span className="relative flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-              </span>
-              Now calling
-            </h2>
-            <div className="flex-1 overflow-y-auto min-h-0 mt-4 pr-2 custom-scrollbar">
+          <section className="rounded-2xl bg-emerald-50 text-emerald-950 ring-1 ring-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-50 dark:ring-emerald-800 flex flex-col min-h-0 overflow-hidden">
+            <div className="px-4 sm:px-6 py-4 border-b border-emerald-200 dark:border-emerald-800 shrink-0">
+              <h2 className="text-xl sm:text-2xl font-semibold flex items-center gap-2">
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                </span>
+                Now calling
+              </h2>
+            </div>
+            <div className="flex-1 overflow-y-auto min-h-0 p-4 sm:p-6 custom-scrollbar">
               {notified.length === 0 ? (
                 <div className="text-center py-12 opacity-60">
                   <p className="text-xl">Waiting for next group...</p>
@@ -354,18 +320,44 @@ export default function DisplayClient({ token }: { token: string }) {
               )}
             </div>
           </section>
-        </div >
+        </div>
 
-
-        <div className="mt-6 flex items-center justify-center shrink-0 gap-1">
+        <div className="mt-4 flex items-center justify-center shrink-0 gap-1">
           <span className="text-xs font-medium text-muted-foreground">Powered by</span>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/waitq.svg" alt="WaitQ" className="h-4 w-auto logo-light" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/waitq-variant.svg" alt="WaitQ" className="h-4 w-auto logo-dark" />
         </div>
-      </div >
-    </main >
+      </div>
+
+      {/* Floating QR Code - bottom right */}
+      {showQrOnDisplay && qrUrl ? (
+        <div className="fixed bottom-6 right-6 z-50 hidden md:flex items-center gap-4 rounded-2xl bg-card text-card-foreground ring-1 ring-border shadow-lg p-4">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={qrUrl}
+            alt="QR code"
+            className="h-20 w-20 bg-white rounded-lg flex-shrink-0"
+            onError={() => {
+              const providers = [
+                (t: string) => `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=2&data=${encodeURIComponent(t)}`,
+                (t: string) => `https://quickchart.io/qr?size=240&margin=2&text=${encodeURIComponent(t)}`,
+                (t: string) => `https://chart.googleapis.com/chart?cht=qr&chs=240x240&chld=L|2&chl=${encodeURIComponent(t)}`,
+              ];
+              if (qrProviderIndex < providers.length - 1) {
+                const next = qrProviderIndex + 1;
+                const base = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== "undefined" ? window.location.origin : "");
+                const joinUrl = `${base}/join/${encodeURIComponent(token)}`;
+                setQrProviderIndex(next);
+                setQrUrl(providers[next](joinUrl));
+              }
+            }}
+          />
+          <div className="text-sm font-medium leading-tight max-w-[120px]">Scan to join the waiting list</div>
+        </div>
+      ) : null}
+    </main>
   );
 }
 
@@ -424,74 +416,82 @@ function KioskButton({
           else close();
         }}
       >
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{step === "confirm" ? "You're all set!" : "Add to waitlist"}</DialogTitle>
-          </DialogHeader>
+        <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
+          <div className="flex max-h-[90vh] flex-col">
+            <div className="h-12 border-b border-border px-6 flex items-center">
+              <DialogHeader>
+                <DialogTitle className="truncate">{step === "confirm" ? "You're all set!" : "Add to waitlist"}</DialogTitle>
+              </DialogHeader>
+            </div>
 
-          {step === "form" ? (
-            <>
-              <AddForm
-                formId="public-waitlist-form"
-                businessCountry={defaultCountry as Country}
-                lockWaitlist
-                mode="public"
-                publicConfig={{
-                  displayToken: token,
-                  waitlist: {
-                    id: waitlistId,
-                    name: "Waitlist",
-                    ask_name: askName,
-                    ask_phone: askPhone,
-                    ask_email: askEmail,
-                    seating_preferences: seatingPreferences,
-                    location_is_open: locationIsOpen,
-                    location_status_reason: locationStatusReason || null,
-                  },
-                }}
-                onPublicSuccess={({ statusUrl, ticketNumber }) => {
-                  setTicketNumber(typeof ticketNumber === "number" ? ticketNumber : null);
-                  setStatusUrl(typeof statusUrl === "string" ? statusUrl : null);
-                  setStep("confirm");
-                }}
-              />
-              <DialogFooter>
-                <Button type="submit" form="public-waitlist-form">
-                  Add
-                </Button>
-                <Button type="button" variant="outline" onClick={close}>
-                  Cancel
-                </Button>
-              </DialogFooter>
-            </>
-          ) : (
-            <>
-              <div className="grid gap-4 text-center text-foreground">
-                {askEmail ? (
-                  <p className="text-sm text-muted-foreground">We sent your ticket details to your email.</p>
-                ) : askPhone ? (
-                  <p className="text-sm text-muted-foreground">We&apos;ll notify you when your table is ready.</p>
-                ) : null}
-                <div>
-                  <p className="text-sm text-muted-foreground">Your ticket</p>
-                  <div className="mt-2 text-4xl font-extrabold text-foreground">{ticketNumber ?? "-"}</div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button
-                  onClick={() => {
-                    if (statusUrl) {
-                      window.location.href = statusUrl;
-                      return;
-                    }
-                    close();
+            <div className="flex-1 overflow-y-auto px-6 py-4">
+              {step === "form" ? (
+                <AddForm
+                  formId="public-waitlist-form"
+                  businessCountry={defaultCountry as Country}
+                  lockWaitlist
+                  mode="public"
+                  publicConfig={{
+                    displayToken: token,
+                    waitlist: {
+                      id: waitlistId,
+                      name: "Waitlist",
+                      ask_name: askName,
+                      ask_phone: askPhone,
+                      ask_email: askEmail,
+                      seating_preferences: seatingPreferences,
+                      location_is_open: locationIsOpen,
+                      location_status_reason: locationStatusReason || null,
+                    },
                   }}
-                >
-                  Done
-                </Button>
-              </DialogFooter>
-            </>
-          )}
+                  onPublicSuccess={({ statusUrl, ticketNumber }) => {
+                    setTicketNumber(typeof ticketNumber === "number" ? ticketNumber : null);
+                    setStatusUrl(typeof statusUrl === "string" ? statusUrl : null);
+                    setStep("confirm");
+                  }}
+                />
+              ) : (
+                <div className="grid gap-4 text-center text-foreground">
+                  {askEmail ? (
+                    <p className="text-sm text-muted-foreground">We sent your ticket details to your email.</p>
+                  ) : askPhone ? (
+                    <p className="text-sm text-muted-foreground">We&apos;ll notify you when your table is ready.</p>
+                  ) : null}
+                  <div>
+                    <p className="text-sm text-muted-foreground">Your ticket</p>
+                    <div className="mt-2 text-4xl font-extrabold text-foreground">{ticketNumber ?? "-"}</div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="sticky bottom-0 h-12 border-t border-border bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center">
+              <div className="ml-auto flex items-center gap-2">
+                {step === "form" ? (
+                  <>
+                    <Button type="button" variant="outline" onClick={close}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" form="public-waitlist-form">
+                      Add
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    onClick={() => {
+                      if (statusUrl) {
+                        window.location.href = statusUrl;
+                        return;
+                      }
+                      close();
+                    }}
+                  >
+                    Done
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
       <AlertDialog open={duplicateDialog.open} onOpenChange={(open) => setDuplicateDialog((prev) => ({ ...prev, open }))}>

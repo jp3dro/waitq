@@ -13,6 +13,8 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import VisitDetailModal from "@/components/visit-detail-modal";
 import { HoverClickTooltip } from "@/components/ui/hover-click-tooltip";
+import { useTimeFormat } from "@/components/time-format-provider";
+import { formatDateTime } from "@/lib/date-time";
 
 type Location = {
   id: string;
@@ -73,7 +75,7 @@ function getStatusBadge(status: string, notifiedAt: string | null) {
   if (status === "notified") {
     return <Badge className="bg-blue-500 text-white">Called</Badge>;
   }
-  return <Badge variant="secondary">Waiting</Badge>;
+  return <Badge className="bg-yellow-500 text-white">Waiting</Badge>;
 }
 
 export default function CustomersTable({
@@ -85,6 +87,7 @@ export default function CustomersTable({
   locations: Location[];
   waitlists: Waitlist[];
 }) {
+  const timeFormat = useTimeFormat();
   const [visits, setVisits] = useState<VisitEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [locationId, setLocationId] = useState<string>("all");
@@ -157,18 +160,10 @@ export default function CustomersTable({
     setPage(1);
   }, [locationId, waitlistId, dateRange]);
 
-  if (loading) {
-    return (
-      <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-6">
-        <p className="text-sm text-muted-foreground">Loading visits...</p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-4">
-      {/* Filters */}
-      <div className="flex items-center gap-4 overflow-x-auto flex-nowrap">
+      {/* Filters - always visible */}
+      <div className="flex flex-wrap items-center gap-4">
         <Tabs value={dateRange} onValueChange={(v) => setDateRange(v as typeof dateRange)}>
           <TabsList variant="default">
             <TabsTrigger value="today">Today</TabsTrigger>
@@ -179,48 +174,69 @@ export default function CustomersTable({
           </TabsList>
         </Tabs>
 
-        <div className="w-56 shrink-0">
-          <Select
-            value={locationId}
-            onValueChange={(v) => {
-              setLocationId(v);
-              setWaitlistId("all");
-            }}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Location" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All locations</SelectItem>
-              {locations.map((l) => (
-                <SelectItem key={l.id} value={l.id}>
-                  {l.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <Select
+          value={locationId}
+          onValueChange={(v) => {
+            setLocationId(v);
+            setWaitlistId("all");
+          }}
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Location" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All locations</SelectItem>
+            {locations.map((l) => (
+              <SelectItem key={l.id} value={l.id}>
+                {l.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-        <div className="w-56 shrink-0">
-          <Select value={waitlistId} onValueChange={setWaitlistId}>
-            <SelectTrigger>
-              <SelectValue placeholder="Waitlist" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All lists</SelectItem>
-              {filteredWaitlists.map((w) => (
-                <SelectItem key={w.id} value={w.id}>
-                  {w.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <Select value={waitlistId} onValueChange={setWaitlistId}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Waitlist" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All lists</SelectItem>
+            {filteredWaitlists.map((w) => (
+              <SelectItem key={w.id} value={w.id}>
+                {w.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Table */}
-      <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl overflow-hidden">
-        {visits.length === 0 ? (
+      <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl overflow-hidden w-full">
+        {loading ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-muted sticky top-0 z-10">
+                <tr>
+                  <th className="text-left font-medium text-foreground px-4 py-2">Customer</th>
+                  <th className="text-left font-medium text-foreground px-4 py-2">Preferences</th>
+                  <th className="text-left font-medium text-foreground px-4 py-2">Party</th>
+                  <th className="text-left font-medium text-foreground px-4 py-2">Began waiting</th>
+                  <th className="text-left font-medium text-foreground px-4 py-2">Wait time</th>
+                  <th className="text-left font-medium text-foreground px-4 py-2">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colSpan={6} className="px-4 py-10 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+                      <p className="text-sm text-muted-foreground">Loading visits...</p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        ) : visits.length === 0 ? (
           <div className="p-10 text-center">
             <h3 className="text-base font-semibold">No visits found</h3>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -279,7 +295,7 @@ export default function CustomersTable({
                     </td>
                     <td className="px-4 py-2">{visit.party_size || "—"}</td>
                     <td className="px-4 py-2">
-                      {new Date(visit.created_at).toLocaleString()}
+                      {formatDateTime(visit.created_at, timeFormat)}
                     </td>
                     <td className="px-4 py-2">
                       {getWaitTime(visit.created_at, visit.notified_at)}

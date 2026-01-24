@@ -129,10 +129,27 @@ export default async function ListsIndexPage() {
             locs.map((loc) => {
               const listsForLoc = allLists.filter((l) => l.location_id === loc.id);
               if (listsForLoc.length === 0) return null;
+              const locationIsOpen = locationOpenById.get(loc.id) ?? true;
               return (
                 <section key={loc.id} className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-base font-semibold">{loc.name}</h2>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-base font-semibold">{loc.name}</h2>
+                      {locationIsOpen ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-200 dark:ring-emerald-800">
+                          <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                          </span>
+                          Live
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive ring-1 ring-inset ring-destructive/30">
+                          <span className="relative inline-flex h-2 w-2 rounded-full bg-destructive"></span>
+                          Closed
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {listsForLoc.map((l) => {

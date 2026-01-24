@@ -83,6 +83,7 @@ export async function GET(req: NextRequest) {
   if (waitlistIds && waitlistIds.length) q = q.in("waitlist_id", waitlistIds);
 
   let res = await q;
+  let usedFallback = false;
 
   // Back-compat for deployments without visits_count/is_returning columns
   if (
@@ -100,7 +101,9 @@ export async function GET(req: NextRequest) {
       .order("created_at", { ascending: false })
       .range((page - 1) * pageSize, page * pageSize - 1);
     if (waitlistIds && waitlistIds.length) q2 = q2.in("waitlist_id", waitlistIds);
-    res = await q2;
+    const fallbackRes = await q2;
+    res = fallbackRes as typeof res;
+    usedFallback = true;
   }
 
   if (res.error) {
@@ -116,8 +119,63 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: res.error.message }, { status: 400 });
   }
 
+  let visits = (res.data ?? []) as any[];
+
+  // If schema doesn't have visits_count / is_returning, compute them on the fly.
+  // This ensures the crown/loyalty UI still works even on older DB deployments.
+  if (usedFallback && Array.isArray(visits) && visits.length > 0) {
+    try {
+      const seatedCache = new Map<string, number>();
+      const anyCache = new Map<string, number>();
+
+      visits = await Promise.all(
+        visits.map(async (v) => {
+          const phone =
+            typeof v.phone === "string" && v.phone.trim().length ? v.phone.trim() : null;
+          const email =
+            typeof v.email === "string" && v.email.trim().length ? v.email.trim() : null;
+          const key = `${phone || ""}::${email || ""}`;
+          if (!phone && !email) return { ...v, visits_count: 0, is_returning: false };
+
+          const cachedSeated = seatedCache.get(key);
+          const cachedAny = anyCache.get(key);
+          if (typeof cachedSeated === "number" && typeof cachedAny === "number") {
+            return { ...v, visits_count: cachedSeated, is_returning: cachedAny > 1 };
+          }
+
+          const ors: string[] = [];
+          if (phone) ors.push(`phone.eq.${phone}`);
+          if (email) ors.push(`email.eq.${email}`);
+          const orStr = ors.join(",");
+
+          const [{ count: anyCount }, { count: seatedCount }] = await Promise.all([
+            admin
+              .from("waitlist_entries")
+              .select("id", { count: "exact", head: true })
+              .eq("business_id", businessId)
+              .or(orStr),
+            admin
+              .from("waitlist_entries")
+              .select("id", { count: "exact", head: true })
+              .eq("business_id", businessId)
+              .eq("status", "seated")
+              .or(orStr),
+          ]);
+
+          const visitsCount = seatedCount || 0;
+          const anyTotal = anyCount || 0;
+          seatedCache.set(key, visitsCount);
+          anyCache.set(key, anyTotal);
+          return { ...v, visits_count: visitsCount, is_returning: anyTotal > 1 };
+        })
+      );
+    } catch (e) {
+      console.error("[customer-visits] Failed to compute visit counts", e);
+    }
+  }
+
   return NextResponse.json({
-    visits: res.data ?? [],
+    visits,
     count: typeof res.count === "number" ? res.count : 0,
   });
 }

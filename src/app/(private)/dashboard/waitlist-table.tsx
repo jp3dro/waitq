@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState } from "react";
 import { differenceInMinutes } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import { toastManager } from "@/hooks/use-toast";
@@ -9,10 +9,11 @@ import { PhoneInput } from "@/components/ui/phone-input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { WhatsAppIcon } from "@/components/icons/whatsapp";
+import { useTimeFormat } from "@/components/time-format-provider";
+import { formatDateTime } from "@/lib/date-time";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -79,7 +80,7 @@ const getWaitTime = (date: string) => {
 export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: string }) {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isPending, startTransition] = useTransition();
+  const [busyIds, setBusyIds] = useState<Set<string>>(new Set());
   const [waitlists, setWaitlists] = useState<{ id: string; name: string; display_token?: string; list_type?: string; seating_preferences?: string[]; ask_name?: boolean; ask_phone?: boolean }[]>([]);
   const [waitlistId, setWaitlistId] = useState<string | null>(fixedWaitlistId ?? null);
   const supabase = createClient();
@@ -87,6 +88,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
   const currentList = waitlists.find(w => w.id === waitlistId);
   const showName = currentList?.ask_name !== false;
   const showPhone = currentList?.ask_phone !== false;
+  const timeFormat = useTimeFormat();
   const prevIdsRef = useRef<Set<string>>(new Set());
   const [highlightIds, setHighlightIds] = useState<Set<string>>(new Set());
   const displayChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
@@ -98,6 +100,34 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
     partySize: "",
     seatingPreference: ""
   });
+
+  const isBusy = (id: string | null | undefined) => {
+    if (!id) return false;
+    return busyIds.has(id);
+  };
+
+  const setBusy = (id: string, busy: boolean) => {
+    setBusyIds((prev) => {
+      const next = new Set(prev);
+      if (busy) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
+
+  const removeFromListOptimistic = (id: string) => {
+    setEntries((prev) => prev.filter((e) => e.id !== id));
+    setHighlightIds((prev) => {
+      if (!prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  };
+
+  const updateEntryOptimistic = (id: string, patch: Partial<Entry>) => {
+    setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, ...patch } : e)));
+  };
 
   async function load(silent: boolean = false) {
     if (!silent) setLoading(true);
@@ -285,27 +315,36 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
   };
 
   const archive = (id: string) => {
-    startTransition(async () => {
-      const res = await fetch("/api/waitlist", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, action: "archive" }),
-      });
-      if (res.ok) {
-        toastManager.add({
-          title: "Success",
-          description: "Customer archived successfully",
-          type: "success",
+    if (isBusy(id)) return;
+    setBusy(id, true);
+    removeFromListOptimistic(id);
+    (async () => {
+      try {
+        const res = await fetch("/api/waitlist", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, action: "archive" }),
         });
-        await load(true);
-      } else {
-        toastManager.add({
-          title: "Error",
-          description: "Failed to archive customer",
-          type: "error",
-        });
+        if (res.ok) {
+          toastManager.add({
+            title: "Success",
+            description: "Customer archived successfully",
+            type: "success",
+          });
+          try { window.dispatchEvent(new CustomEvent('wl:refresh', { detail: { waitlistId } })); } catch { }
+          void load(true);
+        } else {
+          toastManager.add({
+            title: "Error",
+            description: "Failed to archive customer",
+            type: "error",
+          });
+          void load(true);
+        }
+      } finally {
+        setBusy(id, false);
       }
-    });
+    })();
   };
 
   const edit = (id: string) => {
@@ -323,174 +362,207 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
 
   const saveEdit = () => {
     if (!editingId) return;
+    if (isBusy(editingId)) return;
+    const id = editingId;
+    setBusy(id, true);
+    const payload: any = {
+      id,
+    };
 
-    startTransition(async () => {
-      const payload: any = {
-        id: editingId,
-      };
+    // Handle empty strings as null for database
+    payload.customer_name = editForm.customerName.trim() || null;
+    payload.phone = editForm.phone.trim() || null;
+    payload.party_size = editForm.partySize ? parseInt(editForm.partySize, 10) : null;
+    payload.seating_preference = editForm.seatingPreference.trim() || null;
 
-      // Handle empty strings as null for database
-      payload.customer_name = editForm.customerName.trim() || null;
-      payload.phone = editForm.phone.trim() || null;
-      payload.party_size = editForm.partySize ? parseInt(editForm.partySize, 10) : null;
-      payload.seating_preference = editForm.seatingPreference.trim() || null;
+    // Optimistic update
+    updateEntryOptimistic(id, {
+      customer_name: payload.customer_name,
+      phone: payload.phone || "",
+      party_size: payload.party_size,
+      seating_preference: payload.seating_preference,
+    } as any);
 
-      const res = await fetch("/api/waitlist", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        toastManager.add({
-          title: "Success",
-          description: "Customer updated successfully",
-          type: "success",
+    (async () => {
+      try {
+        const res = await fetch("/api/waitlist", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
         });
-        setEditingId(null);
-        await load(true);
-      } else {
-        toastManager.add({
-          title: "Error",
-          description: "Failed to update customer",
-          type: "error",
-        });
+
+        if (res.ok) {
+          toastManager.add({
+            title: "Success",
+            description: "Customer updated successfully",
+            type: "success",
+          });
+          setEditingId(null);
+          try { window.dispatchEvent(new CustomEvent('wl:refresh', { detail: { waitlistId } })); } catch { }
+          void load(true);
+        } else {
+          toastManager.add({
+            title: "Error",
+            description: "Failed to update customer",
+            type: "error",
+          });
+          void load(true);
+        }
+      } finally {
+        setBusy(id, false);
       }
-    });
+    })();
   };
 
   const remove = (id: string) => {
-    startTransition(async () => {
-      const res = await fetch(`/api/waitlist?id=${encodeURIComponent(id)}`, { method: "DELETE" });
-      if (res.ok) {
-        toastManager.add({
-          title: "Success",
-          description: "Customer removed from waitlist",
-          type: "success",
-        });
-      } else {
-        toastManager.add({
-          title: "Error",
-          description: "Failed to remove customer",
-          type: "error",
-        });
+    if (isBusy(id)) return;
+    setBusy(id, true);
+    removeFromListOptimistic(id);
+    (async () => {
+      try {
+        const res = await fetch(`/api/waitlist?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+        if (res.ok) {
+          toastManager.add({
+            title: "Success",
+            description: "Customer removed from waitlist",
+            type: "success",
+          });
+        } else {
+          toastManager.add({
+            title: "Error",
+            description: "Failed to remove customer",
+            type: "error",
+          });
+        }
+        try { window.dispatchEvent(new CustomEvent('wl:refresh', { detail: { waitlistId } })); } catch { }
+        void load(true);
+      } finally {
+        setBusy(id, false);
       }
-      await load(true);
-    });
+    })();
   };
 
   const retryMessage = (id: string, type: 'sms' | 'whatsapp') => {
-    startTransition(async () => {
-      const action = type === 'sms' ? 'retry_sms' : 'retry_whatsapp';
-      const res = await fetch("/api/waitlist", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, action }),
-      });
+    if (isBusy(id)) return;
+    setBusy(id, true);
+    (async () => {
+      try {
+        const action = type === 'sms' ? 'retry_sms' : 'retry_whatsapp';
+        const res = await fetch("/api/waitlist", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, action }),
+        });
 
-      if (res.ok) {
-        // Refresh the list to show updated status
-        await load(true);
-      } else {
-        // Could add error handling/toast here
-        console.error('Failed to retry message');
+        if (res.ok) {
+          void load(true);
+        } else {
+          console.error('Failed to retry message');
+          void load(true);
+        }
+      } finally {
+        setBusy(id, false);
       }
-    });
+    })();
   };
 
   const checkIn = (id: string) => {
-    startTransition(async () => {
-      const res = await fetch("/api/waitlist", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, status: "seated" }),
-      });
-      if (res.ok) {
-        toastManager.add({
-          title: "Checked in",
-          description: "Customer marked as served",
-          type: "success",
+    if (isBusy(id)) return;
+    setBusy(id, true);
+    removeFromListOptimistic(id);
+    (async () => {
+      try {
+        const res = await fetch("/api/waitlist", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, status: "seated" }),
         });
-        try { window.dispatchEvent(new CustomEvent('wl:refresh', { detail: { waitlistId } })); } catch { }
-        await load(true);
-      } else {
-        toastManager.add({
-          title: "Error",
-          description: "Failed to check-in customer",
-          type: "error",
-        });
+        if (res.ok) {
+          toastManager.add({
+            title: "Checked in",
+            description: "Customer marked as served",
+            type: "success",
+          });
+          try { window.dispatchEvent(new CustomEvent('wl:refresh', { detail: { waitlistId } })); } catch { }
+          void load(true);
+        } else {
+          toastManager.add({
+            title: "Error",
+            description: "Failed to check-in customer",
+            type: "error",
+          });
+          void load(true);
+        }
+      } finally {
+        setBusy(id, false);
       }
-    });
+    })();
   };
 
   const noShow = (id: string) => {
-    startTransition(async () => {
-      const res = await fetch("/api/waitlist", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, action: "archive" }),
-      });
-      if (res.ok) {
-        toastManager.add({
-          title: "No show",
-          description: "Customer archived",
-          type: "success",
+    if (isBusy(id)) return;
+    setBusy(id, true);
+    removeFromListOptimistic(id);
+    (async () => {
+      try {
+        const res = await fetch("/api/waitlist", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, action: "archive" }),
         });
-        try { window.dispatchEvent(new CustomEvent('wl:refresh', { detail: { waitlistId } })); } catch { }
-        await load(true);
-      } else {
-        toastManager.add({
-          title: "Error",
-          description: "Failed to archive customer",
-          type: "error",
-        });
+        if (res.ok) {
+          toastManager.add({
+            title: "No show",
+            description: "Customer archived",
+            type: "success",
+          });
+          try { window.dispatchEvent(new CustomEvent('wl:refresh', { detail: { waitlistId } })); } catch { }
+          void load(true);
+        } else {
+          toastManager.add({
+            title: "Error",
+            description: "Failed to archive customer",
+            type: "error",
+          });
+          void load(true);
+        }
+      } finally {
+        setBusy(id, false);
       }
-    });
+    })();
   };
 
   const call = (id: string) => {
-    startTransition(async () => {
-      const res = await fetch("/api/waitlist", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, action: "call" }),
-      });
-      if (res.ok) {
-        toastManager.add({
-          title: "Success",
-          description: "Customer called successfully",
-          type: "success",
+    if (isBusy(id)) return;
+    setBusy(id, true);
+    updateEntryOptimistic(id, { status: "notified" });
+    (async () => {
+      try {
+        const res = await fetch("/api/waitlist", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, action: "call" }),
         });
-        // Local and cross-tab refresh
-        try { window.dispatchEvent(new CustomEvent('wl:refresh', { detail: { waitlistId } })); } catch { }
-        try {
-          // Broadcast to main waitlist table
-          const chan1 = supabase.channel(`waitlist-entries-${waitlistId}`);
-          await chan1.send({ type: 'broadcast', event: 'refresh', payload: {} });
-          supabase.removeChannel(chan1);
-
-          // Broadcast to user status pages
-          const chan2 = supabase.channel(`user-wl-${waitlistId}`);
-          await chan2.send({ type: 'broadcast', event: 'refresh', payload: {} });
-          supabase.removeChannel(chan2);
-
-          // Broadcast to public display if token is available
-          const displayToken = waitlists.find((w) => w.id === waitlistId)?.display_token;
-          if (displayToken) {
-            const chan3 = supabase.channel(`display-bc-${displayToken}`);
-            await chan3.send({ type: 'broadcast', event: 'refresh', payload: {} });
-            supabase.removeChannel(chan3);
-          }
-        } catch { }
-        await load(true);
-      } else {
-        toastManager.add({
-          title: "Error",
-          description: "Failed to call customer",
-          type: "error",
-        });
+        if (res.ok) {
+          toastManager.add({
+            title: "Success",
+            description: "Customer called successfully",
+            type: "success",
+          });
+          try { window.dispatchEvent(new CustomEvent('wl:refresh', { detail: { waitlistId } })); } catch { }
+          void load(true);
+        } else {
+          toastManager.add({
+            title: "Error",
+            description: "Failed to call customer",
+            type: "error",
+          });
+          void load(true);
+        }
+      } finally {
+        setBusy(id, false);
       }
-    });
+    })();
   };
 
   if (loading) return (
@@ -508,33 +580,33 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
 
   const renderRowMenuItems = (e: Entry) => (
     <>
-      <DropdownMenuItem disabled={isPending} onSelect={() => edit(e.id)}>
+      <DropdownMenuItem disabled={isBusy(e.id)} onSelect={() => edit(e.id)}>
         <Pencil className="h-4 w-4" />
         Edit
       </DropdownMenuItem>
       {showPhone && (e.sms_status === "failed" || e.whatsapp_status === "failed") ? (
         <>
           {e.sms_status === "failed" ? (
-            <DropdownMenuItem disabled={isPending} onSelect={() => retryMessage(e.id, "sms")}>
+            <DropdownMenuItem disabled={isBusy(e.id)} onSelect={() => retryMessage(e.id, "sms")}>
               <RefreshCw className="h-4 w-4" />
               Retry SMS
             </DropdownMenuItem>
           ) : null}
           {e.whatsapp_status === "failed" ? (
-            <DropdownMenuItem disabled={isPending} onSelect={() => retryMessage(e.id, "whatsapp")}>
+            <DropdownMenuItem disabled={isBusy(e.id)} onSelect={() => retryMessage(e.id, "whatsapp")}>
               <RefreshCw className="h-4 w-4" />
               Retry WhatsApp
             </DropdownMenuItem>
           ) : null}
         </>
       ) : null}
-      <DropdownMenuItem disabled={isPending} onSelect={() => archive(e.id)}>
+      <DropdownMenuItem disabled={isBusy(e.id)} onSelect={() => archive(e.id)}>
         <Archive className="h-4 w-4" />
         Archive
       </DropdownMenuItem>
       <DropdownMenuSeparator />
       <DropdownMenuItem
-        disabled={isPending}
+        disabled={isBusy(e.id)}
         onSelect={() => remove(e.id)}
         className="text-destructive focus:text-destructive"
       >
@@ -558,7 +630,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
   };
 
   return (
-    <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl overflow-hidden" ref={tableRef}>
+    <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl overflow-hidden w-full min-w-0" ref={tableRef}>
       {/* Mobile (xs/sm): card list */}
       <div className="md:hidden">
         <ul className="divide-y divide-border">
@@ -577,18 +649,6 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                           <Clock className="h-3.5 w-3.5" />
                           <span>{getWaitTime(e.created_at)}</span>
                         </div>
-                        {e.is_returning ? (
-                          <HoverClickTooltip content={loyaltyTooltip(e)} side="bottom" align="start">
-                            <button
-                              type="button"
-                              className="inline-flex items-center"
-                              aria-label="Loyalty user"
-                              title="Loyalty user"
-                            >
-                              <Crown className="h-4 w-4 text-orange-500" />
-                            </button>
-                          </HoverClickTooltip>
-                        ) : null}
                       </div>
 
                       {showName ? (
@@ -655,21 +715,21 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
 
                   <div className="grid gap-2">
                     {e.status === "waiting" ? (
-                      <Button disabled={isPending} onClick={() => call(e.id)} size="sm" className="w-full">
+                      <Button disabled={isBusy(e.id)} onClick={() => call(e.id)} size="sm" className="w-full">
                         Call
                       </Button>
                     ) : null}
                     {e.status === "notified" ? (
                       <div className="grid grid-cols-2 gap-2">
                         <Button
-                          disabled={isPending}
+                          disabled={isBusy(e.id)}
                           onClick={() => checkIn(e.id)}
                           size="sm"
                           className="bg-emerald-500 text-black hover:bg-emerald-500/90"
                         >
                           Check-in
                         </Button>
-                        <Button disabled={isPending} onClick={() => noShow(e.id)} size="sm" variant="destructive">
+                        <Button disabled={isBusy(e.id)} onClick={() => noShow(e.id)} size="sm" variant="destructive">
                           No show
                         </Button>
                       </div>
@@ -683,8 +743,8 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
       </div>
 
       {/* Desktop (md+): table */}
-      <div className="hidden md:block overflow-x-auto">
-        <table className="w-full text-sm">
+      <div className="hidden md:block overflow-x-auto max-w-full">
+        <table className="w-full text-sm min-w-0">
           <thead className="bg-muted sticky top-0 z-10">
             <tr>
               <th className="text-left font-medium text-foreground px-4 py-2">Actions</th>
@@ -703,21 +763,21 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
               <tr key={e.id} className={`border-t border-border hover:bg-muted odd:bg-muted/50 ${highlightIds.has(e.id) ? "row-flash" : ""}`}>
                 <td className="px-4 py-2">
                   {e.status === 'waiting' && (
-                    <Button disabled={isPending} onClick={() => call(e.id)} size="sm">
+                    <Button disabled={isBusy(e.id)} onClick={() => call(e.id)} size="sm">
                       Call
                     </Button>
                   )}
                   {e.status === 'notified' && (
                     <div className="flex items-center gap-2">
                       <Button
-                        disabled={isPending}
+                        disabled={isBusy(e.id)}
                         onClick={() => checkIn(e.id)}
                         size="sm"
                         className="bg-emerald-500 text-black hover:bg-emerald-500/90"
                       >
                         Check-in
                       </Button>
-                      <Button disabled={isPending} onClick={() => noShow(e.id)} size="sm" variant="destructive">
+                      <Button disabled={isBusy(e.id)} onClick={() => noShow(e.id)} size="sm" variant="destructive">
                         No show
                       </Button>
                     </div>
@@ -770,7 +830,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                         </button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>{new Date(e.created_at).toLocaleString()}</p>
+                        <p>{formatDateTime(e.created_at, timeFormat)}</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -811,13 +871,13 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
       <Dialog open={!!editingId} onOpenChange={(v) => (!v ? setEditingId(null) : undefined)}>
         <DialogContent className="sm:max-w-2xl p-0 overflow-hidden">
           <div className="flex max-h-[90vh] flex-col">
-            <div className="px-6 pt-6">
+            <div className="h-12 border-b border-border px-6 flex items-center">
               <DialogHeader>
-                <DialogTitle>Edit entry</DialogTitle>
+                <DialogTitle className="truncate">Edit entry</DialogTitle>
               </DialogHeader>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-6 pb-6">
+            <div className="flex-1 overflow-y-auto px-6 py-4">
               <form className="grid gap-4">
                 {showName && (
                   <div className="grid gap-2">
@@ -864,7 +924,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                             type="button"
                             key={s}
                             onClick={() => setEditForm(prev => ({ ...prev, seatingPreference: s }))}
-                            className={`inline-flex items-center rounded-full px-3 py-1 text-xs ring-1 ring-inset transition ${selected ? "bg-primary text-primary-foreground ring-primary" : "bg-card text-foreground ring-border hover:bg-muted"}`}
+                            className={`inline-flex items-center rounded-full px-4 py-2 text-sm ring-1 ring-inset transition min-h-[44px] ${selected ? "bg-primary text-primary-foreground ring-primary" : "bg-card text-foreground ring-border hover:bg-muted"}`}
                           >
                             {s}
                           </button>
@@ -876,15 +936,15 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
               </form>
             </div>
 
-            <div className="sticky bottom-0 border-t border-border bg-background/95 px-6 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-              <DialogFooter className="p-0">
-                <Button type="button" disabled={isPending} onClick={saveEdit}>
-                  {isPending ? "Saving…" : "Save changes"}
-                </Button>
+            <div className="sticky bottom-0 h-12 border-t border-border bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center">
+              <div className="ml-auto flex items-center gap-2">
                 <Button type="button" variant="outline" onClick={() => setEditingId(null)}>
                   Cancel
                 </Button>
-              </DialogFooter>
+                <Button type="button" disabled={isBusy(editingId)} onClick={saveEdit}>
+                  {isBusy(editingId) ? "Saving…" : "Save changes"}
+                </Button>
+              </div>
             </div>
           </div>
         </DialogContent>

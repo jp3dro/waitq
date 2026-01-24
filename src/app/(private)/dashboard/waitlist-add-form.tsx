@@ -72,7 +72,7 @@ export default function AddForm({
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeTo, setUpgradeTo] = useState<PlanId>("base");
   const [smsUsage, setSmsUsage] = useState<{ used: number; limit: number; windowEnd?: string } | null>(null);
-  const { register, handleSubmit, reset, watch, setValue, setError, clearErrors, setFocus, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, reset, watch, setValue, setError, clearErrors, formState: { errors } } = useForm<FormValues>({
     defaultValues: { phone: "", email: "", customerName: "", waitlistId: "", sendSms: false, sendEmail: false, partySize: 2 },
   });
   const [waitlists, setWaitlists] = useState<WaitlistConfig[]>([]);
@@ -93,7 +93,6 @@ export default function AddForm({
       setWaitlists([publicConfig.waitlist]);
       reset((v) => ({ ...v, waitlistId: publicConfig.waitlist.id }));
       setFetching(false);
-      try { setTimeout(() => setFocus("customerName"), 50); } catch { }
       return;
     }
     (async () => {
@@ -111,10 +110,8 @@ export default function AddForm({
         reset((v) => ({ ...v, waitlistId: j.waitlists[0].id }));
       }
       setFetching(false);
-      // Focus the name field when modal opens
-      try { setTimeout(() => setFocus("customerName"), 50); } catch { }
     })();
-  }, [reset, defaultWaitlistId, isPublic, publicConfig, setFocus]);
+  }, [reset, defaultWaitlistId, isPublic, publicConfig]);
 
   useEffect(() => {
     if (isPublic) return;
@@ -424,7 +421,7 @@ export default function AddForm({
                     type="button"
                     key={s}
                     onClick={() => setValue("seatingPreference", s)}
-                    className={`inline-flex items-center rounded-full px-3 py-1 text-xs ring-1 ring-inset transition ${selected ? "bg-primary text-primary-foreground ring-primary" : "bg-card text-foreground ring-border hover:bg-muted"}`}
+                    className={`inline-flex items-center rounded-full px-4 py-2 text-sm ring-1 ring-inset transition min-h-[44px] ${selected ? "bg-primary text-primary-foreground ring-primary" : "bg-card text-foreground ring-border hover:bg-muted"}`}
                   >
                     {s}
                   </button>

@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -51,13 +50,13 @@ export default function AddButton({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
           <div className="flex max-h-[90vh] flex-col">
-            <div className="px-6 pt-6">
+            <div className="h-12 border-b border-border px-6 flex items-center">
               <DialogHeader>
-                <DialogTitle>Add to waitlist</DialogTitle>
+                <DialogTitle className="truncate">Add to waitlist</DialogTitle>
               </DialogHeader>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-6 pb-6">
+            <div className="flex-1 overflow-y-auto px-6 py-4">
               <AddForm
                 onDone={() => setOpen(false)}
                 defaultWaitlistId={defaultWaitlistId}
@@ -68,23 +67,21 @@ export default function AddButton({
               />
             </div>
 
-            <div className="sticky bottom-0 border-t border-border bg-background/95 px-6 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-              <DialogFooter className="flex-col sm:flex-row p-0">
-                {/* Primary first, Cancel last (esp. on mobile) */}
-                <div className="w-full" title={effectiveBlockedReason || undefined}>
+            <div className="sticky bottom-0 h-12 border-t border-border bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center">
+              <div className="ml-auto flex items-center gap-2">
+                <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                  Cancel
+                </Button>
+                <div title={effectiveBlockedReason || undefined}>
                   <Button
                     type="submit"
                     form="add-waitlist-form"
                     disabled={pending || !!effectiveBlockedReason}
-                    className="w-full"
                   >
                     {pending ? "Adding…" : "Add"}
                   </Button>
                 </div>
-                <Button type="button" variant="outline" onClick={() => setOpen(false)} className="w-full sm:w-auto">
-                  Cancel
-                </Button>
-              </DialogFooter>
+              </div>
             </div>
           </div>
         </DialogContent>

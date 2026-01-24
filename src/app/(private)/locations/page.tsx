@@ -12,7 +12,6 @@ import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -766,22 +765,17 @@ export default function LocationsPage() {
         >
           <DialogContent className="sm:max-w-4xl p-0 overflow-hidden">
             <div className="flex max-h-[90vh] flex-col">
-              <div className="px-6 pt-6">
+              <div className="h-12 border-b border-border px-6 flex items-center">
                 <DialogHeader>
-                  <DialogTitle>New location</DialogTitle>
+                  <DialogTitle className="truncate">New location</DialogTitle>
                 </DialogHeader>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-6 pb-6">
+              <div className="flex-1 overflow-y-auto px-6 py-4">
                 <div className="grid gap-4">
                   {msg ? <p className="text-sm text-destructive">{msg}</p> : null}
                   <div className="grid gap-2">
-                    <div className="flex items-center justify-between gap-3">
-                      <Label>Name</Label>
-                      <span className="text-xs text-muted-foreground tabular-nums">
-                        {Math.max(0, MAX_LOCATION_NAME_LEN - form.name.length)} left
-                      </span>
-                    </div>
+                    <Label>Name</Label>
                     <Input
                       value={form.name}
                       maxLength={MAX_LOCATION_NAME_LEN}
@@ -793,42 +787,10 @@ export default function LocationsPage() {
                       aria-invalid={formNameError ? true : undefined}
                       className={formNameError ? "border-destructive focus-visible:ring-destructive" : undefined}
                     />
-                    <p className="text-xs text-muted-foreground tabular-nums">{form.name.length}/{MAX_LOCATION_NAME_LEN}</p>
+                    <p className="text-xs text-muted-foreground tabular-nums">
+                      {Math.max(0, MAX_LOCATION_NAME_LEN - form.name.length)} characters left
+                    </p>
                     {formNameError ? <p className="text-xs text-destructive">{formNameError}</p> : null}
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>Phone</Label>
-                    <PhoneInput
-                      defaultCountry={businessCountry}
-                      value={form.phone}
-                      onChange={(v: string) => setForm((f) => ({ ...f, phone: v }))}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>Seating capacity</Label>
-                    <Input
-                      inputMode="numeric"
-                      value={form.seatingCapacity}
-                      onChange={(e) => setForm((f) => ({ ...f, seatingCapacity: e.target.value }))}
-                      placeholder="e.g. 80"
-                      aria-invalid={formSeatingError ? true : undefined}
-                      className={formSeatingError ? "border-destructive focus-visible:ring-destructive" : undefined}
-                    />
-                    {formSeatingError ? <p className="text-xs text-destructive">{formSeatingError}</p> : null}
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>Address</Label>
-                    <Input
-                      value={form.address}
-                      onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>City</Label>
-                    <Input
-                      value={form.city}
-                      onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
-                    />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="grid gap-2">
@@ -871,6 +833,44 @@ export default function LocationsPage() {
                       </Select>
                     </div>
                   </div>
+                  <div className="grid gap-2">
+                    <Label>Phone</Label>
+                    <PhoneInput
+                      defaultCountry={businessCountry}
+                      value={form.phone}
+                      onChange={(v: string) => setForm((f) => ({ ...f, phone: v }))}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Seating capacity</Label>
+                    <Input
+                      inputMode="numeric"
+                      value={form.seatingCapacity}
+                      onChange={(e) => setForm((f) => ({ ...f, seatingCapacity: e.target.value }))}
+                      placeholder="e.g. 80"
+                      aria-invalid={formSeatingError ? true : undefined}
+                      className={formSeatingError ? "border-destructive focus-visible:ring-destructive" : undefined}
+                    />
+                    {formSeatingError ? <p className="text-xs text-destructive">{formSeatingError}</p> : null}
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Address</Label>
+                    <Input
+                      value={form.address}
+                      onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>City</Label>
+                    <Input
+                      value={form.city}
+                      onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Seating preferences</Label>
+                    <SeatingPrefsEditor value={formSeatingPrefs} onChange={setFormSeatingPrefs} />
+                  </div>
                   <RegularHoursEditor
                     hours={formRegularHours}
                     onChange={setFormRegularHours}
@@ -878,22 +878,18 @@ export default function LocationsPage() {
                     setErrors={setFormHoursErrors}
                     timeFormat={timeFormat}
                   />
-                  <div className="grid gap-2">
-                    <Label>Seating preferences</Label>
-                    <SeatingPrefsEditor value={formSeatingPrefs} onChange={setFormSeatingPrefs} />
-                  </div>
                 </div>
               </div>
 
-              <div className="sticky bottom-0 border-t border-border bg-background/95 px-6 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                <DialogFooter className="p-0">
-                  <Button type="button" onClick={create} disabled={isPending}>
-                    Create
-                  </Button>
+              <div className="sticky bottom-0 h-12 border-t border-border bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center">
+                <div className="ml-auto flex items-center gap-2">
                   <Button type="button" variant="outline" onClick={() => setOpenCreate(false)}>
                     Cancel
                   </Button>
-                </DialogFooter>
+                  <Button type="button" onClick={create} disabled={isPending}>
+                    Create
+                  </Button>
+                </div>
               </div>
             </div>
           </DialogContent>
@@ -917,22 +913,17 @@ export default function LocationsPage() {
         >
           <DialogContent className="sm:max-w-xl p-0 overflow-hidden">
             <div className="flex max-h-[90vh] flex-col">
-              <div className="px-6 pt-6">
+              <div className="h-12 border-b border-border px-6 flex items-center">
                 <DialogHeader>
-                  <DialogTitle>Edit location</DialogTitle>
+                  <DialogTitle className="truncate">Edit location</DialogTitle>
                 </DialogHeader>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-6 pb-6">
+              <div className="flex-1 overflow-y-auto px-6 py-4">
                 <div className="grid gap-4">
                   {editMessage ? <p className="text-sm text-destructive">{editMessage}</p> : null}
                   <div className="grid gap-2">
-                    <div className="flex items-center justify-between gap-3">
-                      <Label>Name</Label>
-                      <span className="text-xs text-muted-foreground tabular-nums">
-                        {Math.max(0, MAX_LOCATION_NAME_LEN - editForm.name.length)} left
-                      </span>
-                    </div>
+                    <Label>Name</Label>
                     <Input
                       value={editForm.name}
                       maxLength={MAX_LOCATION_NAME_LEN}
@@ -944,42 +935,10 @@ export default function LocationsPage() {
                       aria-invalid={editNameError ? true : undefined}
                       className={editNameError ? "border-destructive focus-visible:ring-destructive" : undefined}
                     />
-                    <p className="text-xs text-muted-foreground tabular-nums">{editForm.name.length}/{MAX_LOCATION_NAME_LEN}</p>
+                    <p className="text-xs text-muted-foreground tabular-nums">
+                      {Math.max(0, MAX_LOCATION_NAME_LEN - editForm.name.length)} characters left
+                    </p>
                     {editNameError ? <p className="text-xs text-destructive">{editNameError}</p> : null}
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>Phone</Label>
-                    <PhoneInput
-                      defaultCountry={businessCountry}
-                      value={editForm.phone}
-                      onChange={(v: string) => setEditForm((f) => ({ ...f, phone: v }))}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>Seating capacity</Label>
-                    <Input
-                      inputMode="numeric"
-                      value={editForm.seatingCapacity}
-                      onChange={(e) => setEditForm((f) => ({ ...f, seatingCapacity: e.target.value }))}
-                      placeholder="e.g. 80"
-                      aria-invalid={editSeatingError ? true : undefined}
-                      className={editSeatingError ? "border-destructive focus-visible:ring-destructive" : undefined}
-                    />
-                    {editSeatingError ? <p className="text-xs text-destructive">{editSeatingError}</p> : null}
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>Address</Label>
-                    <Input
-                      value={editForm.address}
-                      onChange={(e) => setEditForm((f) => ({ ...f, address: e.target.value }))}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>City</Label>
-                    <Input
-                      value={editForm.city}
-                      onChange={(e) => setEditForm((f) => ({ ...f, city: e.target.value }))}
-                    />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="grid gap-2">
@@ -1022,6 +981,44 @@ export default function LocationsPage() {
                       </Select>
                     </div>
                   </div>
+                  <div className="grid gap-2">
+                    <Label>Phone</Label>
+                    <PhoneInput
+                      defaultCountry={businessCountry}
+                      value={editForm.phone}
+                      onChange={(v: string) => setEditForm((f) => ({ ...f, phone: v }))}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Seating capacity</Label>
+                    <Input
+                      inputMode="numeric"
+                      value={editForm.seatingCapacity}
+                      onChange={(e) => setEditForm((f) => ({ ...f, seatingCapacity: e.target.value }))}
+                      placeholder="e.g. 80"
+                      aria-invalid={editSeatingError ? true : undefined}
+                      className={editSeatingError ? "border-destructive focus-visible:ring-destructive" : undefined}
+                    />
+                    {editSeatingError ? <p className="text-xs text-destructive">{editSeatingError}</p> : null}
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Address</Label>
+                    <Input
+                      value={editForm.address}
+                      onChange={(e) => setEditForm((f) => ({ ...f, address: e.target.value }))}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>City</Label>
+                    <Input
+                      value={editForm.city}
+                      onChange={(e) => setEditForm((f) => ({ ...f, city: e.target.value }))}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Seating preferences</Label>
+                    <SeatingPrefsEditor value={editSeatingPrefs} onChange={setEditSeatingPrefs} />
+                  </div>
                   <RegularHoursEditor
                     hours={editRegularHours}
                     onChange={setEditRegularHours}
@@ -1029,22 +1026,18 @@ export default function LocationsPage() {
                     setErrors={setHoursErrors}
                     timeFormat={timeFormat}
                   />
-                  <div className="grid gap-2">
-                    <Label>Seating preferences</Label>
-                    <SeatingPrefsEditor value={editSeatingPrefs} onChange={setEditSeatingPrefs} />
-                  </div>
                 </div>
               </div>
 
-              <div className="sticky bottom-0 border-t border-border bg-background/95 px-6 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                <DialogFooter className="p-0">
-                  <Button type="button" onClick={saveEdit} disabled={isPending}>
-                    Save changes
-                  </Button>
+              <div className="sticky bottom-0 h-12 border-t border-border bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center">
+                <div className="ml-auto flex items-center gap-2">
                   <Button type="button" variant="outline" onClick={closeEditModal}>
                     Cancel
                   </Button>
-                </DialogFooter>
+                  <Button type="button" onClick={saveEdit} disabled={isPending}>
+                    Save changes
+                  </Button>
+                </div>
               </div>
             </div>
           </DialogContent>

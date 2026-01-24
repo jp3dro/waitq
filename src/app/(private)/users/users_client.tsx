@@ -8,7 +8,6 @@ import type { PlanId } from "@/lib/plans";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -394,13 +393,13 @@ export default function UsersClient() {
       <Dialog open={invOpen} onOpenChange={setInvOpen}>
         <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
           <div className="flex max-h-[90vh] flex-col">
-            <div className="px-6 pt-6">
+            <div className="h-12 border-b border-border px-6 flex items-center">
               <DialogHeader>
-                <DialogTitle>Invite user</DialogTitle>
+                <DialogTitle className="truncate">Invite user</DialogTitle>
               </DialogHeader>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-6 pb-6">
+            <div className="flex-1 overflow-y-auto px-6 py-4">
               <div className="grid gap-3">
                 <div className="grid gap-2">
                   <Label>Name</Label>
@@ -425,13 +424,13 @@ export default function UsersClient() {
               </div>
             </div>
 
-            <div className="sticky bottom-0 border-t border-border bg-background/95 px-6 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-              <DialogFooter className="p-0">
+            <div className="sticky bottom-0 h-12 border-t border-border bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center">
+              <div className="ml-auto flex items-center gap-2">
+                <Button type="button" variant="outline" onClick={() => setInvOpen(false)}>Cancel</Button>
                 <Button type="button" disabled={isPending} onClick={invite}>
                   {isPending ? "Sending..." : "Invite"}
                 </Button>
-                <Button type="button" variant="outline" onClick={() => setInvOpen(false)}>Cancel</Button>
-              </DialogFooter>
+              </div>
             </div>
           </div>
         </DialogContent>
@@ -441,13 +440,13 @@ export default function UsersClient() {
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
           <div className="flex max-h-[90vh] flex-col">
-            <div className="px-6 pt-6">
+            <div className="h-12 border-b border-border px-6 flex items-center">
               <DialogHeader>
-                <DialogTitle>Edit user</DialogTitle>
+                <DialogTitle className="truncate">Edit user</DialogTitle>
               </DialogHeader>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-6 pb-6">
+            <div className="flex-1 overflow-y-auto px-6 py-4">
               <div className="grid gap-3">
                 <div className="grid gap-2">
                   <Label>Name</Label>
@@ -486,13 +485,13 @@ export default function UsersClient() {
               </div>
             </div>
 
-            <div className="sticky bottom-0 border-t border-border bg-background/95 px-6 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-              <DialogFooter className="p-0">
+            <div className="sticky bottom-0 h-12 border-t border-border bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center">
+              <div className="ml-auto flex items-center gap-2">
+                <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
                 <Button type="button" disabled={isPending} onClick={saveEdit}>
                   {isPending ? "Saving..." : "Save changes"}
                 </Button>
-                <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
-              </DialogFooter>
+              </div>
             </div>
           </div>
         </DialogContent>

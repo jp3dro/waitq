@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -27,6 +26,7 @@ export default function CreateListButton({ locations }: { locations: Location[] 
   const [askEmail, setAskEmail] = useState(false);
   const [displayEnabled, setDisplayEnabled] = useState(true);
   const [displayShowName, setDisplayShowName] = useState(true);
+  const [kioskQrEnabled, setKioskQrEnabled] = useState(false);
   const [displayShowQr, setDisplayShowQr] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -40,6 +40,7 @@ export default function CreateListButton({ locations }: { locations: Location[] 
     setAskEmail(false);
     setDisplayEnabled(true);
     setDisplayShowName(true);
+    setKioskQrEnabled(false);
     setDisplayShowQr(false);
     setMessage(null);
   };
@@ -101,13 +102,13 @@ export default function CreateListButton({ locations }: { locations: Location[] 
       >
         <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
           <div className="flex max-h-[90vh] flex-col">
-            <div className="px-6 pt-6">
+            <div className="h-12 border-b border-border px-6 flex items-center">
               <DialogHeader>
-                <DialogTitle>Create list</DialogTitle>
+                <DialogTitle className="truncate">Create list</DialogTitle>
               </DialogHeader>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-6 pb-6">
+            <div className="flex-1 overflow-y-auto px-6 py-4">
               <div className="grid gap-4">
                 <ListFormFields
                   name={name}
@@ -130,6 +131,12 @@ export default function CreateListButton({ locations }: { locations: Location[] 
                   onDisplayEnabledChange={setDisplayEnabled}
                   displayShowName={displayShowName}
                   onDisplayShowNameChange={setDisplayShowName}
+                  kioskQrEnabled={kioskQrEnabled}
+                  onKioskQrEnabledChange={(v) => {
+                    setKioskQrEnabled(v);
+                    // When disabling QR, also disable showing it on display
+                    if (!v) setDisplayShowQr(false);
+                  }}
                   displayShowQr={displayShowQr}
                   onDisplayShowQrChange={setDisplayShowQr}
                   kioskEnabled={kioskEnabled}
@@ -139,11 +146,8 @@ export default function CreateListButton({ locations }: { locations: Location[] 
               </div>
             </div>
 
-            <div className="sticky bottom-0 border-t border-border bg-background/95 px-6 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-              <DialogFooter className="p-0">
-                <Button disabled={isPending} onClick={onCreate}>
-                  {isPending ? "Creating…" : "Create"}
-                </Button>
+            <div className="sticky bottom-0 h-12 border-t border-border bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center">
+              <div className="ml-auto flex items-center gap-2">
                 <Button
                   variant="outline"
                   onClick={() => {
@@ -153,7 +157,10 @@ export default function CreateListButton({ locations }: { locations: Location[] 
                 >
                   Cancel
                 </Button>
-              </DialogFooter>
+                <Button disabled={isPending} onClick={onCreate}>
+                  {isPending ? "Creating…" : "Create"}
+                </Button>
+              </div>
             </div>
           </div>
         </DialogContent>

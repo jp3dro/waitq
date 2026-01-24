@@ -4,7 +4,6 @@ import Link from "next/link";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -29,25 +28,25 @@ export default function UpgradeRequiredDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
         <div className="flex max-h-[90vh] flex-col">
-          <div className="px-6 pt-6">
+          <div className="h-12 border-b border-border px-6 flex items-center">
             <DialogHeader>
-              <DialogTitle>{title}</DialogTitle>
+              <DialogTitle className="truncate">{title}</DialogTitle>
             </DialogHeader>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-6 pb-6">
+          <div className="flex-1 overflow-y-auto px-6 py-4">
             <div className="text-sm text-muted-foreground">{description}</div>
           </div>
 
-          <div className="sticky bottom-0 border-t border-border bg-background/95 px-6 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <DialogFooter className="p-0">
-              <Button asChild>
-                <Link href={ctaHref}>{ctaLabel}</Link>
-              </Button>
+          <div className="sticky bottom-0 h-12 border-t border-border bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center">
+            <div className="ml-auto flex items-center gap-2">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Not now
               </Button>
-            </DialogFooter>
+              <Button asChild>
+                <Link href={ctaHref}>{ctaLabel}</Link>
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>
