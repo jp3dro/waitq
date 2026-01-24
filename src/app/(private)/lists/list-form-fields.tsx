@@ -41,6 +41,8 @@ type ListFormFieldsProps = {
   onDisplayShowQrChange: (v: boolean) => void;
   kioskEnabled: boolean;
   onKioskEnabledChange: (v: boolean) => void;
+  averageWaitMinutes: number | null;
+  onAverageWaitMinutesChange: (v: number | null) => void;
 };
 
 export default function ListFormFields({
@@ -67,6 +69,8 @@ export default function ListFormFields({
   onDisplayShowQrChange,
   kioskEnabled,
   onKioskEnabledChange,
+  averageWaitMinutes,
+  onAverageWaitMinutesChange,
 }: ListFormFieldsProps) {
   const baseId = useId();
   const askNameId = `${baseId}-ask-name`;
@@ -111,6 +115,36 @@ export default function ListFormFields({
               ))}
             </SelectContent>
           </Select>
+        </div>
+
+        <div className="grid gap-2">
+          <div className="flex items-center gap-2">
+            <Label>Average wait time (minutes)</Label>
+            <HoverClickTooltip content="Set an average wait time to improve estimated wait time calculations. Leave empty to use only historical data." side="bottom">
+              <button type="button" className="inline-flex items-center" aria-label="About average wait time">
+                <Info className="h-4 w-4 text-muted-foreground" />
+              </button>
+            </HoverClickTooltip>
+          </div>
+          <Input
+            type="number"
+            min={1}
+            max={240}
+            placeholder="e.g. 15"
+            value={averageWaitMinutes ?? ""}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val === "") {
+                onAverageWaitMinutesChange(null);
+              } else {
+                const num = parseInt(val, 10);
+                if (!isNaN(num) && num > 0 && num <= 240) {
+                  onAverageWaitMinutesChange(num);
+                }
+              }
+            }}
+          />
+          <p className="text-xs text-muted-foreground">Optional. Used to calculate estimated wait times for customers.</p>
         </div>
       </div>
 
@@ -171,6 +205,15 @@ export default function ListFormFields({
                   <label htmlFor={displayShowNameId} className="text-sm cursor-pointer">Show names</label>
                 </div>
               ) : null}
+              <div className="flex items-center gap-2">
+                <Checkbox id={kioskEnabledId} checked={kioskEnabled} onCheckedChange={(checked) => onKioskEnabledChange(checked === true)} />
+                <label htmlFor={kioskEnabledId} className="text-sm cursor-pointer">Kiosk mode</label>
+                <HoverClickTooltip content="Show a button on the display so guests can add themselves from a tablet." side="bottom">
+                  <button type="button" className="inline-flex items-center" aria-label="About Kiosk mode">
+                    <Info className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                </HoverClickTooltip>
+              </div>
               {kioskQrEnabled ? (
                 <div className="flex items-center gap-2">
                   <Checkbox id={`${displayShowQrId}-display`} checked={displayShowQr} onCheckedChange={(checked) => onDisplayShowQrChange(checked === true)} />
@@ -182,15 +225,6 @@ export default function ListFormFields({
                   </HoverClickTooltip>
                 </div>
               ) : null}
-              <div className="flex items-center gap-2">
-                <Checkbox id={kioskEnabledId} checked={kioskEnabled} onCheckedChange={(checked) => onKioskEnabledChange(checked === true)} />
-                <label htmlFor={kioskEnabledId} className="text-sm cursor-pointer">Kiosk mode</label>
-                <HoverClickTooltip content="Show a button on the display so guests can add themselves from a tablet." side="bottom">
-                  <button type="button" className="inline-flex items-center" aria-label="About Kiosk mode">
-                    <Info className="h-4 w-4 text-muted-foreground" />
-                  </button>
-                </HoverClickTooltip>
-              </div>
             </div>
           </div>
         ) : null}

@@ -19,6 +19,7 @@ export default function EditListButton({
   initialLocationId,
   locations,
   initialKioskEnabled = false,
+  initialKioskQrEnabled = false,
   initialAskName = true,
   initialAskPhone = true,
   initialAskEmail = false,
@@ -26,6 +27,7 @@ export default function EditListButton({
   initialDisplayEnabled = true,
   initialDisplayShowName = true,
   initialDisplayShowQr = false,
+  initialAverageWaitMinutes = null,
   triggerId,
   hideTrigger = false,
   buttonClassName,
@@ -37,6 +39,7 @@ export default function EditListButton({
   initialLocationId?: string;
   locations: Location[];
   initialKioskEnabled?: boolean;
+  initialKioskQrEnabled?: boolean;
   initialDisplayEnabled?: boolean;
   initialDisplayShowName?: boolean;
   initialDisplayShowQr?: boolean;
@@ -44,6 +47,7 @@ export default function EditListButton({
   initialAskPhone?: boolean;
   initialAskEmail?: boolean;
   initialSeatingPreferences?: string[];
+  initialAverageWaitMinutes?: number | null;
   triggerId?: string;
   hideTrigger?: boolean;
   buttonClassName?: string;
@@ -56,12 +60,13 @@ export default function EditListButton({
   const [kioskEnabled, setKioskEnabled] = useState<boolean>(initialKioskEnabled);
   const [displayEnabled, setDisplayEnabled] = useState<boolean>(initialDisplayEnabled);
   const [displayShowName, setDisplayShowName] = useState<boolean>(initialDisplayShowName);
-  // kioskQrEnabled is derived from displayShowQr - if QR is shown on display, QR feature is enabled
-  const [kioskQrEnabled, setKioskQrEnabled] = useState<boolean>(initialDisplayShowQr);
+  // kioskQrEnabled is now a separate field from displayShowQr
+  const [kioskQrEnabled, setKioskQrEnabled] = useState<boolean>(initialKioskQrEnabled);
   const [displayShowQr, setDisplayShowQr] = useState<boolean>(initialDisplayShowQr);
   const [askName, setAskName] = useState<boolean>(initialAskName);
   const [askPhone, setAskPhone] = useState<boolean>(initialAskPhone);
   const [askEmail, setAskEmail] = useState<boolean>(initialAskEmail);
+  const [averageWaitMinutes, setAverageWaitMinutes] = useState<number | null>(initialAverageWaitMinutes);
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const router = useRouter();
@@ -87,15 +92,16 @@ export default function EditListButton({
         setKioskEnabled(initialKioskEnabled);
         setDisplayEnabled(initialDisplayEnabled);
         setDisplayShowName(initialDisplayShowName);
-        setKioskQrEnabled(initialDisplayShowQr);
+        setKioskQrEnabled(initialKioskQrEnabled);
         setDisplayShowQr(initialDisplayShowQr);
         setAskName(initialAskName);
         setAskPhone(initialAskPhone);
         setAskEmail(initialAskEmail);
+        setAverageWaitMinutes(initialAverageWaitMinutes);
         setMessage(null);
       }
     }
-  }, [controlledOpen, initialName, initialLocationId, initialKioskEnabled, initialDisplayEnabled, initialDisplayShowName, initialDisplayShowQr, initialAskName, initialAskPhone, initialAskEmail, locations]);
+  }, [controlledOpen, initialName, initialLocationId, initialKioskEnabled, initialKioskQrEnabled, initialDisplayEnabled, initialDisplayShowName, initialDisplayShowQr, initialAskName, initialAskPhone, initialAskEmail, initialAverageWaitMinutes, locations]);
 
   const open = typeof controlledOpen === "boolean" ? controlledOpen : internalOpen;
   // Radix Dialog may re-run effects when `onOpenChange` identity changes.
@@ -115,11 +121,12 @@ export default function EditListButton({
     setKioskEnabled(initialKioskEnabled);
     setDisplayEnabled(initialDisplayEnabled);
     setDisplayShowName(initialDisplayShowName);
-    setKioskQrEnabled(initialDisplayShowQr);
+    setKioskQrEnabled(initialKioskQrEnabled);
     setDisplayShowQr(initialDisplayShowQr);
     setAskName(initialAskName);
     setAskPhone(initialAskPhone);
     setAskEmail(initialAskEmail);
+    setAverageWaitMinutes(initialAverageWaitMinutes);
     setMessage(null);
   };
 
@@ -130,18 +137,19 @@ export default function EditListButton({
     setKioskEnabled(initialKioskEnabled);
     setDisplayEnabled(initialDisplayEnabled);
     setDisplayShowName(initialDisplayShowName);
-    setKioskQrEnabled(initialDisplayShowQr);
+    setKioskQrEnabled(initialKioskQrEnabled);
     setDisplayShowQr(initialDisplayShowQr);
     setAskName(initialAskName);
     setAskPhone(initialAskPhone);
     setAskEmail(initialAskEmail);
+    setAverageWaitMinutes(initialAverageWaitMinutes);
     setMessage(null);
   };
 
   const save = () => {
     setMessage(null);
     startTransition(async () => {
-      const payload: { id: string; name?: string; locationId?: string; kioskEnabled?: boolean; displayEnabled?: boolean; displayShowName?: boolean; displayShowQr?: boolean; askName?: boolean; askPhone?: boolean; askEmail?: boolean } = { id: waitlistId };
+      const payload: { id: string; name?: string; locationId?: string; kioskEnabled?: boolean; kioskQrEnabled?: boolean; displayEnabled?: boolean; displayShowName?: boolean; displayShowQr?: boolean; askName?: boolean; askPhone?: boolean; askEmail?: boolean; averageWaitMinutes?: number | null } = { id: waitlistId };
 
       // Only include fields that have changed
       if (name !== initialName) {
@@ -151,12 +159,14 @@ export default function EditListButton({
         payload.locationId = locationId;
       }
       payload.kioskEnabled = kioskEnabled;
+      payload.kioskQrEnabled = kioskQrEnabled;
       payload.displayEnabled = displayEnabled;
       payload.displayShowName = displayEnabled ? displayShowName : false;
-      payload.displayShowQr = displayEnabled ? displayShowQr : false;
+      payload.displayShowQr = displayEnabled && kioskQrEnabled ? displayShowQr : false;
       payload.askName = askName;
       payload.askPhone = askPhone;
       payload.askEmail = askEmail;
+      payload.averageWaitMinutes = averageWaitMinutes;
 
       // If no fields changed, just close modal and show success
       if (Object.keys(payload).length === 1) {
@@ -246,6 +256,8 @@ export default function EditListButton({
                   onDisplayShowQrChange={setDisplayShowQr}
                   kioskEnabled={kioskEnabled}
                   onKioskEnabledChange={setKioskEnabled}
+                  averageWaitMinutes={averageWaitMinutes}
+                  onAverageWaitMinutesChange={setAverageWaitMinutes}
                 />
                 {message ? <p className="text-sm text-destructive">{message}</p> : null}
               </div>

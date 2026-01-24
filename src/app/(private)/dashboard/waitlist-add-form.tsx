@@ -64,7 +64,7 @@ export default function AddForm({
   onBlockedReasonChange?: (reason: string | null) => void;
   mode?: "internal" | "public";
   publicConfig?: PublicConfig;
-  onPublicSuccess?: (payload: { statusUrl?: string; ticketNumber?: number | null }) => void;
+  onPublicSuccess?: (payload: { statusUrl?: string; ticketNumber?: number | null; emailProvided?: boolean; phoneProvided?: boolean }) => void;
 }) {
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
@@ -174,9 +174,11 @@ export default function AddForm({
         });
         const j = await res.json().catch(() => ({}));
         if (res.ok) {
+          const hadEmail = !!(values.email && values.email.trim());
+          const hadPhone = !!(values.phone && values.phone.trim());
           reset({ phone: "", email: "", customerName: "", waitlistId: values.waitlistId, sendSms: false, sendEmail: false, partySize: 2, seatingPreference: undefined });
           setMessage(null);
-          onPublicSuccess?.({ statusUrl: j?.statusUrl, ticketNumber: j?.ticketNumber });
+          onPublicSuccess?.({ statusUrl: j?.statusUrl, ticketNumber: j?.ticketNumber, emailProvided: hadEmail, phoneProvided: hadPhone });
           return;
         }
         // Public mode should never show upgrade prompts (customer-facing).
@@ -378,7 +380,7 @@ export default function AddForm({
 
           {collectPhone && (
             <div className="grid gap-2">
-              <label className="text-sm font-medium">Phone (optional)</label>
+              <label className="text-sm font-medium">{isPublic ? "Phone number to receive confirmation (optional)" : "Phone (optional)"}</label>
               <PhoneInput
                 defaultCountry={businessCountry}
                 value={watch("phone")}
@@ -393,7 +395,7 @@ export default function AddForm({
 
         {collectEmail ? (
           <div className="grid gap-2">
-            <label className="text-sm font-medium">Email</label>
+            <label className="text-sm font-medium">{isPublic ? "E-mail to receive confirmation (optional)" : "Email"}</label>
             <input
               type="email"
               inputMode="email"

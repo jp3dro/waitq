@@ -42,14 +42,13 @@ export async function POST(req: NextRequest) {
 
   const admin = getAdminClient();
 
-  // Find the waitlist by display token and ensure kiosk is enabled
+  // Find the waitlist by display token
   const { data: list, error: listErr } = await admin
     .from("waitlists")
-    .select("id, business_id, kiosk_enabled, ask_name, ask_phone, location_id")
+    .select("id, business_id, ask_name, ask_phone, location_id")
     .eq("display_token", displayToken)
     .single();
   if (listErr || !list) return NextResponse.json({ error: "Invalid display token" }, { status: 404 });
-  if (!list.kiosk_enabled) return NextResponse.json({ error: "Kiosk is disabled" }, { status: 403 });
 
   // Enforce location regular hours: do not accept new entries when closed.
   try {
@@ -73,8 +72,7 @@ export async function POST(req: NextRequest) {
   }
 
 
-  // Validate required fields based on settings
-  if (list.ask_phone !== false && !phone) return NextResponse.json({ error: "Phone number is required" }, { status: 400 });
+  // Validate fields - name is required if ask_name is enabled, phone and email are always optional
   if (list.ask_name !== false && !name) return NextResponse.json({ error: "Name is required" }, { status: 400 });
   const normalizedPhone = normalizePhone(phone);
   if (phone && !normalizedPhone) return NextResponse.json({ error: "Invalid phone number" }, { status: 400 });

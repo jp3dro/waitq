@@ -28,6 +28,7 @@ export default function CreateListButton({ locations }: { locations: Location[] 
   const [displayShowName, setDisplayShowName] = useState(true);
   const [kioskQrEnabled, setKioskQrEnabled] = useState(false);
   const [displayShowQr, setDisplayShowQr] = useState(false);
+  const [averageWaitMinutes, setAverageWaitMinutes] = useState<number | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
   const reset = () => {
@@ -42,6 +43,7 @@ export default function CreateListButton({ locations }: { locations: Location[] 
     setDisplayShowName(true);
     setKioskQrEnabled(false);
     setDisplayShowQr(false);
+    setAverageWaitMinutes(null);
     setMessage(null);
   };
 
@@ -61,12 +63,14 @@ export default function CreateListButton({ locations }: { locations: Location[] 
           name: n,
           locationId: locationId || undefined,
           kioskEnabled,
+          kioskQrEnabled,
           displayEnabled,
           displayShowName,
           displayShowQr,
           askName,
           askPhone,
           askEmail,
+          averageWaitMinutes: averageWaitMinutes || undefined,
         }),
       });
       const j = await res.json().catch(() => ({}));
@@ -141,6 +145,8 @@ export default function CreateListButton({ locations }: { locations: Location[] 
                   onDisplayShowQrChange={setDisplayShowQr}
                   kioskEnabled={kioskEnabled}
                   onKioskEnabledChange={setKioskEnabled}
+                  averageWaitMinutes={averageWaitMinutes}
+                  onAverageWaitMinutesChange={setAverageWaitMinutes}
                 />
                 {message ? <p className="text-sm text-destructive">{message}</p> : null}
               </div>

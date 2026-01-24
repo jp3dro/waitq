@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
   }
 
   const admin = getAdminClient();
-  const listSelect = "id, name, kiosk_enabled, display_enabled, display_show_name, display_show_qr, business_id, location_id, seating_preferences, ask_name, ask_phone, ask_email, business_locations:location_id(regular_hours, timezone)";
+  const listSelect = "id, name, kiosk_enabled, kiosk_qr_enabled, display_enabled, display_show_name, display_show_qr, business_id, location_id, seating_preferences, ask_name, ask_phone, ask_email, average_wait_minutes, business_locations:location_id(regular_hours, timezone)";
   let list = null as any;
   const { data: listData, error: listErr } = await admin
     .from("waitlists")
@@ -74,8 +74,12 @@ export async function GET(req: NextRequest) {
     .order("ticket_number", { ascending: true });
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
-  // Compute estimated wait time based on seated entries; apply 5-minute floor when queue is empty
+  // Compute estimated wait time based on:
+  // 1. Manual average_wait_minutes setting (if set)
+  // 2. Historical data from seated entries
+  // 3. Default 5-minute baseline when queue is empty
   let estimatedMs = 0;
+  const manualAvgMinutes = typeof list.average_wait_minutes === "number" ? list.average_wait_minutes : null;
   try {
     const { data: served } = await admin
       .from("waitlist_entries")
@@ -89,14 +93,33 @@ export async function GET(req: NextRequest) {
     const durationsMs = rows
       .map((r) => (r.notified_at ? new Date(r.notified_at).getTime() - new Date(r.created_at).getTime() : null))
       .filter((v): v is number => typeof v === "number" && isFinite(v) && v > 0);
-    const avg = durationsMs.length ? Math.round(durationsMs.reduce((a, b) => a + b, 0) / durationsMs.length) : 0;
-    // If queue is empty, set 5 minutes baseline
+    const historicalAvgMs = durationsMs.length ? Math.round(durationsMs.reduce((a, b) => a + b, 0) / durationsMs.length) : 0;
+    
+    // Blend manual setting with historical data if both exist
+    // If manual setting exists, weight it 70% and historical 30%
+    // If only manual exists, use it directly
+    // If only historical exists, use it directly
+    let avgMs = 0;
+    if (manualAvgMinutes !== null && historicalAvgMs > 0) {
+      avgMs = Math.round(manualAvgMinutes * 60 * 1000 * 0.7 + historicalAvgMs * 0.3);
+    } else if (manualAvgMinutes !== null) {
+      avgMs = manualAvgMinutes * 60 * 1000;
+    } else {
+      avgMs = historicalAvgMs;
+    }
+    
+    // If queue is empty, set 5 minutes baseline (or manual setting if available)
     const { count: waitingCount } = await admin
       .from("waitlist_entries")
       .select("id", { count: "exact", head: true })
       .eq("waitlist_id", list.id)
       .eq("status", "waiting");
-    estimatedMs = (waitingCount || 0) === 0 ? 5 * 60 * 1000 : avg;
+    
+    if ((waitingCount || 0) === 0) {
+      estimatedMs = manualAvgMinutes !== null ? manualAvgMinutes * 60 * 1000 : 5 * 60 * 1000;
+    } else {
+      estimatedMs = avgMs > 0 ? avgMs : (manualAvgMinutes !== null ? manualAvgMinutes * 60 * 1000 : 5 * 60 * 1000);
+    }
   } catch { }
 
   let businessCountry: string | null = null;

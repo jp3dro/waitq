@@ -149,6 +149,30 @@ export default function DisplayClient({ token }: { token: string }) {
     );
   }
 
+  // Show OFF state when display is disabled
+  if (data.displayEnabled === false) {
+    return (
+      <main className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center">
+        <div className="text-center px-4">
+          <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-muted mb-4">
+            <svg className="h-8 w-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold">Display is off</h1>
+          <p className="mt-2 text-muted-foreground">This public display has been disabled.</p>
+        </div>
+        <div className="absolute bottom-6 flex items-center justify-center gap-1">
+          <span className="text-xs font-medium text-muted-foreground">Powered by</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/waitq.svg" alt="WaitQ" className="h-4 w-auto logo-light" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/waitq-variant.svg" alt="WaitQ" className="h-4 w-auto logo-dark" />
+        </div>
+      </main>
+    );
+  }
+
   const notified = data.entries.filter((e) => e.status === "notified");
   const nowServing = notified.length
     ? notified
@@ -240,12 +264,12 @@ export default function DisplayClient({ token }: { token: string }) {
           ) : null}
         </div>
 
-        <div className="mt-4 grid md:grid-cols-[1.2fr_1fr] gap-4 md:gap-6 flex-1 min-h-0 overflow-hidden">
-          <section className="rounded-2xl bg-card text-card-foreground ring-1 ring-border flex flex-col min-h-0 overflow-hidden">
-            <div className="px-6 py-4 border-b border-border shrink-0">
+        <div className="mt-4 grid md:grid-cols-[1.2fr_1fr] gap-4 md:gap-6 flex-1 min-h-0">
+          <section className="rounded-2xl bg-card text-card-foreground border border-border flex flex-col min-h-0">
+            <div className="px-6 py-4 border-b border-border shrink-0 rounded-t-2xl">
               <h2 className="text-xl sm:text-2xl font-semibold text-foreground">Next in line</h2>
             </div>
-            <div className="flex-1 overflow-y-auto min-h-0 px-6 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto min-h-0 px-6 custom-scrollbar rounded-b-2xl">
               {waiting.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-muted-foreground text-lg">No one waiting at the moment</p>
@@ -278,8 +302,8 @@ export default function DisplayClient({ token }: { token: string }) {
             </div>
           </section>
 
-          <section className="rounded-2xl bg-emerald-50 text-emerald-950 ring-1 ring-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-50 dark:ring-emerald-800 flex flex-col min-h-0 overflow-hidden">
-            <div className="px-4 sm:px-6 py-4 border-b border-emerald-200 dark:border-emerald-800 shrink-0">
+          <section className="rounded-2xl bg-emerald-50 text-emerald-950 border border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-50 dark:border-emerald-800 flex flex-col min-h-0">
+            <div className="px-4 sm:px-6 py-4 border-b border-emerald-200 dark:border-emerald-800 shrink-0 rounded-t-2xl">
               <h2 className="text-xl sm:text-2xl font-semibold flex items-center gap-2">
                 <span className="relative flex h-3 w-3">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -288,7 +312,7 @@ export default function DisplayClient({ token }: { token: string }) {
                 Now calling
               </h2>
             </div>
-            <div className="flex-1 overflow-y-auto min-h-0 p-4 sm:p-6 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto min-h-0 p-4 sm:p-6 custom-scrollbar rounded-b-2xl">
               {notified.length === 0 ? (
                 <div className="text-center py-12 opacity-60">
                   <p className="text-xl">Waiting for next group...</p>
@@ -333,12 +357,15 @@ export default function DisplayClient({ token }: { token: string }) {
 
       {/* Floating QR Code - bottom right */}
       {showQrOnDisplay && qrUrl ? (
-        <div className="fixed bottom-6 right-6 z-50 hidden md:flex items-center gap-4 rounded-2xl bg-card text-card-foreground ring-1 ring-border shadow-lg p-4">
+        <div className="fixed bottom-6 right-6 z-50 hidden md:flex flex-col items-center rounded-2xl bg-card text-card-foreground border border-border shadow-lg p-5">
+          <div className="text-base font-semibold text-center leading-snug mb-3">
+            Scan to join<br />the waiting list
+          </div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={qrUrl}
             alt="QR code"
-            className="h-20 w-20 bg-white rounded-lg flex-shrink-0"
+            className="h-32 w-32 bg-white rounded-lg"
             onError={() => {
               const providers = [
                 (t: string) => `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=2&data=${encodeURIComponent(t)}`,
@@ -354,7 +381,6 @@ export default function DisplayClient({ token }: { token: string }) {
               }
             }}
           />
-          <div className="text-sm font-medium leading-tight max-w-[120px]">Scan to join the waiting list</div>
         </div>
       ) : null}
     </main>
@@ -391,13 +417,16 @@ function KioskButton({
   const [step, setStep] = useState<"form" | "confirm">("form");
   const [duplicateDialog, setDuplicateDialog] = useState<{ open: boolean; message: string }>({ open: false, message: "" });
   const [ticketNumber, setTicketNumber] = useState<number | null>(null);
-  const [statusUrl, setStatusUrl] = useState<string | null>(null);
+  // Track if email was actually provided (not just if askEmail is enabled)
+  const [emailProvided, setEmailProvided] = useState(false);
+  const [phoneProvided, setPhoneProvided] = useState(false);
 
   const close = () => {
     setOpen(false);
     setStep("form");
     setTicketNumber(null);
-    setStatusUrl(null);
+    setEmailProvided(false);
+    setPhoneProvided(false);
     setDuplicateDialog({ open: false, message: "" });
   };
 
@@ -444,17 +473,18 @@ function KioskButton({
                       location_status_reason: locationStatusReason || null,
                     },
                   }}
-                  onPublicSuccess={({ statusUrl, ticketNumber }) => {
+                  onPublicSuccess={({ ticketNumber, emailProvided: ep, phoneProvided: pp }) => {
                     setTicketNumber(typeof ticketNumber === "number" ? ticketNumber : null);
-                    setStatusUrl(typeof statusUrl === "string" ? statusUrl : null);
+                    setEmailProvided(ep === true);
+                    setPhoneProvided(pp === true);
                     setStep("confirm");
                   }}
                 />
               ) : (
                 <div className="grid gap-4 text-center text-foreground">
-                  {askEmail ? (
+                  {emailProvided ? (
                     <p className="text-sm text-muted-foreground">We sent your ticket details to your email.</p>
-                  ) : askPhone ? (
+                  ) : phoneProvided ? (
                     <p className="text-sm text-muted-foreground">We&apos;ll notify you when your table is ready.</p>
                   ) : null}
                   <div>
@@ -477,15 +507,7 @@ function KioskButton({
                     </Button>
                   </>
                 ) : (
-                  <Button
-                    onClick={() => {
-                      if (statusUrl) {
-                        window.location.href = statusUrl;
-                        return;
-                      }
-                      close();
-                    }}
-                  >
+                  <Button onClick={close}>
                     Done
                   </Button>
                 )}

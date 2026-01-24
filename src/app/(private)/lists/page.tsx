@@ -38,7 +38,7 @@ export default async function ListsIndexPage() {
     .order("created_at", { ascending: true });
   const { data: lists } = await supabase
     .from("waitlists")
-    .select("id, name, location_id, display_token, kiosk_enabled, display_enabled, display_show_name, display_show_qr, ask_name, ask_phone, ask_email, seating_preferences")
+    .select("id, name, location_id, display_token, kiosk_enabled, kiosk_qr_enabled, display_enabled, display_show_name, display_show_qr, ask_name, ask_phone, ask_email, seating_preferences, average_wait_minutes")
     .eq("business_id", businessId)
     .order("created_at", { ascending: true });
   const { data: biz } = await supabase.from("businesses").select("name").eq("id", businessId).maybeSingle();
@@ -49,6 +49,7 @@ export default async function ListsIndexPage() {
     location_id: string | null;
     display_token?: string | null;
     kiosk_enabled?: boolean | null;
+    kiosk_qr_enabled?: boolean | null;
     display_enabled?: boolean | null;
     display_show_name?: boolean | null;
     display_show_qr?: boolean | null;
@@ -56,6 +57,7 @@ export default async function ListsIndexPage() {
     ask_phone?: boolean | null;
     ask_email?: boolean | null;
     seating_preferences?: string[] | null;
+    average_wait_minutes?: number | null;
   }[];
 
   const locationOpenById = new Map(
@@ -172,6 +174,7 @@ export default async function ListsIndexPage() {
                             locationName={loc.name}
                             initialLocationId={l.location_id}
                             kioskEnabled={l.kiosk_enabled}
+                            kioskQrEnabled={l.kiosk_qr_enabled}
                             displayEnabled={l.display_enabled}
                             displayShowName={l.display_show_name}
                             displayShowQr={l.display_show_qr}
@@ -179,6 +182,7 @@ export default async function ListsIndexPage() {
                             askPhone={l.ask_phone}
                             askEmail={l.ask_email}
                             seatingPreferences={l.seating_preferences}
+                            averageWaitMinutes={l.average_wait_minutes}
                             locationIsOpen={locationIsOpen}
                             locations={locs}
                             disableDelete={allLists.length <= 1}

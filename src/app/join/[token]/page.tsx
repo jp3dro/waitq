@@ -177,22 +177,22 @@ export default function JoinPage({ params }: { params: Promise<{ token: string }
                 <Button
                   type="submit"
                   form="join-waitlist-form"
-                  className="w-full"
+                  className="w-full h-14 text-lg"
                   disabled={!locationIsOpen || isPending}
                 >
                   {isPending ? "Joining..." : "Join waitlist"}
                 </Button>
               </div>
             </div>
-          </div>
 
-          {/* Footer */}
-          <div className="mt-8 flex items-center justify-center gap-1">
-            <span className="text-xs font-medium text-muted-foreground">Powered by</span>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/waitq.svg" alt="WaitQ" className="h-4 w-auto logo-light" />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/waitq-variant.svg" alt="WaitQ" className="h-4 w-auto logo-dark" />
+            {/* Footer - closer to form */}
+            <div className="mt-6 flex items-center justify-center gap-1">
+              <span className="text-xs font-medium text-muted-foreground">Powered by</span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/waitq.svg" alt="WaitQ" className="h-4 w-auto logo-light" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/waitq-variant.svg" alt="WaitQ" className="h-4 w-auto logo-dark" />
+            </div>
           </div>
         </div>
       </div>

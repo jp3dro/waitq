@@ -17,7 +17,7 @@ export async function GET() {
   if (!businessId) return NextResponse.json({ error: "No business found" }, { status: 404 });
 
   const admin = getAdminClient();
-  const selectFields = "id, name, business_id, location_id, display_token, kiosk_enabled, display_enabled, display_show_name, display_show_qr, list_type, ask_name, ask_phone, ask_email, created_at, business_locations:location_id(id, name, regular_hours, timezone, seating_preferences)";
+  const selectFields = "id, name, business_id, location_id, display_token, kiosk_enabled, kiosk_qr_enabled, display_enabled, display_show_name, display_show_qr, list_type, ask_name, ask_phone, ask_email, average_wait_minutes, created_at, business_locations:location_id(id, name, regular_hours, timezone, seating_preferences)";
   const { data, error } = await admin
     .from("waitlists")
     .select(selectFields)
@@ -74,6 +74,7 @@ const postSchema = z.object({
   name: z.string().min(1).max(30, "Name must be 30 characters or fewer"),
   locationId: z.string().uuid().optional(),
   kioskEnabled: z.boolean().optional().default(true),
+  kioskQrEnabled: z.boolean().optional().default(false),
   displayEnabled: z.boolean().optional(),
   displayShowName: z.boolean().optional(),
   displayShowQr: z.boolean().optional(),
@@ -81,6 +82,7 @@ const postSchema = z.object({
   askName: z.boolean().optional().default(true),
   askPhone: z.boolean().optional().default(true),
   askEmail: z.boolean().optional().default(false),
+  averageWaitMinutes: z.number().int().positive().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -95,16 +97,18 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   let businessId = parse.data.businessId;
-  const { name, kioskEnabled, displayEnabled, displayShowName, displayShowQr, askName, askPhone, askEmail } = parse.data as {
+  const { name, kioskEnabled, kioskQrEnabled, displayEnabled, displayShowName, displayShowQr, askName, askPhone, askEmail, averageWaitMinutes } = parse.data as {
     name: string;
     locationId?: string;
     kioskEnabled?: boolean;
+    kioskQrEnabled?: boolean;
     displayEnabled?: boolean;
     displayShowName?: boolean;
     displayShowQr?: boolean;
     askName?: boolean;
     askPhone?: boolean;
     askEmail?: boolean;
+    averageWaitMinutes?: number;
   };
   let { locationId } = parse.data as { name: string; locationId?: string };
   if (!businessId) {
@@ -134,6 +138,7 @@ export async function POST(req: NextRequest) {
       name,
       location_id: locationId,
       kiosk_enabled: !!kioskEnabled,
+      kiosk_qr_enabled: !!kioskQrEnabled,
       display_enabled: displayEnabled !== false,
       display_show_name: displayShowName !== false,
       display_show_qr: displayShowQr === true,
@@ -141,8 +146,9 @@ export async function POST(req: NextRequest) {
       ask_name: askName !== false,
       ask_phone: askPhone !== false,
       ask_email: askEmail === true,
+      average_wait_minutes: averageWaitMinutes || null,
     })
-    .select("id, name, business_id, location_id, display_token, kiosk_enabled, display_enabled, display_show_name, display_show_qr, list_type, ask_name, ask_phone, ask_email")
+    .select("id, name, business_id, location_id, display_token, kiosk_enabled, kiosk_qr_enabled, display_enabled, display_show_name, display_show_qr, list_type, ask_name, ask_phone, ask_email, average_wait_minutes")
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ waitlist: data }, { status: 201 });
@@ -240,6 +246,7 @@ const patchSchema = z.object({
   name: z.string().min(1).max(30, "Name must be 30 characters or fewer").optional(),
   locationId: z.string().uuid().optional(),
   kioskEnabled: z.boolean().optional(),
+  kioskQrEnabled: z.boolean().optional(),
   displayEnabled: z.boolean().optional(),
   displayShowName: z.boolean().optional(),
   displayShowQr: z.boolean().optional(),
@@ -247,6 +254,7 @@ const patchSchema = z.object({
   askName: z.boolean().optional(),
   askPhone: z.boolean().optional(),
   askEmail: z.boolean().optional(),
+  averageWaitMinutes: z.number().int().positive().nullable().optional(),
 });
 
 export async function PUT(req: NextRequest) {
@@ -263,17 +271,19 @@ export async function PUT(req: NextRequest) {
   const businessId = await resolveCurrentBusinessId(supabase as any, user.id);
   if (!businessId) return NextResponse.json({ error: "No business found" }, { status: 404 });
 
-  const { id, name, locationId, kioskEnabled, displayEnabled, displayShowName, displayShowQr, askName, askPhone, askEmail } = parse.data;
+  const { id, name, locationId, kioskEnabled, kioskQrEnabled, displayEnabled, displayShowName, displayShowQr, askName, askPhone, askEmail, averageWaitMinutes } = parse.data;
   const payload: Record<string, unknown> = {};
   if (typeof name === "string") payload.name = name;
   if (typeof locationId === "string") payload.location_id = locationId;
   if (typeof kioskEnabled === "boolean") payload.kiosk_enabled = kioskEnabled;
+  if (typeof kioskQrEnabled === "boolean") payload.kiosk_qr_enabled = kioskQrEnabled;
   if (typeof displayEnabled === "boolean") payload.display_enabled = displayEnabled;
   if (typeof displayShowName === "boolean") payload.display_show_name = displayShowName;
   if (typeof displayShowQr === "boolean") payload.display_show_qr = displayShowQr;
   if (typeof askName === "boolean") payload.ask_name = askName;
   if (typeof askPhone === "boolean") payload.ask_phone = askPhone;
   if (typeof askEmail === "boolean") payload.ask_email = askEmail;
+  if (averageWaitMinutes !== undefined) payload.average_wait_minutes = averageWaitMinutes;
 
   if (Object.keys(payload).length === 0) return NextResponse.json({ error: "No fields to update" }, { status: 400 });
 
@@ -284,7 +294,7 @@ export async function PUT(req: NextRequest) {
     .update(payload)
     .eq("id", id)
     .eq("business_id", businessId)
-    .select("id, name, business_id, location_id, display_token, kiosk_enabled, display_enabled, display_show_name, display_show_qr, list_type, ask_name, ask_phone, ask_email")
+    .select("id, name, business_id, location_id, display_token, kiosk_enabled, kiosk_qr_enabled, display_enabled, display_show_name, display_show_qr, list_type, ask_name, ask_phone, ask_email, average_wait_minutes")
     .maybeSingle();
   if (error && (error.message.toLowerCase().includes("display_enabled") || error.message.toLowerCase().includes("display_show_name") || error.message.toLowerCase().includes("display_show_qr"))) {
     return NextResponse.json({ error: "Public display settings are not available in this project. Add the display_* columns first." }, { status: 400 });

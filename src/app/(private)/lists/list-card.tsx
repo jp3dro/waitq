@@ -26,6 +26,7 @@ export default function ListCard({
   locationName,
   initialLocationId,
   kioskEnabled,
+  kioskQrEnabled,
   displayEnabled,
   displayShowName,
   displayShowQr,
@@ -33,6 +34,7 @@ export default function ListCard({
   askPhone,
   askEmail,
   seatingPreferences,
+  averageWaitMinutes,
   locationIsOpen,
   locations,
   disableDelete,
@@ -46,6 +48,7 @@ export default function ListCard({
   locationName?: string | null;
   initialLocationId?: string | null;
   kioskEnabled?: boolean | null;
+  kioskQrEnabled?: boolean | null;
   displayEnabled?: boolean | null;
   displayShowName?: boolean | null;
   displayShowQr?: boolean | null;
@@ -53,6 +56,7 @@ export default function ListCard({
   askPhone?: boolean | null;
   askEmail?: boolean | null;
   seatingPreferences?: string[] | null;
+  averageWaitMinutes?: number | null;
   locationIsOpen?: boolean;
   locations?: { id: string; name: string }[];
   disableDelete?: boolean;
@@ -168,6 +172,7 @@ export default function ListCard({
         initialName={name}
         initialLocationId={initialLocationId || undefined}
         initialKioskEnabled={kioskEnabled !== false}
+        initialKioskQrEnabled={kioskQrEnabled === true}
         initialDisplayEnabled={displayEnabled !== false}
         initialDisplayShowName={displayShowName !== false}
         initialDisplayShowQr={displayShowQr === true}
@@ -175,6 +180,7 @@ export default function ListCard({
         initialAskPhone={askPhone !== false}
         initialAskEmail={askEmail === true}
         initialSeatingPreferences={seatingPreferences || []}
+        initialAverageWaitMinutes={averageWaitMinutes}
         locations={locations || []}
         controlledOpen={editOpen}
         onOpenChange={setEditOpen}
