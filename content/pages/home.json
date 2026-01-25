@@ -1,7 +1,7 @@
 {
   "hero": {
-    "title": "The virtual waitlist that keeps guests from walking away",
-    "subtitle": "Turn waitlists into warm welcomes. Manage walk-ins and send SMS updates in one intuitive platform designed for restaurants.",
+    "title": "The waitlist management system that makes waits feel shorter",
+    "subtitle": "Turn waitlists into warm welcomes. Keep customers informed, the entrance calm, and service flowing.",
     "primaryCta": "Try for free",
     "primaryCtaLink": "/signup",
     "secondaryCta": "See how it works",
@@ -127,6 +127,6 @@
   "seo": {
     "title": "WaitQ - The virtual waitlist that keeps guests from walking away",
     "description": "Modern restaurant waitlist management software with SMS notifications. No app required. Manage queues, reduce wait times, and improve customer experience. Starting at $19/mo.",
-    "ogImage": "/og-home.png"
+    "ogImage": "/images/og-home.png"
   }
 }
