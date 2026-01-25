@@ -21,17 +21,14 @@ const nextConfig: NextConfig = {
     ];
   },
   async headers() {
-    // In development, allow TinaCMS admin to embed pages in iframe
-    const framePolicy = isDev
-      ? { key: "X-Frame-Options", value: "SAMEORIGIN" }
-      : { key: "X-Frame-Options", value: "DENY" };
-    
+    // TinaCMS visual editing requires embedding pages in iframe
+    // In dev: allow localhost, in prod: allow TinaCloud
     const frameAncestors = isDev
       ? "frame-ancestors 'self' http://localhost:3000 http://localhost:4001"
-      : "frame-ancestors 'none'";
+      : "frame-ancestors 'self' https://app.tina.io https://*.tina.io";
 
     return [
-      // Exclude /admin from strict CSP - TinaCMS needs to load from localhost:4001 in dev
+      // Exclude /admin from strict CSP - TinaCMS admin page
       {
         source: "/admin/:path*",
         headers: [
@@ -44,7 +41,7 @@ const nextConfig: NextConfig = {
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          framePolicy,
+          // Note: X-Frame-Options removed - using CSP frame-ancestors instead for TinaCMS compatibility
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
           { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
           {
