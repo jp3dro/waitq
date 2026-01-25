@@ -28,7 +28,7 @@ export default function CreateListButton({ locations }: { locations: Location[] 
   const [displayShowName, setDisplayShowName] = useState(true);
   const [kioskQrEnabled, setKioskQrEnabled] = useState(false);
   const [displayShowQr, setDisplayShowQr] = useState(false);
-  const [averageWaitMinutes, setAverageWaitMinutes] = useState<number | null>(null);
+  const [averageWaitMinutes, setAverageWaitMinutes] = useState<number | null>(15);
   const [message, setMessage] = useState<string | null>(null);
 
   const reset = () => {
@@ -43,7 +43,7 @@ export default function CreateListButton({ locations }: { locations: Location[] 
     setDisplayShowName(true);
     setKioskQrEnabled(false);
     setDisplayShowQr(false);
-    setAverageWaitMinutes(null);
+    setAverageWaitMinutes(15);
     setMessage(null);
   };
 
@@ -106,7 +106,7 @@ export default function CreateListButton({ locations }: { locations: Location[] 
       >
         <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
           <div className="flex max-h-[90vh] flex-col">
-            <div className="h-12 border-b border-border px-6 flex items-center">
+            <div className="min-h-12 h-12 shrink-0 border-b border-border px-6 flex items-center">
               <DialogHeader>
                 <DialogTitle className="truncate">Create list</DialogTitle>
               </DialogHeader>
@@ -152,7 +152,7 @@ export default function CreateListButton({ locations }: { locations: Location[] 
               </div>
             </div>
 
-            <div className="sticky bottom-0 h-12 border-t border-border bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center">
+            <div className="sticky bottom-0 min-h-12 h-12 shrink-0 border-t border-border bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center">
               <div className="ml-auto flex items-center gap-2">
                 <Button
                   variant="outline"

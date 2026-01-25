@@ -28,7 +28,7 @@ export default function UpgradeRequiredDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
         <div className="flex max-h-[90vh] flex-col">
-          <div className="h-12 border-b border-border px-6 flex items-center">
+          <div className="min-h-12 h-12 shrink-0 border-b border-border px-6 flex items-center">
             <DialogHeader>
               <DialogTitle className="truncate">{title}</DialogTitle>
             </DialogHeader>
@@ -38,7 +38,7 @@ export default function UpgradeRequiredDialog({
             <div className="text-sm text-muted-foreground">{description}</div>
           </div>
 
-          <div className="sticky bottom-0 h-12 border-t border-border bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center">
+          <div className="sticky bottom-0 min-h-12 h-12 shrink-0 border-t border-border bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center">
             <div className="ml-auto flex items-center gap-2">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Not now

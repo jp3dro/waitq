@@ -359,25 +359,70 @@ export default function BusinessDetailsClient({ initial, canEdit }: Props) {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              Country
-            </label>
-            <Select value={countryCode} onValueChange={(v) => setCountryCode(v)} disabled={!canEdit}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a country">
-                  {selectedCountryLabel}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {countryOptions.map((c) => (
-                  <SelectItem key={c.code} value={c.code}>
-                    {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-sm text-muted-foreground">Used as the default region for phone number formatting.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Country
+              </label>
+              <Select value={countryCode} onValueChange={(v) => setCountryCode(v)} disabled={!canEdit}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a country">
+                    {selectedCountryLabel}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {countryOptions.map((c) => (
+                    <SelectItem key={c.code} value={c.code}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-muted-foreground">Used as the default region for phone number formatting.</p>
+            </div>
+
+            {isEuCountry(countryCode) ? (
+              <div className="space-y-2">
+                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  VAT ID
+                </label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={vatId}
+                    onChange={(e) => {
+                      setVatId(e.target.value);
+                      setVatStatus(null);
+                    }}
+                    disabled={!canEdit}
+                    placeholder="e.g. PT123456789"
+                    autoCapitalize="characters"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => void validateVatNow()}
+                    disabled={!canEdit || vatStatus?.state === "checking"}
+                  >
+                    {vatStatus?.state === "checking" ? "Validating..." : "Validate"}
+                  </Button>
+                </div>
+                <div className="text-sm">
+                  {vatStatus?.state === "checking" ? (
+                    <span className="text-muted-foreground">Checking VAT ID…</span>
+                  ) : vatStatus?.state === "valid" ? (
+                    <span className="text-emerald-600">VAT ID is valid (VIES)</span>
+                  ) : vatStatus?.state === "invalid" ? (
+                    <span className="text-destructive">VAT ID is not valid{vatStatus.detail ? `: ${vatStatus.detail}` : ""}</span>
+                  ) : vatStatus?.state === "error" ? (
+                    <span className="text-muted-foreground">Could not verify VAT ID{vatStatus.detail ? `: ${vatStatus.detail}` : ""}</span>
+                  ) : (
+                    <span className="text-muted-foreground">
+                      VAT (VIES) validation is only available for EU countries.
+                    </span>
+                  )}
+                </div>
+              </div>
+            ) : null}
           </div>
 
           <div className="space-y-2">
@@ -395,49 +440,6 @@ export default function BusinessDetailsClient({ initial, canEdit }: Props) {
             </Select>
             <p className="text-sm text-muted-foreground">Controls how times are displayed and edited across WaitQ.</p>
           </div>
-
-          {isEuCountry(countryCode) ? (
-            <div className="space-y-2">
-              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                VAT ID
-              </label>
-              <div className="flex items-center gap-2">
-                <Input
-                  value={vatId}
-                  onChange={(e) => {
-                    setVatId(e.target.value);
-                    setVatStatus(null);
-                  }}
-                  disabled={!canEdit}
-                  placeholder="e.g. PT123456789"
-                  autoCapitalize="characters"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => void validateVatNow()}
-                  disabled={!canEdit || vatStatus?.state === "checking"}
-                >
-                  {vatStatus?.state === "checking" ? "Validating..." : "Validate"}
-                </Button>
-              </div>
-              <div className="text-sm">
-                {vatStatus?.state === "checking" ? (
-                  <span className="text-muted-foreground">Checking VAT ID…</span>
-                ) : vatStatus?.state === "valid" ? (
-                  <span className="text-emerald-600">VAT ID is valid (VIES)</span>
-                ) : vatStatus?.state === "invalid" ? (
-                  <span className="text-destructive">VAT ID is not valid{vatStatus.detail ? `: ${vatStatus.detail}` : ""}</span>
-                ) : vatStatus?.state === "error" ? (
-                  <span className="text-muted-foreground">Could not verify VAT ID{vatStatus.detail ? `: ${vatStatus.detail}` : ""}</span>
-                ) : (
-                  <span className="text-muted-foreground">
-                    VAT (VIES) validation is only available for EU countries.
-                  </span>
-                )}
-              </div>
-            </div>
-          ) : null}
 
           <div className="space-y-6 pt-2">
             <h3 className="text-base font-semibold">Links</h3>

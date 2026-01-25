@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
 
   const { error: updErr } = await admin
     .from("waitlist_entries")
-    .update({ status: "cancelled" })
+    .update({ status: "cancelled", cancelled_at: new Date().toISOString() })
     .eq("id", entry.id);
   if (updErr) return NextResponse.json({ error: updErr.message }, { status: 400 });
 

@@ -613,7 +613,7 @@ export default function AnalyticsPage() {
         <div className="space-y-6">
           {/* Quick Insights - Apple Intelligence style gradient border */}
           <div className="relative rounded-xl p-[1px] bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500">
-            <div className="rounded-[11px] bg-background p-4">
+            <div className="rounded-xl bg-background p-4">
               <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Quick insights</div>
               <p className="mt-2 text-sm text-foreground">{tldr}</p>
             </div>

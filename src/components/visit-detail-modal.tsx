@@ -1,5 +1,6 @@
 "use client";
 import { Badge } from "@/components/ui/badge";
+import { SeatingPreferenceBadge } from "@/components/ui/seating-preference-badge";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +22,7 @@ type VisitEntry = {
   status: string;
   created_at: string;
   notified_at: string | null;
+  cancelled_at: string | null;
   waitlist_id?: string | null;
   sms_status?: string | null;
   whatsapp_status?: string | null;
@@ -118,7 +120,7 @@ export default function VisitDetailModal({
     timelineEvents.push({
       icon: XCircle,
       label: "Cancelled",
-      time: "—",
+      time: visit.cancelled_at ? formatDateTime(visit.cancelled_at, timeFormat) : "—",
       completed: true,
     });
   }
@@ -127,7 +129,7 @@ export default function VisitDetailModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl p-0 overflow-hidden">
         <div className="flex max-h-[90vh] flex-col">
-          <div className="h-12 border-b border-border px-6 flex items-center">
+          <div className="min-h-12 h-12 shrink-0 border-b border-border px-6 flex items-center">
             <DialogHeader>
               <DialogTitle className="truncate">Visit Details</DialogTitle>
             </DialogHeader>
@@ -164,7 +166,7 @@ export default function VisitDetailModal({
           </div>
 
           {/* Visit Details Grid */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div className="space-y-1">
               <div className="text-sm text-muted-foreground">Party size</div>
               <div className="flex items-center gap-2">
@@ -183,12 +185,14 @@ export default function VisitDetailModal({
               </div>
             </div>
 
-            {visit.seating_preference && (
-              <div className="space-y-1 col-span-2">
-                <div className="text-sm text-muted-foreground">Seating preference</div>
-                <Badge variant="secondary">{visit.seating_preference}</Badge>
-              </div>
-            )}
+            <div className="space-y-1">
+              <div className="text-sm text-muted-foreground">Seating preference</div>
+              {visit.seating_preference ? (
+                <SeatingPreferenceBadge>{visit.seating_preference}</SeatingPreferenceBadge>
+              ) : (
+                <span className="text-sm font-medium">—</span>
+              )}
+            </div>
           </div>
 
           {/* Activity Timeline */}

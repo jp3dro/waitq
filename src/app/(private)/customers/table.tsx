@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { differenceInMinutes } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { SeatingPreferenceBadge } from "@/components/ui/seating-preference-badge";
 import { Crown } from "lucide-react";
 import {
   Select,
@@ -39,6 +40,7 @@ type VisitEntry = {
   status: string;
   created_at: string;
   notified_at: string | null;
+  cancelled_at: string | null;
   waitlist_id: string | null;
 };
 
@@ -60,22 +62,22 @@ function getWaitTime(createdAt: string, notifiedAt: string | null) {
 
 function getStatusBadge(status: string, notifiedAt: string | null) {
   if (status === "seated") {
-    return <Badge className="bg-emerald-500 text-white">Showed</Badge>;
+    return <Badge className="bg-emerald-500 dark:bg-emerald-600 text-white">Showed</Badge>;
   }
   if (status === "cancelled") {
-    return <Badge variant="secondary">Cancelled</Badge>;
+    return <Badge className="bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground">Cancelled</Badge>;
   }
   if (status === "archived") {
     // If notified but archived, it's a no-show
     if (notifiedAt) {
-      return <Badge variant="destructive">No show</Badge>;
+      return <Badge className="bg-red-500 dark:bg-red-600 text-white">No show</Badge>;
     }
-    return <Badge variant="secondary">Archived</Badge>;
+    return <Badge className="bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground">Archived</Badge>;
   }
   if (status === "notified") {
-    return <Badge className="bg-blue-500 text-white">Called</Badge>;
+    return <Badge className="bg-blue-500 dark:bg-blue-600 text-white">Called</Badge>;
   }
-  return <Badge className="bg-yellow-500 text-white">Waiting</Badge>;
+  return <Badge className="bg-yellow-500 dark:bg-yellow-600 text-white dark:text-black">Waiting</Badge>;
 }
 
 export default function CustomersTable({
@@ -288,7 +290,7 @@ export default function CustomersTable({
                     </td>
                     <td className="px-4 py-2">
                       {visit.seating_preference ? (
-                        <Badge variant="secondary">{visit.seating_preference}</Badge>
+                        <SeatingPreferenceBadge>{visit.seating_preference}</SeatingPreferenceBadge>
                       ) : (
                         "—"
                       )}

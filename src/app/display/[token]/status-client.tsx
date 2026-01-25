@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { SeatingPreferenceBadge } from "@/components/ui/seating-preference-badge";
 import type { Country } from "@/components/ui/phone-input";
 import AddForm from "@/app/(private)/dashboard/waitlist-add-form";
 import { User, Plus } from "lucide-react";
@@ -214,17 +215,17 @@ export default function DisplayClient({ token }: { token: string }) {
   })();
 
   return (
-    <main className="h-screen bg-background text-foreground flex flex-col overflow-hidden">
-      <div className="flex flex-col flex-1 px-4 py-4 sm:py-6 md:px-6 overflow-hidden">
+    <main className="h-screen max-h-screen bg-background text-foreground flex flex-col overflow-hidden">
+      <div className="flex flex-col h-full px-4 py-3 sm:py-4 md:px-6 overflow-hidden">
         {!locationIsOpen ? (
-          <div className="mb-4 rounded-xl border border-destructive/30 bg-destructive/10 text-destructive px-4 py-3 shrink-0">
-            <div className="font-semibold">Restaurant is closed</div>
-            <div className="text-sm opacity-90">{data.locationStatusReason || "This location is currently closed based on regular opening hours."}</div>
+          <div className="mb-3 rounded-xl border border-destructive/30 bg-destructive/10 text-destructive px-4 py-2 shrink-0">
+            <div className="font-semibold text-sm">Restaurant is closed</div>
+            <div className="text-xs opacity-90">{data.locationStatusReason || "This location is currently closed based on regular opening hours."}</div>
           </div>
         ) : null}
-        <div className="flex w-full flex-col gap-4 md:flex-row md:flex-wrap md:items-center shrink-0">
+        <div className="flex w-full flex-col gap-3 md:flex-row md:flex-wrap md:items-center shrink-0">
           <div className="flex items-center gap-3 md:mr-6 md:flex-1">
-            <div className="h-10 w-10 sm:h-14 sm:w-14 shrink-0 overflow-hidden rounded-lg border border-border bg-muted flex items-center justify-center">
+            <div className="h-10 w-10 sm:h-12 sm:w-12 shrink-0 overflow-hidden rounded-lg border border-border bg-muted flex items-center justify-center">
               {data.brandLogo ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={data.brandLogo} alt="Logo" className="h-full w-full object-cover" />
@@ -234,15 +235,15 @@ export default function DisplayClient({ token }: { token: string }) {
             </div>
             <div className="flex flex-col">
               {data.businessName ? (
-                <p className="text-sm font-medium text-muted-foreground leading-none mb-2">{data.businessName}</p>
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground leading-none mb-1">{data.businessName}</p>
               ) : null}
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight leading-none">{data.listName}</h1>
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight leading-none">{data.listName}</h1>
             </div>
           </div>
           {typeof data.estimatedMs === 'number' ? (
             <div className="md:mr-6 flex flex-col md:items-end">
-              <p className="w-full text-sm md:text-right text-muted-foreground">Estimated wait time</p>
-              <p className="mt-1 text-2xl sm:text-3xl font-semibold tracking-tight md:text-right">{formatDuration(data.estimatedMs)}</p>
+              <p className="w-full text-xs sm:text-sm md:text-right text-muted-foreground">Estimated wait time</p>
+              <p className="mt-0.5 text-xl sm:text-2xl font-semibold tracking-tight md:text-right">{formatDuration(data.estimatedMs)}</p>
             </div>
           ) : null}
           {data.kioskEnabled ? (
@@ -264,35 +265,35 @@ export default function DisplayClient({ token }: { token: string }) {
           ) : null}
         </div>
 
-        <div className="mt-4 grid md:grid-cols-[1.2fr_1fr] gap-4 md:gap-6 flex-1 min-h-0">
-          <section className="rounded-2xl bg-card text-card-foreground border border-border flex flex-col min-h-0">
-            <div className="px-6 py-4 border-b border-border shrink-0 rounded-t-2xl">
-              <h2 className="text-xl sm:text-2xl font-semibold text-foreground">Next in line</h2>
+        <div className="mt-3 grid md:grid-cols-[1.2fr_1fr] gap-3 md:gap-4 flex-1 min-h-0 overflow-hidden">
+          <section className="rounded-2xl bg-card text-card-foreground border border-border flex flex-col min-h-0 overflow-hidden">
+            <div className="px-4 sm:px-6 py-3 border-b border-border shrink-0">
+              <h2 className="text-lg sm:text-xl font-semibold text-foreground">Next in line</h2>
             </div>
-            <div className="flex-1 overflow-y-auto min-h-0 px-6 custom-scrollbar rounded-b-2xl">
+            <div className="flex-1 overflow-y-auto min-h-0 px-4 sm:px-6 custom-scrollbar">
               {waiting.length === 0 ? (
-                <div className="text-center py-12">
-                  <p className="text-muted-foreground text-lg">No one waiting at the moment</p>
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground text-base">No one waiting at the moment</p>
                 </div>
               ) : (
                 <ul className="divide-y divide-border">
                   {waiting.map((e) => (
-                    <li key={e.id} className="py-3 sm:py-4 flex items-center gap-4 sm:gap-6">
-                      <span className="w-12 sm:w-14 shrink-0 text-left text-3xl sm:text-4xl font-semibold tabular-nums">
+                    <li key={e.id} className="py-2.5 sm:py-3 flex items-center gap-3 sm:gap-4">
+                      <span className="w-10 sm:w-12 shrink-0 text-left text-2xl sm:text-3xl font-semibold tabular-nums">
                         {e.ticket_number ?? e.queue_position ?? "-"}
                       </span>
-                      <div className="flex items-center gap-4 sm:gap-8 flex-wrap">
+                      <div className="flex items-center gap-3 sm:gap-6 flex-wrap">
                         {showNameOnDisplay && e.customer_name ? (
-                          <div className="text-lg font-medium">{e.customer_name}</div>
+                          <div className="text-base font-medium">{e.customer_name}</div>
                         ) : null}
                         {typeof e.party_size === 'number' ? (
-                          <div className="flex items-center gap-1.5 text-lg sm:text-xl font-medium">
-                            <User className="h-5 w-5" />
+                          <div className="flex items-center gap-1 text-base sm:text-lg font-medium">
+                            <User className="h-4 w-4" />
                             <span>{e.party_size}</span>
                           </div>
                         ) : null}
                         {e.seating_preference && (
-                          <Badge variant="secondary" className="text-sm sm:text-lg px-3 py-1.5 sm:py-4">{e.seating_preference}</Badge>
+                          <SeatingPreferenceBadge>{e.seating_preference}</SeatingPreferenceBadge>
                         )}
                       </div>
                     </li>
@@ -302,40 +303,40 @@ export default function DisplayClient({ token }: { token: string }) {
             </div>
           </section>
 
-          <section className="rounded-2xl bg-emerald-50 text-emerald-950 border border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-50 dark:border-emerald-800 flex flex-col min-h-0">
-            <div className="px-4 sm:px-6 py-4 border-b border-emerald-200 dark:border-emerald-800 shrink-0 rounded-t-2xl">
-              <h2 className="text-xl sm:text-2xl font-semibold flex items-center gap-2">
-                <span className="relative flex h-3 w-3">
+          <section className="rounded-2xl bg-emerald-50 text-emerald-950 border border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-50 dark:border-emerald-800 flex flex-col min-h-0 overflow-hidden">
+            <div className="px-4 sm:px-6 py-3 border-b border-emerald-200 dark:border-emerald-800 shrink-0">
+              <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
+                <span className="relative flex h-2.5 w-2.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
                 </span>
                 Now calling
               </h2>
             </div>
-            <div className="flex-1 overflow-y-auto min-h-0 p-4 sm:p-6 custom-scrollbar rounded-b-2xl">
+            <div className="flex-1 overflow-y-auto min-h-0 p-3 sm:p-4 custom-scrollbar">
               {notified.length === 0 ? (
-                <div className="text-center py-12 opacity-60">
-                  <p className="text-xl">Waiting for next group...</p>
+                <div className="text-center py-8 opacity-60">
+                  <p className="text-base">Waiting for next group...</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-1 gap-3">
                   {notified.map((e) => (
-                    <div key={e.id} className="flex items-center gap-4 sm:gap-8 rounded-xl p-4 sm:p-6 bg-background/50 dark:bg-background/20">
-                      <span className="text-5xl sm:text-6xl font-extrabold tabular-nums">
+                    <div key={e.id} className="flex items-center gap-3 sm:gap-6 rounded-xl p-3 sm:p-4 bg-background/50 dark:bg-background/20">
+                      <span className="text-4xl sm:text-5xl font-extrabold tabular-nums">
                         {e.ticket_number ?? e.queue_position ?? "-"}
                       </span>
-                      <div className="flex items-center gap-4 sm:gap-8 flex-wrap">
+                      <div className="flex items-center gap-3 sm:gap-6 flex-wrap">
                         {showNameOnDisplay && e.customer_name ? (
-                          <div className="text-xl sm:text-2xl font-semibold">{e.customer_name}</div>
+                          <div className="text-lg sm:text-xl font-semibold">{e.customer_name}</div>
                         ) : null}
                         {typeof e.party_size === 'number' ? (
-                          <div className="flex items-center gap-1.5 text-xl sm:text-2xl font-medium">
-                            <User className="h-6 w-6" />
+                          <div className="flex items-center gap-1 text-lg sm:text-xl font-medium">
+                            <User className="h-5 w-5" />
                             <span>{e.party_size}</span>
                           </div>
                         ) : null}
                         {e.seating_preference && (
-                          <Badge variant="secondary" className="text-sm sm:text-xl px-3 py-1.5 sm:py-4">{e.seating_preference}</Badge>
+                          <SeatingPreferenceBadge>{e.seating_preference}</SeatingPreferenceBadge>
                         )}
                       </div>
                     </div>
@@ -346,12 +347,12 @@ export default function DisplayClient({ token }: { token: string }) {
           </section>
         </div>
 
-        <div className="mt-4 flex items-center justify-center shrink-0 gap-1">
+        <div className="mt-2 flex items-center justify-center shrink-0 gap-1">
           <span className="text-xs font-medium text-muted-foreground">Powered by</span>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/waitq.svg" alt="WaitQ" className="h-4 w-auto logo-light" />
+          <img src="/waitq.svg" alt="WaitQ" className="h-3 w-auto logo-light" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/waitq-variant.svg" alt="WaitQ" className="h-4 w-auto logo-dark" />
+          <img src="/waitq-variant.svg" alt="WaitQ" className="h-3 w-auto logo-dark" />
         </div>
       </div>
 
@@ -447,7 +448,7 @@ function KioskButton({
       >
         <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
           <div className="flex max-h-[90vh] flex-col">
-            <div className="h-12 border-b border-border px-6 flex items-center">
+            <div className="min-h-12 h-12 shrink-0 border-b border-border px-6 flex items-center">
               <DialogHeader>
                 <DialogTitle className="truncate">{step === "confirm" ? "You're all set!" : "Add to waitlist"}</DialogTitle>
               </DialogHeader>
@@ -495,7 +496,7 @@ function KioskButton({
               )}
             </div>
 
-            <div className="sticky bottom-0 h-12 border-t border-border bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center">
+            <div className="sticky bottom-0 min-h-12 h-12 shrink-0 border-t border-border bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center">
               <div className="ml-auto flex items-center gap-2">
                 {step === "form" ? (
                   <>

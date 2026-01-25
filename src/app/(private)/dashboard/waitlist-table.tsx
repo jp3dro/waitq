@@ -8,6 +8,7 @@ import { Stepper } from "@/components/ui/stepper";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { SeatingPreferenceBadge } from "@/components/ui/seating-preference-badge";
 import { WhatsAppIcon } from "@/components/icons/whatsapp";
 import { useTimeFormat } from "@/components/time-format-provider";
 import { formatDateTime } from "@/lib/date-time";
@@ -705,7 +706,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                       <User className="h-3.5 w-3.5 text-muted-foreground" />
                       <span>{typeof e.party_size === "number" ? e.party_size : "—"}</span>
                     </div>
-                    {e.seating_preference ? <Badge variant="secondary">{e.seating_preference}</Badge> : null}
+                    {e.seating_preference ? <SeatingPreferenceBadge>{e.seating_preference}</SeatingPreferenceBadge> : null}
                     {showPhone ? (
                       <div className="text-xs">
                         {getNotificationDisplay(e.send_sms, e.send_whatsapp, e.sms_status, e.whatsapp_status)}
@@ -813,7 +814,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                   </div>
                 </td>
                 <td className="px-4 py-2">
-                  {e.seating_preference ? <Badge variant="secondary">{e.seating_preference}</Badge> : "—"}
+                  {e.seating_preference ? <SeatingPreferenceBadge>{e.seating_preference}</SeatingPreferenceBadge> : "—"}
                 </td>
                 {showPhone && (
                   <td className="px-4 py-2">
@@ -865,13 +866,11 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
         </table>
       </div>
 
-      {/* Row actions menu is now implemented with shadcn DropdownMenu */}
-
       {/* Edit entry */}
       <Dialog open={!!editingId} onOpenChange={(v) => (!v ? setEditingId(null) : undefined)}>
         <DialogContent className="sm:max-w-2xl p-0 overflow-hidden">
           <div className="flex max-h-[90vh] flex-col">
-            <div className="h-12 border-b border-border px-6 flex items-center">
+            <div className="min-h-12 h-12 shrink-0 border-b border-border px-6 flex items-center">
               <DialogHeader>
                 <DialogTitle className="truncate">Edit entry</DialogTitle>
               </DialogHeader>
@@ -924,7 +923,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                             type="button"
                             key={s}
                             onClick={() => setEditForm(prev => ({ ...prev, seatingPreference: s }))}
-                            className={`inline-flex items-center rounded-full px-4 py-2 text-sm ring-1 ring-inset transition min-h-[44px] ${selected ? "bg-primary text-primary-foreground ring-primary" : "bg-card text-foreground ring-border hover:bg-muted"}`}
+                            className={`inline-flex items-center rounded-full px-3 h-8 text-sm ring-1 ring-inset transition ${selected ? "bg-primary text-primary-foreground ring-primary" : "bg-card text-foreground ring-border hover:bg-muted"}`}
                           >
                             {s}
                           </button>
@@ -936,7 +935,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
               </form>
             </div>
 
-            <div className="sticky bottom-0 h-12 border-t border-border bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center">
+            <div className="sticky bottom-0 min-h-12 h-12 shrink-0 border-t border-border bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center">
               <div className="ml-auto flex items-center gap-2">
                 <Button type="button" variant="outline" onClick={() => setEditingId(null)}>
                   Cancel

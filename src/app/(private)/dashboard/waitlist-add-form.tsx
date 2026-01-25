@@ -423,7 +423,7 @@ export default function AddForm({
                     type="button"
                     key={s}
                     onClick={() => setValue("seatingPreference", s)}
-                    className={`inline-flex items-center rounded-full px-4 py-2 text-sm ring-1 ring-inset transition min-h-[44px] ${selected ? "bg-primary text-primary-foreground ring-primary" : "bg-card text-foreground ring-border hover:bg-muted"}`}
+                    className={`inline-flex items-center rounded-full px-3 h-8 text-sm ring-1 ring-inset transition ${selected ? "bg-primary text-primary-foreground ring-primary" : "bg-card text-foreground ring-border hover:bg-muted"}`}
                   >
                     {s}
                   </button>

@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
   }
 
   const admin = getAdminClient();
-  const listSelect = "id, name, kiosk_enabled, kiosk_qr_enabled, display_enabled, display_show_name, display_show_qr, business_id, location_id, seating_preferences, ask_name, ask_phone, ask_email, average_wait_minutes, business_locations:location_id(regular_hours, timezone)";
+  const listSelect = "id, name, kiosk_enabled, kiosk_qr_enabled, display_enabled, display_show_name, display_show_qr, business_id, location_id, ask_name, ask_phone, ask_email, average_wait_minutes, business_locations:location_id(regular_hours, timezone, seating_preferences)";
   let list = null as any;
   const { data: listData, error: listErr } = await admin
     .from("waitlists")
@@ -52,11 +52,12 @@ export async function GET(req: NextRequest) {
     list = listData;
   }
 
-  const loc = (list as unknown as { business_locations?: { regular_hours?: unknown; timezone?: unknown } | null }).business_locations;
+  const loc = (list as unknown as { business_locations?: { regular_hours?: unknown; timezone?: unknown; seating_preferences?: unknown } | null }).business_locations;
   const openState = getLocationOpenState({
     regularHours: (loc?.regular_hours as RegularHours | null) || null,
     timezone: (typeof loc?.timezone === "string" ? (loc.timezone as string) : null) || null,
   });
+  const seatingPreferences = Array.isArray(loc?.seating_preferences) ? (loc.seating_preferences as string[]) : [];
 
   const displayEnabled = list.display_enabled !== false;
   const showNameOnDisplay = displayEnabled && list.display_show_name !== false && list.ask_name !== false;
@@ -157,7 +158,7 @@ export async function GET(req: NextRequest) {
     brandLogo,
     accentColor: accentColor || "#533AFD",
     backgroundColor: backgroundColor || "#000000",
-    seatingPreferences: (list.seating_preferences as string[] | null) || [],
+    seatingPreferences,
     estimatedMs,
     entries: entries ?? [],
   });

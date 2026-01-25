@@ -87,7 +87,7 @@ function AlertDialogHeader({
   return (
     <div
       data-slot="alert-dialog-header"
-      className={cn("h-12 border-b border-border px-6 flex items-center", className)}
+      className={cn("min-h-12 h-12 shrink-0 border-b border-border px-6 flex items-center", className)}
       {...props}
     />
   )
@@ -101,7 +101,7 @@ function AlertDialogFooter({
     <div
       data-slot="alert-dialog-footer"
       className={cn(
-        "h-12 border-t border-border bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center gap-2 sm:[&>*:last-child:not(:first-child)]:ml-auto",
+        "min-h-12 h-12 shrink-0 border-t border-border bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center gap-2 sm:[&>*:last-child:not(:first-child)]:ml-auto",
         className
       )}
       {...props}
