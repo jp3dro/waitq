@@ -107,7 +107,7 @@ export default function MobileListActions({
               </DropdownMenuItem>
             ) : null}
 
-            {canShowPublicDisplay ? <QRCodeButton listName={waitlistName} displayToken={displayToken} businessName={businessName} variant="menu" /> : null}
+            {canShowPublicDisplay && kioskQrEnabled ? <QRCodeButton listName={waitlistName} displayToken={displayToken} businessName={businessName} variant="menu" /> : null}
 
             <DropdownMenuSeparator />
 

@@ -141,10 +141,12 @@ export default function ListCard({
                     Open public display
                   </a>
                 </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => setQrOpen(true)}>
-                  <QrCode className="h-4 w-4" />
-                  Open QR code
-                </DropdownMenuItem>
+                {kioskQrEnabled === true && (
+                  <DropdownMenuItem onSelect={() => setQrOpen(true)}>
+                    <QrCode className="h-4 w-4" />
+                    Open QR code
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
               </>
             ) : null}
@@ -164,7 +166,7 @@ export default function ListCard({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      {displayEnabled !== false && displayToken ? (
+      {displayEnabled !== false && displayToken && kioskQrEnabled === true ? (
         <QRCodeModal open={qrOpen} onClose={() => setQrOpen(false)} listName={name} displayToken={displayToken || undefined} businessName={businessName} />
       ) : null}
       <EditListButton
