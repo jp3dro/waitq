@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+const isDev = process.env.NODE_ENV === "development";
+
 const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
@@ -19,13 +21,30 @@ const nextConfig: NextConfig = {
     ];
   },
   async headers() {
+    // In development, allow TinaCMS admin to embed pages in iframe
+    const framePolicy = isDev
+      ? { key: "X-Frame-Options", value: "SAMEORIGIN" }
+      : { key: "X-Frame-Options", value: "DENY" };
+    
+    const frameAncestors = isDev
+      ? "frame-ancestors 'self' http://localhost:3000 http://localhost:4001"
+      : "frame-ancestors 'none'";
+
     return [
+      // Exclude /admin from strict CSP - TinaCMS needs to load from localhost:4001 in dev
       {
-        source: "/(.*)",
+        source: "/admin/:path*",
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          { key: "X-Frame-Options", value: "DENY" },
+        ],
+      },
+      {
+        source: "/((?!admin).*)",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          framePolicy,
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
           { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
           {
@@ -36,7 +55,7 @@ const nextConfig: NextConfig = {
               "default-src 'self'",
               "base-uri 'self'",
               "form-action 'self'",
-              "frame-ancestors 'none'",
+              frameAncestors,
               // Allow embedding trusted third-party iframes (e.g. YouTube lightbox)
               "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com",
               "object-src 'none'",

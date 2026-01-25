@@ -78,7 +78,7 @@ function NavItem({
 }) {
     const pathname = usePathname();
     const isSubActive = subItems?.some((s) => pathname === s.href) ?? false;
-    const isActive = pathname === href || (pathname.startsWith(href + "/") && !subItems);
+    const isActive = pathname === href || (pathname?.startsWith(href + "/") && !subItems);
     // When we have subitems, only mark parent as active if we're exactly on the parent page
     // or if we're on a subpath that doesn't match any subitem
 

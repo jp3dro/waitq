@@ -14,7 +14,7 @@ function LoginPageContent() {
   const searchParams = useSearchParams();
   
   useEffect(() => {
-      const e = searchParams.get('email');
+      const e = searchParams?.get('email');
       if (e) setEmail(e);
   }, [searchParams]);
 
@@ -50,7 +50,7 @@ function LoginPageContent() {
           }
           posthog.capture('login_completed', { method: 'email' });
 
-          const inviteToken = searchParams.get('invite_token');
+          const inviteToken = searchParams?.get('invite_token');
           if (inviteToken) {
               // Accept invite if token present
               await fetch("/api/invite/accept", {

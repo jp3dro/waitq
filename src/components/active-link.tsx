@@ -9,7 +9,7 @@ export default function ActiveLink({ href, children, className, activeClassName 
   activeClassName?: string;
 }) {
   const pathname = usePathname();
-  const isActive = pathname === href || pathname.startsWith(href + "/");
+  const isActive = pathname === href || pathname?.startsWith(href + "/");
   const cls = `${className || ""} ${isActive ? (activeClassName || "bg-neutral-100 text-black border border-orange-500") : ""}`.trim();
   return (
     <Link href={href} className={cls} aria-current={isActive ? "page" : undefined}>

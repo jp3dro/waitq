@@ -1,0 +1,438 @@
+"use client";
+
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { 
+  Check, 
+  Users, 
+  FileText, 
+  MessageSquare,
+  Zap,
+  Monitor,
+  MapPin,
+  Smartphone,
+  BarChart3,
+  Clock,
+  Play,
+  QrCode,
+  MonitorPlay,
+  Image as ImageIcon
+} from "lucide-react";
+import { YouTubeLightbox } from "@/components/youtube-lightbox";
+import { useTina } from "tinacms/dist/react";
+import type { HomeQuery } from "../../../tina/__generated__/types";
+
+// Icon mapping for dynamic icons
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  Users,
+  FileText,
+  MessageSquare,
+  Zap,
+  Monitor,
+  MapPin,
+  Smartphone,
+  BarChart3,
+  Clock,
+  QrCode,
+  MonitorPlay,
+};
+
+function getIcon(iconName: string | null | undefined) {
+  if (!iconName) return Users;
+  return iconMap[iconName] || Users;
+}
+
+interface HomeClientProps {
+  query: string;
+  variables: Record<string, unknown>;
+  data: HomeQuery;
+}
+
+export function HomeClient(props: HomeClientProps) {
+  const { data } = useTina(props);
+  const page = data.home;
+
+  // FAQ structured data for rich snippets
+  const faqStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": page.faq?.items?.map((item) => ({
+      "@type": "Question",
+      "name": item?.question,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": item?.answer
+      }
+    })) || []
+  };
+
+  return (
+    <main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqStructuredData) }}
+      />
+
+      {/* Hero Section */}
+      <section className="relative overflow-hidden pt-48 lg:pt-60 pb-12 -mt-20">
+        {/* Background video - hidden when reduce motion is preferred */}
+        <video
+          className="absolute inset-0 h-full w-full object-cover hidden motion-safe:block"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          aria-hidden="true"
+        >
+          <source src="/hero.mp4" type="video/mp4" />
+        </video>
+
+        {/* Dark overlay for legibility - only shown with video */}
+        <div
+          className="absolute inset-0 bg-gradient-to-b from-black/10 to-black/70 hidden motion-safe:block"
+          aria-hidden="true"
+        />
+
+        {/* Fallback background when reduced motion is enabled */}
+        <div
+          className="absolute inset-0 bg-gradient-to-b from-background via-background to-muted/30 block motion-safe:hidden"
+          aria-hidden="true"
+        />
+
+        <div className="relative mx-auto max-w-[1200px] px-6 lg:px-8 pb-16">
+          <div className="mx-auto max-w-4xl text-center text-white">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight drop-shadow-[0_2px_16px_rgba(0,0,0,0.65)]">
+              {page.hero?.title}
+            </h1>
+            <p className="mt-6 text-lg md:text-xl text-white/80 max-w-3xl mx-auto drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)]">
+              {page.hero?.subtitle}
+            </p>
+            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Button asChild size="lg" className="px-4">
+                <Link href={page.hero?.primaryCtaLink || "/signup"}>{page.hero?.primaryCta}</Link>
+              </Button>
+              {page.hero?.videoId && (
+                <YouTubeLightbox videoId={page.hero.videoId} title="WaitQ demo">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="gap-2 border-white/30 text-white bg-white/5 hover:bg-white/10 hover:text-white"
+                  >
+                    <Play className="h-4 w-4" />
+                    {page.hero?.secondaryCta}
+                  </Button>
+                </YouTubeLightbox>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Problem/Solution Section */}
+      <section className="py-16">
+        <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
+          <div className="mx-auto max-w-3xl text-center">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{page.problems?.title}</h2>
+            <p className="mt-2 text-lg text-muted-foreground">
+              {page.problems?.subtitle}
+            </p>
+          </div>
+          <div className="mt-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {page.problems?.items?.map((item, index) => {
+              const Icon = getIcon(item?.icon);
+              return (
+                <div key={index} className="border border-border rounded-2xl p-6 text-left shadow-sm">
+                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                    <Icon className="w-6 h-6 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-semibold">{item?.title}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {item?.description}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Better Guest Impressions Section */}
+      <section className="py-2">
+        <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
+          <div className="rounded-3xl bg-muted dark:bg-muted/30 p-6 md:p-10">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              <div className="relative">
+                <div className="aspect-[4/3] bg-background rounded-2xl shadow-xl overflow-hidden">
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center p-8">
+                      <ImageIcon className="w-24 h-24 mx-auto text-muted-foreground/20" />
+                      <p className="mt-4 text-sm text-muted-foreground">Restaurant image placeholder</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
+                  Better guest first impressions
+                </h2>
+                <p className="mt-4 text-lg text-muted-foreground">
+                  Replace crowded entrances with calm, accurate updates, so guests don&apos;t walk away.
+                </p>
+                <ul className="mt-8 space-y-4">
+                  <li className="flex items-start gap-3">
+                    <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span className="text-muted-foreground">Anyone can check-in to the waitlist from their phone or kiosk, no app downloads required</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span className="text-muted-foreground">Keep customers informed with accurate wait times on public display or directly on their phones.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span className="text-muted-foreground">Customers get honest wait times that update in real time.</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="grid lg:grid-cols-2 gap-12 mt-12 items-center">
+              <div>
+                <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
+                  Handling of peak hours with ease
+                </h2>
+                <p className="mt-4 text-lg text-muted-foreground">
+                  No mistakes, crossed-out names, or constant &quot;how long?&quot; interruptions.
+                </p>
+                <ul className="mt-8 space-y-4">
+                  <li className="flex items-start gap-3">
+                    <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span className="text-muted-foreground">See who&apos;s waiting, and who&apos;s next in a glance.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span className="text-muted-foreground">Send &quot;table ready&quot; texts and reduce walk-aways.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span className="text-muted-foreground">Works on the devices you already have. No training nor additional hardware needed.</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="relative">
+                <div className="aspect-[4/3] bg-muted rounded-2xl shadow-xl overflow-hidden">
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center p-8">
+                      <Smartphone className="w-24 h-24 mx-auto text-muted-foreground/20" />
+                      <p className="mt-4 text-sm text-muted-foreground">Phone mockup placeholder</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Simple Powerful Solution Section */}
+      <section className="py-20">
+        <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
+          <div className="">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
+                Simple, powerful solution to let guests flow through
+              </h2>
+            </div>
+            <div className="grid md:grid-cols-3 gap-8">
+              {/* Self Check-in */}
+              <div>
+                <div className="aspect-[4/3] bg-red-900 rounded-xl shadow-lg overflow-hidden mb-6">
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center p-8">
+                      <QrCode className="w-20 h-20 mx-auto text-muted-foreground/20" />
+                    </div>
+                  </div>
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Self check-in</h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Guests can check-in themselves by scanning a QR code, and enter their email or phone number to get alerts.
+                </p>
+                <Button asChild variant="link" className="p-0 h-auto text-sm">
+                  <Link href="/features/self-check-in">Read about self check-in &rarr;</Link>
+                </Button>
+              </div>
+
+              {/* Virtual Waitlist */}
+              <div>
+                <div className="aspect-[4/3] bg-red-900 rounded-xl shadow-lg overflow-hidden mb-6">
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center p-8">
+                      <Users className="w-20 h-20 mx-auto text-muted-foreground/20" />
+                    </div>
+                  </div>
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Virtual waitlist</h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  From the queue the customers wait times are updated on their devices and on kiosks.
+                </p>
+                <Button asChild variant="link" className="p-0 h-auto text-sm">
+                  <Link href="/features/virtual-waitlist">Read about virtual waitlist &rarr;</Link>
+                </Button>
+              </div>
+
+              {/* Virtual waiting room */}
+              <div>
+                <div className="aspect-[4/3] bg-red-900 rounded-xl shadow-lg overflow-hidden mb-6">
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center p-8">
+                      <MonitorPlay className="w-20 h-20 mx-auto text-muted-foreground/20" />
+                    </div>
+                  </div>
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Virtual waiting room</h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Keep guests waiting comfortably and in control, without crowding the entrance.
+                </p>
+                <Button asChild variant="link" className="p-0 h-auto text-sm">
+                  <Link href="/features/virtual-waiting-room">Read about virtual waiting room &rarr;</Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Analytics Section */}
+      <section className="py-2">
+        <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
+          <div className="rounded-3xl bg-muted dark:bg-muted/30 p-6 md:p-10">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              <div className="relative">
+                <div className="aspect-[4/3] bg-background rounded-2xl shadow-xl overflow-hidden">
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center p-8">
+                      <ImageIcon className="w-24 h-24 mx-auto text-muted-foreground/20" />
+                      <p className="mt-4 text-sm text-muted-foreground">Restaurant image placeholder</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
+                  Rich analytics that improve your business
+                </h2>
+                <p className="mt-4 text-lg text-muted-foreground">
+                  Track the few metrics that actually move revenue and guest experience, then adjust staffing, pacing, and guest messaging based on real data, not gut feel.
+                </p>
+                <ul className="mt-8 space-y-4">
+                  <li className="flex items-start gap-3">
+                    <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span className="text-muted-foreground">Track peak hours and average wait time, so you staff smarter.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span className="text-muted-foreground">Get accurate wait times and trends, so the experience stays predictable.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span className="text-muted-foreground">Gather customer data for marketing campaigns.</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* With All Features Section */}
+      <section className="py-20">
+        <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
+              {page.features?.title}
+            </h2>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {page.features?.items?.map((item, index) => {
+              const Icon = getIcon(item?.icon);
+              return (
+                <div key={index}>
+                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                    <Icon className="w-6 h-6 text-primary" />
+                  </div>
+                  <h3 className="font-semibold mb-2">{item?.title}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {item?.description}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Social Proof Section */}
+      <section className="py-2">
+        <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
+          <div className="rounded-3xl bg-muted dark:bg-muted/30 p-6 md:p-10">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold tracking-tight">{page.socialProof?.title}</h2>
+            </div>
+            <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+              {page.socialProof?.stats?.map((stat, index) => (
+                <div key={index} className="text-center">
+                  <p className="text-5xl font-bold">{stat?.value}</p>
+                  <p className="mt-2 text-sm text-muted-foreground">{stat?.label}</p>
+                </div>
+              ))}
+            </div>
+            {page.socialProof?.testimonial && (
+              <div className="mt-16 max-w-3xl mx-auto">
+                <div className="bg-background rounded-xl p-8 shadow-sm">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-primary/10 rounded-full flex-shrink-0" />
+                    <div>
+                      <p className="text-lg italic">
+                        &ldquo;{page.socialProof.testimonial.quote}&rdquo;
+                      </p>
+                      <p className="mt-3 text-sm font-medium">
+                        — {page.socialProof.testimonial.author}, {page.socialProof.testimonial.role}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-20">
+        <div className="mx-auto max-w-3xl px-6 lg:px-8">
+          <h2 className="text-3xl font-bold tracking-tight text-center mb-10">
+            {page.faq?.title}
+          </h2>
+          <Accordion type="single" collapsible className="w-full space-y-4">
+            {page.faq?.items?.map((item, index) => (
+              <AccordionItem key={index} value={`item-${index}`} className="bg-card rounded-lg px-6 border-0">
+                <AccordionTrigger className="text-left font-medium hover:no-underline">
+                  {item?.question}
+                </AccordionTrigger>
+                <AccordionContent className="text-sm text-muted-foreground">
+                  {item?.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      </section>
+    </main>
+  );
+}
