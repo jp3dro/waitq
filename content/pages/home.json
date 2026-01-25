@@ -1,0 +1,132 @@
+{
+  "hero": {
+    "title": "The virtual waitlist that keeps guests from walking away",
+    "subtitle": "Turn waitlists into warm welcomes. Manage walk-ins, reservations, and SMS updates in one intuitive platform designed for restaurants.",
+    "primaryCta": "Try for free",
+    "primaryCtaLink": "/signup",
+    "secondaryCta": "See how it works",
+    "videoId": "Jk1ZrZF87UY"
+  },
+  "problems": {
+    "title": "Stop losing revenue to long waits",
+    "subtitle": "Badly managed restaurant queues lead to lost revenue in different ways.",
+    "items": [
+      {
+        "title": "Front-door chaos",
+        "description": "Crowded lobbies make guests leave, causing you to lose potential revenue.",
+        "icon": "Users"
+      },
+      {
+        "title": "Paper waitlists",
+        "description": "Clipboards don't work anymore. Guests expect text updates about their table.",
+        "icon": "FileText"
+      },
+      {
+        "title": "Poor guest experience",
+        "description": "Keep guests informed with accurate wait times and manage crowds effortlessly.",
+        "icon": "MessageSquare"
+      }
+    ]
+  },
+  "features": {
+    "title": "With all the features your restaurant needs",
+    "items": [
+      {
+        "title": "SMS or E-mail notifications",
+        "description": "Automatic text messages keep guests informed. No app downloads required.",
+        "icon": "MessageSquare"
+      },
+      {
+        "title": "Real-Time Queue",
+        "description": "See what's happening, who's next, and manage in real-time.",
+        "icon": "Zap"
+      },
+      {
+        "title": "Virtual Waiting Room",
+        "description": "Guests see their position in the waitlist with estimated wait times.",
+        "icon": "Monitor"
+      },
+      {
+        "title": "Multi-Location",
+        "description": "Manage multiple restaurant locations from a single dashboard.",
+        "icon": "MapPin"
+      },
+      {
+        "title": "Public Display",
+        "description": "Show current wait times on a TV screen or tablet at your entrance.",
+        "icon": "Monitor"
+      },
+      {
+        "title": "Self-Service Kiosk",
+        "description": "Let guests add themselves to the waitlist via tablet or QR code.",
+        "icon": "Smartphone"
+      },
+      {
+        "title": "Analytics & Insights",
+        "description": "Track peak hours, average wait times, and customer patterns.",
+        "icon": "BarChart3"
+      },
+      {
+        "title": "Accurate Wait Times",
+        "description": "Smart estimates based on historical data and queue length. No more guessing.",
+        "icon": "Clock"
+      }
+    ]
+  },
+  "socialProof": {
+    "title": "Trusted by top restaurants worldwide",
+    "stats": [
+      {
+        "value": "85%",
+        "label": "Reduction in perceived wait time"
+      },
+      {
+        "value": "2,000+",
+        "label": "Restaurants using WaitQ"
+      },
+      {
+        "value": "4.8★",
+        "label": "Average customer rating"
+      }
+    ],
+    "testimonial": {
+      "quote": "WaitQ cut our wait times by 35%. Guests love the SMS updates and our staff stays organized.",
+      "author": "Maria",
+      "role": "GM at Bistro Verde"
+    }
+  },
+  "faq": {
+    "title": "Frequently asked questions",
+    "items": [
+      {
+        "question": "What is a waitlist management system?",
+        "answer": "A waitlist management system is a digital solution that helps businesses manage customer queues efficiently. It replaces paper lists and pagers with SMS notifications, real-time updates, and analytics to improve the customer experience and reduce walk-aways."
+      },
+      {
+        "question": "What kind of businesses benefit from a waitlist management system like WaitQ?",
+        "answer": "WaitQ is designed for any business that manages customer queues, including restaurants, cafes, healthcare clinics, salons, retail stores, and entertainment venues. Any business with walk-in customers can benefit from better queue management."
+      },
+      {
+        "question": "Do we need to purchase hardware?",
+        "answer": "No. WaitQ works on any device with a web browser - tablets, phones, or computers you already own. No special hardware, pagers, or equipment needed."
+      },
+      {
+        "question": "Can we customize the check-in page?",
+        "answer": "Yes! You can customize the check-in page with your logo, colors, and branding to match your business identity."
+      },
+      {
+        "question": "Do customers need to download an app to use WaitQ?",
+        "answer": "No. Customers receive SMS text messages with a link to track their place in line. They can view their status from any web browser without downloading anything."
+      },
+      {
+        "question": "Is WaitQ easy to set up?",
+        "answer": "Yes! WaitQ can be set up in under 5 minutes. Simply create an account, configure your waitlist settings, and you're ready to start managing your queue."
+      }
+    ]
+  },
+  "seo": {
+    "title": "WaitQ - The virtual waitlist that keeps guests from walking away",
+    "description": "Modern restaurant waitlist management software with SMS notifications. No app required. Manage queues, reduce wait times, and improve customer experience. Starting at $19/mo.",
+    "ogImage": "/og-home.png"
+  }
+}

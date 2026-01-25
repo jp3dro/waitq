@@ -1,0 +1,67 @@
+{
+  "hero": {
+    "title": "Manage your restaurant queue",
+    "highlightedText": "without the chaos",
+    "subtitle": "Replace paper lists and expensive pagers. Improve customer experience, reduce walk-aways, and turn tables faster with WaitQ.",
+    "ctaText": "Start free trial",
+    "ctaLink": "/signup",
+    "ctaSubtext": "No credit card required • Cancel anytime • 5-minute setup"
+  },
+  "problems": {
+    "title": "The problems you may be facing",
+    "subtitle": "Reception chaos and undefined wait times lead to dissatisfied customers and lost revenue.",
+    "items": [
+      {
+        "title": "Crowded Entrances",
+        "description": "Blocked pathways frustrate staff and guests.",
+        "icon": "Users"
+      },
+      {
+        "title": "Walk-aways",
+        "description": "Guests leave when they don't know the wait.",
+        "icon": "Ban"
+      },
+      {
+        "title": "Pager Costs",
+        "description": "Expensive hardware that gets lost or broken.",
+        "icon": "Smartphone"
+      },
+      {
+        "title": "Staff Stress",
+        "description": "Constant questions about \"how much longer?\"",
+        "icon": "Clock"
+      }
+    ]
+  },
+  "features": {
+    "title": "Everything you need to run smoothly",
+    "subtitle": "Powerful features designed specifically for high-volume restaurants",
+    "items": [
+      {
+        "title": "Self-Service Options",
+        "description": "Display a QR code so guests can join the waitlist from their own device, preventing overcrowding at the stand.",
+        "icon": "QrCode"
+      },
+      {
+        "title": "Table Management",
+        "description": "Visualize your floor plan and assign tables to waiting parties with a simple drag-and-drop interface.",
+        "icon": "LayoutGrid"
+      },
+      {
+        "title": "Analytics & Insights",
+        "description": "Track average wait times, busy hours, and party sizes to optimize your staffing and operations.",
+        "icon": "TrendingUp"
+      }
+    ]
+  },
+  "testimonial": {
+    "quote": "Since switching to WaitQ, our host stand chaos has disappeared. Customers love the text updates, and we are turning tables 15% faster because people are ready when we text them.",
+    "author": "Sarah Jenkins",
+    "role": "Manager at The Local Grill"
+  },
+  "seo": {
+    "title": "WaitQ for Restaurants",
+    "description": "Maximize table turnover and improve customer satisfaction with the smartest waitlist app for restaurants. Replace paper lists and expensive pagers.",
+    "ogImage": "/og-restaurants.png"
+  }
+}

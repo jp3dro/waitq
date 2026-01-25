@@ -1,0 +1,66 @@
+{
+  "hero": {
+    "title": "Simple, transparent pricing",
+    "subtitle": "WaitQ pays for itself with one recovered table a day."
+  },
+  "socialProof": {
+    "title": "Trusted by top restaurants worldwide",
+    "stats": [
+      {
+        "value": "85%",
+        "label": "Reduction in perceived wait time"
+      },
+      {
+        "value": "2,000+",
+        "label": "Restaurants using WaitQ"
+      },
+      {
+        "value": "4.8★",
+        "label": "Average customer rating"
+      }
+    ],
+    "testimonial": {
+      "quote": "WaitQ cut our wait times by 35%. Guests love the SMS updates and our staff stays organized.",
+      "author": "Maria",
+      "role": "GM at Bistro Verde"
+    }
+  },
+  "faq": {
+    "title": "Frequently asked questions",
+    "items": [
+      {
+        "question": "Can I use WaitQ for free?",
+        "answer": "Yes! We offer a free tier to get started. You can upgrade as your needs grow."
+      },
+      {
+        "question": "What are the benefits of a virtual waitlist software in a physical business?",
+        "answer": "A virtual waitlist reduces crowding at your entrance, keeps customers informed with accurate wait times, reduces walk-aways, and frees up your staff from constantly answering \"how much longer?\" questions. It also provides valuable analytics to optimize your operations."
+      },
+      {
+        "question": "Do we need to purchase hardware?",
+        "answer": "No. WaitQ works on any device with a web browser - tablets, phones, or computers you already own. No special hardware, pagers, or equipment needed."
+      },
+      {
+        "question": "What is the expected ROI of WaitQ?",
+        "answer": "Most restaurants see ROI within the first month through increased table turnover and reduced walk-aways. With just one additional seated party per day, WaitQ pays for itself."
+      },
+      {
+        "question": "Is billing based on each waitlist?",
+        "answer": "No, billing is based on your plan tier. You can create unlimited waitlists within your plan limits."
+      },
+      {
+        "question": "Do you offer real-time insights and analytics?",
+        "answer": "Yes! WaitQ provides real-time analytics including average wait times, peak hours, customer patterns, and more to help you optimize your operations."
+      },
+      {
+        "question": "Is WaitQ easy to set up?",
+        "answer": "Yes! WaitQ can be set up in under 5 minutes. Simply create an account, configure your waitlist settings, and you're ready to start managing your queue."
+      }
+    ]
+  },
+  "seo": {
+    "title": "Simple, transparent pricing",
+    "description": "WaitQ pays for itself with one recovered table a day. Start free, upgrade as you grow.",
+    "ogImage": "/og-pricing.png"
+  }
+}

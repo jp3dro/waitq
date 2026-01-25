@@ -1,0 +1,143 @@
+{
+  "slug": "virtual-waitlist",
+  "hero": {
+    "title": "The virtual waitlist that keeps customers in the loop",
+    "subtitle": "Turn waitlists into warm welcomes. Manage walk-ins, reservations, and SMS updates in one intuitive platform designed for restaurants.",
+    "primaryCta": "Try Free",
+    "primaryCtaLink": "/signup",
+    "secondaryCta": "See how it works"
+  },
+  "sections": [
+    {
+      "_template": "textWithImage",
+      "title": "Better guest experience, better reputation",
+      "description": "Keep customers informed with accurate wait times as public display or directly on their phone",
+      "imageOnRight": true,
+      "bullets": [
+        { "text": "Customers get honest wait times that update in real time" },
+        { "text": "Anyone can check-in from their phone or kiosk" },
+        { "text": "No app downloads required" }
+      ]
+    },
+    {
+      "_template": "textWithImage",
+      "title": "Manage smart queues without the chaos",
+      "description": "Keep the front-of-house stress-free and organized. Know who's waiting and who's next in a glance.",
+      "imageOnRight": false,
+      "bullets": [
+        { "text": "See who's waiting, and who's next in a glance" },
+        { "text": "Send \"table ready\" texts and reduce walk-aways" },
+        { "text": "Works on the devices you already have - no training nor hardware needed" }
+      ]
+    },
+    {
+      "_template": "howItWorks",
+      "title": "How our digital waitlist works",
+      "steps": [
+        {
+          "title": "Guests are added to the waitlist",
+          "description": "Self check-in or host check-in: all it takes is a name and phone number or email.",
+          "icon": "QrCode",
+          "link": "/features/self-check-in",
+          "linkText": "Read about self check-in"
+        },
+        {
+          "title": "Full transparency for everyone",
+          "description": "Anyone can see who's waiting, and who's next in a glance.",
+          "icon": "Users",
+          "link": "/features/virtual-waiting-room",
+          "linkText": "Read about virtual waiting room"
+        },
+        {
+          "title": "Seat with one tap",
+          "description": "When a table is ready, notify the guest and mark them as seated. Simple and fast.",
+          "icon": "MousePointerClick",
+          "link": "/restaurant-waitlist-app",
+          "linkText": "Read about WaitQ for restaurants"
+        }
+      ]
+    },
+    {
+      "_template": "featureGrid",
+      "title": "All you need to manage your waitlist",
+      "features": [
+        {
+          "title": "Multiple join methods",
+          "description": "Self check-in, QR codes, email or SMS or host check-in. Make it easy for guests to join.",
+          "icon": "QrCode"
+        },
+        {
+          "title": "Real-Time Queue",
+          "description": "See what's happening, who's next, and manage your entire waitlist in real-time.",
+          "icon": "Zap"
+        },
+        {
+          "title": "Public Display",
+          "description": "Show current wait times on a TV screen at your entrance or have guests track online.",
+          "icon": "Monitor"
+        },
+        {
+          "title": "Multi-Location",
+          "description": "Manage multiple restaurant locations from a single dashboard.",
+          "icon": "MapPin"
+        },
+        {
+          "title": "Self-Service Kiosk",
+          "description": "Let guests add themselves to the waitlist via tablet or QR code.",
+          "icon": "Smartphone"
+        },
+        {
+          "title": "Analytics & Insights",
+          "description": "Track peak hours, wait times, and customer patterns.",
+          "icon": "BarChart3"
+        },
+        {
+          "title": "Accurate Wait Times",
+          "description": "Smart estimates based on real-time data and historical patterns.",
+          "icon": "Clock"
+        },
+        {
+          "title": "Full control",
+          "description": "Optional gen-fencing or party size limits to prevent abuses.",
+          "icon": "SlidersHorizontal"
+        }
+      ]
+    },
+    {
+      "_template": "socialProof",
+      "title": "Trusted by top restaurants worldwide",
+      "stats": [
+        { "value": "85%", "label": "Reduction in perceived wait time" },
+        { "value": "2,000+", "label": "Restaurants using WaitQ" },
+        { "value": "4.8★", "label": "Average customer rating" }
+      ]
+    },
+    {
+      "_template": "faq",
+      "title": "Frequently asked questions",
+      "items": [
+        {
+          "question": "Can I use WaitQ for free?",
+          "answer": "Yes! We offer a free tier to get started. You can upgrade as your needs grow."
+        },
+        {
+          "question": "Realistically, what is the expected ROI of WaitQ?",
+          "answer": "Most restaurants see ROI within the first month through increased table turnover and reduced walk-aways."
+        },
+        {
+          "question": "Is billing based on each waitlist?",
+          "answer": "No, billing is based on your plan tier. You can create unlimited waitlists within your plan limits."
+        },
+        {
+          "question": "What are my payment options?",
+          "answer": "We accept all major credit cards and can accommodate invoicing for annual plans."
+        }
+      ]
+    }
+  ],
+  "seo": {
+    "title": "Virtual Waitlist",
+    "description": "The virtual waitlist that keeps customers in the loop. Manage walk-ins, reservations, and SMS updates in one intuitive platform.",
+    "ogImage": "/og-virtual-waitlist.png"
+  }
+}

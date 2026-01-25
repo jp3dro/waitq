@@ -1,0 +1,62 @@
+{
+  "slug": "self-check-in",
+  "hero": {
+    "title": "Self check-in that works for everyone",
+    "subtitle": "Reduce front-of-house congestion by letting guests join your waitlist themselves. Simple QR code scanning or kiosk check-in—no app downloads required.",
+    "primaryCta": "Try Free",
+    "primaryCtaLink": "/signup",
+    "secondaryCta": "See how it works"
+  },
+  "sections": [
+    {
+      "_template": "howItWorks",
+      "title": "How self check-in works",
+      "subtitle": "Give guests control of their experience from the moment they arrive",
+      "steps": [
+        {
+          "title": "Scan QR code",
+          "description": "Display a QR code at your entrance. Guests scan it with their phone camera—no app needed.",
+          "icon": "QrCode"
+        },
+        {
+          "title": "Enter details",
+          "description": "Guests enter their name, party size, and contact info directly from their phone.",
+          "icon": "Smartphone"
+        },
+        {
+          "title": "Get updates",
+          "description": "Instant SMS or email updates keep them informed of their place in line.",
+          "icon": "Zap"
+        }
+      ]
+    },
+    {
+      "_template": "textWithImage",
+      "title": "Less chaos at the front door",
+      "description": "Stop juggling clipboards and handling lines. Let guests add themselves while your team focuses on hospitality.",
+      "imageOnRight": true,
+      "bullets": [
+        { "text": "Reduce front-of-house congestion and confusion" },
+        { "text": "No app downloads or account creation required" },
+        { "text": "Works on any smartphone with a camera" },
+        { "text": "Free up staff to deliver better service" }
+      ]
+    },
+    {
+      "_template": "textWithImage",
+      "title": "Or use kiosk mode",
+      "description": "Set up a tablet at your entrance for guests who prefer a dedicated station. Same easy check-in, different approach.",
+      "imageOnRight": false,
+      "bullets": [
+        { "text": "Dedicated check-in station for walk-ins" },
+        { "text": "Works on any tablet—no special hardware needed" },
+        { "text": "Customizable with your restaurant branding" }
+      ]
+    }
+  ],
+  "seo": {
+    "title": "Self Check-in",
+    "description": "Let guests join your waitlist with QR codes or kiosk check-in. No app downloads required.",
+    "ogImage": "/og-self-check-in.png"
+  }
+}

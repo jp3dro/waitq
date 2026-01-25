@@ -1,0 +1,29 @@
+{
+  "header": {
+    "logo": "/waitq.svg",
+    "siteName": "WaitQ",
+    "navLinks": [
+      { "label": "Features", "href": "/features/virtual-waitlist" },
+      { "label": "Pricing", "href": "/pricing" },
+      { "label": "For Restaurants", "href": "/restaurant-waitlist-app" }
+    ]
+  },
+  "footer": {
+    "copyright": "© 2026 WaitQ. All rights reserved.",
+    "links": [
+      { "label": "Terms", "href": "/terms" },
+      { "label": "Privacy", "href": "/privacy" },
+      { "label": "Contact", "href": "/contact" }
+    ],
+    "social": [
+      { "platform": "Twitter", "url": "https://twitter.com/waitqapp" },
+      { "platform": "LinkedIn", "url": "https://linkedin.com/company/waitq" }
+    ]
+  },
+  "cta": {
+    "title": "Ready to transform your waitlist?",
+    "subtitle": "Join thousands of restaurants using WaitQ to improve guest experience.",
+    "buttonText": "Start free trial",
+    "buttonLink": "/signup"
+  }
+}
