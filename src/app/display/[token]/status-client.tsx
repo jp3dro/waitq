@@ -9,6 +9,7 @@ import {
 import {
   AlertDialog,
   AlertDialogAction,
+  AlertDialogBody,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
@@ -521,10 +522,12 @@ function KioskButton({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Already waiting</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogBody>
             <AlertDialogDescription>
               {duplicateDialog.message || "This person is already waiting in this list."}
             </AlertDialogDescription>
-          </AlertDialogHeader>
+          </AlertDialogBody>
           <AlertDialogFooter>
             <AlertDialogAction>OK</AlertDialogAction>
           </AlertDialogFooter>

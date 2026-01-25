@@ -897,7 +897,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                       value={editForm.partySize ? parseInt(editForm.partySize, 10) : undefined}
                       onChange={(value) => setEditForm(prev => ({ ...prev, partySize: value?.toString() || "" }))}
                       min={1}
-                      max={20}
+                      max={30}
                     />
                   </div>
                   {showPhone && (

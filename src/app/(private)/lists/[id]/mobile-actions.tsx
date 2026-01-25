@@ -26,6 +26,7 @@ export default function MobileListActions({
   waitlistName,
   locationId,
   kioskEnabled,
+  kioskQrEnabled,
   displayEnabled,
   displayShowName,
   displayShowQr,
@@ -44,6 +45,7 @@ export default function MobileListActions({
   waitlistName: string;
   locationId: string;
   kioskEnabled: boolean;
+  kioskQrEnabled: boolean;
   displayEnabled: boolean;
   displayShowName: boolean;
   displayShowQr: boolean;
@@ -122,6 +124,7 @@ export default function MobileListActions({
         initialName={waitlistName}
         initialLocationId={locationId}
         initialKioskEnabled={kioskEnabled}
+        initialKioskQrEnabled={kioskQrEnabled}
         initialDisplayEnabled={displayEnabled}
         initialDisplayShowName={displayShowName}
         initialDisplayShowQr={displayShowQr}

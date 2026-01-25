@@ -37,6 +37,7 @@ type WaitlistRow = {
   id: string;
   name: string;
   kiosk_enabled: boolean | null;
+  kiosk_qr_enabled?: boolean | null;
   display_enabled?: boolean | null;
   display_show_name?: boolean | null;
   display_show_qr?: boolean | null;
@@ -67,6 +68,7 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
       id,
       name,
       kiosk_enabled,
+      kiosk_qr_enabled,
       display_enabled,
       display_show_name,
       display_show_qr,
@@ -119,6 +121,7 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
     waitlist = {
       ...(fb as any),
       business_locations,
+      kiosk_qr_enabled: false,
       display_enabled: true,
       display_show_name: false,
       display_show_qr: false,
@@ -157,9 +160,9 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
     });
     return st.isOpen;
   })();
-  const isLive = locationIsOpen;
-  const liveHelp =
-    "Live means this list is currently within this location’s working hours. You can change working hours in Locations → Edit location.";
+  const isOpen = locationIsOpen;
+  const openHelp =
+    "Open means this list is currently within this location’s working hours. You can change working hours in Locations → Edit location.";
   const locationName = (() => {
     const loc = Array.isArray(wl.business_locations) ? wl.business_locations[0] : wl.business_locations;
     const name = (loc as { name?: unknown } | null)?.name;
@@ -185,9 +188,9 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
                   <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-destructive"></span>
                   Closed
                 </Badge>
-              ) : isLive ? (
-                <HoverClickTooltip content={liveHelp} side="bottom">
-                  <button type="button" className="inline-flex items-center" aria-label="What does Live mean?">
+              ) : isOpen ? (
+                <HoverClickTooltip content={openHelp} side="bottom">
+                  <button type="button" className="inline-flex items-center" aria-label="What does Open mean?">
                     <Badge
                       variant="secondary"
                       className="gap-1 bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-200 dark:ring-emerald-800 cursor-help"
@@ -196,7 +199,7 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
                       </span>
-                      Live
+                      Open
                     </Badge>
                   </button>
                 </HoverClickTooltip>
@@ -218,6 +221,7 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
               ""
             }
             kioskEnabled={!!wl.kiosk_enabled}
+            kioskQrEnabled={wl.kiosk_qr_enabled === true}
             displayEnabled={wl.display_enabled !== false}
             displayShowName={wl.display_show_name !== false}
             displayShowQr={wl.display_show_qr === true}
@@ -251,6 +255,7 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
                   (Array.isArray(wl.business_locations) ? wl.business_locations[0]?.id : wl.business_locations?.id)
                 }
                 initialKioskEnabled={!!wl.kiosk_enabled}
+                initialKioskQrEnabled={wl.kiosk_qr_enabled === true}
                 initialDisplayEnabled={wl.display_enabled !== false}
                 initialDisplayShowName={wl.display_show_name !== false}
                 initialDisplayShowQr={wl.display_show_qr === true}

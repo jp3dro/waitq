@@ -80,7 +80,7 @@ const schema = z.object({
   sendSms: z.boolean().optional().default(false),
   sendWhatsapp: z.boolean().optional().default(false),
   sendEmail: z.boolean().optional().default(false),
-  partySize: z.number().int().positive().optional(),
+  partySize: z.number().int().positive().max(30, "Maximum 30 people allowed").optional(),
   seatingPreference: z.string().optional(),
 });
 

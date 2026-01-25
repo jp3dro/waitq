@@ -19,7 +19,7 @@ const schema = z.object({
     .optional()
     .transform((v) => (typeof v === "string" ? v.trim() : undefined))
     .refine((v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), "Invalid email"),
-  partySize: z.number().int().positive().optional(),
+  partySize: z.number().int().positive().max(30, "Maximum 30 people allowed").optional(),
   seatingPreference: z.string().optional(),
 });
 

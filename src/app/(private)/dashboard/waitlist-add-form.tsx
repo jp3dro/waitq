@@ -7,6 +7,7 @@ import { Stepper } from "@/components/ui/stepper";
 import {
   AlertDialog,
   AlertDialogAction,
+  AlertDialogBody,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
@@ -373,7 +374,7 @@ export default function AddForm({
                 value={watch("partySize")}
                 onChange={(value) => setValue("partySize", value)}
                 min={1}
-                max={20}
+                max={30}
               />
             </div>
           </div>
@@ -458,10 +459,12 @@ export default function AddForm({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Already waiting</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogBody>
             <AlertDialogDescription>
               {duplicateDialog.message || "This customer is already waiting in this list."}
             </AlertDialogDescription>
-          </AlertDialogHeader>
+          </AlertDialogBody>
           <AlertDialogFooter>
             <AlertDialogAction>OK</AlertDialogAction>
           </AlertDialogFooter>
