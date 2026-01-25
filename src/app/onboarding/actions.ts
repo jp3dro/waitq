@@ -5,6 +5,7 @@ import { getAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getStripe } from "@/lib/stripe";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 function isMissingColumnError(errMsg: string, column: string) {
     const m = errMsg.toLowerCase();
@@ -132,6 +133,15 @@ export async function submitUserInfo(formData: FormData) {
         .from("profiles")
         .upsert({ id: user.id, onboarding_step: 2 }, { onConflict: "id" });
     if (error) throw error;
+
+    // Track onboarding step completion
+    const posthog = getPostHogClient();
+    posthog.capture({
+        distinctId: user.id,
+        event: 'onboarding_step_completed',
+        properties: { step: 'user_info', step_number: 1 }
+    });
+
     revalidatePath("/onboarding");
 }
 
@@ -252,6 +262,14 @@ export async function submitBusinessInfo(formData: FormData) {
         console.error("Stripe init failed", e);
     }
 
+    // Track onboarding step completion
+    const posthog = getPostHogClient();
+    posthog.capture({
+        distinctId: user.id,
+        event: 'onboarding_step_completed',
+        properties: { step: 'business_info', step_number: 2, business_id: businessId, country }
+    });
+
     revalidatePath("/onboarding");
 }
 
@@ -283,6 +301,14 @@ export async function submitLocationInfo(formData: FormData) {
             { onConflict: "id" }
         );
     if (profileErr) throw profileErr;
+
+    // Track onboarding step completion
+    const posthog = getPostHogClient();
+    posthog.capture({
+        distinctId: user.id,
+        event: 'onboarding_step_completed',
+        properties: { step: 'location_info', step_number: 3 }
+    });
 
     revalidatePath("/onboarding");
 }
@@ -374,6 +400,14 @@ export async function submitWaitlistInfo(formData: FormData) {
         .upsert({ id: user.id, onboarding_step: 5 }, { onConflict: "id" });
     if (profileErr) throw profileErr;
 
+    // Track onboarding step completion
+    const posthog = getPostHogClient();
+    posthog.capture({
+        distinctId: user.id,
+        event: 'onboarding_step_completed',
+        properties: { step: 'waitlist_info', step_number: 4 }
+    });
+
     revalidatePath("/onboarding");
 }
 
@@ -394,5 +428,14 @@ export async function completeOnboarding() {
         .from("profiles")
         .update({ onboarding_completed: true, onboarding_step: 5 })
         .eq("id", user.id);
+
+    // Track onboarding completion
+    const posthog = getPostHogClient();
+    posthog.capture({
+        distinctId: user.id,
+        event: 'onboarding_completed',
+        properties: {}
+    });
+
     redirect("/lists");
 }

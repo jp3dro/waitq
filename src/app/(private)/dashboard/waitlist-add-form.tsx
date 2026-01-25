@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { PhoneInput, type Country } from "@/components/ui/phone-input";
 import { toastManager } from "@/hooks/use-toast";
 import { Stepper } from "@/components/ui/stepper";
+import posthog from "posthog-js";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -220,6 +221,17 @@ export default function AddForm({
       if (res.ok) {
         const j = await res.json().catch(() => ({}));
         const ticketNumber = typeof j?.ticketNumber === "number" ? j.ticketNumber : null;
+
+        // Track customer added to waitlist (internal)
+        posthog.capture('customer_added_to_waitlist', {
+          waitlist_id: values.waitlistId,
+          party_size: values.partySize || null,
+          sms_sent: values.sendSms,
+          email_sent: values.sendEmail,
+          has_phone: !!values.phone,
+          has_email: !!values.email,
+        });
+
         toastManager.add({
           title: "Success",
           description: `Customer added to waitlist successfully${typeof ticketNumber === "number" ? ` #${ticketNumber}` : ""}`,

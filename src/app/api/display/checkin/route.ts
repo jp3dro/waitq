@@ -9,6 +9,7 @@ import { normalizePhone } from "@/lib/phone";
 import { countEntriesInPeriod, getPlanContext } from "@/lib/plan-limits";
 import { getLocationOpenState, type RegularHours } from "@/lib/location-hours";
 import { buildWaitlistTicketEmailHtml } from "@/lib/email-templates";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 const schema = z.object({
   token: z.string().min(1),
@@ -183,6 +184,23 @@ export async function POST(req: NextRequest) {
       broadcastRefresh(`user-wl-${list.id}`),
       broadcastRefresh(`w-status-${data.token}`),
     ]);
+  } catch { }
+
+  // Track customer self check-in (anonymous event with business context)
+  try {
+    const posthog = getPostHogClient();
+    posthog.capture({
+      distinctId: `anon_kiosk_${ip}`, // Anonymous distinct ID for kiosk check-ins
+      event: 'customer_self_checkin',
+      properties: {
+        waitlist_id: list.id,
+        business_id: list.business_id,
+        party_size: partySize || null,
+        has_phone: !!normalizedPhone,
+        has_email: !!normalizedEmail,
+        seating_preference: seatingPreference || null,
+      }
+    });
   } catch { }
 
   return NextResponse.json(

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { toastManager } from "@/hooks/use-toast";
+import posthog from "posthog-js";
 
 type PasswordRule = {
   id: string;
@@ -36,6 +37,7 @@ function SignupPageContent() {
   const passwordsMatch = password === confirm;
 
   const handleGoogleSignup = async () => {
+    posthog.capture('signup_started', { method: 'google' });
     const supabase = createClient();
     await supabase.auth.signInWithOAuth({
       provider: "google",
@@ -58,19 +60,26 @@ function SignupPageContent() {
       return;
     }
     setLoading(true);
+    posthog.capture('signup_started', { method: 'email' });
     const supabase = createClient();
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) {
       toastManager.add({ title: "Error", description: error.message, type: "error" });
       setMessage({ text: error.message, tone: "error" });
+      posthog.capture('signup_failed', { method: 'email', error: error.message });
       setLoading(false);
       return;
     }
-    if (data.session) {
+    if (data.session && data.user) {
+      // Identify user and capture signup completion
+      posthog.identify(data.user.id, { email: data.user.email });
+      posthog.capture('signup_completed', { method: 'email' });
       router.push("/lists");
       router.refresh();
       return;
     }
+    // Email confirmation required
+    posthog.capture('signup_completed', { method: 'email', requires_email_confirmation: true });
     setMessage({ text: "Check your email to confirm your account.", tone: "info" });
     setLoading(false);
   };

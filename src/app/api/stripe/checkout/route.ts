@@ -3,6 +3,7 @@ import { getStripe } from "@/lib/stripe";
 import { createRouteClient } from "@/lib/supabase/server";
 import { plans } from "@/lib/plans";
 import type { Stripe } from "stripe";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 export async function POST(req: NextRequest) {
   const { priceId, lookupKey, customerEmail, planId, successPath, cancelPath } = await req.json();
@@ -226,6 +227,20 @@ export async function POST(req: NextRequest) {
       },
     },
   });
+
+  // Track checkout initiation
+  const posthog = getPostHogClient();
+  posthog.capture({
+    distinctId: user.id,
+    event: 'checkout_initiated',
+    properties: {
+      plan_id: planId || null,
+      is_upgrade: isUpgradeViaCheckout,
+      current_plan_id: currentPlanId || null,
+      business_id: businessId || null,
+    }
+  });
+
   return NextResponse.json({ url: session.url });
 }
 

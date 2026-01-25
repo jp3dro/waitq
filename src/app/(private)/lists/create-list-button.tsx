@@ -10,6 +10,7 @@ import {
 import { toastManager } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import ListFormFields from "@/app/(private)/lists/list-form-fields";
+import posthog from "posthog-js";
 
 type Location = { id: string; name: string };
 
@@ -75,6 +76,16 @@ export default function CreateListButton({ locations }: { locations: Location[] 
       });
       const j = await res.json().catch(() => ({}));
       if (res.ok) {
+        // Track waitlist creation
+        posthog.capture('waitlist_created', {
+          waitlist_id: j?.id || null,
+          kiosk_enabled: kioskEnabled,
+          display_enabled: displayEnabled,
+          ask_name: askName,
+          ask_phone: askPhone,
+          ask_email: askEmail,
+        });
+
         setOpen(false);
         reset();
         try { window.dispatchEvent(new CustomEvent('wl:refresh', { detail: {} })); } catch {}

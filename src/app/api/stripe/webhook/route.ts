@@ -3,6 +3,7 @@ import { getStripe } from "@/lib/stripe";
 import { getAdminClient } from "@/lib/supabase/admin";
 import type { Stripe } from "stripe";
 import { plans } from "@/lib/plans";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 export const runtime = "nodejs";
 
@@ -236,6 +237,31 @@ export async function POST(req: NextRequest) {
         const admin = getAdminClient();
         // We expect user id in subscription.metadata
         const userId = sub.metadata?.user_id || sub.metadata?.userId || null;
+
+        // Track subscription events in PostHog
+        if (userId) {
+          const posthog = getPostHogClient();
+          if (event.type === "customer.subscription.created") {
+            posthog.capture({
+              distinctId: userId,
+              event: 'subscription_created',
+              properties: {
+                subscription_id: sub.id,
+                plan_id: sub.metadata?.plan_id || null,
+                status: sub.status,
+              }
+            });
+          } else if (event.type === "customer.subscription.deleted" || sub.status === "canceled") {
+            posthog.capture({
+              distinctId: userId,
+              event: 'subscription_cancelled',
+              properties: {
+                subscription_id: sub.id,
+                plan_id: sub.metadata?.plan_id || null,
+              }
+            });
+          }
+        }
         if (userId) {
           // Resolve business for this user (owned first, then membership)
           let businessId: string | undefined;

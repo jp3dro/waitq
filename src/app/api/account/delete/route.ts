@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createRouteClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { getStripe } from "@/lib/stripe";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 export async function POST() {
   const supabase = await createRouteClient();
@@ -90,6 +91,18 @@ export async function POST() {
   // Profile row
   const { error: profileErr } = await admin.from("profiles").delete().eq("id", user.id);
   if (profileErr) return NextResponse.json({ error: profileErr.message }, { status: 500 });
+
+  // Track account deletion before deleting the user
+  try {
+    const posthog = getPostHogClient();
+    posthog.capture({
+      distinctId: user.id,
+      event: 'account_deleted',
+      properties: {
+        owned_businesses_count: ownedBusinessIds.length,
+      }
+    });
+  } catch { }
 
   // Finally, delete the auth user.
   try {

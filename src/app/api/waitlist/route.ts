@@ -11,6 +11,7 @@ import { countEntriesInPeriod, countSmsInPeriod, getPlanContext } from "@/lib/pl
 import { getLocationOpenState, type RegularHours } from "@/lib/location-hours";
 import { buildWaitlistTicketEmailHtml } from "@/lib/email-templates";
 import { resolveCurrentBusinessId } from "@/lib/current-business";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 function getBulkGateMessageId(resp: unknown): string | null {
   const r = resp as { data?: Record<string, unknown> } | null | undefined;
@@ -390,6 +391,18 @@ export async function POST(req: NextRequest) {
                 sent_at: new Date().toISOString(),
                 message_text: message
               });
+
+            // Track SMS sent event
+            const posthog = getPostHogClient();
+            posthog.capture({
+              distinctId: user.id,
+              event: 'sms_sent',
+              properties: {
+                waitlist_id: waitlistId,
+                entry_id: data.id,
+                business_id: w.business_id,
+              }
+            });
           }
         } catch (err) {
           console.error("[Waitlist] SMS error", err);
@@ -625,6 +638,20 @@ export async function PATCH(req: NextRequest) {
     .select("id, status, ticket_number, waitlist_id, token")
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+  // Track customer called event
+  if (action === "call" && data) {
+    const posthog = getPostHogClient();
+    posthog.capture({
+      distinctId: user.id,
+      event: 'customer_called',
+      properties: {
+        waitlist_id: data.waitlist_id,
+        entry_id: data.id,
+        ticket_number: data.ticket_number,
+      }
+    });
+  }
 
   // Recalculate ETA for all entries in this waitlist when status changes (including archive)
   if (data?.waitlist_id && (action === "call" || action === "archive" || status)) {

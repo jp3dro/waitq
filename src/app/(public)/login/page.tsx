@@ -4,6 +4,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toastManager } from "@/hooks/use-toast";
+import posthog from "posthog-js";
 
 function LoginPageContent() {
   const [email, setEmail] = useState("");
@@ -18,6 +19,7 @@ function LoginPageContent() {
   }, [searchParams]);
 
   const handleGoogleLogin = async () => {
+    posthog.capture('login_started', { method: 'google' });
     const supabase = createClient();
     await supabase.auth.signInWithOAuth({
       provider: "google",
@@ -30,16 +32,24 @@ function LoginPageContent() {
   const handleEmailLogin = async (e: React.FormEvent) => {
       e.preventDefault();
       setLoading(true);
+      posthog.capture('login_started', { method: 'email' });
       const supabase = createClient();
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password
       });
 
       if (error) {
           toastManager.add({ title: "Error", description: error.message, type: "error" });
+          posthog.capture('login_failed', { method: 'email', error: error.message });
           setLoading(false);
       } else {
+          // Identify user and capture login completion
+          if (data.user) {
+              posthog.identify(data.user.id, { email: data.user.email });
+          }
+          posthog.capture('login_completed', { method: 'email' });
+
           const inviteToken = searchParams.get('invite_token');
           if (inviteToken) {
               // Accept invite if token present
