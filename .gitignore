@@ -41,3 +41,6 @@ yarn-error.log*
 next-env.d.ts
 .pnpm-store
 .pnpm
+
+node_modules
+.env
