@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { ContactModal } from "@/components/contact-modal";
 
 interface CTASectionProps {
   variant?: "default" | "compact" | "inline";
@@ -50,9 +53,9 @@ export function CTASection({ variant = "default", className = "" }: CTASectionPr
               Try Free <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
-          <Button asChild variant="outline">
-            <Link href="/contact">Contact Sales</Link>
-          </Button>
+          <ContactModal>
+            <Button variant="outline">Contact Sales</Button>
+          </ContactModal>
         </div>
       </div>
     );
@@ -71,9 +74,11 @@ export function CTASection({ variant = "default", className = "" }: CTASectionPr
           <Button asChild size="lg" variant="secondary">
             <Link href="/signup">Try Free</Link>
           </Button>
-          <Button asChild size="lg" variant="outline" className="border-primary-foreground/30 hover:bg-primary-foreground/10">
-            <Link href="/contact">Contact Sales</Link>
-          </Button>
+          <ContactModal>
+            <Button size="lg" variant="outline" className="border-primary-foreground/30 hover:bg-primary-foreground/10">
+              Contact Sales
+            </Button>
+          </ContactModal>
         </div>
       </div>
     </section>

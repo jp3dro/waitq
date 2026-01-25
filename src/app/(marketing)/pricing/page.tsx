@@ -10,9 +10,22 @@ import {
 } from "@/components/ui/accordion";
 import { plans, pricingFeatures } from "@/lib/plans";
 
-export const metadata = { 
-  title: "Simple, transparent pricing | WaitQ",
-  description: "WaitQ pays for itself with one recovered table a day. Start free, upgrade as you grow."
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { 
+  title: "Simple, transparent pricing",
+  description: "WaitQ pays for itself with one recovered table a day. Start free, upgrade as you grow.",
+  openGraph: {
+    title: "Simple, transparent pricing - WaitQ",
+    description: "WaitQ pays for itself with one recovered table a day. Start free, upgrade as you grow.",
+    images: [{ url: "/og-pricing.png", width: 1200, height: 630, alt: "WaitQ Pricing" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Simple, transparent pricing - WaitQ",
+    description: "WaitQ pays for itself with one recovered table a day. Start free, upgrade as you grow.",
+    images: ["/og-pricing.png"],
+  },
 };
 
 export default function PricingPage() {
@@ -276,13 +289,29 @@ export default function PricingPage() {
             </AccordionItem>
             <AccordionItem value="item-2" className="bg-background rounded-lg px-6 border-0">
               <AccordionTrigger className="text-left font-medium hover:no-underline">
-                Realistically, what is the expected ROI of WaitQ?
+                What are the benefits of a virtual waitlist software in a physical business?
+              </AccordionTrigger>
+              <AccordionContent className="text-sm text-muted-foreground">
+                A virtual waitlist reduces crowding at your entrance, keeps customers informed with accurate wait times, reduces walk-aways, and frees up your staff from constantly answering &quot;how much longer?&quot; questions. It also provides valuable analytics to optimize your operations.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-3" className="bg-background rounded-lg px-6 border-0">
+              <AccordionTrigger className="text-left font-medium hover:no-underline">
+                Do we need to purchase hardware?
+              </AccordionTrigger>
+              <AccordionContent className="text-sm text-muted-foreground">
+                No. WaitQ works on any device with a web browser - tablets, phones, or computers you already own. No special hardware, pagers, or equipment needed.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-4" className="bg-background rounded-lg px-6 border-0">
+              <AccordionTrigger className="text-left font-medium hover:no-underline">
+                What is the expected ROI of WaitQ?
               </AccordionTrigger>
               <AccordionContent className="text-sm text-muted-foreground">
                 Most restaurants see ROI within the first month through increased table turnover and reduced walk-aways. With just one additional seated party per day, WaitQ pays for itself.
               </AccordionContent>
             </AccordionItem>
-            <AccordionItem value="item-3" className="bg-background rounded-lg px-6 border-0">
+            <AccordionItem value="item-5" className="bg-background rounded-lg px-6 border-0">
               <AccordionTrigger className="text-left font-medium hover:no-underline">
                 Is billing based on each waitlist?
               </AccordionTrigger>
@@ -290,12 +319,20 @@ export default function PricingPage() {
                 No, billing is based on your plan tier. You can create unlimited waitlists within your plan limits.
               </AccordionContent>
             </AccordionItem>
-            <AccordionItem value="item-4" className="bg-background rounded-lg px-6 border-0">
+            <AccordionItem value="item-6" className="bg-background rounded-lg px-6 border-0">
               <AccordionTrigger className="text-left font-medium hover:no-underline">
-                What are my payment options?
+                Do you offer real-time insights and analytics?
               </AccordionTrigger>
               <AccordionContent className="text-sm text-muted-foreground">
-                We accept all major credit cards and can accommodate invoicing for annual plans.
+                Yes! WaitQ provides real-time analytics including average wait times, peak hours, customer patterns, and more to help you optimize your operations.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-7" className="bg-background rounded-lg px-6 border-0">
+              <AccordionTrigger className="text-left font-medium hover:no-underline">
+                Is WaitQ easy to set up?
+              </AccordionTrigger>
+              <AccordionContent className="text-sm text-muted-foreground">
+                Yes! WaitQ can be set up in under 5 minutes. Simply create an account, configure your waitlist settings, and you&apos;re ready to start managing your queue.
               </AccordionContent>
             </AccordionItem>
             </Accordion>

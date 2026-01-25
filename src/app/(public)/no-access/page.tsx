@@ -1,5 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+
+export const metadata: Metadata = {
+  title: "No Access",
+  description: "You don't have access to any organization.",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default function NoAccessPage() {
   return (

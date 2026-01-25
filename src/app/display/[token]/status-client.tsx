@@ -273,7 +273,7 @@ export default function DisplayClient({ token }: { token: string }) {
             </div>
             <div className="flex-1 overflow-y-auto min-h-0 px-4 sm:px-6 custom-scrollbar">
               {waiting.length === 0 ? (
-                <div className="text-center py-8">
+                <div className="flex items-center justify-center h-full">
                   <p className="text-muted-foreground text-base">No one waiting at the moment</p>
                 </div>
               ) : (
@@ -316,7 +316,7 @@ export default function DisplayClient({ token }: { token: string }) {
             </div>
             <div className="flex-1 overflow-y-auto min-h-0 p-3 sm:p-4 custom-scrollbar">
               {notified.length === 0 ? (
-                <div className="text-center py-8 opacity-60">
+                <div className="flex items-center justify-center h-full opacity-60">
                   <p className="text-base">Waiting for next group...</p>
                 </div>
               ) : (

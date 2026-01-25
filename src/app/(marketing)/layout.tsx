@@ -2,6 +2,8 @@ import Nav from "@/components/nav";
 import Link from "next/link";
 import Image from "next/image";
 import { CTASection } from "@/components/cta-section";
+import { ContactModal } from "@/components/contact-modal";
+import { Button } from "@/components/ui/button";
 
 export default function MarketingLayout({
   children,
@@ -35,24 +37,23 @@ export default function MarketingLayout({
               </p>
             </div>
             <div>
+              <p className="font-semibold text-foreground mb-3">Features</p>
+              <ul className="space-y-2 text-muted-foreground">
+                <li><Link href="/features/self-check-in" className="hover:text-foreground transition">Self Check-in</Link></li>
+                <li><Link href="/features/virtual-waitlist" className="hover:text-foreground transition">Virtual Waitlist</Link></li>
+                <li><Link href="/features/virtual-waiting-room" className="hover:text-foreground transition">Virtual Waiting Room</Link></li>
+              </ul>
+            </div>
+            <div>
               <p className="font-semibold text-foreground mb-3">Platform</p>
               <ul className="space-y-2 text-muted-foreground">
-                <li><Link href="/platform/self-check-in" className="hover:text-foreground transition">Self Check-in</Link></li>
-                <li><Link href="/platform/virtual-waitlist" className="hover:text-foreground transition">Virtual Waitlist</Link></li>
-                <li><Link href="/platform/virtual-waiting-room" className="hover:text-foreground transition">Virtual Waiting Room</Link></li>
-              </ul>
-            </div>
-            <div>
-              <p className="font-semibold text-foreground mb-3">Use Cases</p>
-              <ul className="space-y-2 text-muted-foreground">
-                <li><Link href="/use-cases/restaurants" className="hover:text-foreground transition">Restaurants</Link></li>
-              </ul>
-            </div>
-            <div>
-              <p className="font-semibold text-foreground mb-3">Company</p>
-              <ul className="space-y-2 text-muted-foreground">
+                <li>
+                  <ContactModal>
+                    <Button variant="link" className="h-auto p-0 text-muted-foreground hover:text-foreground transition font-normal">Contact</Button>
+                  </ContactModal>
+                </li>
                 <li><Link href="/pricing" className="hover:text-foreground transition">Pricing</Link></li>
-                <li><Link href="/contact" className="hover:text-foreground transition">Contact</Link></li>
+                <li><Link href="/restaurant-waitlist-app" className="hover:text-foreground transition">WaitQ for Restaurants</Link></li>
               </ul>
             </div>
             <div>

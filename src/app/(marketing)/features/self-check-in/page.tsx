@@ -1,10 +1,24 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Check, QrCode, Smartphone, Users, Zap } from "lucide-react";
+import { ContactButton } from "@/components/contact-button";
 
-export const metadata = {
-  title: "Self Check-in | WaitQ",
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Self Check-in",
   description: "Let guests join your waitlist with QR codes or kiosk check-in. No app downloads required.",
+  openGraph: {
+    title: "Self Check-in - WaitQ",
+    description: "Let guests join your waitlist with QR codes or kiosk check-in. No app downloads required.",
+    images: [{ url: "/og-self-check-in.png", width: 1200, height: 630, alt: "WaitQ Self Check-in" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Self Check-in - WaitQ",
+    description: "Let guests join your waitlist with QR codes or kiosk check-in.",
+    images: ["/og-self-check-in.png"],
+  },
 };
 
 export default function SelfCheckInPage() {
@@ -25,9 +39,7 @@ export default function SelfCheckInPage() {
                 <Button asChild size="lg">
                   <Link href="/signup">Try Free</Link>
                 </Button>
-                <Button asChild variant="outline" size="lg">
-                  <Link href="/contact">See how it works</Link>
-                </Button>
+                <ContactButton>See how it works</ContactButton>
               </div>
             </div>
             <div className="relative">

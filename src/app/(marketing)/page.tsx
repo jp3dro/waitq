@@ -24,9 +24,22 @@ import {
 } from "lucide-react";
 import { YouTubeLightbox } from "@/components/youtube-lightbox";
 
-export const metadata = { 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { 
   title: "WaitQ - The virtual waitlist that keeps guests from walking away",
   description: "Modern restaurant waitlist management software with SMS notifications. No app required. Manage queues, reduce wait times, and improve customer experience. Starting at $19/mo.",
+  openGraph: {
+    title: "WaitQ - The virtual waitlist that keeps guests from walking away",
+    description: "Modern restaurant waitlist management software with SMS notifications. No app required. Manage queues, reduce wait times, and improve customer experience.",
+    images: [{ url: "/og-home.png", width: 1200, height: 630, alt: "WaitQ - Restaurant Waitlist Management" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "WaitQ - The virtual waitlist that keeps guests from walking away",
+    description: "Modern restaurant waitlist management software with SMS notifications. No app required.",
+    images: ["/og-home.png"],
+  },
 };
 
 export default function HomePage() {
@@ -38,7 +51,39 @@ export default function HomePage() {
     "mainEntity": [
       {
         "@type": "Question",
-        "name": "Do guests need an app?",
+        "name": "What is a waitlist management system?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "A waitlist management system is a digital solution that helps businesses manage customer queues efficiently. It replaces paper lists and pagers with SMS notifications, real-time updates, and analytics to improve the customer experience and reduce walk-aways."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What kind of businesses benefit from a waitlist management system like WaitQ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "WaitQ is designed for any business that manages customer queues, including restaurants, cafes, healthcare clinics, salons, retail stores, and entertainment venues. Any business with walk-in customers can benefit from better queue management."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Do we need to purchase hardware?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. WaitQ works on any device with a web browser - tablets, phones, or computers you already own. No special hardware, pagers, or equipment needed."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can we customize the check-in page?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes! You can customize the check-in page with your logo, colors, and branding to match your business identity."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Do customers need to download an app to use WaitQ?",
         "acceptedAnswer": {
           "@type": "Answer",
           "text": "No. Customers receive SMS text messages with a link to track their place in line. They can view their status from any web browser without downloading anything."
@@ -46,26 +91,10 @@ export default function HomePage() {
       },
       {
         "@type": "Question",
-        "name": "Does it work without WiFi integration?",
+        "name": "Is WaitQ easy to set up?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Yes. WaitQ works on any device with an internet connection. No special hardware or integration required."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Is billing based on each waitlist?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "No, billing is based on your plan tier. You can create unlimited waitlists within your plan limits."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "What are my payment options?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "We accept all major credit cards and can accommodate invoicing for annual plans."
+          "text": "Yes! WaitQ can be set up in under 5 minutes. Simply create an account, configure your waitlist settings, and you're ready to start managing your queue."
         }
       }
     ]
@@ -80,9 +109,9 @@ export default function HomePage() {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-48 lg:pt-60 pb-12 -mt-20">
-        {/* Background video */}
+        {/* Background video - hidden when reduce motion is preferred */}
         <video
-          className="absolute inset-0 h-full w-full object-cover motion-reduce:hidden"
+          className="absolute inset-0 h-full w-full object-cover hidden motion-safe:block"
           autoPlay
           muted
           loop
@@ -93,15 +122,15 @@ export default function HomePage() {
           <source src="/hero.mp4" type="video/mp4" />
         </video>
 
-        {/* Dark overlay for legibility */}
+        {/* Dark overlay for legibility - only shown with video */}
         <div
-          className="absolute inset-0 bg-gradient-to-b from-black/10  to-black/70"
+          className="absolute inset-0 bg-gradient-to-b from-black/10 to-black/70 hidden motion-safe:block"
           aria-hidden="true"
         />
 
         {/* Fallback background when reduced motion is enabled */}
         <div
-          className="absolute inset-0 bg-gradient-to-b from-background via-background to-muted/30 motion-reduce:block hidden"
+          className="absolute inset-0 bg-gradient-to-b from-background via-background to-muted/30 block motion-safe:hidden"
           aria-hidden="true"
         />
 
@@ -276,7 +305,7 @@ export default function HomePage() {
                 Guests can check-in themselves by scanning a QR code, and enter their email or phone number to get alerts.
               </p>
               <Button asChild variant="link" className="p-0 h-auto text-sm">
-                <Link href="/platform/virtual-waitlist">Read about self check-in &rarr;</Link>
+                <Link href="/features/self-check-in">Read about self check-in &rarr;</Link>
               </Button>
             </div>
 
@@ -294,7 +323,7 @@ export default function HomePage() {
                 From the queue the customers wait times are updated on their devices and on kiosks.
               </p>
               <Button asChild variant="link" className="p-0 h-auto text-sm">
-                <Link href="/platform/virtual-waitlist">Read about virtual waitlist &rarr;</Link>
+                <Link href="/features/virtual-waitlist">Read about virtual waitlist &rarr;</Link>
               </Button>
             </div>
 
@@ -312,7 +341,7 @@ export default function HomePage() {
                 Keep guests waiting comfortably and in control, without crowding the entrance.
               </p>
               <Button asChild variant="link" className="p-0 h-auto text-sm">
-                <Link href="/platform/virtual-waitlist">Read about virtual waiting room &rarr;</Link>
+                <Link href="/features/virtual-waiting-room">Read about virtual waiting room &rarr;</Link>
               </Button>
             </div>
           </div>
@@ -510,34 +539,82 @@ export default function HomePage() {
           <Accordion type="single" collapsible className="w-full space-y-4">
             <AccordionItem value="item-1" className="bg-card rounded-lg px-6 border-0">
               <AccordionTrigger className="text-left font-medium hover:no-underline">
-                Do guests need an app?
+                What is a waitlist management system?
+              </AccordionTrigger>
+              <AccordionContent className="text-sm text-muted-foreground">
+                A waitlist management system is a digital solution that helps businesses manage customer queues efficiently. It replaces paper lists and pagers with SMS notifications, real-time updates, and analytics to improve the customer experience and reduce walk-aways.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-2" className="bg-card rounded-lg px-6 border-0">
+              <AccordionTrigger className="text-left font-medium hover:no-underline">
+                What kind of businesses benefit from a waitlist management system like WaitQ?
+              </AccordionTrigger>
+              <AccordionContent className="text-sm text-muted-foreground">
+                WaitQ is designed for any business that manages customer queues, including restaurants, cafes, healthcare clinics, salons, retail stores, and entertainment venues. Any business with walk-in customers can benefit from better queue management.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-3" className="bg-card rounded-lg px-6 border-0">
+              <AccordionTrigger className="text-left font-medium hover:no-underline">
+                Do we need to purchase hardware?
+              </AccordionTrigger>
+              <AccordionContent className="text-sm text-muted-foreground">
+                No. WaitQ works on any device with a web browser - tablets, phones, or computers you already own. No special hardware, pagers, or equipment needed.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-4" className="bg-card rounded-lg px-6 border-0">
+              <AccordionTrigger className="text-left font-medium hover:no-underline">
+                Can we customize the check-in page?
+              </AccordionTrigger>
+              <AccordionContent className="text-sm text-muted-foreground">
+                Yes! You can customize the check-in page with your logo, colors, and branding to match your business identity.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-5" className="bg-card rounded-lg px-6 border-0">
+              <AccordionTrigger className="text-left font-medium hover:no-underline">
+                What if I want my staff only adding customers to the waitlist?
+              </AccordionTrigger>
+              <AccordionContent className="text-sm text-muted-foreground">
+                You can configure WaitQ to disable self check-in and only allow staff to add customers to the waitlist. This gives you full control over who joins the queue.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-6" className="bg-card rounded-lg px-6 border-0">
+              <AccordionTrigger className="text-left font-medium hover:no-underline">
+                Can customers check in before they arrive?
+              </AccordionTrigger>
+              <AccordionContent className="text-sm text-muted-foreground">
+                Yes! Customers can join your waitlist remotely from their phone before arriving at your location, reducing crowding at your entrance.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-7" className="bg-card rounded-lg px-6 border-0">
+              <AccordionTrigger className="text-left font-medium hover:no-underline">
+                Can we turn online joining on/off when it gets too busy?
+              </AccordionTrigger>
+              <AccordionContent className="text-sm text-muted-foreground">
+                Yes. You can easily toggle remote check-in on or off at any time, giving you control over your queue during peak hours.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-8" className="bg-card rounded-lg px-6 border-0">
+              <AccordionTrigger className="text-left font-medium hover:no-underline">
+                Do you offer real-time insights and analytics?
+              </AccordionTrigger>
+              <AccordionContent className="text-sm text-muted-foreground">
+                Yes! WaitQ provides real-time analytics including average wait times, peak hours, customer patterns, and more to help you optimize your operations.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-9" className="bg-card rounded-lg px-6 border-0">
+              <AccordionTrigger className="text-left font-medium hover:no-underline">
+                Do customers need to download an app to use WaitQ?
               </AccordionTrigger>
               <AccordionContent className="text-sm text-muted-foreground">
                 No. Customers receive SMS text messages with a link to track their place in line. They can view their status from any web browser without downloading anything.
               </AccordionContent>
             </AccordionItem>
-            <AccordionItem value="item-2" className="bg-card rounded-lg px-6 border-0">
+            <AccordionItem value="item-10" className="bg-card rounded-lg px-6 border-0">
               <AccordionTrigger className="text-left font-medium hover:no-underline">
-                Does it work without WiFi integration?
+                Is WaitQ easy to set up?
               </AccordionTrigger>
               <AccordionContent className="text-sm text-muted-foreground">
-                Yes. WaitQ works on any device with an internet connection. No special hardware or integration required.
-              </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="item-3" className="bg-card rounded-lg px-6 border-0">
-              <AccordionTrigger className="text-left font-medium hover:no-underline">
-                Is billing based on each waitlist?
-              </AccordionTrigger>
-              <AccordionContent className="text-sm text-muted-foreground">
-                No, billing is based on your plan tier. You can create unlimited waitlists within your plan limits.
-              </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="item-4" className="bg-card rounded-lg px-6 border-0">
-              <AccordionTrigger className="text-left font-medium hover:no-underline">
-                What are my payment options?
-              </AccordionTrigger>
-              <AccordionContent className="text-sm text-muted-foreground">
-                We accept all major credit cards and can accommodate invoicing for annual plans.
+                Yes! WaitQ can be set up in under 5 minutes. Simply create an account, configure your waitlist settings, and you&apos;re ready to start managing your queue.
               </AccordionContent>
             </AccordionItem>
           </Accordion>

@@ -1,10 +1,24 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Check, Monitor, MonitorPlay, Clock, Smartphone } from "lucide-react";
+import { ContactButton } from "@/components/contact-button";
 
-export const metadata = {
-  title: "Virtual Waiting Room | WaitQ",
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Virtual Waiting Room",
   description: "Public displays and status pages that keep guests informed. Real-time wait times on any screen.",
+  openGraph: {
+    title: "Virtual Waiting Room - WaitQ",
+    description: "Public displays and status pages that keep guests informed. Real-time wait times on any screen.",
+    images: [{ url: "/og-virtual-waiting-room.png", width: 1200, height: 630, alt: "WaitQ Virtual Waiting Room" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Virtual Waiting Room - WaitQ",
+    description: "Public displays and status pages that keep guests informed.",
+    images: ["/og-virtual-waiting-room.png"],
+  },
 };
 
 export default function VirtualWaitingRoomPage() {
@@ -25,9 +39,7 @@ export default function VirtualWaitingRoomPage() {
                 <Button asChild size="lg">
                   <Link href="/signup">Try Free</Link>
                 </Button>
-                <Button asChild variant="outline" size="lg">
-                  <Link href="/contact">See how it works</Link>
-                </Button>
+                <ContactButton>See how it works</ContactButton>
               </div>
             </div>
             <div className="relative">

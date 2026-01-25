@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import OnboardingWizard from "./wizard";
@@ -5,6 +6,15 @@ import { syncSubscriptionForUser } from "@/lib/subscription-sync";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { getStripe } from "@/lib/stripe";
 import { headers } from "next/headers";
+
+export const metadata: Metadata = {
+  title: "Get Started",
+  description: "Set up your WaitQ account and start managing your restaurant waitlist.",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 type SearchParams = Record<string, string | string[] | undefined>;
 

@@ -6,6 +6,7 @@ import { Menu } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { ContactModal } from "@/components/contact-modal";
 
 type Props = {
   isAuthed: boolean;
@@ -69,9 +70,11 @@ export default function MarketingMobileMenu({ isAuthed }: Props) {
               <Button asChild variant="ghost" className="justify-start" onClick={() => setOpen(false)}>
                 <Link href="/pricing">Pricing</Link>
               </Button>
-              <Button asChild variant="ghost" className="justify-start" onClick={() => setOpen(false)}>
-                <Link href="/contact">Contact</Link>
-              </Button>
+              <ContactModal>
+                <Button variant="ghost" className="justify-start" onClick={() => setOpen(false)}>
+                  Contact
+                </Button>
+              </ContactModal>
             </div>
           </nav>
         </div>

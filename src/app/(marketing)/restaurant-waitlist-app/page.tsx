@@ -13,12 +13,25 @@ import {
   Ban
 } from "lucide-react";
 
-export const metadata = {
-  title: "WaitQ for Restaurants | Smart Waitlist Management",
-  description: "Maximize table turnover and improve customer satisfaction with the smartest waitlist app for restaurants."
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "WaitQ for Restaurants",
+  description: "Maximize table turnover and improve customer satisfaction with the smartest waitlist app for restaurants. Replace paper lists and expensive pagers.",
+  openGraph: {
+    title: "WaitQ for Restaurants - Smart Waitlist Management",
+    description: "Maximize table turnover and improve customer satisfaction with the smartest waitlist app for restaurants.",
+    images: [{ url: "/og-restaurants.png", width: 1200, height: 630, alt: "WaitQ for Restaurants" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "WaitQ for Restaurants - Smart Waitlist Management",
+    description: "Maximize table turnover and improve customer satisfaction with the smartest waitlist app for restaurants.",
+    images: ["/og-restaurants.png"],
+  },
 };
 
-export default function RestaurantsUseCase() {
+export default function RestaurantWaitlistAppPage() {
   return (
     <main>
       {/* Hero Section */}
@@ -35,9 +48,6 @@ export default function RestaurantsUseCase() {
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button asChild size="lg">
               <Link href="/signup">Start free trial</Link>
-            </Button>
-            <Button asChild size="lg" variant="outline">
-              <Link href="/contact">Request demo</Link>
             </Button>
           </div>
           <p className="mt-4 text-xs text-muted-foreground">
@@ -69,7 +79,7 @@ export default function RestaurantsUseCase() {
                 <Ban className="w-6 h-6 text-red-600 dark:text-red-400" />
               </div>
               <p className="mt-3 font-medium text-sm">Walk-aways</p>
-              <p className="mt-1 text-xs text-muted-foreground">Guests leave when they don't know the wait.</p>
+              <p className="mt-1 text-xs text-muted-foreground">Guests leave when they don&apos;t know the wait.</p>
             </div>
             <div className="text-center">
               <div className="mx-auto w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-3">
@@ -83,7 +93,7 @@ export default function RestaurantsUseCase() {
                 <Clock className="w-6 h-6 text-red-600 dark:text-red-400" />
               </div>
               <p className="mt-3 font-medium text-sm">Staff Stress</p>
-              <p className="mt-1 text-xs text-muted-foreground">Constant questions about "how much longer?"</p>
+              <p className="mt-1 text-xs text-muted-foreground">Constant questions about &quot;how much longer?&quot;</p>
             </div>
           </div>
         </div>
@@ -204,7 +214,7 @@ export default function RestaurantsUseCase() {
           <figure className="mx-auto max-w-2xl text-center">
             <blockquote className="text-xl font-medium leading-8 text-foreground sm:text-2xl sm:leading-9">
               <p>
-                “Since switching to WaitQ, our host stand chaos has disappeared. Customers love the text updates, and we are turning tables 15% faster because people are ready when we text them.”
+                &ldquo;Since switching to WaitQ, our host stand chaos has disappeared. Customers love the text updates, and we are turning tables 15% faster because people are ready when we text them.&rdquo;
               </p>
             </blockquote>
             <figcaption className="mt-6">

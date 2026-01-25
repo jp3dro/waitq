@@ -1,4 +1,13 @@
-export const metadata = { title: "Terms" };
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Terms of Service",
+  description: "Read the WaitQ Terms of Service and Privacy Policy. Learn about your rights and responsibilities when using our restaurant waitlist management software.",
+  openGraph: {
+    title: "Terms of Service - WaitQ",
+    description: "Read the WaitQ Terms of Service and Privacy Policy.",
+  },
+};
 
 export default function TermsPage() {
   return (

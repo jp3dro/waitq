@@ -22,10 +22,24 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { ContactButton } from "@/components/contact-button";
 
-export const metadata = {
-  title: "Virtual Waitlist | WaitQ",
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Virtual Waitlist",
   description: "The virtual waitlist that keeps customers in the loop. Manage walk-ins, reservations, and SMS updates in one intuitive platform.",
+  openGraph: {
+    title: "Virtual Waitlist - WaitQ",
+    description: "The virtual waitlist that keeps customers in the loop. Manage walk-ins, reservations, and SMS updates in one intuitive platform.",
+    images: [{ url: "/og-virtual-waitlist.png", width: 1200, height: 630, alt: "WaitQ Virtual Waitlist" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Virtual Waitlist - WaitQ",
+    description: "The virtual waitlist that keeps customers in the loop.",
+    images: ["/og-virtual-waitlist.png"],
+  },
 };
 
 export default function VirtualWaitlistPage() {
@@ -46,9 +60,7 @@ export default function VirtualWaitlistPage() {
                 <Button asChild size="lg">
                   <Link href="/signup">Try Free</Link>
                 </Button>
-                <Button asChild variant="outline" size="lg">
-                  <Link href="/contact">See how it works</Link>
-                </Button>
+                <ContactButton>See how it works</ContactButton>
               </div>
               <p className="mt-4 text-sm text-muted-foreground flex items-center gap-2">
                 <BadgeCheck className="w-4 h-4 text-primary" />
@@ -178,7 +190,7 @@ export default function VirtualWaitlistPage() {
                 Self check-in or host check-in: all it takes is a name and phone number or email.
               </p>
               <Button asChild variant="link" className="mt-2">
-                <Link href="/use-cases/restaurants">Read about self check-in &rarr;</Link>
+                <Link href="/features/self-check-in">Read about self check-in &rarr;</Link>
               </Button>
             </div>
 
@@ -193,10 +205,10 @@ export default function VirtualWaitlistPage() {
               </div>
               <h3 className="text-xl font-semibold mb-2">Full transparency for everyone</h3>
               <p className="text-sm text-muted-foreground">
-                Anyone can see who's waiting, and who's next in a glance.
+                Anyone can see who&apos;s waiting, and who&apos;s next in a glance.
               </p>
               <Button asChild variant="link" className="mt-2">
-                <Link href="/use-cases/restaurants">Read about virtual waitlist &rarr;</Link>
+                <Link href="/features/virtual-waiting-room">Read about virtual waiting room &rarr;</Link>
               </Button>
             </div>
 
@@ -214,7 +226,7 @@ export default function VirtualWaitlistPage() {
                 When a table is ready, notify the guest and mark them as seated. Simple and fast.
               </p>
               <Button asChild variant="link" className="mt-2">
-                <Link href="/use-cases/restaurants">Read about waitlist &rarr;</Link>
+                <Link href="/restaurant-waitlist-app">Read about WaitQ for restaurants &rarr;</Link>
               </Button>
             </div>
           </div>

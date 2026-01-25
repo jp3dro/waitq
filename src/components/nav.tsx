@@ -13,6 +13,7 @@ import {
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
 import { QrCode, Users, MonitorPlay } from "lucide-react";
+import { ContactModal } from "@/components/contact-modal";
 
 export default async function Nav() {
   const supabase = await createClient();
@@ -105,9 +106,9 @@ export default async function Nav() {
               <Link href="/pricing">Pricing</Link>
             </Button>
             
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/contact">Contact</Link>
-            </Button>
+            <ContactModal>
+              <Button variant="ghost" size="sm">Contact</Button>
+            </ContactModal>
           </div>
           <div className="flex items-center gap-3">
             <ThemeToggle />

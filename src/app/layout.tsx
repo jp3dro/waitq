@@ -25,11 +25,13 @@ export const metadata: Metadata = {
     description: "Modern restaurant waitlist management software with SMS notifications. No app required. Manage queues, reduce wait times, and improve customer experience.",
     type: "website",
     siteName: "WaitQ",
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "WaitQ - Restaurant Waitlist Management" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Restaurant Waitlist App & Queue Management Software - WaitQ",
     description: "Modern restaurant waitlist management software with SMS notifications. No app required. Manage queues, reduce wait times, and improve customer experience.",
+    images: ["/og-default.png"],
   },
   alternates: {
     canonical: typeof process !== "undefined" && process.env.NEXT_PUBLIC_SITE_URL ? process.env.NEXT_PUBLIC_SITE_URL : undefined,

@@ -37,6 +37,7 @@ import {
 import {
     AlertDialog,
     AlertDialogAction,
+    AlertDialogBody,
     AlertDialogCancel,
     AlertDialogContent,
     AlertDialogDescription,
@@ -300,11 +301,13 @@ export default function PrivateSidebarClient({ userName, userEmail, businessLogo
                                         <AlertDialogContent>
                                             <AlertDialogHeader>
                                                 <AlertDialogTitle>Delete your account?</AlertDialogTitle>
+                                            </AlertDialogHeader>
+                                            <AlertDialogBody>
                                                 <AlertDialogDescription>
                                                     This will permanently delete your user, business setup data, and activity from the database.
                                                     This cannot be undone.
                                                 </AlertDialogDescription>
-                                            </AlertDialogHeader>
+                                            </AlertDialogBody>
                                             <AlertDialogFooter>
                                                 <AlertDialogAction
                                                     variant="destructive"
