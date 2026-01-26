@@ -121,6 +121,10 @@
       {
         "question": "Is WaitQ easy to set up?",
         "answer": "Yes! WaitQ can be set up in under 5 minutes. Simply create an account, configure your waitlist settings, and you're ready to start managing your queue."
+      },
+      {
+        "question": "Do customers need to download an app to join the wailist?",
+        "answer": "No. Guests can join themselves from their phone using a public link shared via website, tablet, or QR code, so there’s nothing to install."
       }
     ]
   },
