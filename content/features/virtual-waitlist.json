@@ -1,5 +1,5 @@
 {
-  "slug": "virtual-waitlist",
+  "slug": "digital-waitlist",
   "hero": {
     "title": "The virtual waitlist that keeps customers in the loop",
     "subtitle": "Turn waitlists into warm welcomes. Manage walk-ins, reservations, and SMS updates in one intuitive platform designed for restaurants.",
@@ -9,29 +9,40 @@
   },
   "sections": [
     {
-      "_template": "textWithImage",
       "title": "Better guest experience, better reputation",
       "description": "Keep customers informed with accurate wait times as public display or directly on their phone",
       "imageOnRight": true,
       "bullets": [
-        { "text": "Customers get honest wait times that update in real time" },
-        { "text": "Anyone can check-in from their phone or kiosk" },
-        { "text": "No app downloads required" }
-      ]
+        {
+          "text": "Customers get honest wait times that update in real time"
+        },
+        {
+          "text": "Anyone can check-in from their phone or kiosk"
+        },
+        {
+          "text": "No app downloads required"
+        }
+      ],
+      "_template": "textWithImage"
     },
     {
-      "_template": "textWithImage",
       "title": "Manage smart queues without the chaos",
       "description": "Keep the front-of-house stress-free and organized. Know who's waiting and who's next in a glance.",
       "imageOnRight": false,
       "bullets": [
-        { "text": "See who's waiting, and who's next in a glance" },
-        { "text": "Send \"table ready\" texts and reduce walk-aways" },
-        { "text": "Works on the devices you already have - no training nor hardware needed" }
-      ]
+        {
+          "text": "See who's waiting, and who's next in a glance"
+        },
+        {
+          "text": "Send \"table ready\" texts and reduce walk-aways"
+        },
+        {
+          "text": "Works on the devices you already have - no training nor hardware needed"
+        }
+      ],
+      "_template": "textWithImage"
     },
     {
-      "_template": "howItWorks",
       "title": "How our digital waitlist works",
       "steps": [
         {
@@ -55,10 +66,10 @@
           "link": "/restaurant-waitlist-app",
           "linkText": "Read about WaitQ for restaurants"
         }
-      ]
+      ],
+      "_template": "howItWorks"
     },
     {
-      "_template": "featureGrid",
       "title": "All you need to manage your waitlist",
       "features": [
         {
@@ -101,19 +112,28 @@
           "description": "Optional gen-fencing or party size limits to prevent abuses.",
           "icon": "SlidersHorizontal"
         }
-      ]
+      ],
+      "_template": "featureGrid"
     },
     {
-      "_template": "socialProof",
       "title": "Trusted by top restaurants worldwide",
       "stats": [
-        { "value": "85%", "label": "Reduction in perceived wait time" },
-        { "value": "2,000+", "label": "Restaurants using WaitQ" },
-        { "value": "4.8★", "label": "Average customer rating" }
-      ]
+        {
+          "value": "85%",
+          "label": "Reduction in perceived wait time"
+        },
+        {
+          "value": "2,000+",
+          "label": "Restaurants using WaitQ"
+        },
+        {
+          "value": "4.8★",
+          "label": "Average customer rating"
+        }
+      ],
+      "_template": "socialProof"
     },
     {
-      "_template": "faq",
       "title": "Frequently asked questions",
       "items": [
         {
@@ -132,12 +152,13 @@
           "question": "What are my payment options?",
           "answer": "We accept all major credit cards and can accommodate invoicing for annual plans."
         }
-      ]
+      ],
+      "_template": "faq"
     }
   ],
   "seo": {
-    "title": "Virtual Waitlist",
-    "description": "The virtual waitlist that keeps customers in the loop. Manage walk-ins, reservations, and SMS updates in one intuitive platform.",
-    "ogImage": "/og-virtual-waitlist.png"
+    "title": "Digital Waitlist Management App - WaitQ",
+    "description": "Reduce wait anxiety with our real-time virtual waitlist that lets customers see their position in line from their own devices and at all times.",
+    "ogImage": "/images/og-virtual-waitlist.png"
   }
 }
