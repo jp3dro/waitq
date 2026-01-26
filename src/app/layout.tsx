@@ -5,36 +5,14 @@ import Script from "next/script";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "next-themes";
- 
+
 
 const figtree = Figtree({ variable: "--font-sans", subsets: ["latin"], display: "swap" });
 
 export const metadata: Metadata = {
-  title: {
-    default: "Restaurant Waitlist App & Queue Management Software - WaitQ",
-    template: "%s - WaitQ",
-  },
-  description: "Modern restaurant waitlist management software with SMS notifications. No app required. Manage queues, reduce wait times, and improve customer experience. Starting at $19/mo.",
   metadataBase: typeof process !== "undefined" && process.env.NEXT_PUBLIC_SITE_URL ? new URL(process.env.NEXT_PUBLIC_SITE_URL) : undefined,
-  keywords: ["restaurant waitlist app", "queue management software", "restaurant queue system", "waitlist management", "SMS notifications", "table management", "virtual waitlist", "restaurant waitlist software"],
   icons: {
     icon: "/waitq-square.svg",
-  },
-  openGraph: {
-    title: "Restaurant Waitlist App & Queue Management Software - WaitQ",
-    description: "Modern restaurant waitlist management software with SMS notifications. No app required. Manage queues, reduce wait times, and improve customer experience.",
-    type: "website",
-    siteName: "WaitQ",
-    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "WaitQ - Restaurant Waitlist Management" }],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Restaurant Waitlist App & Queue Management Software - WaitQ",
-    description: "Modern restaurant waitlist management software with SMS notifications. No app required. Manage queues, reduce wait times, and improve customer experience.",
-    images: ["/og-default.png"],
-  },
-  alternates: {
-    canonical: typeof process !== "undefined" && process.env.NEXT_PUBLIC_SITE_URL ? process.env.NEXT_PUBLIC_SITE_URL : undefined,
   },
 };
 
