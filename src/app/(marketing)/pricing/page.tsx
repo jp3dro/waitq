@@ -3,21 +3,30 @@ import { PricingClient } from "./pricing-client";
 
 import type { Metadata } from "next";
 
-export const metadata: Metadata = { 
-  title: "Simple, transparent pricing",
-  description: "WaitQ pays for itself with one recovered table a day. Start free, upgrade as you grow.",
-  openGraph: {
-    title: "Simple, transparent pricing - WaitQ",
-    description: "WaitQ pays for itself with one recovered table a day. Start free, upgrade as you grow.",
-    images: [{ url: "/og-pricing.png", width: 1200, height: 630, alt: "WaitQ Pricing" }],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Simple, transparent pricing - WaitQ",
-    description: "WaitQ pays for itself with one recovered table a day. Start free, upgrade as you grow.",
-    images: ["/og-pricing.png"],
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { data } = await getPricingPageData();
+  const seo = data.pricing.seo;
+
+  const title = seo?.title || "Simple, transparent pricing";
+  const description = seo?.description || "WaitQ pays for itself with one recovered table a day. Start free, upgrade as you grow.";
+  const ogImage = seo?.ogImage || "/og-pricing.png";
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title: `${title} - WaitQ`,
+      description,
+      images: [{ url: ogImage, width: 1200, height: 630, alt: "WaitQ Pricing" }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${title} - WaitQ`,
+      description,
+      images: [ogImage],
+    },
+  };
+}
 
 export default async function PricingPage() {
   const { data, query, variables } = await getPricingPageData();

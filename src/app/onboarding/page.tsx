@@ -18,10 +18,8 @@ export const metadata: Metadata = {
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
-export default async function OnboardingPage({
-    searchParams,
-}: {
-    searchParams?: SearchParams | Promise<SearchParams>;
+export default async function OnboardingPage(props: {
+    searchParams: Promise<SearchParams>;
 }) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -30,7 +28,7 @@ export default async function OnboardingPage({
         redirect("/login");
     }
 
-    const sp = await Promise.resolve(searchParams ?? {});
+    const sp = await props.searchParams;
     const checkout =
         typeof sp.checkout === "string" ? sp.checkout : Array.isArray(sp.checkout) ? sp.checkout[0] : undefined;
     const sessionId =
