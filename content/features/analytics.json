@@ -1,0 +1,118 @@
+{
+  "slug": "analytics",
+  "hero": {
+    "title": "Waitlist analytics that power business decisions",
+    "subtitle": "Get actionable insights from your waitlist data: customer patterns, staff performance, and bottlenecks—at a glance, built to fuel data-driven decisions.",
+    "primaryCta": "Try Free",
+    "primaryCtaLink": "/signup",
+    "secondaryCta": "See how it works"
+  },
+  "sections": [
+    {
+      "_template": "textWithImage",
+      "title": "WaitQ analytics surface insights from your waitlists, empowering data-driven decisions.",
+      "description": "Every check-in, wait time, and seating generates data. WaitQ turns that data into clear dashboards so you can spot trends, fix bottlenecks, and optimize operations.",
+      "imageOnRight": true,
+      "variant": "default"
+    },
+    {
+      "_template": "threeColumnCards",
+      "title": "Understand your customer flow with key metrics",
+      "columns": 3,
+      "variant": "with-image",
+      "items": [
+        {
+          "title": "Number of customers",
+          "description": "Track daily, weekly, and monthly guest counts. See how traffic changes over time and identify your busiest periods.",
+          "icon": "Users"
+        },
+        {
+          "title": "No-show rate",
+          "description": "Monitor how often guests don't show up. Historical trends help you adjust overbooking and reminder strategies.",
+          "icon": "Clock"
+        },
+        {
+          "title": "Average wait times",
+          "description": "Measure actual wait times against estimates. Spot when waits spike and correlate with staffing or events.",
+          "icon": "BarChart3"
+        }
+      ]
+    },
+    {
+      "_template": "textWithImage",
+      "title": "Run the queue with real-time clarity",
+      "description": "Live dashboards show current queue length, average wait, and staff activity. Make decisions in the moment, not after the rush.",
+      "imageOnRight": false,
+      "variant": "muted-bg",
+      "bullets": [
+        { "text": "Live queue length and wait times" },
+        { "text": "Real-time staff activity tracking" },
+        { "text": "Instant alerts when waits exceed thresholds" }
+      ]
+    },
+    {
+      "_template": "textWithImage",
+      "title": "Spot trends and fix bottlenecks",
+      "description": "Historical reports reveal patterns: which days are busiest, when no-shows spike, how party size affects turnover. Use data to staff smarter and seat faster.",
+      "imageOnRight": true,
+      "variant": "muted-bg",
+      "bullets": [
+        { "text": "Day-by-day and hour-by-hour breakdowns" },
+        { "text": "Compare weeks, months, or custom ranges" },
+        { "text": "Export data for deeper analysis" }
+      ]
+    },
+    {
+      "_template": "testimonialWithStats",
+      "title": "Trusted by top restaurants worldwide",
+      "quote": "WaitQ cut our wait times by 35%. Guests love the SMS updates and our staff stays organized.",
+      "author": "Maria",
+      "role": "GM at Bistro Verde",
+      "stats": [
+        { "value": "2,000+", "label": "Restaurants using WaitQ" },
+        { "value": "4.8★", "label": "Average customer rating" },
+        { "value": "4.8★", "label": "Trustpilot rating" }
+      ]
+    },
+    {
+      "_template": "faq",
+      "title": "Analytics FAQs",
+      "items": [
+        {
+          "question": "What am I able to track in WaitQ?",
+          "answer": "WaitQ tracks guest counts, wait times, no-show rates, party sizes, peak hours, staff performance, and more. All data is available in real-time dashboards and historical reports."
+        },
+        {
+          "question": "Who has access to my analytics dashboard?",
+          "answer": "Account admins and managers can access analytics. You can configure role-based permissions to control who sees what data."
+        },
+        {
+          "question": "Do you track real-time or historical data?",
+          "answer": "Both! Live dashboards show current queue status, while historical reports let you analyze trends over days, weeks, or months."
+        },
+        {
+          "question": "Can I filter wait metrics by day, hour, or service period?",
+          "answer": "Yes. Filter by any time range, day of week, hour, or custom service periods (lunch, dinner, etc.). Compare periods side-by-side."
+        },
+        {
+          "question": "Does analytics require POS integrations?",
+          "answer": "No. WaitQ analytics work standalone using your waitlist data. POS integration is optional and can add revenue correlation if desired."
+        }
+      ]
+    },
+    {
+      "_template": "statsRow",
+      "variant": "bordered",
+      "stats": [
+        { "value": "85%", "label": "Reduction in perceived wait time" },
+        { "value": "2,000+", "label": "Restaurants using WaitQ" },
+        { "value": "4.8★", "label": "Average customer rating" }
+      ]
+    }
+  ],
+  "seo": {
+    "title": "Waitlist Analytics & Insights - WaitQ",
+    "description": "Get actionable insights from your waitlist data. Track wait times, no-show rates, and customer patterns to optimize operations.",
+    "ogImage": "/og-analytics.png"
+  }
+}

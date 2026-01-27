@@ -42,11 +42,13 @@ export default function MarketingLayout({
                 <li><Link href="/features/self-check-in" className="hover:text-foreground transition">Self Check-in</Link></li>
                 <li><Link href="/features/virtual-waitlist" className="hover:text-foreground transition">Virtual Waitlist</Link></li>
                 <li><Link href="/features/virtual-waiting-room" className="hover:text-foreground transition">Virtual Waiting Room</Link></li>
+                <li><Link href="/features/analytics" className="hover:text-foreground transition">Analytics</Link></li>
               </ul>
             </div>
             <div>
               <p className="font-semibold text-foreground mb-3">Platform</p>
               <ul className="space-y-2 text-muted-foreground">
+                <li><Link href="/about" className="hover:text-foreground transition">About</Link></li>
                 <li>
                   <ContactModal>
                     <Button variant="link" className="h-auto p-0 text-muted-foreground hover:text-foreground transition font-normal">Contact</Button>

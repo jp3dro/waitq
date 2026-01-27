@@ -1,0 +1,72 @@
+{
+  "hero": {
+    "title": "About WaitQ",
+    "subtitle": "Time is everyone's most valuable resource. We're in the business of time because every minute you save is added revenue you can earn."
+  },
+  "intro": {
+    "title": "WaitQ started in 2026 and is built by a small team who believes software shouldn't be complicated.",
+    "description": "We're a fully bootstrapped project, moving fast, staying focused, and shipping only the features that actually solve real problems.",
+    "bullets": [
+      { "text": "No venture capital, no growth-at-all-costs mentality" },
+      { "text": "Focused on solving real problems for real restaurants" },
+      { "text": "Built by people who understand hospitality" }
+    ]
+  },
+  "mission": {
+    "title": "Our mission: everyone make the most out of their time",
+    "paragraphs": [
+      {
+        "text": "As avid travelers and foodies, we saw too many poor experiences in restaurants accepting no reservations around the world. Managers yelling names at doors. Unclear waiting times. Customers either desperately to ask staff if they were next or simply disappearing."
+      },
+      {
+        "text": "We built WaitQ to eliminate that chaos. Not with complexity nor with enterprise features that need training, but with a simple system that does one thing exceptionally well: it turns waiting from a liability into a competitive advantage. When everyone is aligned, that's when businesses actually win."
+      },
+      {
+        "text": "We see WaitQ as the waitlist system that reduces no-shows, increases customer turnover, and brings a sense of calm to an activity no one likes: waiting. All with virtually zero operational overhead."
+      }
+    ]
+  },
+  "principles": {
+    "title": "Our guiding principles",
+    "items": [
+      {
+        "title": "Time is everything",
+        "description": "We're focused on delivering light, effortless waiting experiences that save time to both customers and managers."
+      },
+      {
+        "title": "Design for clarity",
+        "description": "Complexity is the enemy. We obsess over making every interaction obvious. Intuitive, and effortless."
+      },
+      {
+        "title": "Less is more",
+        "description": "Our software should be running in minutes, not days. No unnecessary complexity. No feature creep. Just what works."
+      }
+    ]
+  },
+  "howWeOperate": {
+    "title": "How we operate",
+    "description": "WaitQ is a small independent and bootstrapped business based in Portugal. We're a remote team focused on delivering lightweight but powerful platforms that actually bring back precious time to our clients.",
+    "items": [
+      {
+        "title": "Remote-first",
+        "description": "Remote work means we stay timezone-agnostic, lean, and focused on results, not office politics.",
+        "icon": "Globe"
+      },
+      {
+        "title": "EU-based",
+        "description": "We're proud to be based in the EU and committed to data privacy and compliance.",
+        "icon": "MapPin"
+      },
+      {
+        "title": "Transparent pricing",
+        "description": "No hidden fees. No per-user charges. What you see is what you pay.",
+        "icon": "Heart"
+      }
+    ]
+  },
+  "seo": {
+    "title": "About WaitQ - Our Story & Mission",
+    "description": "Learn about WaitQ's mission to transform waiting experiences. We're a small, bootstrapped team building simple, powerful waitlist software.",
+    "ogImage": "/og-about.png"
+  }
+}

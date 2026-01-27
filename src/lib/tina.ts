@@ -32,6 +32,12 @@ export async function getTermsPageData() {
   return result;
 }
 
+// Helper to get about page data
+export async function getAboutPageData() {
+  const result = await client.queries.about({ relativePath: "about.json" });
+  return result;
+}
+
 // Helper to get global settings
 export async function getGlobalSettings() {
   const result = await client.queries.global({ relativePath: "global.json" });

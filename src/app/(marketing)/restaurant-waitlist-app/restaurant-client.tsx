@@ -3,19 +3,72 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
   MessageSquare,
   Users,
   Smartphone,
   Clock,
-  CheckCircle2,
-  Utensils,
+  Check,
+  X,
+  Zap,
+  Monitor,
+  Heart,
   QrCode,
   LayoutGrid,
   TrendingUp,
-  Ban
+  Ban,
+  Image as ImageIcon
 } from "lucide-react";
 import { useTina } from "tinacms/dist/react";
 import type { RestaurantPageQuery } from "../../../../tina/__generated__/types";
+import { TestimonialWithStats } from "@/components/sections/testimonial-with-stats";
+import { StatsRow } from "@/components/sections/stats-row";
+import { useState } from "react";
+
+// Extended types for content sections
+interface HowItWorksItem {
+  title: string;
+  description: string;
+  icon: string;
+}
+
+interface BenefitSection {
+  title: string;
+  description: string;
+  imageOnRight?: boolean;
+}
+
+interface BeforeAfterItem {
+  text: string;
+  positive: boolean;
+}
+
+interface BeforeAfterTab {
+  id: string;
+  label: string;
+  items: BeforeAfterItem[];
+}
+
+interface WhyLoveItem {
+  title: string;
+  description: string;
+  icon: string;
+}
+
+interface FAQItem {
+  question: string;
+  answer: string;
+}
+
+interface StatItem {
+  value: string;
+  label: string;
+}
 
 // Icon mapping for dynamic icons
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -27,6 +80,9 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutGrid,
   TrendingUp,
   MessageSquare,
+  Zap,
+  Monitor,
+  Heart,
 };
 
 function getIcon(iconName: string | null | undefined) {
@@ -43,6 +99,28 @@ interface RestaurantClientProps {
 export function RestaurantClient(props: RestaurantClientProps) {
   const { data } = useTina(props);
   const page = data.restaurantPage;
+  const [activeTab, setActiveTab] = useState("before");
+
+  // Get extended content with proper typing
+  type ExtendedPage = {
+    intro?: { title: string; description: string; imageOnRight?: boolean };
+    howItWorks?: { title: string; items: HowItWorksItem[] };
+    benefits?: { title: string; sections: BenefitSection[] };
+    beforeAfter?: { title: string; tabs: BeforeAfterTab[] };
+    whyLove?: { title: string; items: WhyLoveItem[] };
+    testimonialWithStats?: { title: string; quote: string; author: string; role: string; stats: StatItem[] };
+    faq?: { title: string; items: FAQItem[] };
+    cta?: { title: string; subtitle: string; buttonText: string; buttonLink: string };
+  };
+  const extendedPage = page as unknown as ExtendedPage;
+  const intro = extendedPage.intro;
+  const howItWorks = extendedPage.howItWorks;
+  const benefits = extendedPage.benefits;
+  const beforeAfter = extendedPage.beforeAfter;
+  const whyLove = extendedPage.whyLove;
+  const testimonialWithStats = extendedPage.testimonialWithStats;
+  const faq = extendedPage.faq;
+  const cta = extendedPage.cta;
 
   return (
     <main>
@@ -52,7 +130,7 @@ export function RestaurantClient(props: RestaurantClientProps) {
           <div className="mx-auto max-w-4xl text-center">
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-foreground">
               {page.hero?.title} <br />
-              <span className="text-muted-foreground">{page.hero?.highlightedText}</span>
+              <span className="text-primary">{page.hero?.highlightedText}</span>
             </h1>
             <p className="mt-6 text-lg md:text-xl text-muted-foreground leading-relaxed max-w-3xl mx-auto">
               {page.hero?.subtitle}
@@ -69,148 +147,242 @@ export function RestaurantClient(props: RestaurantClientProps) {
         </div>
       </section>
 
-      {/* Problem/Solution Section */}
-      <section className="py-16">
-        <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-          <div className="mx-auto max-w-3xl text-center">
-            <h2 className="text-3xl font-semibold tracking-tight">{page.problems?.title}</h2>
-            <p className="mt-4 text-base text-muted-foreground">
-              {page.problems?.subtitle}
-            </p>
-          </div>
-          <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {page.problems?.items?.map((item, index) => {
-              const Icon = getIcon(item?.icon);
-              return (
-                <div key={index} className="text-center">
-                  <div className="mx-auto w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-3">
-                    <Icon className="w-6 h-6 text-red-600 dark:text-red-400" />
-                  </div>
-                  <p className="mt-3 font-medium text-sm">{item?.title}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{item?.description}</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Main Feature: Simplicity */}
-      <section className="py-20">
-        <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-6 text-primary">
-                <Utensils className="h-6 w-6" />
-              </div>
-              <h2 className="text-3xl font-semibold tracking-tight">Waitlist management made simple</h2>
-              <p className="mt-4 text-lg text-muted-foreground">
-                Say goodbye to messy handwriting and confused hosts. Our intuitive digital interface makes adding parties, estimating wait times, and seating guests a breeze.
-              </p>
-              <ul className="mt-8 space-y-4">
-                {[
-                  "Add guests in seconds with just a name and phone number",
-                  "Accurate wait time estimates based on real data",
-                  "Color-coded status for quick visual scanning",
-                ].map((item) => (
-                  <li key={item} className="flex gap-3 text-base text-muted-foreground">
-                    <CheckCircle2 className="h-6 w-6 text-primary flex-shrink-0" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="bg-muted rounded-2xl aspect-[4/3] flex items-center justify-center border text-muted-foreground">
-              <span className="text-sm font-medium">Product Interface Preview</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Main Feature: Communication (Alternating) */}
-      <section className="py-20">
-        <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="order-last lg:order-first bg-background rounded-2xl aspect-[4/3] flex items-center justify-center border text-muted-foreground shadow-sm">
-              <span className="text-sm font-medium">SMS Notification Preview</span>
-            </div>
-            <div>
-              <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-6 text-blue-600">
-                <MessageSquare className="h-6 w-6" />
-              </div>
-              <h2 className="text-3xl font-semibold tracking-tight">Keep customers in the loop</h2>
-              <p className="mt-4 text-lg text-muted-foreground">
-                Reduce anxiety and give guests the freedom to wait from anywhere. Send automated SMS or WhatsApp notifications when tables are ready.
-              </p>
-              <ul className="mt-8 space-y-4">
-                {[
-                  "Two-way communication lets guests confirm or cancel",
-                  "Send updates if wait times change",
-                  "Customizable message templates",
-                ].map((item) => (
-                  <li key={item} className="flex gap-3 text-base text-muted-foreground">
-                    <CheckCircle2 className="h-6 w-6 text-blue-600 flex-shrink-0" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Grid */}
-      <section className="py-16">
-        <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-          <div className="mx-auto max-w-2xl text-center mb-16">
-            <h2 className="text-3xl font-semibold tracking-tight">{page.features?.title}</h2>
-            <p className="mt-3 text-base text-muted-foreground">
-              {page.features?.subtitle}
-            </p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            {page.features?.items?.map((item, index) => {
-              const Icon = getIcon(item?.icon);
-              const colors = [
-                { bg: "bg-purple-100 dark:bg-purple-900/30", text: "text-purple-600 dark:text-purple-400" },
-                { bg: "bg-orange-100 dark:bg-orange-900/30", text: "text-orange-600 dark:text-orange-400" },
-                { bg: "bg-teal-100 dark:bg-teal-900/30", text: "text-teal-600 dark:text-teal-400" },
-              ];
-              const color = colors[index % colors.length];
-              return (
-                <div key={index} className="rounded-xl bg-card ring-1 ring-border p-6 hover:shadow-md transition">
-                  <div className={`w-10 h-10 rounded-lg ${color.bg} flex items-center justify-center mb-4`}>
-                    <Icon className={`w-5 h-5 ${color.text}`} />
-                  </div>
-                  <h3 className="text-lg font-semibold">{item?.title}</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    {item?.description}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonial */}
-      {page.testimonial && (
-        <section className="py-20">
+      {/* Say goodbye to paper lists */}
+      {intro && (
+        <section className="py-16">
           <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-            <figure className="mx-auto max-w-2xl text-center">
-              <blockquote className="text-xl font-medium leading-8 text-foreground sm:text-2xl sm:leading-9">
-                <p>
-                  &ldquo;{page.testimonial.quote}&rdquo;
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              <div className="relative">
+                <div className="aspect-[4/3] bg-muted rounded-2xl shadow-xl overflow-hidden">
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center p-8">
+                      <ImageIcon className="w-24 h-24 mx-auto text-muted-foreground/20" />
+                      <p className="mt-4 text-sm text-muted-foreground">Restaurant image</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{intro.title}</h2>
+                <p className="mt-4 text-lg text-muted-foreground">
+                  {intro.description}
                 </p>
-              </blockquote>
-              <figcaption className="mt-6">
-                <div className="font-semibold text-foreground">{page.testimonial.author}</div>
-                <div className="text-sm text-muted-foreground mt-1">{page.testimonial.role}</div>
-              </figcaption>
-            </figure>
+              </div>
+            </div>
           </div>
         </section>
       )}
+
+      {/* The modern waitlist app */}
+      {howItWorks && (
+        <section className="py-16">
+          <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
+                {howItWorks.title}
+              </h2>
+            </div>
+            <div className="grid md:grid-cols-3 gap-8">
+              {howItWorks.items?.map((item, index) => {
+                const Icon = getIcon(item?.icon);
+                return (
+                  <div key={index} className="text-center">
+                    <div className="w-12 h-12 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                      <Icon className="w-6 h-6 text-primary" />
+                    </div>
+                    <h3 className="font-semibold mb-2">{item?.title}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {item?.description}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Less time handling the line */}
+      {benefits && (
+        <section className="py-16">
+          <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
+                {benefits.title}
+              </h2>
+            </div>
+            <div className="grid md:grid-cols-3 gap-8">
+              {benefits.sections?.map((section, index) => (
+                <div key={index}>
+                  <div className="aspect-[4/3] bg-muted rounded-xl shadow-lg overflow-hidden mb-4">
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-center p-8">
+                        <Smartphone className="w-16 h-16 mx-auto text-muted-foreground/20" />
+                      </div>
+                    </div>
+                  </div>
+                  <h3 className="font-semibold mb-2">{section.title}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {section.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Before/After WaitQ */}
+      {beforeAfter && (
+        <section className="py-16">
+          <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
+            <div className="rounded-3xl bg-muted dark:bg-muted/30 p-6 md:p-10">
+              <div className="text-center mb-8">
+                <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
+                  {beforeAfter.title}
+                </h2>
+              </div>
+
+              {/* Tab buttons */}
+              <div className="flex justify-center mb-8">
+                <div className="inline-flex bg-background rounded-full p-1 shadow-sm">
+                  {beforeAfter.tabs?.map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`px-6 py-2 text-sm font-medium transition-colors rounded-full ${
+                        activeTab === tab.id
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tab content */}
+              {beforeAfter.tabs?.map((tab) => (
+                tab.id === activeTab && (
+                  <div key={tab.id} className="max-w-2xl mx-auto">
+                    <div className="space-y-4">
+                      {tab.items?.map((item, index) => (
+                        <div key={index} className="flex items-start gap-3 bg-background rounded-lg p-4">
+                          {item.positive ? (
+                            <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                          ) : (
+                            <X className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+                          )}
+                          <span className="text-muted-foreground">{item.text}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Why restaurants love WaitQ */}
+      {whyLove && (
+        <section className="py-16">
+          <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
+                {whyLove.title}
+              </h2>
+            </div>
+            <div className="grid md:grid-cols-2 gap-8">
+              {whyLove.items?.map((item, index) => {
+                const Icon = getIcon(item?.icon);
+                return (
+                  <div key={index} className="rounded-xl border border-border bg-card p-6 shadow-sm">
+                    <div className="flex gap-4">
+                      <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <Icon className="w-6 h-6 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold mb-2">{item?.title}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {item?.description}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Testimonial with Stats */}
+      {testimonialWithStats && (
+        <TestimonialWithStats
+          title={testimonialWithStats.title}
+          quote={testimonialWithStats.quote}
+          author={testimonialWithStats.author}
+          role={testimonialWithStats.role}
+          stats={testimonialWithStats.stats || []}
+        />
+      )}
+
+      {/* FAQ */}
+      {faq && (
+        <section className="py-20">
+          <div className="mx-auto max-w-3xl px-6 lg:px-8">
+            <h2 className="text-3xl font-bold tracking-tight text-center mb-10">
+              {faq.title}
+            </h2>
+            <Accordion type="single" collapsible className="w-full space-y-4">
+              {faq.items?.map((item, index) => (
+                <AccordionItem key={index} value={`item-${index}`} className="bg-card rounded-lg px-6 border-0">
+                  <AccordionTrigger className="text-left font-medium hover:no-underline">
+                    {item?.question}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm text-muted-foreground">
+                    {item?.answer}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
+        </section>
+      )}
+
+      {/* Every minute counts CTA */}
+      {cta && (
+        <section className="py-16">
+          <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
+            <div className="rounded-3xl bg-primary text-primary-foreground p-8 md:p-12 text-center">
+              <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
+                {cta.title}
+              </h2>
+              <p className="mt-4 text-lg opacity-90">
+                {cta.subtitle}
+              </p>
+              <div className="mt-8">
+                <Button asChild size="lg" variant="secondary">
+                  <Link href={cta.buttonLink || "/signup"}>{cta.buttonText}</Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Stats Row */}
+      <StatsRow
+        stats={[
+          { value: "85%", label: "Reduction in perceived wait time" },
+          { value: "2,000+", label: "Restaurants using WaitQ" },
+          { value: "4.8★", label: "Average customer rating" }
+        ]}
+        variant="bordered"
+      />
     </main>
   );
 }

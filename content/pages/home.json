@@ -5,11 +5,14 @@
     "primaryCta": "Try for free",
     "primaryCtaLink": "/signup",
     "secondaryCta": "See how it works",
-    "videoId": "Jk1ZrZF87UY"
+    "videoId": "Jk1ZrZF87UY",
+    "trustMessage": "No credit card required • 5-minute setup • Cancel anytime"
   },
   "problems": {
-    "title": "Stop losing revenue to long waits",
+    "title": "Stop losing revenue to long waits and chaotic wait lines",
     "subtitle": "Badly managed restaurant queues lead to lost revenue in different ways.",
+    "description": "WaitQ gives guests full control over their wait time and gives your front-of-house team a clear, real-time queue to keep things moving.",
+    "image": "/images/couple.jpg",
     "items": [
       {
         "title": "Front-door chaos",
@@ -25,6 +28,142 @@
         "title": "Poor guest experience",
         "description": "Keep guests informed with accurate wait times and manage crowds effortlessly.",
         "icon": "MessageSquare"
+      }
+    ]
+  },
+  "howItWorks": {
+    "title": "How WaitQ delivers a modern waiting experience",
+    "items": [
+      {
+        "title": "Check in customers in a breeze",
+        "description": "Customers check in themselves or staff adds them, from any device.",
+        "image": "/images/bar friends.jpg",
+        "link": "/features/self-check-in",
+        "linkText": "More about self-check-in"
+      },
+      {
+        "title": "Know exactly who's next",
+        "description": "See who's waiting, notify them when it's their turn and reduce cancellations.",
+        "image": "/images/couple.jpg",
+        "link": "/features/virtual-waitlist",
+        "linkText": "More about digital waitlist"
+      },
+      {
+        "title": "Turn wait data into decisions",
+        "description": "Real-time insights improves service and historical data informs long-term operations.",
+        "image": "/images/friends.jpg",
+        "link": "/features/analytics",
+        "linkText": "More about analytics"
+      }
+    ]
+  },
+  "benefits": {
+    "title": "Improve revenue, reviews, and repeat visits",
+    "sections": [
+      {
+        "badge": "For owners",
+        "title": "Handle peak hours with ease",
+        "image": "/images/bar friends.jpg",
+        "bullets": [
+          {
+            "text": "See who's waiting and who's next in a glance, and send \"table ready\" notifications with one tap"
+          },
+          {
+            "text": "Cut wait times with more efficient queue management"
+          },
+          {
+            "text": "No mistakes, crossed-out names, or constant \"how long?\" interruptions"
+          }
+        ]
+      },
+      {
+        "badge": "For customers",
+        "title": "Better, consistent customer experience",
+        "image": "/images/couple.jpg",
+        "bullets": [
+          {
+            "text": "Anyone can join the public digital waitlist from their phone or kiosk"
+          },
+          {
+            "text": "Replace crowded entrances with calm, accurate updates"
+          },
+          {
+            "text": "Customers get accurate wait times on public display or directly on their phones"
+          }
+        ]
+      }
+    ]
+  },
+  "productShowcase": {
+    "title": "Modern, efficient waitlist management",
+    "subtitle": "WaitQ is built for restaurants, but works for any busy customer-facing business.",
+    "ctaText": "See how restaurants benefit from WaitQ",
+    "ctaLink": "/restaurant-waitlist-app",
+    "cards": [
+      {
+        "title": "Designed for walk-ins",
+        "description": "WaitQ is made for trendy spots that seek a smoother flow when their house is full.",
+        "image": "/images/bar friends.jpg"
+      },
+      {
+        "title": "No apps or hardware required",
+        "description": "WaitQ runs in your phone, tablet as well as TV and kiosk. No extra installs needed.",
+        "image": "/images/couple.jpg"
+      },
+      {
+        "title": "Set up in 5 minutes",
+        "description": "WaitQ is designed to be user-friendly and can be set up quickly with no training.",
+        "image": "/images/friends.jpg"
+      }
+    ]
+  },
+  "competitiveAdvantage": {
+    "title": "How we turn waiting time into a competitive advantage",
+    "items": [
+      {
+        "title": "Free for small business",
+        "description": "Full access to core features without paying a dime. Upgrade only when you need more.",
+        "image": "/images/bar friends.jpg"
+      },
+      {
+        "title": "No POS integration needed",
+        "description": "WaitQ works standalone. Connect your POS later if you want, but it's not required.",
+        "image": "/images/friends.jpg"
+      },
+      {
+        "title": "Public facing display",
+        "description": "Show your queue on a TV at the entrance. Guests see their position without asking staff.",
+        "image": "/images/couple.jpg"
+      },
+      {
+        "title": "SMS notifications",
+        "description": "Keep guests informed with automatic text updates about their table status.",
+        "image": "/images/couple.jpg"
+      },
+      {
+        "title": "Real-time analytics",
+        "description": "Track wait times, peak hours, and customer patterns to optimize operations.",
+        "image": "/images/bar friends.jpg"
+      }
+    ]
+  },
+  "testimonialWithStats": {
+    "title": "How WaitQ is improving waiting experiences, worldwide.",
+    "quote": "WaitQ cut our wait times by 35%. Guests love the SMS updates and our staff stays organized.",
+    "author": "Maria",
+    "role": "GM at Bistro Verde",
+    "stats": [
+      {
+        "value": "2,000+",
+        "label": "Restaurants using WaitQ"
+      },
+      {
+        "value": "4.8★",
+        "label": "Average customer rating"
+      },
+      {
+        "value": "4.8★",
+        "label": "Trustpilot rating"
       }
     ]
   },
@@ -75,20 +214,7 @@
   },
   "socialProof": {
     "title": "Trusted by top restaurants worldwide",
-    "stats": [
-      {
-        "value": "85%",
-        "label": "Reduction in perceived wait time"
-      },
-      {
-        "value": "2,000+",
-        "label": "Restaurants using WaitQ"
-      },
-      {
-        "value": "4.8★",
-        "label": "Average customer rating"
-      }
-    ],
+    "stats": [],
     "testimonial": {
       "quote": "WaitQ cut our wait times by 35%. Guests love the SMS updates and our staff stays organized.",
       "author": "Maria",
@@ -111,6 +237,10 @@
         "answer": "No. WaitQ works on any device with a web browser - tablets, phones, or computers you already own. No special hardware, pagers, or equipment needed."
       },
       {
+        "question": "What if guests prefer not to use technology, or don't have a phone?",
+        "answer": "No problem. Staff can manually add guests to the waitlist and call their name when ready. WaitQ supports both digital and traditional approaches."
+      },
+      {
         "question": "Can we customize the check-in page?",
         "answer": "Yes! You can customize the check-in page with your logo, colors, and branding to match your business identity."
       },
@@ -119,12 +249,12 @@
         "answer": "No. Customers receive SMS text messages with a link to track their place in line. They can view their status from any web browser without downloading anything."
       },
       {
-        "question": "Is WaitQ easy to set up?",
-        "answer": "Yes! WaitQ can be set up in under 5 minutes. Simply create an account, configure your waitlist settings, and you're ready to start managing your queue."
+        "question": "Can you show me a live demo of the waitlist in operation before I try?",
+        "answer": "Absolutely! Contact us and we'll schedule a live demo to show you how WaitQ works in a real restaurant environment."
       },
       {
-        "question": "Do customers need to download an app to join the wailist?",
-        "answer": "No. Guests can join themselves from their phone using a public link shared via website, tablet, or QR code, so there’s nothing to install."
+        "question": "Is WaitQ easy to set up?",
+        "answer": "Yes! WaitQ can be set up in under 5 minutes. Simply create an account, configure your waitlist settings, and you're ready to start managing your queue."
       }
     ]
   },
