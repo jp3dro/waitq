@@ -93,21 +93,16 @@ export default defineConfig({
               },
             ],
           },
-          // Problem/Solution Section
+          // Intro Section (image + text below hero)
           {
             type: "object",
             name: "problems",
-            label: "Problems Section",
+            label: "Intro Section",
             fields: [
               {
                 type: "string",
                 name: "title",
                 label: "Section Title",
-              },
-              {
-                type: "string",
-                name: "subtitle",
-                label: "Section Subtitle",
               },
               {
                 type: "string",
@@ -119,20 +114,6 @@ export default defineConfig({
                 type: "image",
                 name: "image",
                 label: "Image",
-              },
-              {
-                type: "object",
-                name: "items",
-                label: "Problem Items",
-                list: true,
-                ui: {
-                  itemProps: (item) => ({ label: item?.title }),
-                },
-                fields: [
-                  { type: "string", name: "title", label: "Title" },
-                  { type: "string", name: "description", label: "Description" },
-                  { type: "string", name: "icon", label: "Icon (lucide icon name)" },
-                ],
               },
             ],
           },
@@ -367,6 +348,21 @@ export default defineConfig({
                   { type: "string", name: "answer", label: "Answer", ui: { component: "textarea" } },
                 ],
               },
+            ],
+          },
+          // Global CTA Section
+          {
+            type: "object",
+            name: "globalCta",
+            label: "Bottom CTA Section",
+            fields: [
+              { type: "string", name: "title", label: "Title" },
+              { type: "string", name: "subtitle", label: "Subtitle", ui: { component: "textarea" } },
+              { type: "string", name: "primaryButtonText", label: "Primary Button Text" },
+              { type: "string", name: "primaryButtonLink", label: "Primary Button Link" },
+              { type: "string", name: "secondaryButtonText", label: "Secondary Button Text" },
+              { type: "string", name: "secondaryButtonLink", label: "Secondary Button Link" },
+              { type: "string", name: "trustMessage", label: "Trust Message" },
             ],
           },
           // SEO
@@ -794,28 +790,36 @@ export default defineConfig({
             label: "Hero Section",
             fields: [
               { type: "string", name: "title", label: "Title" },
-              { type: "string", name: "highlightedText", label: "Highlighted Text (muted)" },
               { type: "string", name: "subtitle", label: "Subtitle", ui: { component: "textarea" } },
-              { type: "string", name: "ctaText", label: "CTA Button Text" },
-              { type: "string", name: "ctaLink", label: "CTA Button Link" },
-              { type: "string", name: "ctaSubtext", label: "CTA Subtext" },
+              { type: "string", name: "primaryCta", label: "Primary CTA Text" },
+              { type: "string", name: "primaryCtaLink", label: "Primary CTA Link" },
+              { type: "string", name: "secondaryCta", label: "Secondary CTA Text" },
+              { type: "string", name: "secondaryCtaLink", label: "Secondary CTA Link" },
+              { type: "string", name: "trustMessage", label: "Trust Message (below buttons)" },
             ],
           },
           {
             type: "object",
-            name: "problems",
-            label: "Problems Section",
+            name: "intro",
+            label: "Intro Section",
             fields: [
               { type: "string", name: "title", label: "Section Title" },
-              { type: "string", name: "subtitle", label: "Section Subtitle" },
+              { type: "string", name: "description", label: "Description", ui: { component: "textarea" } },
+              { type: "image", name: "image", label: "Image" },
+            ],
+          },
+          {
+            type: "object",
+            name: "howItWorks",
+            label: "How It Works Section",
+            fields: [
+              { type: "string", name: "title", label: "Section Title" },
               {
                 type: "object",
                 name: "items",
-                label: "Problem Items",
+                label: "Steps",
                 list: true,
-                ui: {
-                  itemProps: (item) => ({ label: item?.title }),
-                },
+                ui: { itemProps: (item) => ({ label: item?.title }) },
                 fields: [
                   { type: "string", name: "title", label: "Title" },
                   { type: "string", name: "description", label: "Description" },
@@ -826,19 +830,65 @@ export default defineConfig({
           },
           {
             type: "object",
-            name: "features",
-            label: "Features Section",
+            name: "benefits",
+            label: "Benefits Section",
             fields: [
               { type: "string", name: "title", label: "Section Title" },
-              { type: "string", name: "subtitle", label: "Section Subtitle" },
+              {
+                type: "object",
+                name: "sections",
+                label: "Benefit Cards",
+                list: true,
+                ui: { itemProps: (item) => ({ label: item?.title }) },
+                fields: [
+                  { type: "string", name: "title", label: "Title" },
+                  { type: "string", name: "description", label: "Description" },
+                  { type: "image", name: "image", label: "Image" },
+                ],
+              },
+            ],
+          },
+          {
+            type: "object",
+            name: "beforeAfter",
+            label: "Before/After Section",
+            fields: [
+              { type: "string", name: "title", label: "Section Title" },
+              {
+                type: "object",
+                name: "tabs",
+                label: "Tabs",
+                list: true,
+                ui: { itemProps: (item) => ({ label: item?.label }) },
+                fields: [
+                  { type: "string", name: "id", label: "Tab ID" },
+                  { type: "string", name: "label", label: "Tab Label" },
+                  {
+                    type: "object",
+                    name: "items",
+                    label: "Items",
+                    list: true,
+                    fields: [
+                      { type: "string", name: "text", label: "Text" },
+                      { type: "boolean", name: "positive", label: "Positive (green check)" },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            type: "object",
+            name: "whyLove",
+            label: "Why Love Section",
+            fields: [
+              { type: "string", name: "title", label: "Section Title" },
               {
                 type: "object",
                 name: "items",
-                label: "Feature Items",
+                label: "Items",
                 list: true,
-                ui: {
-                  itemProps: (item) => ({ label: item?.title }),
-                },
+                ui: { itemProps: (item) => ({ label: item?.title }) },
                 fields: [
                   { type: "string", name: "title", label: "Title" },
                   { type: "string", name: "description", label: "Description" },
@@ -849,12 +899,37 @@ export default defineConfig({
           },
           {
             type: "object",
-            name: "testimonial",
-            label: "Testimonial",
+            name: "faq",
+            label: "FAQ Section",
             fields: [
-              { type: "string", name: "quote", label: "Quote", ui: { component: "textarea" } },
-              { type: "string", name: "author", label: "Author" },
-              { type: "string", name: "role", label: "Role/Title" },
+              { type: "string", name: "title", label: "Section Title" },
+              {
+                type: "object",
+                name: "items",
+                label: "FAQ Items",
+                list: true,
+                ui: {
+                  itemProps: (item) => ({ label: item?.question }),
+                },
+                fields: [
+                  { type: "string", name: "question", label: "Question" },
+                  { type: "string", name: "answer", label: "Answer", ui: { component: "textarea" } },
+                ],
+              },
+            ],
+          },
+          {
+            type: "object",
+            name: "globalCta",
+            label: "Bottom CTA Section",
+            fields: [
+              { type: "string", name: "title", label: "Title" },
+              { type: "string", name: "subtitle", label: "Subtitle", ui: { component: "textarea" } },
+              { type: "string", name: "primaryButtonText", label: "Primary Button Text" },
+              { type: "string", name: "primaryButtonLink", label: "Primary Button Link" },
+              { type: "string", name: "secondaryButtonText", label: "Secondary Button Text" },
+              { type: "string", name: "secondaryButtonLink", label: "Secondary Button Link" },
+              { type: "string", name: "trustMessage", label: "Trust Message" },
             ],
           },
           {

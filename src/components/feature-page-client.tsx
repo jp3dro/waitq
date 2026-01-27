@@ -3,12 +3,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { 
   Check, 
   Users, 
@@ -41,6 +35,10 @@ import type {
 } from "../../tina/__generated__/types";
 import { TestimonialWithStats } from "@/components/sections/testimonial-with-stats";
 import { StatsRow } from "@/components/sections/stats-row";
+import { FAQSection } from "@/components/sections/faq-section";
+import { ArrowLink } from "@/components/sections/arrow-link";
+import { GlobalCTA } from "@/components/sections/global-cta";
+import { IntroSection } from "@/components/sections/intro-section";
 
 // Icon mapping for dynamic icons
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -106,7 +104,9 @@ export function FeaturePageClient(props: FeaturePageClientProps) {
                 {page.hero?.heroImage ? (
                   <Image src={page.hero.heroImage} alt="" fill className="object-cover" />
                 ) : (
-                  <Smartphone className="w-24 h-24 text-muted-foreground/20" />
+                  <div className="flex items-center justify-center h-full">
+                    <ImageIcon className="w-24 h-24 text-muted-foreground/20" />
+                  </div>
                 )}
               </div>
             </div>
@@ -134,13 +134,15 @@ export function FeaturePageClient(props: FeaturePageClientProps) {
                     <div className="grid lg:grid-cols-2 gap-12 items-center">
                       {!section.imageOnRight && (
                         <div className="relative">
-                          <div className={`aspect-[4/3] rounded-2xl shadow-xl overflow-hidden flex items-center justify-center ${
+                          <div className={`aspect-[4/3] rounded-2xl shadow-xl overflow-hidden ${
                             variant === "muted-bg" ? "bg-background" : "bg-muted"
                           }`}>
                             {section.image ? (
                               <Image src={section.image} alt="" fill className="object-cover" />
                             ) : (
-                              <ImageIcon className="w-24 h-24 text-muted-foreground/20" />
+                              <div className="flex items-center justify-center h-full">
+                                <ImageIcon className="w-24 h-24 text-muted-foreground/20" />
+                              </div>
                             )}
                           </div>
                         </div>
@@ -165,13 +167,15 @@ export function FeaturePageClient(props: FeaturePageClientProps) {
                       </div>
                       {section.imageOnRight && (
                         <div className="relative">
-                          <div className={`aspect-[4/3] rounded-2xl shadow-xl overflow-hidden flex items-center justify-center ${
+                          <div className={`aspect-[4/3] rounded-2xl shadow-xl overflow-hidden ${
                             variant === "muted-bg" ? "bg-background" : "bg-muted"
                           }`}>
                             {section.image ? (
                               <Image src={section.image} alt="" fill className="object-cover" />
                             ) : (
-                              <ImageIcon className="w-24 h-24 text-muted-foreground/20" />
+                              <div className="flex items-center justify-center h-full">
+                                <ImageIcon className="w-24 h-24 text-muted-foreground/20" />
+                              </div>
                             )}
                           </div>
                         </div>
@@ -198,43 +202,34 @@ export function FeaturePageClient(props: FeaturePageClientProps) {
                     )}
                   </div>
                   
-                  {/* Tab-style navigation */}
-                  <div className="flex justify-center mb-8">
-                    <div className="inline-flex bg-muted rounded-full p-1">
-                      {section.steps?.map((step, stepIndex) => (
-                        <div
-                          key={stepIndex}
-                          className={`px-4 py-2 text-sm font-medium rounded-full ${
-                            stepIndex === 0 ? "bg-primary text-primary-foreground" : "text-muted-foreground"
-                          }`}
-                        >
-                          {step?.title}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  
                   <div className="grid md:grid-cols-3 gap-8">
                     {section.steps?.map((step, stepIndex) => {
-                      const Icon = getIcon(step?.icon);
                       const stepWithImage = step as FeatureSectionsHowItWorksSteps & { image?: string };
                       return (
-                        <div key={stepIndex} className="text-center">
-                          <div className="aspect-[4/3] bg-muted rounded-xl shadow-lg overflow-hidden mb-6 flex items-center justify-center">
+                        <div key={stepIndex}>
+                          <div className="aspect-[4/3] bg-muted rounded-xl shadow-lg overflow-hidden mb-6">
                             {stepWithImage?.image ? (
-                              <Image src={stepWithImage.image} alt={step?.title || ""} fill className="object-cover" />
+                              <Image 
+                                src={stepWithImage.image} 
+                                alt={step?.title || ""} 
+                                width={400}
+                                height={300}
+                                className="w-full h-full object-cover" 
+                              />
                             ) : (
-                              <Icon className="w-20 h-20 text-muted-foreground/20" />
+                              <div className="flex items-center justify-center h-full">
+                                <ImageIcon className="w-20 h-20 text-muted-foreground/20" />
+                              </div>
                             )}
                           </div>
                           <h3 className="text-xl font-semibold mb-2">{step?.title}</h3>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-sm text-muted-foreground mb-3">
                             {step?.description}
                           </p>
                           {step?.link && step?.linkText && (
-                            <Button asChild variant="link" className="mt-2">
-                              <Link href={step.link}>{step.linkText} &rarr;</Link>
-                            </Button>
+                            <ArrowLink href={step.link}>
+                              {step.linkText}
+                            </ArrowLink>
                           )}
                         </div>
                       );
@@ -287,7 +282,7 @@ export function FeaturePageClient(props: FeaturePageClientProps) {
                                 />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center">
-                                  <Icon className="w-16 h-16 text-muted-foreground/30" />
+                                  <ImageIcon className="w-16 h-16 text-muted-foreground/20" />
                                 </div>
                               )}
                             </div>
@@ -296,9 +291,9 @@ export function FeaturePageClient(props: FeaturePageClientProps) {
                               {item.description}
                             </p>
                             {item.link && item.linkText && (
-                              <Button asChild variant="link" className="p-0 h-auto text-sm">
-                                <Link href={item.link}>{item.linkText} &rarr;</Link>
-                              </Button>
+                              <ArrowLink href={item.link}>
+                                {item.linkText}
+                              </ArrowLink>
                             )}
                           </div>
                         );
@@ -318,9 +313,9 @@ export function FeaturePageClient(props: FeaturePageClientProps) {
                             {item.description}
                           </p>
                           {item.link && item.linkText && (
-                            <Button asChild variant="link" className="p-0 h-auto text-sm mt-3">
-                              <Link href={item.link}>{item.linkText} &rarr;</Link>
-                            </Button>
+                            <ArrowLink href={item.link} className="mt-3">
+                              {item.linkText}
+                            </ArrowLink>
                           )}
                         </div>
                       );
@@ -439,25 +434,11 @@ export function FeaturePageClient(props: FeaturePageClientProps) {
 
           case "FeatureSectionsFaq":
             return (
-              <section key={index} className="py-20">
-                <div className="mx-auto max-w-3xl px-6 lg:px-8">
-                  <h2 className="text-3xl font-bold tracking-tight text-center mb-10">
-                    {section.title}
-                  </h2>
-                  <Accordion type="single" collapsible className="w-full space-y-4">
-                    {section.items?.map((item, itemIndex) => (
-                      <AccordionItem key={itemIndex} value={`item-${itemIndex}`} className="bg-card rounded-lg px-6 border-0">
-                        <AccordionTrigger className="text-left font-medium hover:no-underline">
-                          {item?.question}
-                        </AccordionTrigger>
-                        <AccordionContent className="text-sm text-muted-foreground">
-                          {item?.answer}
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                </div>
-              </section>
+              <FAQSection
+                key={index}
+                title={section.title || "Frequently asked questions"}
+                items={section.items || []}
+              />
             );
 
           default:

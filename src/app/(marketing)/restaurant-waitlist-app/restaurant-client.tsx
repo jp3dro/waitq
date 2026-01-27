@@ -1,13 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import {
   MessageSquare,
   Users,
@@ -26,8 +21,9 @@ import {
 } from "lucide-react";
 import { useTina } from "tinacms/dist/react";
 import type { RestaurantPageQuery } from "../../../../tina/__generated__/types";
-import { TestimonialWithStats } from "@/components/sections/testimonial-with-stats";
-import { StatsRow } from "@/components/sections/stats-row";
+import { FAQSection } from "@/components/sections/faq-section";
+import { GlobalCTA } from "@/components/sections/global-cta";
+import { IntroSection } from "@/components/sections/intro-section";
 import { useState } from "react";
 
 // Extended types for content sections
@@ -40,7 +36,7 @@ interface HowItWorksItem {
 interface BenefitSection {
   title: string;
   description: string;
-  imageOnRight?: boolean;
+  image?: string;
 }
 
 interface BeforeAfterItem {
@@ -63,11 +59,6 @@ interface WhyLoveItem {
 interface FAQItem {
   question: string;
   answer: string;
-}
-
-interface StatItem {
-  value: string;
-  label: string;
 }
 
 // Icon mapping for dynamic icons
@@ -103,74 +94,87 @@ export function RestaurantClient(props: RestaurantClientProps) {
 
   // Get extended content with proper typing
   type ExtendedPage = {
-    intro?: { title: string; description: string; imageOnRight?: boolean };
+    hero?: {
+      title: string;
+      subtitle: string;
+      primaryCta?: string;
+      primaryCtaLink?: string;
+      secondaryCta?: string;
+      secondaryCtaLink?: string;
+      trustMessage?: string;
+    };
+    intro?: { title: string; description: string; image?: string };
     howItWorks?: { title: string; items: HowItWorksItem[] };
     benefits?: { title: string; sections: BenefitSection[] };
     beforeAfter?: { title: string; tabs: BeforeAfterTab[] };
     whyLove?: { title: string; items: WhyLoveItem[] };
-    testimonialWithStats?: { title: string; quote: string; author: string; role: string; stats: StatItem[] };
     faq?: { title: string; items: FAQItem[] };
-    cta?: { title: string; subtitle: string; buttonText: string; buttonLink: string };
+    globalCta?: {
+      title: string;
+      subtitle: string;
+      primaryButtonText: string;
+      primaryButtonLink: string;
+      secondaryButtonText?: string;
+      secondaryButtonLink?: string;
+      trustMessage?: string;
+    };
   };
   const extendedPage = page as unknown as ExtendedPage;
+  const hero = extendedPage.hero;
   const intro = extendedPage.intro;
   const howItWorks = extendedPage.howItWorks;
   const benefits = extendedPage.benefits;
   const beforeAfter = extendedPage.beforeAfter;
   const whyLove = extendedPage.whyLove;
-  const testimonialWithStats = extendedPage.testimonialWithStats;
   const faq = extendedPage.faq;
-  const cta = extendedPage.cta;
+  const globalCta = extendedPage.globalCta;
 
   return (
     <main>
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-b from-background via-background to-muted/30 pt-24 pb-20">
-        <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
+      {/* Hero Section - Same style as homepage */}
+      <section className="relative overflow-hidden pt-32 lg:pt-48 pb-12 -mt-20 bg-foreground">
+        <div className="relative mx-auto max-w-[1200px] px-6 lg:px-8 pb-16">
           <div className="mx-auto max-w-4xl text-center">
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-foreground">
-              {page.hero?.title} <br />
-              <span className="text-primary">{page.hero?.highlightedText}</span>
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-primary">
+              {hero?.title}
             </h1>
-            <p className="mt-6 text-lg md:text-xl text-muted-foreground leading-relaxed max-w-3xl mx-auto">
-              {page.hero?.subtitle}
+            <p className="mt-6 text-lg md:text-xl text-background/80 max-w-3xl mx-auto">
+              {hero?.subtitle}
             </p>
-            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button asChild size="lg">
-                <Link href={page.hero?.ctaLink || "/signup"}>{page.hero?.ctaText}</Link>
-              </Button>
+            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+              {hero?.primaryCta && (
+                <Button asChild size="lg" className="px-8">
+                  <Link href={hero?.primaryCtaLink || "/signup"}>{hero.primaryCta}</Link>
+                </Button>
+              )}
+              {hero?.secondaryCta && (
+                <Button
+                  asChild
+                  size="lg"
+                  variant="outline"
+                  className="px-8 border-background/30 text-background bg-background/5 hover:bg-background/10 hover:text-background"
+                >
+                  <Link href={hero?.secondaryCtaLink || "/pricing"}>{hero.secondaryCta}</Link>
+                </Button>
+              )}
             </div>
-            <p className="mt-4 text-xs text-muted-foreground">
-              {page.hero?.ctaSubtext}
-            </p>
+            {/* Trust message */}
+            {hero?.trustMessage && (
+              <p className="mt-6 text-sm text-background/60">
+                {hero.trustMessage}
+              </p>
+            )}
           </div>
         </div>
       </section>
 
-      {/* Say goodbye to paper lists */}
+      {/* Intro Section */}
       {intro && (
-        <section className="py-16">
-          <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
-              <div className="relative">
-                <div className="aspect-[4/3] bg-muted rounded-2xl shadow-xl overflow-hidden">
-                  <div className="flex items-center justify-center h-full">
-                    <div className="text-center p-8">
-                      <ImageIcon className="w-24 h-24 mx-auto text-muted-foreground/20" />
-                      <p className="mt-4 text-sm text-muted-foreground">Restaurant image</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{intro.title}</h2>
-                <p className="mt-4 text-lg text-muted-foreground">
-                  {intro.description}
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
+        <IntroSection
+          title={intro.title}
+          description={intro.description}
+          image={intro.image}
+        />
       )}
 
       {/* The modern waitlist app */}
@@ -215,11 +219,21 @@ export function RestaurantClient(props: RestaurantClientProps) {
               {benefits.sections?.map((section, index) => (
                 <div key={index}>
                   <div className="aspect-[4/3] bg-muted rounded-xl shadow-lg overflow-hidden mb-4">
-                    <div className="flex items-center justify-center h-full">
-                      <div className="text-center p-8">
-                        <Smartphone className="w-16 h-16 mx-auto text-muted-foreground/20" />
+                    {section.image ? (
+                      <Image
+                        src={section.image}
+                        alt={section.title}
+                        width={400}
+                        height={300}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-full">
+                        <div className="text-center p-8">
+                          <ImageIcon className="w-16 h-16 mx-auto text-muted-foreground/20" />
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                   <h3 className="font-semibold mb-2">{section.title}</h3>
                   <p className="text-sm text-muted-foreground">
@@ -319,70 +333,23 @@ export function RestaurantClient(props: RestaurantClientProps) {
         </section>
       )}
 
-      {/* Testimonial with Stats */}
-      {testimonialWithStats && (
-        <TestimonialWithStats
-          title={testimonialWithStats.title}
-          quote={testimonialWithStats.quote}
-          author={testimonialWithStats.author}
-          role={testimonialWithStats.role}
-          stats={testimonialWithStats.stats || []}
+      {/* FAQ */}
+      {faq?.title && faq?.items && (
+        <FAQSection title={faq.title} items={faq.items} />
+      )}
+
+      {/* Global CTA */}
+      {globalCta && (
+        <GlobalCTA
+          title={globalCta.title}
+          subtitle={globalCta.subtitle}
+          primaryButtonText={globalCta.primaryButtonText}
+          primaryButtonLink={globalCta.primaryButtonLink}
+          secondaryButtonText={globalCta.secondaryButtonText}
+          secondaryButtonLink={globalCta.secondaryButtonLink}
+          trustMessage={globalCta.trustMessage}
         />
       )}
-
-      {/* FAQ */}
-      {faq && (
-        <section className="py-20">
-          <div className="mx-auto max-w-3xl px-6 lg:px-8">
-            <h2 className="text-3xl font-bold tracking-tight text-center mb-10">
-              {faq.title}
-            </h2>
-            <Accordion type="single" collapsible className="w-full space-y-4">
-              {faq.items?.map((item, index) => (
-                <AccordionItem key={index} value={`item-${index}`} className="bg-card rounded-lg px-6 border-0">
-                  <AccordionTrigger className="text-left font-medium hover:no-underline">
-                    {item?.question}
-                  </AccordionTrigger>
-                  <AccordionContent className="text-sm text-muted-foreground">
-                    {item?.answer}
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </div>
-        </section>
-      )}
-
-      {/* Every minute counts CTA */}
-      {cta && (
-        <section className="py-16">
-          <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-            <div className="rounded-3xl bg-primary text-primary-foreground p-8 md:p-12 text-center">
-              <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
-                {cta.title}
-              </h2>
-              <p className="mt-4 text-lg opacity-90">
-                {cta.subtitle}
-              </p>
-              <div className="mt-8">
-                <Button asChild size="lg" variant="secondary">
-                  <Link href={cta.buttonLink || "/signup"}>{cta.buttonText}</Link>
-                </Button>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Stats Row */}
-      <StatsRow
-        stats={[
-          { value: "85%", label: "Reduction in perceived wait time" },
-          { value: "2,000+", label: "Restaurants using WaitQ" },
-          { value: "4.8★", label: "Average customer rating" }
-        ]}
-        variant="bordered"
-      />
     </main>
   );
 }

@@ -3,3 +3,7 @@ export { ThreeColumnCards } from "./three-column-cards";
 export { StatsRow } from "./stats-row";
 export { TabbedContent } from "./tabbed-content";
 export { TwoColumnImageText } from "./two-column-image-text";
+export { ArrowLink } from "./arrow-link";
+export { FAQSection } from "./faq-section";
+export { GlobalCTA } from "./global-cta";
+export { IntroSection } from "./intro-section";

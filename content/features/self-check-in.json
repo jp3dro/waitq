@@ -5,7 +5,8 @@
     "subtitle": "No staff queuing. On their own time. Customers choose how to enter the queue on their own, without lining up or worrying at staff.",
     "primaryCta": "Try Free",
     "primaryCtaLink": "/signup",
-    "secondaryCta": "See how it works"
+    "secondaryCta": "See how it works",
+    "heroImage": "/images/couple.jpg"
   },
   "sections": [
     {
@@ -23,17 +24,19 @@
           "title": "Create check-in page",
           "description": "Set up your custom-branded check-in page in minutes. Choose what information to collect: name, phone, party size, special requests.",
           "icon": "Smartphone",
-          "image": ""
+          "image": "/images/couple.jpg"
         },
         {
           "title": "Publicly display it",
           "description": "Display the QR code at your entrance or share a link on your website and social media. Guests scan and join from their phone.",
-          "icon": "QrCode"
+          "icon": "QrCode",
+          "image": "/images/friends.jpg"
         },
         {
           "title": "Customer joins and waits",
           "description": "Guests enter their info and immediately see their position. They can wait anywhere and track progress from their phone.",
-          "icon": "Users"
+          "icon": "Users",
+          "image": "/images/bar friends.jpg"
         }
       ],
       "_template": "howItWorks"
@@ -41,6 +44,7 @@
     {
       "title": "Keep the line moving, without the stress",
       "description": "No more managing a crowd at the door. Guests join at their own pace, and your team focuses on seating—not clipboard management.",
+      "image": "/images/couple.jpg",
       "imageOnRight": false,
       "variant": "muted-bg",
       "bullets": [
@@ -59,6 +63,7 @@
     {
       "title": "Customers join the queue on their terms",
       "description": "Some guests prefer self-service; others want to speak to a host. WaitQ supports both. Self-check-in is an option, not a requirement.",
+      "image": "/images/couple.jpg",
       "imageOnRight": true,
       "variant": "muted-bg",
       "bullets": [
@@ -100,6 +105,7 @@
     {
       "title": "Keep control of the check-in experience",
       "description": "Customize what guests see and what information you collect. Add your branding, set party size limits, and enable geo-fencing to prevent remote abuse.",
+      "image": "/images/friends.jpg",
       "imageOnRight": true,
       "variant": "default",
       "bullets": [
@@ -116,28 +122,7 @@
       "_template": "textWithImage"
     },
     {
-      "title": "Trusted by top restaurants worldwide",
-      "quote": "WaitQ cut our wait times by 35%. Guests love the SMS updates and our staff stays organized.",
-      "author": "Maria",
-      "role": "GM at Bistro Verde",
-      "stats": [
-        {
-          "value": "2,000+",
-          "label": "Restaurants using WaitQ"
-        },
-        {
-          "value": "4.8★",
-          "label": "Average customer rating"
-        },
-        {
-          "value": "4.8★",
-          "label": "Trustpilot rating"
-        }
-      ],
-      "_template": "testimonialWithStats"
-    },
-    {
-      "title": "Self check-in FAQs",
+      "title": "Frequently Asked Questions",
       "items": [
         {
           "question": "What is self check-in?",
@@ -165,24 +150,6 @@
         }
       ],
       "_template": "faq"
-    },
-    {
-      "variant": "bordered",
-      "stats": [
-        {
-          "value": "85%",
-          "label": "Reduction in perceived wait time"
-        },
-        {
-          "value": "2,000+",
-          "label": "Restaurants using WaitQ"
-        },
-        {
-          "value": "4.8★",
-          "label": "Average customer rating"
-        }
-      ],
-      "_template": "statsRow"
     }
   ],
   "seo": {

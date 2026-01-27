@@ -10,26 +10,8 @@
   },
   "problems": {
     "title": "Stop losing revenue to long waits and chaotic wait lines",
-    "subtitle": "Badly managed restaurant queues lead to lost revenue in different ways.",
     "description": "WaitQ gives guests full control over their wait time and gives your front-of-house team a clear, real-time queue to keep things moving.",
-    "image": "/images/couple.jpg",
-    "items": [
-      {
-        "title": "Front-door chaos",
-        "description": "Crowded lobbies make guests leave, causing you to lose potential revenue.",
-        "icon": "Users"
-      },
-      {
-        "title": "Paper waitlists",
-        "description": "Clipboards don't work anymore. Guests expect text updates about their table.",
-        "icon": "FileText"
-      },
-      {
-        "title": "Poor guest experience",
-        "description": "Keep guests informed with accurate wait times and manage crowds effortlessly.",
-        "icon": "MessageSquare"
-      }
-    ]
+    "image": "/images/couple.jpg"
   },
   "howItWorks": {
     "title": "How WaitQ delivers a modern waiting experience",
@@ -147,80 +129,6 @@
       }
     ]
   },
-  "testimonialWithStats": {
-    "title": "How WaitQ is improving waiting experiences, worldwide.",
-    "quote": "WaitQ cut our wait times by 35%. Guests love the SMS updates and our staff stays organized.",
-    "author": "Maria",
-    "role": "GM at Bistro Verde",
-    "stats": [
-      {
-        "value": "2,000+",
-        "label": "Restaurants using WaitQ"
-      },
-      {
-        "value": "4.8★",
-        "label": "Average customer rating"
-      },
-      {
-        "value": "4.8★",
-        "label": "Trustpilot rating"
-      }
-    ]
-  },
-  "features": {
-    "title": "With all the features your restaurant needs",
-    "items": [
-      {
-        "title": "SMS or E-mail notifications",
-        "description": "Automatic text messages keep guests informed. No app downloads required.",
-        "icon": "MessageSquare"
-      },
-      {
-        "title": "Real-Time Queue",
-        "description": "See what's happening, who's next, and manage in real-time.",
-        "icon": "Zap"
-      },
-      {
-        "title": "Virtual Waiting Room",
-        "description": "Guests see their position in the waitlist with estimated wait times.",
-        "icon": "Monitor"
-      },
-      {
-        "title": "Multi-Location",
-        "description": "Manage multiple restaurant locations from a single dashboard.",
-        "icon": "MapPin"
-      },
-      {
-        "title": "Public Display",
-        "description": "Show current wait times on a TV screen or tablet at your entrance.",
-        "icon": "Monitor"
-      },
-      {
-        "title": "Self-Service Kiosk",
-        "description": "Let guests add themselves to the waitlist via tablet or QR code.",
-        "icon": "Smartphone"
-      },
-      {
-        "title": "Analytics & Insights",
-        "description": "Track peak hours, average wait times, and customer patterns.",
-        "icon": "BarChart3"
-      },
-      {
-        "title": "Accurate Wait Times",
-        "description": "Smart estimates based on historical data and queue length. No more guessing.",
-        "icon": "Clock"
-      }
-    ]
-  },
-  "socialProof": {
-    "title": "Trusted by top restaurants worldwide",
-    "stats": [],
-    "testimonial": {
-      "quote": "WaitQ cut our wait times by 35%. Guests love the SMS updates and our staff stays organized.",
-      "author": "Maria",
-      "role": "GM at Bistro Verde"
-    }
-  },
   "faq": {
     "title": "Frequently asked questions",
     "items": [
@@ -257,6 +165,15 @@
         "answer": "Yes! WaitQ can be set up in under 5 minutes. Simply create an account, configure your waitlist settings, and you're ready to start managing your queue."
       }
     ]
+  },
+  "globalCta": {
+    "title": "The smart way to manage walk-in customers",
+    "subtitle": "Reduce wait times, improve customer satisfaction, and increase revenue by servicing more, happier clients.",
+    "primaryButtonText": "Try WaitQ",
+    "primaryButtonLink": "/signup",
+    "secondaryButtonText": "See pricing",
+    "secondaryButtonLink": "/pricing",
+    "trustMessage": "No credit card required • 2-minute setup • Cancel anytime"
   },
   "seo": {
     "title": "WaitQ - Digital Waitlist Management System",

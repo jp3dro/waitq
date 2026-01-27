@@ -3,23 +3,18 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { 
-  Smartphone,
   Play,
   Monitor,
   Image as ImageIcon,
-  ArrowUpRight,
   Check
 } from "lucide-react";
 import { YouTubeLightbox } from "@/components/youtube-lightbox";
 import { useTina } from "tinacms/dist/react";
 import type { HomeQuery } from "../../../tina/__generated__/types";
+import { ArrowLink } from "@/components/sections/arrow-link";
+import { FAQSection } from "@/components/sections/faq-section";
+import { GlobalCTA } from "@/components/sections/global-cta";
 
 // Extended types for content sections not in TinaCMS schema
 interface HowItWorksItem {
@@ -47,11 +42,6 @@ interface CompetitiveItem {
   title: string;
   description: string;
   image?: string;
-}
-
-interface StatItem {
-  value: string;
-  label: string;
 }
 
 interface HomeClientProps {
@@ -83,6 +73,7 @@ export function HomeClient(props: HomeClientProps) {
   const benefits = (page as unknown as { benefits?: { title: string; sections: BenefitSection[] } }).benefits;
   const productShowcase = (page as unknown as { productShowcase?: { title: string; subtitle?: string; ctaText?: string; ctaLink?: string; cards: ProductCard[] } }).productShowcase;
   const competitiveAdvantage = (page as unknown as { competitiveAdvantage?: { title: string; items: CompetitiveItem[] } }).competitiveAdvantage;
+  const globalCta = (page as unknown as { globalCta?: { title: string; subtitle: string; primaryButtonText: string; primaryButtonLink: string; secondaryButtonText?: string; secondaryButtonLink?: string; trustMessage?: string } }).globalCta;
 
   return (
     <main>
@@ -159,18 +150,27 @@ export function HomeClient(props: HomeClientProps) {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="relative">
               <div className="aspect-[4/3] bg-muted rounded-2xl shadow-xl overflow-hidden">
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center p-8">
-                    <ImageIcon className="w-24 h-24 mx-auto text-muted-foreground/20" />
-                    <p className="mt-4 text-sm text-muted-foreground">Phone mockup with chat</p>
+                {page.problems?.image ? (
+                  <Image
+                    src={page.problems.image}
+                    alt={page.problems?.title || ""}
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center p-8">
+                      <ImageIcon className="w-24 h-24 mx-auto text-muted-foreground/20" />
+                      <p className="mt-4 text-sm text-muted-foreground">Image placeholder</p>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
             <div>
               <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{page.problems?.title}</h2>
               <p className="mt-4 text-lg text-muted-foreground">
-                {(page.problems as unknown as { description?: string })?.description || page.problems?.subtitle}
+                {page.problems?.description}
               </p>
             </div>
           </div>
@@ -221,13 +221,9 @@ export function HomeClient(props: HomeClientProps) {
                   
                   {/* Link */}
                   {item?.link && item?.linkText && (
-                    <Link 
-                      href={item.link}
-                      className="inline-flex items-center gap-1 text-md font-medium text-foreground hover:text-primary transition-colors mt-auto group"
-                    >
-                      <span className="border-b border-foreground group-hover:border-primary">{item.linkText}</span>
-                      <ArrowUpRight className="w-4 h-4 group-hover:text-primary group-hover:rotate-45 transition-transform" />
-                    </Link>
+                    <ArrowLink href={item.link} className="mt-auto">
+                      {item.linkText}
+                    </ArrowLink>
                   )}
                 </div>
               ))}
@@ -312,13 +308,9 @@ export function HomeClient(props: HomeClientProps) {
                     </p>
                   )}
                   {productShowcase.ctaText && productShowcase.ctaLink && (
-                    <Link 
-                      href={productShowcase.ctaLink}
-                      className="inline-flex items-center gap-1 text-foreground transition-colors hover:text-primary border-foreground text-md group group-hover:text-primary"
-                    >
-                      <span className="border-b border-foreground group-hover:border-primary">{productShowcase.ctaText}</span>
-                      <ArrowUpRight className="w-4 h-4 group-hover:text-primary group-hover:rotate-45 transition-transform" />
-                    </Link>
+                    <ArrowLink href={productShowcase.ctaLink}>
+                      {productShowcase.ctaText}
+                    </ArrowLink>
                   )}
               </div>
 
@@ -434,25 +426,22 @@ export function HomeClient(props: HomeClientProps) {
 
 
       {/* FAQ */}
-      <section className="py-8">
-        <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-8">
-            {page.faq?.title}
-          </h2>
-          <Accordion type="single" collapsible className="w-full space-y-4 bg-muted p-6 md:p-10 rounded-3xl">
-            {page.faq?.items?.map((item, index) => (
-              <AccordionItem key={index} value={`item-${index}`} className="bg-card rounded-lg px-6 border-0">
-                <AccordionTrigger className="text-left font-medium hover:no-underline">
-                  {item?.question}
-                </AccordionTrigger>
-                <AccordionContent className="text-sm text-muted-foreground">
-                  {item?.answer}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </div>
-      </section>
+      {page.faq?.title && page.faq?.items && (
+        <FAQSection title={page.faq.title} items={page.faq.items} />
+      )}
+
+      {/* Global CTA */}
+      {globalCta && (
+        <GlobalCTA
+          title={globalCta.title}
+          subtitle={globalCta.subtitle}
+          primaryButtonText={globalCta.primaryButtonText}
+          primaryButtonLink={globalCta.primaryButtonLink}
+          secondaryButtonText={globalCta.secondaryButtonText}
+          secondaryButtonLink={globalCta.secondaryButtonLink}
+          trustMessage={globalCta.trustMessage}
+        />
+      )}
     </main>
   );
 }

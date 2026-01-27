@@ -1,16 +1,17 @@
 {
   "hero": {
-    "title": "The restaurant waitlist app that reduces",
-    "highlightedText": "no-shows and speeds up seating",
+    "title": "The restaurant waitlist app that reduces no-shows and speeds up seating",
     "subtitle": "Combine reservation confirmations, no-show tracking, and smart pacing to seat more guests, on time, without overstaffing your door.",
-    "ctaText": "Start free trial",
-    "ctaLink": "/signup",
-    "ctaSubtext": "No credit card required • Cancel anytime • 5-minute setup"
+    "primaryCta": "Start free trial",
+    "primaryCtaLink": "/signup",
+    "secondaryCta": "See pricing",
+    "secondaryCtaLink": "/pricing",
+    "trustMessage": "No credit card required • 2-minute setup • Cancel anytime"
   },
   "intro": {
     "title": "Say goodbye to paper lists, yelling names and scattered reservations",
     "description": "WaitQ replaces the improvised mix of paper, Post-its, and memory with a single live queue. Guests get automatic SMS updates, your host gets a clean dashboard, and the chaos at the door disappears.",
-    "imageOnRight": true
+    "image": "/images/couple.jpg"
   },
   "howItWorks": {
     "title": "The modern waitlist app built for the busiest restaurants",
@@ -38,17 +39,17 @@
       {
         "title": "Customers check-in",
         "description": "Guests join the waitlist themselves via QR code or tablet. No queue at the host stand.",
-        "imageOnRight": true
+        "image": "/images/bar friends.jpg"
       },
       {
         "title": "You serve more, faster",
         "description": "See who's next, send notifications, and seat guests with one tap. No paperwork, no confusion.",
-        "imageOnRight": false
+        "image": "/images/couple.jpg"
       },
       {
         "title": "You eliminate wait time questions",
         "description": "Customers see their position and estimated wait time on their phone. No more \"how much longer?\" interruptions.",
-        "imageOnRight": true
+        "image": "/images/friends.jpg"
       }
     ]
   },
@@ -102,26 +103,6 @@
       }
     ]
   },
-  "testimonialWithStats": {
-    "title": "Trusted by top restaurants worldwide",
-    "quote": "WaitQ cut our wait times by 35%. Guests love the SMS updates and our staff stays organized.",
-    "author": "Maria",
-    "role": "GM at Bistro Verde",
-    "stats": [
-      {
-        "value": "2,000+",
-        "label": "Restaurants using WaitQ"
-      },
-      {
-        "value": "4.8★",
-        "label": "Average customer rating"
-      },
-      {
-        "value": "4.8★",
-        "label": "Trustpilot rating"
-      }
-    ]
-  },
   "faq": {
     "title": "Frequently asked questions",
     "items": [
@@ -146,7 +127,7 @@
         "answer": "Yes! You can create multiple waitlists for different areas of your restaurant, each with its own settings and notifications."
       },
       {
-        "question": "Does WaitQ also work with reservations? What if the guest booked on a third-party website?",
+        "question": "Does WaitQ also work with reservations?",
         "answer": "WaitQ focuses on walk-in management. For reservations, you can manually add reserved guests to the queue when they arrive, ensuring they're seated on time."
       },
       {
@@ -159,63 +140,14 @@
       }
     ]
   },
-  "cta": {
-    "title": "Every minute counts in a restaurant",
-    "subtitle": "Start managing your waitlist smarter today.",
-    "buttonText": "Start free trial",
-    "buttonLink": "/signup"
-  },
-  "problems": {
-    "title": "The problems you may be facing",
-    "subtitle": "Reception chaos and undefined wait times lead to dissatisfied customers and lost revenue.",
-    "items": [
-      {
-        "title": "Crowded Entrances",
-        "description": "Blocked pathways frustrate staff and guests.",
-        "icon": "Users"
-      },
-      {
-        "title": "Walk-aways",
-        "description": "Guests leave when they don't know the wait.",
-        "icon": "Ban"
-      },
-      {
-        "title": "Pager Costs",
-        "description": "Expensive hardware that gets lost or broken.",
-        "icon": "Smartphone"
-      },
-      {
-        "title": "Staff Stress",
-        "description": "Constant questions about \"how much longer?\"",
-        "icon": "Clock"
-      }
-    ]
-  },
-  "features": {
-    "title": "Everything you need to run smoothly",
-    "subtitle": "Powerful features designed specifically for high-volume restaurants",
-    "items": [
-      {
-        "title": "Self-Service Options",
-        "description": "Display a QR code so guests can join the waitlist from their own device, preventing overcrowding at the stand.",
-        "icon": "QrCode"
-      },
-      {
-        "title": "Table Management",
-        "description": "Visualize your floor plan and assign tables to waiting parties with a simple drag-and-drop interface.",
-        "icon": "LayoutGrid"
-      },
-      {
-        "title": "Analytics & Insights",
-        "description": "Track average wait times, busy hours, and party sizes to optimize your staffing and operations.",
-        "icon": "TrendingUp"
-      }
-    ]
-  },
-  "testimonial": {
-    "quote": "Since switching to WaitQ, our host stand chaos has disappeared. Customers love the text updates, and we are turning tables 15% faster because people are ready when we text them.",
-    "author": "Sarah Jenkins",
-    "role": "Manager at The Local Grill"
+  "globalCta": {
+    "title": "The smart way to manage walk-in customers",
+    "subtitle": "Reduce wait times, improve customer satisfaction, and increase revenue by servicing more, happier clients.",
+    "primaryButtonText": "Try WaitQ",
+    "primaryButtonLink": "/signup",
+    "secondaryButtonText": "See pricing",
+    "secondaryButtonLink": "/pricing",
+    "trustMessage": "No credit card required • 2-minute setup • Cancel anytime"
   },
   "seo": {
     "title": "WaitQ for Restaurants - Smart Waitlist Management",
