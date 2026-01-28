@@ -38,10 +38,10 @@ export function TwoColumnBenefits({ title, subtitle, cards }: TwoColumnBenefitsP
             <p className="mt-2 text-muted-foreground">{subtitle}</p>
           )}
         </div>
-        <div className="rounded-3xl bg-muted dark:bg-muted/30 p-6 md:p-8">
+        <div className="rounded-3xl bg-muted dark:bg-muted/50 p-6 md:p-8">
           <div className="grid md:grid-cols-2 gap-6">
             {cards.slice(0, 2).map((card, index) => (
-              <div key={index} className="bg-card rounded-2xl overflow-hidden shadow-sm">
+              <div key={index} className="bg-card dark:bg-background rounded-2xl overflow-hidden shadow-sm">
                 {/* Image with badge */}
                 <div className="relative aspect-[16/10]">
                   {card.image ? (
@@ -76,7 +76,7 @@ export function TwoColumnBenefits({ title, subtitle, cards }: TwoColumnBenefitsP
                           <span className="text-primary font-semibold mt-0.5 flex-shrink-0">
                             <Check className="w-4 h-4" />
                           </span>
-                          <span className="text-md text-gray-700">
+                          <span className="text-md text-foreground">
                             {bullet?.text}
                           </span>
                         </li>

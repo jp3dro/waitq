@@ -36,10 +36,10 @@ export function BentoGrid({ title, items }: BentoGridProps) {
           {items.slice(0, 2).map((item, index) => (
             <div
               key={index}
-              className="md:col-span-3 rounded-2xl border border-orange-200 bg-orange-100 p-6 flex flex-col"
+              className="md:col-span-3 rounded-2xl bg-orange-100 dark:bg-orange-400/10 p-6 flex flex-col"
             >
               <h3 className="font-semibold text-lg mb-2">{item.title}</h3>
-              <p className="text-sm text-muted-foreground mb-4">
+              <p className="text-md text-muted-foreground mb-4">
                 {item.description}
               </p>
               <div className="mt-auto aspect-[16/10] bg-muted rounded-xl overflow-hidden">
@@ -53,7 +53,7 @@ export function BentoGrid({ title, items }: BentoGridProps) {
                   />
                 ) : (
                   <div className="flex items-center justify-center h-full">
-                    <ImageIcon className="w-12 h-12 text-muted-foreground/20" />
+                    <ImageIcon className="w-12 h-12 text-muted-foreground" />
                   </div>
                 )}
               </div>
@@ -64,10 +64,10 @@ export function BentoGrid({ title, items }: BentoGridProps) {
           {items.slice(2, 5).map((item, index) => (
             <div
               key={index + 2}
-              className="md:col-span-2 rounded-2xl border border-orange-200 bg-orange-100 p-5 flex flex-col"
+              className="md:col-span-2 rounded-2xl bg-orange-100 dark:bg-orange-400/10 p-5 flex flex-col"
             >
               <h3 className="font-semibold mb-2">{item.title}</h3>
-              <p className="text-sm text-muted-foreground mb-4">
+              <p className="text-md text-muted-foreground mb-4">
                 {item.description}
               </p>
               <div className="mt-auto aspect-[4/3] bg-muted rounded-xl overflow-hidden">

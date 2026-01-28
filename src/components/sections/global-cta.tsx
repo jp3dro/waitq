@@ -30,11 +30,11 @@ export function GlobalCTA({
   return (
     <section className="py-8">
       <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-        <div className="rounded-3xl bg-foreground text-background p-8 md:p-16 text-center">
+        <div className="rounded-3xl bg-orange-100 dark:bg-orange-400/10 text-background p-8 md:p-16 text-center">
           <h2 className="text-2xl md:text-4xl font-bold tracking-tight text-primary">
             {title}
           </h2>
-          <p className="mt-4 text-lg text-background/80 max-w-2xl mx-auto">
+          <p className="mt-4 text-lg text-foreground max-w-2xl mx-auto">
             {subtitle}
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -42,13 +42,13 @@ export function GlobalCTA({
               <Link href={primaryButtonLink}>{primaryButtonText}</Link>
             </Button>
             {secondaryButtonText && secondaryButtonLink && (
-              <Button asChild size="lg" variant="outline" className="px-8 border-background/30 text-background bg-background/5 hover:bg-background/10 hover:text-background">
+              <Button asChild size="lg" variant="outline" className="px-8 text-foreground bg-background hover:text-foreground">
                 <Link href={secondaryButtonLink}>{secondaryButtonText}</Link>
               </Button>
             )}
           </div>
           {trustMessage && (
-            <p className="mt-6 text-sm text-background/60">
+            <p className="mt-6 text-sm text-muted-foreground">
               {trustMessage}
             </p>
           )}
