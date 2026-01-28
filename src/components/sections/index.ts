@@ -1,7 +1,5 @@
 export { TestimonialWithStats } from "./testimonial-with-stats";
 export { ThreeColumnCards } from "./three-column-cards";
-export { StatsRow } from "./stats-row";
-export { TabbedContent } from "./tabbed-content";
 export { TwoColumnImageText } from "./two-column-image-text";
 export { ArrowLink } from "./arrow-link";
 export { FAQSection } from "./faq-section";
@@ -12,3 +10,5 @@ export { StepsSection } from "./steps-section";
 export { BentoGrid } from "./bento-grid";
 export { HowItWorksCards } from "./how-it-works-cards";
 export { TwoColumnBenefits } from "./two-column-benefits";
+export { ProductShowcase } from "./product-showcase";
+export { IconCards } from "./icon-cards";

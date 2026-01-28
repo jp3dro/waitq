@@ -93,276 +93,164 @@ export default defineConfig({
               },
             ],
           },
-          // Intro Section (image + text below hero)
+          // Content Sections (flexible)
           {
             type: "object",
-            name: "problems",
-            label: "Intro Section",
-            fields: [
+            name: "sections",
+            label: "Content Sections",
+            list: true,
+            templates: [
               {
-                type: "string",
-                name: "title",
-                label: "Section Title",
-              },
-              {
-                type: "string",
-                name: "description",
-                label: "Description",
-                ui: { component: "textarea" },
-              },
-              {
-                type: "image",
-                name: "image",
-                label: "Image",
-              },
-            ],
-          },
-          // How It Works Section
-          {
-            type: "object",
-            name: "howItWorks",
-            label: "How It Works Section",
-            fields: [
-              {
-                type: "string",
-                name: "title",
-                label: "Section Title",
-              },
-              {
-                type: "object",
-                name: "items",
-                label: "Items",
-                list: true,
+                name: "introSection",
+                label: "Intro Section (Image + Text)",
                 ui: {
-                  itemProps: (item) => ({ label: item?.title }),
+                  itemProps: (item) => ({ label: item?.title || "Intro Section" }),
                 },
                 fields: [
                   { type: "string", name: "title", label: "Title" },
                   { type: "string", name: "description", label: "Description", ui: { component: "textarea" } },
                   { type: "image", name: "image", label: "Image" },
-                  { type: "string", name: "link", label: "Link URL" },
-                  { type: "string", name: "linkText", label: "Link Text" },
                 ],
               },
-            ],
-          },
-          // Benefits Section
-          {
-            type: "object",
-            name: "benefits",
-            label: "Benefits Section",
-            fields: [
               {
-                type: "string",
-                name: "title",
-                label: "Section Title",
-              },
-              {
-                type: "object",
-                name: "sections",
-                label: "Benefit Sections",
-                list: true,
+                name: "howItWorks",
+                label: "How It Works (3 Cards with Images)",
                 ui: {
-                  itemProps: (item) => ({ label: item?.title }),
+                  itemProps: (item) => ({ label: item?.title || "How It Works" }),
                 },
                 fields: [
-                  { type: "string", name: "badge", label: "Badge Text (e.g., For owners)" },
-                  { type: "string", name: "title", label: "Title" },
-                  { type: "image", name: "image", label: "Image" },
+                  { type: "string", name: "title", label: "Section Title" },
                   {
                     type: "object",
-                    name: "bullets",
-                    label: "Bullet Points",
+                    name: "items",
+                    label: "Items",
                     list: true,
+                    ui: { itemProps: (item) => ({ label: item?.title }) },
                     fields: [
-                      { type: "string", name: "text", label: "Text" },
+                      { type: "string", name: "title", label: "Title" },
+                      { type: "string", name: "description", label: "Description", ui: { component: "textarea" } },
+                      { type: "image", name: "image", label: "Image" },
+                      { type: "string", name: "link", label: "Link URL" },
+                      { type: "string", name: "linkText", label: "Link Text" },
                     ],
                   },
                 ],
               },
-            ],
-          },
-          // Product Showcase Section (Cards)
-          {
-            type: "object",
-            name: "productShowcase",
-            label: "Product Showcase Section",
-            fields: [
-              { type: "string", name: "title", label: "Section Title" },
-              { type: "string", name: "subtitle", label: "Section Subtitle" },
-              { type: "string", name: "ctaText", label: "CTA Link Text" },
-              { type: "string", name: "ctaLink", label: "CTA Link URL" },
               {
-                type: "object",
-                name: "cards",
-                label: "Cards",
-                list: true,
+                name: "twoColumnBenefits",
+                label: "Two Column Benefits (Two Cards Side by Side)",
                 ui: {
-                  itemProps: (item) => ({ label: item?.title }),
+                  itemProps: (item) => ({ label: item?.title || "Two Column Benefits" }),
                 },
                 fields: [
-                  { type: "string", name: "title", label: "Card Title" },
-                  { type: "string", name: "description", label: "Card Description", ui: { component: "textarea" } },
-                  { type: "image", name: "image", label: "Card Image" },
+                  { type: "string", name: "title", label: "Section Title" },
+                  {
+                    type: "object",
+                    name: "cards",
+                    label: "Benefit Cards (max 2)",
+                    list: true,
+                    ui: { itemProps: (item) => ({ label: item?.title }) },
+                    fields: [
+                      { type: "string", name: "badge", label: "Badge Text (optional)" },
+                      { type: "string", name: "title", label: "Title" },
+                      { type: "image", name: "image", label: "Image" },
+                      {
+                        type: "object",
+                        name: "bullets",
+                        label: "Bullet Points",
+                        list: true,
+                        fields: [
+                          { type: "string", name: "text", label: "Text" },
+                        ],
+                      },
+                    ],
+                  },
                 ],
               },
-            ],
-          },
-          // Competitive Advantage Section (Bento Box)
-          {
-            type: "object",
-            name: "competitiveAdvantage",
-            label: "Competitive Advantage Section",
-            fields: [
               {
-                type: "string",
-                name: "title",
-                label: "Section Title",
+                name: "productShowcase",
+                label: "Product Showcase (3 Cards in Muted Container)",
+                ui: {
+                  itemProps: (item) => ({ label: item?.title || "Product Showcase" }),
+                },
+                fields: [
+                  { type: "string", name: "title", label: "Section Title" },
+                  { type: "string", name: "subtitle", label: "Section Subtitle" },
+                  { type: "string", name: "ctaText", label: "CTA Link Text" },
+                  { type: "string", name: "ctaLink", label: "CTA Link URL" },
+                  {
+                    type: "object",
+                    name: "cards",
+                    label: "Cards",
+                    list: true,
+                    ui: { itemProps: (item) => ({ label: item?.title }) },
+                    fields: [
+                      { type: "string", name: "title", label: "Card Title" },
+                      { type: "string", name: "description", label: "Card Description", ui: { component: "textarea" } },
+                      { type: "image", name: "image", label: "Card Image" },
+                    ],
+                  },
+                ],
               },
               {
-                type: "object",
-                name: "items",
-                label: "Bento Items (first 2 large, next 3 small)",
-                list: true,
+                name: "bentoGrid",
+                label: "Bento Grid (2 large + 3 small cards)",
                 ui: {
-                  itemProps: (item) => ({ label: item?.title }),
+                  itemProps: (item) => ({ label: item?.title || "Bento Grid" }),
+                },
+                fields: [
+                  { type: "string", name: "title", label: "Section Title" },
+                  {
+                    type: "object",
+                    name: "items",
+                    label: "Bento Items (first 2 large, next 3 small)",
+                    list: true,
+                    ui: { itemProps: (item) => ({ label: item?.title }) },
+                    fields: [
+                      { type: "string", name: "title", label: "Title" },
+                      { type: "string", name: "description", label: "Description", ui: { component: "textarea" } },
+                      { type: "image", name: "image", label: "Image" },
+                    ],
+                  },
+                ],
+              },
+              {
+                name: "faq",
+                label: "FAQ Section",
+                ui: {
+                  itemProps: () => ({ label: "FAQ Section" }),
+                },
+                fields: [
+                  { type: "string", name: "title", label: "Section Title" },
+                  {
+                    type: "object",
+                    name: "items",
+                    label: "FAQ Items",
+                    list: true,
+                    ui: { itemProps: (item) => ({ label: item?.question }) },
+                    fields: [
+                      { type: "string", name: "question", label: "Question" },
+                      { type: "string", name: "answer", label: "Answer", ui: { component: "textarea" } },
+                    ],
+                  },
+                ],
+              },
+              {
+                name: "globalCta",
+                label: "Global CTA Section",
+                ui: {
+                  itemProps: () => ({ label: "Global CTA" }),
                 },
                 fields: [
                   { type: "string", name: "title", label: "Title" },
-                  { type: "string", name: "description", label: "Description", ui: { component: "textarea" } },
-                  { type: "image", name: "image", label: "Image" },
+                  { type: "string", name: "subtitle", label: "Subtitle", ui: { component: "textarea" } },
+                  { type: "string", name: "primaryButtonText", label: "Primary Button Text" },
+                  { type: "string", name: "primaryButtonLink", label: "Primary Button Link" },
+                  { type: "string", name: "secondaryButtonText", label: "Secondary Button Text" },
+                  { type: "string", name: "secondaryButtonLink", label: "Secondary Button Link" },
+                  { type: "string", name: "trustMessage", label: "Trust Message" },
                 ],
               },
-            ],
-          },
-          // Testimonial with Stats Section
-          {
-            type: "object",
-            name: "testimonialWithStats",
-            label: "Testimonial with Stats Section",
-            fields: [
-              { type: "string", name: "title", label: "Section Title" },
-              { type: "string", name: "quote", label: "Quote", ui: { component: "textarea" } },
-              { type: "string", name: "author", label: "Author Name" },
-              { type: "string", name: "role", label: "Author Role" },
-              { type: "image", name: "image", label: "Author Image" },
-              {
-                type: "object",
-                name: "stats",
-                label: "Statistics",
-                list: true,
-                ui: {
-                  itemProps: (item) => ({ label: item?.label }),
-                },
-                fields: [
-                  { type: "string", name: "value", label: "Value" },
-                  { type: "string", name: "label", label: "Label" },
-                ],
-              },
-            ],
-          },
-          // Features Section
-          {
-            type: "object",
-            name: "features",
-            label: "Features Section",
-            fields: [
-              {
-                type: "string",
-                name: "title",
-                label: "Section Title",
-              },
-              {
-                type: "object",
-                name: "items",
-                label: "Feature Items",
-                list: true,
-                ui: {
-                  itemProps: (item) => ({ label: item?.title }),
-                },
-                fields: [
-                  { type: "string", name: "title", label: "Title" },
-                  { type: "string", name: "description", label: "Description" },
-                  { type: "string", name: "icon", label: "Icon (lucide icon name)" },
-                ],
-              },
-            ],
-          },
-          // Social Proof Section
-          {
-            type: "object",
-            name: "socialProof",
-            label: "Social Proof Section",
-            fields: [
-              {
-                type: "string",
-                name: "title",
-                label: "Section Title",
-              },
-              {
-                type: "object",
-                name: "stats",
-                label: "Statistics",
-                list: true,
-                ui: {
-                  itemProps: (item) => ({ label: item?.label }),
-                },
-                fields: [
-                  { type: "string", name: "value", label: "Value" },
-                  { type: "string", name: "label", label: "Label" },
-                ],
-              },
-              {
-                type: "object",
-                name: "testimonial",
-                label: "Testimonial",
-                fields: [
-                  { type: "string", name: "quote", label: "Quote", ui: { component: "textarea" } },
-                  { type: "string", name: "author", label: "Author" },
-                  { type: "string", name: "role", label: "Role/Title" },
-                ],
-              },
-            ],
-          },
-          // FAQ Section
-          {
-            type: "object",
-            name: "faq",
-            label: "FAQ Section",
-            fields: [
-              {
-                type: "string",
-                name: "title",
-                label: "Section Title",
-              },
-              {
-                type: "object",
-                name: "items",
-                label: "FAQ Items",
-                list: true,
-                ui: {
-                  itemProps: (item) => ({ label: item?.question }),
-                },
-                fields: [
-                  { type: "string", name: "question", label: "Question" },
-                  { type: "string", name: "answer", label: "Answer", ui: { component: "textarea" } },
-                ],
-              },
-            ],
-          },
-          // Global CTA Section
-          {
-            type: "object",
-            name: "globalCta",
-            label: "Bottom CTA Section",
-            fields: [
-              { type: "string", name: "title", label: "Title" },
-              { type: "string", name: "subtitle", label: "Subtitle", ui: { component: "textarea" } },
-              { type: "string", name: "primaryButtonText", label: "Primary Button Text" },
-              { type: "string", name: "primaryButtonLink", label: "Primary Button Link" },
-              { type: "string", name: "secondaryButtonText", label: "Secondary Button Text" },
-              { type: "string", name: "secondaryButtonLink", label: "Secondary Button Link" },
-              { type: "string", name: "trustMessage", label: "Trust Message" },
             ],
           },
           // SEO
@@ -639,66 +527,6 @@ export default defineConfig({
                 ],
               },
               {
-                name: "tabbedContent",
-                label: "Tabbed Content",
-                ui: {
-                  itemProps: (item) => ({ label: item?.title || "Tabbed Content" }),
-                },
-                fields: [
-                  { type: "string", name: "title", label: "Section Title" },
-                  { type: "string", name: "subtitle", label: "Section Subtitle" },
-                  { type: "string", name: "variant", label: "Tab Style (pills, underline, buttons)" },
-                  {
-                    type: "object",
-                    name: "tabs",
-                    label: "Tabs",
-                    list: true,
-                    ui: {
-                      itemProps: (item) => ({ label: item?.label }),
-                    },
-                    fields: [
-                      { type: "string", name: "id", label: "Tab ID" },
-                      { type: "string", name: "label", label: "Tab Label" },
-                      { type: "string", name: "title", label: "Content Title" },
-                      { type: "string", name: "description", label: "Content Description", ui: { component: "textarea" } },
-                      { type: "image", name: "image", label: "Content Image" },
-                      {
-                        type: "object",
-                        name: "bullets",
-                        label: "Bullet Points",
-                        list: true,
-                        fields: [
-                          { type: "string", name: "text", label: "Text" },
-                        ],
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                name: "statsRow",
-                label: "Stats Row",
-                ui: {
-                  itemProps: () => ({ label: "Stats Row" }),
-                },
-                fields: [
-                  { type: "string", name: "variant", label: "Variant (default, light, bordered)" },
-                  {
-                    type: "object",
-                    name: "stats",
-                    label: "Statistics",
-                    list: true,
-                    ui: {
-                      itemProps: (item) => ({ label: item?.label }),
-                    },
-                    fields: [
-                      { type: "string", name: "value", label: "Value" },
-                      { type: "string", name: "label", label: "Label" },
-                    ],
-                  },
-                ],
-              },
-              {
                 name: "testimonial",
                 label: "Testimonial",
                 fields: [
@@ -799,6 +627,77 @@ export default defineConfig({
                   },
                 ],
               },
+              {
+                name: "bentoGrid",
+                label: "Bento Grid (2 large + 3 small cards)",
+                ui: {
+                  itemProps: (item) => ({ label: item?.title || "Bento Grid" }),
+                },
+                fields: [
+                  { type: "string", name: "title", label: "Section Title" },
+                  {
+                    type: "object",
+                    name: "items",
+                    label: "Bento Items (first 2 large, next 3 small)",
+                    list: true,
+                    ui: { itemProps: (item) => ({ label: item?.title }) },
+                    fields: [
+                      { type: "string", name: "title", label: "Title" },
+                      { type: "string", name: "description", label: "Description", ui: { component: "textarea" } },
+                      { type: "image", name: "image", label: "Image" },
+                    ],
+                  },
+                ],
+              },
+              {
+                name: "introSection",
+                label: "Intro Section (Image + Text)",
+                ui: {
+                  itemProps: (item) => ({ label: item?.title || "Intro Section" }),
+                },
+                fields: [
+                  { type: "string", name: "title", label: "Title" },
+                  { type: "string", name: "description", label: "Description", ui: { component: "textarea" } },
+                  { type: "image", name: "image", label: "Image" },
+                ],
+              },
+              {
+                name: "beforeAfterComparison",
+                label: "Before/After Comparison",
+                ui: {
+                  itemProps: (item) => ({ label: item?.title || "Before/After Comparison" }),
+                },
+                fields: [
+                  { type: "string", name: "title", label: "Section Title" },
+                  { type: "string", name: "subtitle", label: "Section Subtitle" },
+                  { type: "string", name: "beforeTitle", label: "Before Column Title" },
+                  { type: "string", name: "afterTitle", label: "After Column Title" },
+                  {
+                    type: "object",
+                    name: "beforeItems",
+                    label: "Before Items",
+                    list: true,
+                    ui: { itemProps: (item) => ({ label: item?.title }) },
+                    fields: [
+                      { type: "string", name: "title", label: "Title" },
+                      { type: "string", name: "description", label: "Description" },
+                      { type: "string", name: "icon", label: "Icon (lucide icon name)" },
+                    ],
+                  },
+                  {
+                    type: "object",
+                    name: "afterItems",
+                    label: "After Items",
+                    list: true,
+                    ui: { itemProps: (item) => ({ label: item?.title }) },
+                    fields: [
+                      { type: "string", name: "title", label: "Title" },
+                      { type: "string", name: "description", label: "Description" },
+                      { type: "string", name: "icon", label: "Icon (lucide icon name)" },
+                    ],
+                  },
+                ],
+              },
             ],
           },
           // SEO
@@ -847,157 +746,179 @@ export default defineConfig({
               { type: "string", name: "trustMessage", label: "Trust Message (below buttons)" },
             ],
           },
+          // Content Sections (flexible)
           {
             type: "object",
-            name: "intro",
-            label: "Intro Section",
-            fields: [
-              { type: "string", name: "title", label: "Section Title" },
-              { type: "string", name: "description", label: "Description", ui: { component: "textarea" } },
-              { type: "image", name: "image", label: "Image" },
-            ],
-          },
-          {
-            type: "object",
-            name: "howItWorks",
-            label: "How It Works Section",
-            fields: [
-              { type: "string", name: "title", label: "Section Title" },
+            name: "sections",
+            label: "Content Sections",
+            list: true,
+            templates: [
               {
-                type: "object",
-                name: "items",
-                label: "Steps",
-                list: true,
-                ui: { itemProps: (item) => ({ label: item?.title }) },
-                fields: [
-                  { type: "string", name: "title", label: "Title" },
-                  { type: "string", name: "description", label: "Description" },
-                  { type: "string", name: "icon", label: "Icon (lucide icon name)" },
-                ],
-              },
-            ],
-          },
-          {
-            type: "object",
-            name: "benefits",
-            label: "Benefits Section (Steps)",
-            fields: [
-              { type: "string", name: "title", label: "Section Title" },
-              {
-                type: "object",
-                name: "steps",
-                label: "Steps",
-                list: true,
-                ui: { itemProps: (item) => ({ label: item?.title }) },
-                fields: [
-                  { type: "number", name: "stepNumber", label: "Step Number" },
-                  { type: "string", name: "title", label: "Title" },
-                  {
-                    type: "object",
-                    name: "bullets",
-                    label: "Bullet Points",
-                    list: true,
-                    fields: [
-                      { type: "string", name: "text", label: "Text" },
-                    ],
-                  },
-                  { type: "string", name: "link", label: "Link URL" },
-                  { type: "string", name: "linkText", label: "Link Text" },
-                  { type: "image", name: "image", label: "Image" },
-                ],
-              },
-            ],
-          },
-          {
-            type: "object",
-            name: "beforeAfter",
-            label: "Before/After Comparison",
-            fields: [
-              { type: "string", name: "title", label: "Section Title" },
-              { type: "string", name: "subtitle", label: "Section Subtitle" },
-              { type: "string", name: "beforeTitle", label: "Before Column Title" },
-              { type: "string", name: "afterTitle", label: "After Column Title" },
-              {
-                type: "object",
-                name: "beforeItems",
-                label: "Before Items",
-                list: true,
-                ui: { itemProps: (item) => ({ label: item?.title }) },
-                fields: [
-                  { type: "string", name: "title", label: "Title" },
-                  { type: "string", name: "description", label: "Description" },
-                  { type: "string", name: "icon", label: "Icon (lucide icon name)" },
-                ],
-              },
-              {
-                type: "object",
-                name: "afterItems",
-                label: "After Items",
-                list: true,
-                ui: { itemProps: (item) => ({ label: item?.title }) },
-                fields: [
-                  { type: "string", name: "title", label: "Title" },
-                  { type: "string", name: "description", label: "Description" },
-                  { type: "string", name: "icon", label: "Icon (lucide icon name)" },
-                ],
-              },
-            ],
-          },
-          {
-            type: "object",
-            name: "whyLove",
-            label: "Why Love Section (Bento)",
-            fields: [
-              { type: "string", name: "title", label: "Section Title" },
-              {
-                type: "object",
-                name: "items",
-                label: "Bento Items (first 2 large, next 3 small)",
-                list: true,
-                ui: { itemProps: (item) => ({ label: item?.title }) },
-                fields: [
-                  { type: "string", name: "title", label: "Title" },
-                  { type: "string", name: "description", label: "Description" },
-                  { type: "image", name: "image", label: "Image" },
-                ],
-              },
-            ],
-          },
-          {
-            type: "object",
-            name: "faq",
-            label: "FAQ Section",
-            fields: [
-              { type: "string", name: "title", label: "Section Title" },
-              {
-                type: "object",
-                name: "items",
-                label: "FAQ Items",
-                list: true,
+                name: "introSection",
+                label: "Intro Section (Image + Text)",
                 ui: {
-                  itemProps: (item) => ({ label: item?.question }),
+                  itemProps: (item) => ({ label: item?.title || "Intro Section" }),
                 },
                 fields: [
-                  { type: "string", name: "question", label: "Question" },
-                  { type: "string", name: "answer", label: "Answer", ui: { component: "textarea" } },
+                  { type: "string", name: "title", label: "Title" },
+                  { type: "string", name: "description", label: "Description", ui: { component: "textarea" } },
+                  { type: "image", name: "image", label: "Image" },
+                ],
+              },
+              {
+                name: "iconCards",
+                label: "Icon Cards (3 columns with icons)",
+                ui: {
+                  itemProps: (item) => ({ label: item?.title || "Icon Cards" }),
+                },
+                fields: [
+                  { type: "string", name: "title", label: "Section Title" },
+                  {
+                    type: "object",
+                    name: "items",
+                    label: "Items",
+                    list: true,
+                    ui: { itemProps: (item) => ({ label: item?.title }) },
+                    fields: [
+                      { type: "string", name: "title", label: "Title" },
+                      { type: "string", name: "description", label: "Description" },
+                      { type: "string", name: "icon", label: "Icon (lucide icon name)" },
+                    ],
+                  },
+                ],
+              },
+              {
+                name: "stepsSection",
+                label: "Steps Section (Numbered steps with images)",
+                ui: {
+                  itemProps: (item) => ({ label: item?.title || "Steps Section" }),
+                },
+                fields: [
+                  { type: "string", name: "title", label: "Section Title" },
+                  {
+                    type: "object",
+                    name: "steps",
+                    label: "Steps",
+                    list: true,
+                    ui: { itemProps: (item) => ({ label: item?.title }) },
+                    fields: [
+                      { type: "number", name: "stepNumber", label: "Step Number" },
+                      { type: "string", name: "title", label: "Title" },
+                      {
+                        type: "object",
+                        name: "bullets",
+                        label: "Bullet Points",
+                        list: true,
+                        fields: [
+                          { type: "string", name: "text", label: "Text" },
+                        ],
+                      },
+                      { type: "string", name: "link", label: "Link URL" },
+                      { type: "string", name: "linkText", label: "Link Text" },
+                      { type: "image", name: "image", label: "Image" },
+                    ],
+                  },
+                ],
+              },
+              {
+                name: "beforeAfterComparison",
+                label: "Before/After Comparison",
+                ui: {
+                  itemProps: (item) => ({ label: item?.title || "Before/After Comparison" }),
+                },
+                fields: [
+                  { type: "string", name: "title", label: "Section Title" },
+                  { type: "string", name: "subtitle", label: "Section Subtitle" },
+                  { type: "string", name: "beforeTitle", label: "Before Column Title" },
+                  { type: "string", name: "afterTitle", label: "After Column Title" },
+                  {
+                    type: "object",
+                    name: "beforeItems",
+                    label: "Before Items",
+                    list: true,
+                    ui: { itemProps: (item) => ({ label: item?.title }) },
+                    fields: [
+                      { type: "string", name: "title", label: "Title" },
+                      { type: "string", name: "description", label: "Description" },
+                      { type: "string", name: "icon", label: "Icon (lucide icon name)" },
+                    ],
+                  },
+                  {
+                    type: "object",
+                    name: "afterItems",
+                    label: "After Items",
+                    list: true,
+                    ui: { itemProps: (item) => ({ label: item?.title }) },
+                    fields: [
+                      { type: "string", name: "title", label: "Title" },
+                      { type: "string", name: "description", label: "Description" },
+                      { type: "string", name: "icon", label: "Icon (lucide icon name)" },
+                    ],
+                  },
+                ],
+              },
+              {
+                name: "bentoGrid",
+                label: "Bento Grid (2 large + 3 small cards)",
+                ui: {
+                  itemProps: (item) => ({ label: item?.title || "Bento Grid" }),
+                },
+                fields: [
+                  { type: "string", name: "title", label: "Section Title" },
+                  {
+                    type: "object",
+                    name: "items",
+                    label: "Bento Items (first 2 large, next 3 small)",
+                    list: true,
+                    ui: { itemProps: (item) => ({ label: item?.title }) },
+                    fields: [
+                      { type: "string", name: "title", label: "Title" },
+                      { type: "string", name: "description", label: "Description", ui: { component: "textarea" } },
+                      { type: "image", name: "image", label: "Image" },
+                    ],
+                  },
+                ],
+              },
+              {
+                name: "faq",
+                label: "FAQ Section",
+                ui: {
+                  itemProps: () => ({ label: "FAQ Section" }),
+                },
+                fields: [
+                  { type: "string", name: "title", label: "Section Title" },
+                  {
+                    type: "object",
+                    name: "items",
+                    label: "FAQ Items",
+                    list: true,
+                    ui: { itemProps: (item) => ({ label: item?.question }) },
+                    fields: [
+                      { type: "string", name: "question", label: "Question" },
+                      { type: "string", name: "answer", label: "Answer", ui: { component: "textarea" } },
+                    ],
+                  },
+                ],
+              },
+              {
+                name: "globalCta",
+                label: "Global CTA Section",
+                ui: {
+                  itemProps: () => ({ label: "Global CTA" }),
+                },
+                fields: [
+                  { type: "string", name: "title", label: "Title" },
+                  { type: "string", name: "subtitle", label: "Subtitle", ui: { component: "textarea" } },
+                  { type: "string", name: "primaryButtonText", label: "Primary Button Text" },
+                  { type: "string", name: "primaryButtonLink", label: "Primary Button Link" },
+                  { type: "string", name: "secondaryButtonText", label: "Secondary Button Text" },
+                  { type: "string", name: "secondaryButtonLink", label: "Secondary Button Link" },
+                  { type: "string", name: "trustMessage", label: "Trust Message" },
                 ],
               },
             ],
           },
-          {
-            type: "object",
-            name: "globalCta",
-            label: "Bottom CTA Section",
-            fields: [
-              { type: "string", name: "title", label: "Title" },
-              { type: "string", name: "subtitle", label: "Subtitle", ui: { component: "textarea" } },
-              { type: "string", name: "primaryButtonText", label: "Primary Button Text" },
-              { type: "string", name: "primaryButtonLink", label: "Primary Button Link" },
-              { type: "string", name: "secondaryButtonText", label: "Secondary Button Text" },
-              { type: "string", name: "secondaryButtonLink", label: "Secondary Button Link" },
-              { type: "string", name: "trustMessage", label: "Trust Message" },
-            ],
-          },
+          // SEO
           {
             type: "object",
             name: "seo",

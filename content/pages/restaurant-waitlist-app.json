@@ -8,186 +8,195 @@
     "secondaryCtaLink": "/pricing",
     "trustMessage": "No credit card required • 2-minute setup • Cancel anytime"
   },
-  "intro": {
-    "title": "Say goodbye to paper lists, yelling names and scattered reservations",
-    "description": "WaitQ replaces the improvised mix of paper, Post-its, and memory with a single live queue. Guests get automatic SMS updates, your host gets a clean dashboard, and the chaos at the door disappears.",
-    "image": "/images/couple.jpg"
-  },
-  "howItWorks": {
-    "title": "The modern waitlist app built for the busiest restaurants",
-    "items": [
-      {
-        "title": "Instant queue on any device",
-        "description": "Pull up the waitlist on your phone or tablet. No hardware to purchase, no installation headaches.",
-        "icon": "Smartphone"
-      },
-      {
-        "title": "Guest keeps control of their wait",
-        "description": "Customers track their place in line from their own phone. They can even leave the area and come back when it's time.",
-        "icon": "Users"
-      },
-      {
-        "title": "Instant Notifications",
-        "description": "One tap sends an SMS or email when the table is ready. No more shouting names.",
-        "icon": "MessageSquare"
-      }
-    ]
-  },
-  "benefits": {
-    "title": "Less time handling the line, more time focusing on great service",
-    "steps": [
-      {
-        "stepNumber": 1,
-        "title": "Customers check in",
-        "bullets": [
-          { "text": "Add walk-ins in seconds or let customers self check-in from any device" },
-          { "text": "Customers get an wait time estimate at a virtual waiting room, staying in the loop even if they step away" }
-        ],
-        "link": "/features/self-check-in",
-        "linkText": "More about self-check-in",
-        "image": "/images/couple.jpg"
-      },
-      {
-        "stepNumber": 2,
-        "title": "Your team moves faster",
-        "bullets": [
-          { "text": "Easily run a waitlist that show who's waiting and who's next in real-time" },
-          { "text": "Keep control of the flow - tap once to call them in, tap again to mark them seated" },
-          { "text": "Set up separate waitlists for indoor/outdoor or across restaurant locations" }
-        ],
-        "link": "/features/virtual-waitlist",
-        "linkText": "Explore digital waitlist",
-        "image": "/images/friends.jpg"
-      },
-      {
-        "stepNumber": 3,
-        "title": "Your data turns into smarter operations",
-        "bullets": [
-          { "text": "Track which times have the longest waits. Adjust pacing and staffing to act on them." },
-          { "text": "Watch your no-show rate drop and your table turnover increase." }
-        ],
-        "link": "/features/analytics",
-        "linkText": "Analytics",
-        "image": "/images/bar friends.jpg"
-      }
-    ]
-  },
-  "beforeAfter": {
-    "title": "Improve revenue, reviews, and repeat visits",
-    "subtitle": "Badly managed queues damage your restaurant in different ways.",
-    "beforeTitle": "Before WaitQ",
-    "afterTitle": "With WaitQ",
-    "beforeItems": [
-      {
-        "title": "Front-door chaos",
-        "description": "Crowds at the entrance slow seating, stress staff, and scare customers into leaving. You're juggling names and timing with no visibility.",
-        "icon": "Users"
-      },
-      {
-        "title": "Time-consuming paper waitlists",
-        "description": "Manual lists create mistakes, constant \"how long?\" interruptions and uncertainty about who's next, leading to lost tables.",
-        "icon": "Clock"
-      },
-      {
-        "title": "Poor, unpredictable guest experience",
-        "description": "Unclear wait expectations frustrate guests, trigger no-shows, and damage reviews.",
-        "icon": "AlertCircle"
-      }
-    ],
-    "afterItems": [
-      {
-        "title": "Organized queue, organized mind",
-        "description": "Customers check in digitally. Your team knows exactly who's next. No yelling names, no confusion, no lost tables.",
-        "icon": "Check"
-      },
-      {
-        "title": "Actual data on your wait times",
-        "description": "Real-time wait visibility means fewer customer complaints and more accurate seating predictions. You know what's actually happening.",
-        "icon": "BarChart3"
-      },
-      {
-        "title": "Happier customers = better reviews",
-        "description": "Customers know the wait upfront. They stick around, spend money while waiting, and leave happier. That shows in your ratings.",
-        "icon": "Heart"
-      }
-    ]
-  },
-  "whyLove": {
-    "title": "Why restaurants love WaitQ",
-    "items": [
-      {
-        "title": "Reduced front-door chaos",
-        "description": "Customer flow becomes predictable; your team stays calm even during rush hours.",
-        "image": "/images/bar friends.jpg"
-      },
-      {
-        "title": "Public Display",
-        "description": "Show the queue on a TV at your entrance. Guests see their position without bothering staff.",
-        "image": "/images/friends.jpg"
-      },
-      {
-        "title": "Set up in minutes",
-        "description": "WaitQ works on your existing devices. No hardware, no installation, no training.",
-        "image": "/images/couple.jpg"
-      },
-      {
-        "title": "VIP priority",
-        "description": "Flag regulars or VIPs for priority seating—without announcing it to the room.",
-        "image": "/images/couple.jpg"
-      },
-      {
-        "title": "Free for small business",
-        "description": "Full access to core features without paying a dime. Upgrade only when you need more.",
-        "image": "/images/bar friends.jpg"
-      }
-    ]
-  },
-  "faq": {
-    "title": "Frequently asked questions",
-    "items": [
-      {
-        "question": "What is a restaurant waitlist app?",
-        "answer": "A restaurant waitlist app is a digital tool that helps you manage walk-in customers. Instead of paper lists, guests check in on a tablet or their phone, track their place in line, and get notified when their table is ready."
-      },
-      {
-        "question": "Why does a restaurant need a waitlist app like WaitQ?",
-        "answer": "WaitQ reduces front-door chaos, cuts perceived wait times, and frees your team to focus on hospitality instead of queue management. It also provides data to help you optimize staffing and seating."
-      },
-      {
-        "question": "Does WaitQ replace the check-in page?",
-        "answer": "Yes! WaitQ provides a customizable check-in page that matches your brand. Guests can join the waitlist via QR code, tablet kiosk, or a link on your website."
-      },
-      {
-        "question": "What if I need to add a guest to a waitlist manually?",
-        "answer": "No problem. Your host can add guests manually with a name and phone number. The guest will still receive SMS updates and can track their position online."
-      },
-      {
-        "question": "Can I have separate waitlists for bar, patio and dining room?",
-        "answer": "Yes! You can create multiple waitlists for different areas of your restaurant, each with its own settings and notifications."
-      },
-      {
-        "question": "Does WaitQ also work with reservations?",
-        "answer": "WaitQ focuses on walk-in management. For reservations, you can manually add reserved guests to the queue when they arrive, ensuring they're seated on time."
-      },
-      {
-        "question": "Can I use the app on iPhone, iPad or Android?",
-        "answer": "Yes! WaitQ works on any device with a web browser—iPhone, iPad, Android phones, tablets, or computers."
-      },
-      {
-        "question": "Is WaitQ easy to install?",
-        "answer": "Very easy. There's nothing to install. Just sign up, configure your settings, and you're ready to go in under 5 minutes."
-      }
-    ]
-  },
-  "globalCta": {
-    "title": "The smart way to manage walk-in customers",
-    "subtitle": "Reduce wait times, improve customer satisfaction, and increase revenue by servicing more, happier clients.",
-    "primaryButtonText": "Try WaitQ",
-    "primaryButtonLink": "/signup",
-    "secondaryButtonText": "See pricing",
-    "secondaryButtonLink": "/pricing",
-    "trustMessage": "No credit card required • 2-minute setup • Cancel anytime"
-  },
+  "sections": [
+    {
+      "_template": "introSection",
+      "title": "Say goodbye to paper lists, yelling names and scattered reservations",
+      "description": "WaitQ replaces the improvised mix of paper, Post-its, and memory with a single live queue. Guests get automatic SMS updates, your host gets a clean dashboard, and the chaos at the door disappears.",
+      "image": "/images/couple.jpg"
+    },
+    {
+      "_template": "iconCards",
+      "title": "The modern waitlist app built for the busiest restaurants",
+      "items": [
+        {
+          "title": "Instant queue on any device",
+          "description": "Pull up the waitlist on your phone or tablet. No hardware to purchase, no installation headaches.",
+          "icon": "Smartphone"
+        },
+        {
+          "title": "Guest keeps control of their wait",
+          "description": "Customers track their place in line from their own phone. They can even leave the area and come back when it's time.",
+          "icon": "Users"
+        },
+        {
+          "title": "Instant Notifications",
+          "description": "One tap sends an SMS or email when the table is ready. No more shouting names.",
+          "icon": "MessageSquare"
+        }
+      ]
+    },
+    {
+      "_template": "stepsSection",
+      "title": "Less time handling the line, more time focusing on great service",
+      "steps": [
+        {
+          "stepNumber": 1,
+          "title": "Customers check in",
+          "bullets": [
+            { "text": "Add walk-ins in seconds or let customers self check-in from any device" },
+            { "text": "Customers get an wait time estimate at a virtual waiting room, staying in the loop even if they step away" }
+          ],
+          "link": "/features/self-check-in",
+          "linkText": "More about self-check-in",
+          "image": "/images/couple.jpg"
+        },
+        {
+          "stepNumber": 2,
+          "title": "Your team moves faster",
+          "bullets": [
+            { "text": "Easily run a waitlist that show who's waiting and who's next in real-time" },
+            { "text": "Keep control of the flow - tap once to call them in, tap again to mark them seated" },
+            { "text": "Set up separate waitlists for indoor/outdoor or across restaurant locations" }
+          ],
+          "link": "/features/virtual-waitlist",
+          "linkText": "Explore digital waitlist",
+          "image": "/images/friends.jpg"
+        },
+        {
+          "stepNumber": 3,
+          "title": "Your data turns into smarter operations",
+          "bullets": [
+            { "text": "Track which times have the longest waits. Adjust pacing and staffing to act on them." },
+            { "text": "Watch your no-show rate drop and your table turnover increase." }
+          ],
+          "link": "/features/analytics",
+          "linkText": "Analytics",
+          "image": "/images/bar friends.jpg"
+        }
+      ]
+    },
+    {
+      "_template": "beforeAfterComparison",
+      "title": "Improve revenue, reviews, and repeat visits",
+      "subtitle": "Badly managed queues damage your restaurant in different ways.",
+      "beforeTitle": "Before WaitQ",
+      "afterTitle": "With WaitQ",
+      "beforeItems": [
+        {
+          "title": "Front-door chaos",
+          "description": "Crowds at the entrance slow seating, stress staff, and scare customers into leaving. You're juggling names and timing with no visibility.",
+          "icon": "Users"
+        },
+        {
+          "title": "Time-consuming paper waitlists",
+          "description": "Manual lists create mistakes, constant \"how long?\" interruptions and uncertainty about who's next, leading to lost tables.",
+          "icon": "Clock"
+        },
+        {
+          "title": "Poor, unpredictable guest experience",
+          "description": "Unclear wait expectations frustrate guests, trigger no-shows, and damage reviews.",
+          "icon": "AlertCircle"
+        }
+      ],
+      "afterItems": [
+        {
+          "title": "Organized queue, organized mind",
+          "description": "Customers check in digitally. Your team knows exactly who's next. No yelling names, no confusion, no lost tables.",
+          "icon": "Check"
+        },
+        {
+          "title": "Actual data on your wait times",
+          "description": "Real-time wait visibility means fewer customer complaints and more accurate seating predictions. You know what's actually happening.",
+          "icon": "BarChart3"
+        },
+        {
+          "title": "Happier customers = better reviews",
+          "description": "Customers know the wait upfront. They stick around, spend money while waiting, and leave happier. That shows in your ratings.",
+          "icon": "Heart"
+        }
+      ]
+    },
+    {
+      "_template": "bentoGrid",
+      "title": "Why restaurants love WaitQ",
+      "items": [
+        {
+          "title": "Reduced front-door chaos",
+          "description": "Customer flow becomes predictable; your team stays calm even during rush hours.",
+          "image": "/images/bar friends.jpg"
+        },
+        {
+          "title": "Public Display",
+          "description": "Show the queue on a TV at your entrance. Guests see their position without bothering staff.",
+          "image": "/images/friends.jpg"
+        },
+        {
+          "title": "Set up in minutes",
+          "description": "WaitQ works on your existing devices. No hardware, no installation, no training.",
+          "image": "/images/couple.jpg"
+        },
+        {
+          "title": "VIP priority",
+          "description": "Flag regulars or VIPs for priority seating—without announcing it to the room.",
+          "image": "/images/couple.jpg"
+        },
+        {
+          "title": "Free for small business",
+          "description": "Full access to core features without paying a dime. Upgrade only when you need more.",
+          "image": "/images/bar friends.jpg"
+        }
+      ]
+    },
+    {
+      "_template": "faq",
+      "title": "Frequently asked questions",
+      "items": [
+        {
+          "question": "What is a restaurant waitlist app?",
+          "answer": "A restaurant waitlist app is a digital tool that helps you manage walk-in customers. Instead of paper lists, guests check in on a tablet or their phone, track their place in line, and get notified when their table is ready."
+        },
+        {
+          "question": "Why does a restaurant need a waitlist app like WaitQ?",
+          "answer": "WaitQ reduces front-door chaos, cuts perceived wait times, and frees your team to focus on hospitality instead of queue management. It also provides data to help you optimize staffing and seating."
+        },
+        {
+          "question": "Does WaitQ replace the check-in page?",
+          "answer": "Yes! WaitQ provides a customizable check-in page that matches your brand. Guests can join the waitlist via QR code, tablet kiosk, or a link on your website."
+        },
+        {
+          "question": "What if I need to add a guest to a waitlist manually?",
+          "answer": "No problem. Your host can add guests manually with a name and phone number. The guest will still receive SMS updates and can track their position online."
+        },
+        {
+          "question": "Can I have separate waitlists for bar, patio and dining room?",
+          "answer": "Yes! You can create multiple waitlists for different areas of your restaurant, each with its own settings and notifications."
+        },
+        {
+          "question": "Does WaitQ also work with reservations?",
+          "answer": "WaitQ focuses on walk-in management. For reservations, you can manually add reserved guests to the queue when they arrive, ensuring they're seated on time."
+        },
+        {
+          "question": "Can I use the app on iPhone, iPad or Android?",
+          "answer": "Yes! WaitQ works on any device with a web browser—iPhone, iPad, Android phones, tablets, or computers."
+        },
+        {
+          "question": "Is WaitQ easy to install?",
+          "answer": "Very easy. There's nothing to install. Just sign up, configure your settings, and you're ready to go in under 5 minutes."
+        }
+      ]
+    },
+    {
+      "_template": "globalCta",
+      "title": "The smart way to manage walk-in customers",
+      "subtitle": "Reduce wait times, improve customer satisfaction, and increase revenue by servicing more, happier clients.",
+      "primaryButtonText": "Try WaitQ",
+      "primaryButtonLink": "/signup",
+      "secondaryButtonText": "See pricing",
+      "secondaryButtonLink": "/pricing",
+      "trustMessage": "No credit card required • 2-minute setup • Cancel anytime"
+    }
+  ],
   "seo": {
     "title": "WaitQ for Restaurants - Smart Waitlist Management",
     "description": "Maximize table turnover and improve customer satisfaction with the smartest waitlist app for restaurants. Replace paper lists and expensive pagers.",

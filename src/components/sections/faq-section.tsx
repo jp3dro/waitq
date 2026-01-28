@@ -27,13 +27,13 @@ export function FAQSection({ title, items }: FAQSectionProps) {
   return (
     <section className="py-8">
       <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-        <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-8">
+        <h2 className="text-2xl md:text-3xl font-bold mb-8">
           {title}
         </h2>
         <Accordion
           type="single"
           collapsible
-          className="w-full space-y-4 bg-muted p-6 md:p-10 rounded-3xl"
+          className="w-full space-y-4 bg-muted p-6 md:p-10 rounded-xl"
         >
           {items.map((item, index) => {
             if (!item?.question) return null;
@@ -43,10 +43,10 @@ export function FAQSection({ title, items }: FAQSectionProps) {
                 value={`item-${index}`}
                 className="bg-card rounded-lg px-6 border-0"
               >
-                <AccordionTrigger className="text-left font-medium hover:no-underline">
+                <AccordionTrigger className="text-left text-md font-medium hover:no-underline">
                   {item.question}
                 </AccordionTrigger>
-                <AccordionContent className="text-sm text-muted-foreground">
+                <AccordionContent className="text-sm">
                   {item.answer}
                 </AccordionContent>
               </AccordionItem>

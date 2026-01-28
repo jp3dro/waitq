@@ -29,11 +29,9 @@ import type {
   FeatureQuery,
   FeatureSectionsThreeColumnCards,
   FeatureSectionsTestimonialWithStats,
-  FeatureSectionsStatsRow,
   FeatureSectionsHowItWorksSteps,
 } from "../../tina/__generated__/types";
 import { TestimonialWithStats } from "@/components/sections/testimonial-with-stats";
-import { StatsRow } from "@/components/sections/stats-row";
 import { FAQSection } from "@/components/sections/faq-section";
 import { ArrowLink } from "@/components/sections/arrow-link";
 import { GlobalCTA } from "@/components/sections/global-cta";
@@ -208,7 +206,7 @@ export function FeaturePageClient(props: FeaturePageClientProps) {
                     {section.steps?.map((step, stepIndex) => {
                       const stepWithImage = step as FeatureSectionsHowItWorksSteps & { image?: string };
                       return (
-                        <div key={stepIndex} className="flex flex-col">
+                        <div key={stepIndex}>
                           {/* Image first */}
                           <div className="aspect-[4/3] bg-muted rounded-md overflow-hidden mb-4 shadow-sm">
                             {stepWithImage?.image ? (
@@ -226,14 +224,14 @@ export function FeaturePageClient(props: FeaturePageClientProps) {
                             )}
                           </div>
                           {/* Title */}
-                          <h3 className="font-semibold text-lg mb-4">{step?.title}</h3>
+                          <h3 className="font-semibold text-lg mb-2">{step?.title}</h3>
                           {/* Description */}
-                          <p className="text-md text-muted-foreground mb-4">
+                          <p className="text-md text-muted-foreground mb-3">
                             {step?.description}
                           </p>
-                          {/* Link */}
+                          {/* Link - directly below description */}
                           {step?.link && step?.linkText && (
-                            <ArrowLink href={step.link} className="mt-auto">
+                            <ArrowLink href={step.link}>
                               {step.linkText}
                             </ArrowLink>
                           )}
@@ -379,17 +377,6 @@ export function FeaturePageClient(props: FeaturePageClientProps) {
                 role={sectionData.role || ""}
                 image={sectionData.image || undefined}
                 stats={(sectionData.stats || []).map(s => ({ value: s?.value || "", label: s?.label || "" }))}
-              />
-            );
-          }
-
-          case "FeatureSectionsStatsRow": {
-            const sectionData = section as FeatureSectionsStatsRow;
-            return (
-              <StatsRow
-                key={index}
-                stats={(sectionData.stats || []).map(s => ({ value: s?.value || "", label: s?.label || "" }))}
-                variant={(sectionData.variant as "default" | "light" | "bordered") || "default"}
               />
             );
           }

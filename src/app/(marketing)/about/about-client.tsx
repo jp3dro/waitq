@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 import { useTina } from "tinacms/dist/react";
 import type { AboutQuery } from "../../../../tina/__generated__/types";
-import { StatsRow } from "@/components/sections/stats-row";
 
 // Icon mapping for dynamic icons
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -176,15 +175,6 @@ export function AboutClient(props: AboutClientProps) {
         </div>
       </section>
 
-      {/* Stats Row */}
-      <StatsRow
-        stats={[
-          { value: "85%", label: "Reduction in perceived wait time" },
-          { value: "2,000+", label: "Restaurants using WaitQ" },
-          { value: "4.8★", label: "Average customer rating" }
-        ]}
-        variant="bordered"
-      />
     </main>
   );
 }

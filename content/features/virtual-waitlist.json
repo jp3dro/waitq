@@ -134,15 +134,6 @@
           "answer": "Yes! WaitQ provides real-time and historical analytics on wait times, party sizes, and peak hours. This data helps you optimize staffing, predict busy periods, and improve the guest experience."
         }
       ]
-    },
-    {
-      "_template": "statsRow",
-      "variant": "bordered",
-      "stats": [
-        { "value": "85%", "label": "Reduction in perceived wait time" },
-        { "value": "2,000+", "label": "Restaurants using WaitQ" },
-        { "value": "4.8★", "label": "Average customer rating" }
-      ]
     }
   ],
   "seo": {

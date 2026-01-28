@@ -1,48 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { 
-  Play,
-  Monitor,
-  Image as ImageIcon,
-  Check
-} from "lucide-react";
+import { Play } from "lucide-react";
 import { YouTubeLightbox } from "@/components/youtube-lightbox";
 import { useTina } from "tinacms/dist/react";
 import type { HomeQuery } from "../../../tina/__generated__/types";
-import { ArrowLink } from "@/components/sections/arrow-link";
 import { FAQSection } from "@/components/sections/faq-section";
 import { GlobalCTA } from "@/components/sections/global-cta";
-
-// Extended types for content sections not in TinaCMS schema
-interface HowItWorksItem {
-  title: string;
-  description: string;
-  image?: string;
-  link?: string;
-  linkText?: string;
-}
-
-interface BenefitSection {
-  badge?: string;
-  title: string;
-  image?: string;
-  bullets?: { text: string }[];
-}
-
-interface ProductCard {
-  title: string;
-  description: string;
-  image?: string;
-}
-
-interface CompetitiveItem {
-  title: string;
-  description: string;
-  image?: string;
-}
+import { BentoGrid } from "@/components/sections/bento-grid";
+import { TwoColumnBenefits } from "@/components/sections/two-column-benefits";
+import { HowItWorksCards } from "@/components/sections/how-it-works-cards";
+import { IntroSection } from "@/components/sections/intro-section";
+import { ProductShowcase } from "@/components/sections/product-showcase";
 
 interface HomeClientProps {
   query: string;
@@ -54,11 +24,12 @@ export function HomeClient(props: HomeClientProps) {
   const { data } = useTina(props);
   const page = data.home;
 
-  // FAQ structured data for rich snippets
-  const faqStructuredData = {
+  // Find FAQ section for structured data
+  const faqSection = page.sections?.find((s) => s?.__typename === "HomeSectionsFaq");
+  const faqStructuredData = faqSection && faqSection.__typename === "HomeSectionsFaq" ? {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    "mainEntity": page.faq?.items?.map((item) => ({
+    "mainEntity": faqSection.items?.map((item) => ({
       "@type": "Question",
       "name": item?.question,
       "acceptedAnswer": {
@@ -66,21 +37,16 @@ export function HomeClient(props: HomeClientProps) {
         "text": item?.answer
       }
     })) || []
-  };
-
-  // Get content from JSON with fallbacks - cast to expected types
-  const howItWorks = (page as unknown as { howItWorks?: { title: string; items: HowItWorksItem[] } }).howItWorks;
-  const benefits = (page as unknown as { benefits?: { title: string; sections: BenefitSection[] } }).benefits;
-  const productShowcase = (page as unknown as { productShowcase?: { title: string; subtitle?: string; ctaText?: string; ctaLink?: string; cards: ProductCard[] } }).productShowcase;
-  const competitiveAdvantage = (page as unknown as { competitiveAdvantage?: { title: string; items: CompetitiveItem[] } }).competitiveAdvantage;
-  const globalCta = (page as unknown as { globalCta?: { title: string; subtitle: string; primaryButtonText: string; primaryButtonLink: string; secondaryButtonText?: string; secondaryButtonLink?: string; trustMessage?: string } }).globalCta;
+  } : null;
 
   return (
     <main>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqStructuredData) }}
-      />
+      {faqStructuredData && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqStructuredData) }}
+        />
+      )}
 
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-32 lg:pt-48 pb-12 -mt-20">
@@ -144,304 +110,109 @@ export function HomeClient(props: HomeClientProps) {
         </div>
       </section>
 
-      {/* Stop losing revenue Section */}
-      <section className="pb-6 -mt-10">
-        <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="relative">
-              <div className="aspect-[4/3] bg-muted rounded-2xl shadow-xl overflow-hidden">
-                {page.problems?.image ? (
-                  <Image
-                    src={page.problems.image}
-                    alt={page.problems?.title || ""}
-                    fill
-                    className="object-cover"
-                  />
-                ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <div className="text-center p-8">
-                      <ImageIcon className="w-24 h-24 mx-auto text-muted-foreground/20" />
-                      <p className="mt-4 text-sm text-muted-foreground">Image placeholder</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-            <div>
-              <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{page.problems?.title}</h2>
-              <p className="mt-4 text-lg text-muted-foreground">
-                {page.problems?.description}
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Dynamic Sections */}
+      {page.sections?.map((section, index) => {
+        if (!section) return null;
 
-      {/* How WaitQ delivers a modern waiting experience */}
-      {howItWorks && (
-        <section className="py-16">
-          <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-            <div className="mb-8">
-              <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
-                {howItWorks.title}
-              </h2>
-            </div>
-            <div className="grid md:grid-cols-3 gap-8">
-              {howItWorks.items?.map((item, index) => (
-                <div key={index} className="flex flex-col">
-                  
-                 
-                  {/* Image */}
-                  <div className="aspect-[4/3] bg-background rounded-md overflow-hidden mb-4 shadow-sm">
-                    {item?.image ? (
-                      <Image
-                        src={item.image}
-                        alt={item.title}
-                        width={400}
-                        height={300}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex items-center justify-center h-full bg-gradient-to-br from-muted to-muted/50">
-                        <div className="text-center p-6">
-                          <ImageIcon className="w-16 h-16 mx-auto text-muted-foreground/30" />
-                        </div>
-                      </div>
-                    )}
-                  </div>
+        switch (section.__typename) {
+          case "HomeSectionsIntroSection":
+            return (
+              <IntroSection
+                key={index}
+                title={section.title || ""}
+                description={section.description || ""}
+                image={section.image || undefined}
+              />
+            );
 
-                   {/* Title */}
-                   <h3 className="font-semibold text-lg mb-4">{item?.title}</h3>
-                  
-                  
-                  {/* Description */}
-                  <p className="text-md text-muted-foreground mb-4">
-                    {item?.description}
-                  </p>
-                  
-                  {/* Link */}
-                  {item?.link && item?.linkText && (
-                    <ArrowLink href={item.link} className="mt-auto">
-                      {item.linkText}
-                    </ArrowLink>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+          case "HomeSectionsHowItWorks":
+            return (
+              <HowItWorksCards
+                key={index}
+                title={section.title || ""}
+                items={(section.items || []).map(item => ({
+                  title: item?.title || "",
+                  description: item?.description || "",
+                  image: item?.image || undefined,
+                  link: item?.link || undefined,
+                  linkText: item?.linkText || undefined,
+                }))}
+              />
+            );
 
-      {/* Improve revenue, reviews Section - Two Big Cards Side by Side */}
-      {benefits && (
-        <section className="py-8">
-          <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-            <div className="mb-8">
-              <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
-                {benefits.title}
-              </h2>
-            </div>
-            <div className="rounded-3xl bg-muted dark:bg-muted/30 p-6 md:p-8">
-              <div className="grid md:grid-cols-2 gap-6">
-                {benefits.sections?.map((section, index) => (
-                  <div key={index} className="bg-card rounded-2xl overflow-hidden shadow-sm">
-                    {/* Image with badge */}
-                    <div className="relative aspect-[16/10]">
-                      {section.image ? (
-                        <Image
-                          src={section.image}
-                          alt={section.title}
-                          fill
-                          className="object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-900/30 dark:to-amber-800/30 flex items-center justify-center">
-                          <ImageIcon className="w-16 h-16 text-muted-foreground/20" />
-                        </div>
-                      )}
-                      {/* Badge */}
-                      {section.badge && (
-                        <div className="absolute top-4 left-4">
-                          <span className="inline-block px-3 py-1 text-sm font-medium bg-white text-orange-700 rounded-full">
-                            {section.badge}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Content */}
-                    <div className="p-6">
-                      <h3 className="text-xl font-bold mb-4">{section.title}</h3>
-                      {section.bullets && section.bullets.length > 0 && (
-                        <ul className="space-y-3">
-                          {section.bullets.map((bullet, bulletIndex) => (
-                            <li key={bulletIndex} className="flex items-start gap-3">
-                              <span className="text-primary font-semibold mt-0.5 flex-shrink-0 text-sm"><Check className="w-4 h-4" /></span>
-                              <span className="text-sm text-muted-foreground">{bullet?.text}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
+          case "HomeSectionsTwoColumnBenefits":
+            return (
+              <TwoColumnBenefits
+                key={index}
+                title={section.title || ""}
+                cards={(section.cards || []).map(card => ({
+                  badge: card?.badge || undefined,
+                  title: card?.title || "",
+                  image: card?.image || undefined,
+                  bullets: card?.bullets?.map(b => ({ text: b?.text || "" })) || [],
+                }))}
+              />
+            );
 
-      {/* Modern, efficient waitlist management - Three Cards (No Tabs) */}
-      {productShowcase && (
-        <section className="py-16">
-          
-          <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-            {/* Header with CTA */}
-            <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-8">
-                {productShowcase.title}
-              </h2>
-            <div className="rounded-3xl bg-muted dark:bg-muted/30 p-6 md:p-10">
-              <div className="mb-10">
-                  {productShowcase.subtitle && (
-                    <p className="text-xl font-semibold mb-2">
-                      {productShowcase.subtitle}
-                    </p>
-                  )}
-                  {productShowcase.ctaText && productShowcase.ctaLink && (
-                    <ArrowLink href={productShowcase.ctaLink}>
-                      {productShowcase.ctaText}
-                    </ArrowLink>
-                  )}
-              </div>
+          case "HomeSectionsProductShowcase":
+            return (
+              <ProductShowcase
+                key={index}
+                title={section.title || ""}
+                subtitle={section.subtitle || undefined}
+                ctaText={section.ctaText || undefined}
+                ctaLink={section.ctaLink || undefined}
+                cards={(section.cards || []).map(card => ({
+                  title: card?.title || "",
+                  description: card?.description || "",
+                  image: card?.image || undefined,
+                }))}
+              />
+            );
 
-              {/* Three cards */}
-              <div className="grid md:grid-cols-3 gap-6">
-                {productShowcase.cards?.map((card, index) => (
-                  <div key={index} className="bg-background rounded-xl overflow-hidden">
-                    {/* Image */}
-                    <div className="aspect-[4/3] p-4 overflow-hidden">
-                      {card.image ? (
-                        <Image
-                          src={card.image}
-                          alt={card.title}
-                          width={400}
-                          height={300}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex items-center justify-center h-full">
-                          <div className="text-center p-6">
-                            <Monitor className="w-16 h-16 mx-auto text-muted-foreground/20" />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Content */}
-                    <div className="pl-5 pr-5 pb-5">
-                      <h3 className="font-semibold mb-2">{card.title}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {card.description}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
+          case "HomeSectionsBentoGrid":
+            return (
+              <BentoGrid
+                key={index}
+                title={section.title || ""}
+                items={(section.items || []).map(item => ({
+                  title: item?.title || "",
+                  description: item?.description || "",
+                  image: item?.image || undefined,
+                }))}
+              />
+            );
 
-      {/* How we turn waiting time into a competitive advantage - Bento Box */}
-      {competitiveAdvantage && (
-        <section className="py-8">
-          <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-            <div className="mb-8">
-              <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
-                {competitiveAdvantage.title}
-              </h2>
-            </div>
-            
-            {/* Bento Box Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-              {/* First two items - Large cards (3 cols each) */}
-              {competitiveAdvantage.items?.slice(0, 2).map((item, index) => (
-                <div 
-                  key={index} 
-                  className="lg:col-span-3 rounded-2xl border border-border bg-card p-6 flex flex-col"
-                >
-                  <h3 className="font-semibold text-lg mb-2">{item?.title}</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    {item?.description}
-                  </p>
-                  <div className="mt-auto aspect-[16/10] bg-muted rounded-xl overflow-hidden">
-                    {item?.image ? (
-                      <Image
-                        src={item.image}
-                        alt={item.title}
-                        width={500}
-                        height={300}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex items-center justify-center h-full">
-                        <ImageIcon className="w-12 h-12 text-muted-foreground/20" />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-              
-              {/* Next three items - Small cards (2 cols each) */}
-              {competitiveAdvantage.items?.slice(2, 5).map((item, index) => (
-                <div 
-                  key={index + 2} 
-                  className="lg:col-span-2 rounded-2xl border border-border bg-card p-5 flex flex-col"
-                >
-                  <h3 className="font-semibold mb-2">{item?.title}</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    {item?.description}
-                  </p>
-                  <div className="mt-auto aspect-[4/3] bg-muted rounded-xl overflow-hidden">
-                    {item?.image ? (
-                      <Image
-                        src={item.image}
-                        alt={item.title}
-                        width={300}
-                        height={225}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex items-center justify-center h-full">
-                        <ImageIcon className="w-10 h-10 text-muted-foreground/20" />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+          case "HomeSectionsFaq":
+            return (
+              <FAQSection
+                key={index}
+                title={section.title || ""}
+                items={(section.items || []).map(item => ({
+                  question: item?.question || "",
+                  answer: item?.answer || "",
+                }))}
+              />
+            );
 
+          case "HomeSectionsGlobalCta":
+            return (
+              <GlobalCTA
+                key={index}
+                title={section.title || ""}
+                subtitle={section.subtitle || ""}
+                primaryButtonText={section.primaryButtonText || ""}
+                primaryButtonLink={section.primaryButtonLink || ""}
+                secondaryButtonText={section.secondaryButtonText || undefined}
+                secondaryButtonLink={section.secondaryButtonLink || undefined}
+                trustMessage={section.trustMessage || undefined}
+              />
+            );
 
-      {/* FAQ */}
-      {page.faq?.title && page.faq?.items && (
-        <FAQSection title={page.faq.title} items={page.faq.items} />
-      )}
-
-      {/* Global CTA */}
-      {globalCta && (
-        <GlobalCTA
-          title={globalCta.title}
-          subtitle={globalCta.subtitle}
-          primaryButtonText={globalCta.primaryButtonText}
-          primaryButtonLink={globalCta.primaryButtonLink}
-          secondaryButtonText={globalCta.secondaryButtonText}
-          secondaryButtonLink={globalCta.secondaryButtonLink}
-          trustMessage={globalCta.trustMessage}
-        />
-      )}
+          default:
+            return null;
+        }
+      })}
     </main>
   );
 }

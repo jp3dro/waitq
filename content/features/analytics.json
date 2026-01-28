@@ -99,15 +99,6 @@
           "answer": "No. WaitQ analytics work standalone using your waitlist data. POS integration is optional and can add revenue correlation if desired."
         }
       ]
-    },
-    {
-      "_template": "statsRow",
-      "variant": "bordered",
-      "stats": [
-        { "value": "85%", "label": "Reduction in perceived wait time" },
-        { "value": "2,000+", "label": "Restaurants using WaitQ" },
-        { "value": "4.8★", "label": "Average customer rating" }
-      ]
     }
   ],
   "seo": {
