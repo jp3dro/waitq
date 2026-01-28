@@ -12,3 +12,6 @@ export { HowItWorksCards } from "./how-it-works-cards";
 export { TwoColumnBenefits } from "./two-column-benefits";
 export { ProductShowcase } from "./product-showcase";
 export { IconCards } from "./icon-cards";
+export { PricingCards } from "./pricing-cards";
+export { FeatureComparison } from "./feature-comparison";
+export { SocialProof } from "./social-proof";

@@ -3,61 +3,234 @@
     "title": "Simple, transparent pricing",
     "subtitle": "WaitQ pays for itself with one recovered table a day."
   },
-  "socialProof": {
-    "title": "Trusted by top restaurants worldwide",
-    "stats": [
+  "pricingCards": {
+    "plans": [
       {
-        "value": "85%",
-        "label": "Reduction in perceived wait time"
+        "planId": "free",
+        "name": "Free",
+        "description": "Perfect for testing the waters and small establishments.",
+        "price": "€0",
+        "period": "/mo",
+        "highlighted": false,
+        "features": [
+          {
+            "text": "50 SMS total"
+          },
+          {
+            "text": "1 location"
+          },
+          {
+            "text": "2 users"
+          },
+          {
+            "text": "Today analytics only"
+          }
+        ],
+        "ctaText": "Get started",
+        "ctaLink": "/signup"
       },
       {
-        "value": "2,000+",
-        "label": "Restaurants using WaitQ"
+        "planId": "base",
+        "name": "Base",
+        "description": "Essential features for growing busy restaurants.",
+        "price": "€49",
+        "period": "/mo",
+        "highlighted": true,
+        "highlightLabel": "Most Popular",
+        "features": [
+          {
+            "text": "1,000 SMS / month"
+          },
+          {
+            "text": "5 locations"
+          },
+          {
+            "text": "10 users"
+          },
+          {
+            "text": "30-day analytics"
+          },
+          {
+            "text": "Bidirectional SMS"
+          }
+        ],
+        "ctaText": "Get started",
+        "ctaLink": "/signup"
       },
       {
-        "value": "4.8★",
-        "label": "Average customer rating"
-      }
-    ],
-    "testimonial": {
-      "quote": "WaitQ cut our wait times by 35%. Guests love the SMS updates and our staff stays organized.",
-      "author": "Maria",
-      "role": "GM at Bistro Verde"
-    }
-  },
-  "faq": {
-    "title": "Frequently asked questions",
-    "items": [
-      {
-        "question": "Can I use WaitQ for free?",
-        "answer": "Yes! We offer a free tier to get started. You can upgrade as your needs grow."
-      },
-      {
-        "question": "What are the benefits of a virtual waitlist software in a physical business?",
-        "answer": "A virtual waitlist reduces crowding at your entrance, keeps customers informed with accurate wait times, reduces walk-aways, and frees up your staff from constantly answering \"how much longer?\" questions. It also provides valuable analytics to optimize your operations."
-      },
-      {
-        "question": "Do we need to purchase hardware?",
-        "answer": "No. WaitQ works on any device with a web browser - tablets, phones, or computers you already own. No special hardware, pagers, or equipment needed."
-      },
-      {
-        "question": "What is the expected ROI of WaitQ?",
-        "answer": "Most restaurants see ROI within the first month through increased table turnover and reduced walk-aways. With just one additional seated party per day, WaitQ pays for itself."
-      },
-      {
-        "question": "Is billing based on each waitlist?",
-        "answer": "No, billing is based on your plan tier. You can create unlimited waitlists within your plan limits."
-      },
-      {
-        "question": "Do you offer real-time insights and analytics?",
-        "answer": "Yes! WaitQ provides real-time analytics including average wait times, peak hours, customer patterns, and more to help you optimize your operations."
-      },
-      {
-        "question": "Is WaitQ easy to set up?",
-        "answer": "Yes! WaitQ can be set up in under 5 minutes. Simply create an account, configure your waitlist settings, and you're ready to start managing your queue."
+        "planId": "premium",
+        "name": "Premium",
+        "description": "Unleash the full power with advanced analytics and support.",
+        "price": "€99",
+        "period": "/mo",
+        "highlighted": false,
+        "features": [
+          {
+            "text": "5,000 SMS / month"
+          },
+          {
+            "text": "100 locations"
+          },
+          {
+            "text": "100 users"
+          },
+          {
+            "text": "30-day analytics"
+          },
+          {
+            "text": "Priority support"
+          }
+        ],
+        "ctaText": "Get started",
+        "ctaLink": "/signup"
       }
     ]
   },
+  "sections": [
+    {
+      "title": "Compare all features",
+      "categories": [
+        {
+          "name": "Waitlist",
+          "features": [
+            {
+              "name": "Digital Waitlist",
+              "free": "✓",
+              "base": "✓",
+              "premium": "✓"
+            },
+            {
+              "name": "Waitlist Position Tracking",
+              "free": "✓",
+              "base": "✓",
+              "premium": "✓"
+            },
+            {
+              "name": "QR Code Check-in",
+              "free": "✓",
+              "base": "✓",
+              "premium": "✓"
+            },
+            {
+              "name": "Public Status Page",
+              "free": "✓",
+              "base": "✓",
+              "premium": "✓"
+            }
+          ]
+        },
+        {
+          "name": "Reservations",
+          "features": [
+            {
+              "name": "Online Reservations",
+              "free": "✓",
+              "base": "✓",
+              "premium": "✓"
+            },
+            {
+              "name": "Email Confirmations",
+              "free": "✓",
+              "base": "✓",
+              "premium": "✓"
+            }
+          ]
+        },
+        {
+          "name": "Communications",
+          "features": [
+            {
+              "name": "SMS Notifications",
+              "free": "50 total",
+              "base": "1,000 / mo",
+              "premium": "5,000 / mo"
+            },
+            {
+              "name": "Bidirectional SMS",
+              "free": "✗",
+              "base": "✓",
+              "premium": "✓"
+            },
+            {
+              "name": "Customizable SMS Templates",
+              "free": "✗",
+              "base": "✓",
+              "premium": "✓"
+            }
+          ]
+        },
+        {
+          "name": "Analytics & Reports",
+          "features": [
+            {
+              "name": "Usage Statistics",
+              "free": "Today only",
+              "base": "30 days",
+              "premium": "30 days"
+            },
+            {
+              "name": "Data Export (CSV)",
+              "free": "✗",
+              "base": "✓",
+              "premium": "✓"
+            }
+          ]
+        },
+        {
+          "name": "Management",
+          "features": [
+            {
+              "name": "Multi-location Support",
+              "free": "1 Location",
+              "base": "5 Locations",
+              "premium": "100 Locations"
+            },
+            {
+              "name": "Multi-device Sync & Login",
+              "free": "✓",
+              "base": "✓",
+              "premium": "✓"
+            }
+          ]
+        }
+      ],
+      "_template": "featureComparison"
+    },
+    {
+      "title": "Frequently asked questions",
+      "items": [
+        {
+          "question": "Can I use WaitQ for free?",
+          "answer": "Yes! We offer a free tier to get started. You can upgrade as your needs grow."
+        },
+        {
+          "question": "What are the benefits of a virtual waitlist software in a physical business?",
+          "answer": "A virtual waitlist reduces crowding at your entrance, keeps customers informed with accurate wait times, reduces walk-aways, and frees up your staff from constantly answering \"how much longer?\" questions. It also provides valuable analytics to optimize your operations."
+        },
+        {
+          "question": "Do we need to purchase hardware?",
+          "answer": "No. WaitQ works on any device with a web browser - tablets, phones, or computers you already own. No special hardware, pagers, or equipment needed."
+        },
+        {
+          "question": "What is the expected ROI of WaitQ?",
+          "answer": "Most restaurants see ROI within the first month through increased table turnover and reduced walk-aways. With just one additional seated party per day, WaitQ pays for itself."
+        },
+        {
+          "question": "Is billing based on each waitlist?",
+          "answer": "No, billing is based on your plan tier. You can create unlimited waitlists within your plan limits."
+        },
+        {
+          "question": "Do you offer real-time insights and analytics?",
+          "answer": "Yes! WaitQ provides real-time analytics including average wait times, peak hours, customer patterns, and more to help you optimize your operations."
+        },
+        {
+          "question": "Is WaitQ easy to set up?",
+          "answer": "Yes! WaitQ can be set up in under 5 minutes. Simply create an account, configure your waitlist settings, and you're ready to start managing your queue."
+        }
+      ],
+      "_template": "faq"
+    }
+  ],
   "seo": {
     "title": "WaitQ Pricing Plans",
     "description": "Simple, transparent pricing for digital waitlist management. See plans that scale with your business.",

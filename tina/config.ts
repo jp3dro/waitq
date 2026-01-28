@@ -285,6 +285,7 @@ export default defineConfig({
           include: "pricing",
         },
         fields: [
+          // Hero Section
           {
             type: "object",
             name: "hero",
@@ -294,58 +295,137 @@ export default defineConfig({
               { type: "string", name: "subtitle", label: "Subtitle" },
             ],
           },
+          // Pricing Cards Section
           {
             type: "object",
-            name: "socialProof",
-            label: "Social Proof Section",
+            name: "pricingCards",
+            label: "Pricing Cards",
+            description: "Configure the pricing plan cards",
             fields: [
-              { type: "string", name: "title", label: "Section Title" },
               {
                 type: "object",
-                name: "stats",
-                label: "Statistics",
+                name: "plans",
+                label: "Plans",
                 list: true,
-                ui: {
-                  itemProps: (item) => ({ label: item?.label }),
-                },
+                ui: { itemProps: (item) => ({ label: item?.name }) },
                 fields: [
-                  { type: "string", name: "value", label: "Value" },
-                  { type: "string", name: "label", label: "Label" },
-                ],
-              },
-              {
-                type: "object",
-                name: "testimonial",
-                label: "Testimonial",
-                fields: [
-                  { type: "string", name: "quote", label: "Quote", ui: { component: "textarea" } },
-                  { type: "string", name: "author", label: "Author" },
-                  { type: "string", name: "role", label: "Role/Title" },
+                  { type: "string", name: "planId", label: "Plan ID (free, base, premium)" },
+                  { type: "string", name: "name", label: "Display Name" },
+                  { type: "string", name: "description", label: "Description" },
+                  { type: "string", name: "price", label: "Price (e.g. €0, €49)" },
+                  { type: "string", name: "period", label: "Period (e.g. /mo)" },
+                  { type: "boolean", name: "highlighted", label: "Highlighted (Most Popular)" },
+                  { type: "string", name: "highlightLabel", label: "Highlight Label (e.g. Most Popular)" },
+                  {
+                    type: "object",
+                    name: "features",
+                    label: "Feature List",
+                    list: true,
+                    fields: [
+                      { type: "string", name: "text", label: "Feature Text" },
+                    ],
+                  },
+                  { type: "string", name: "ctaText", label: "CTA Button Text" },
+                  { type: "string", name: "ctaLink", label: "CTA Button Link" },
                 ],
               },
             ],
           },
+          // Content Sections (flexible)
           {
             type: "object",
-            name: "faq",
-            label: "FAQ Section",
-            fields: [
-              { type: "string", name: "title", label: "Section Title" },
+            name: "sections",
+            label: "Content Sections",
+            list: true,
+            templates: [
               {
-                type: "object",
-                name: "items",
-                label: "FAQ Items",
-                list: true,
+                name: "featureComparison",
+                label: "Feature Comparison Table",
                 ui: {
-                  itemProps: (item) => ({ label: item?.question }),
+                  itemProps: (item) => ({ label: item?.title || "Feature Comparison" }),
                 },
                 fields: [
-                  { type: "string", name: "question", label: "Question" },
-                  { type: "string", name: "answer", label: "Answer", ui: { component: "textarea" } },
+                  { type: "string", name: "title", label: "Section Title" },
+                  {
+                    type: "object",
+                    name: "categories",
+                    label: "Feature Categories",
+                    list: true,
+                    ui: { itemProps: (item) => ({ label: item?.name }) },
+                    fields: [
+                      { type: "string", name: "name", label: "Category Name" },
+                      {
+                        type: "object",
+                        name: "features",
+                        label: "Features",
+                        list: true,
+                        ui: { itemProps: (item) => ({ label: item?.name }) },
+                        fields: [
+                          { type: "string", name: "name", label: "Feature Name" },
+                          { type: "string", name: "free", label: "Free Plan Value (✓, ✗, or text)" },
+                          { type: "string", name: "base", label: "Base Plan Value" },
+                          { type: "string", name: "premium", label: "Premium Plan Value" },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                name: "socialProof",
+                label: "Social Proof Section",
+                ui: {
+                  itemProps: (item) => ({ label: item?.title || "Social Proof" }),
+                },
+                fields: [
+                  { type: "string", name: "title", label: "Section Title" },
+                  {
+                    type: "object",
+                    name: "stats",
+                    label: "Statistics",
+                    list: true,
+                    ui: { itemProps: (item) => ({ label: item?.label }) },
+                    fields: [
+                      { type: "string", name: "value", label: "Value" },
+                      { type: "string", name: "label", label: "Label" },
+                    ],
+                  },
+                  {
+                    type: "object",
+                    name: "testimonial",
+                    label: "Testimonial",
+                    fields: [
+                      { type: "string", name: "quote", label: "Quote", ui: { component: "textarea" } },
+                      { type: "string", name: "author", label: "Author" },
+                      { type: "string", name: "role", label: "Role/Title" },
+                    ],
+                  },
+                ],
+              },
+              {
+                name: "faq",
+                label: "FAQ Section",
+                ui: {
+                  itemProps: () => ({ label: "FAQ Section" }),
+                },
+                fields: [
+                  { type: "string", name: "title", label: "Section Title" },
+                  {
+                    type: "object",
+                    name: "items",
+                    label: "FAQ Items",
+                    list: true,
+                    ui: { itemProps: (item) => ({ label: item?.question }) },
+                    fields: [
+                      { type: "string", name: "question", label: "Question" },
+                      { type: "string", name: "answer", label: "Answer", ui: { component: "textarea" } },
+                    ],
+                  },
                 ],
               },
             ],
           },
+          // SEO
           {
             type: "object",
             name: "seo",
@@ -959,83 +1039,92 @@ export default defineConfig({
               { type: "string", name: "subtitle", label: "Subtitle", ui: { component: "textarea" } },
             ],
           },
+          // Content Sections (flexible)
           {
             type: "object",
-            name: "intro",
-            label: "Introduction Section",
-            fields: [
-              { type: "string", name: "title", label: "Title" },
-              { type: "string", name: "description", label: "Description", ui: { component: "textarea" } },
-              { type: "image", name: "image", label: "Image" },
+            name: "sections",
+            label: "Content Sections",
+            list: true,
+            templates: [
               {
-                type: "object",
-                name: "bullets",
-                label: "Key Points",
-                list: true,
-                fields: [
-                  { type: "string", name: "text", label: "Text" },
-                ],
-              },
-            ],
-          },
-          {
-            type: "object",
-            name: "mission",
-            label: "Mission Section",
-            fields: [
-              { type: "string", name: "title", label: "Title" },
-              {
-                type: "object",
-                name: "paragraphs",
-                label: "Paragraphs",
-                list: true,
-                fields: [
-                  { type: "string", name: "text", label: "Text", ui: { component: "textarea" } },
-                ],
-              },
-            ],
-          },
-          {
-            type: "object",
-            name: "principles",
-            label: "Guiding Principles",
-            fields: [
-              { type: "string", name: "title", label: "Section Title" },
-              {
-                type: "object",
-                name: "items",
-                label: "Principles",
-                list: true,
-                ui: {
-                  itemProps: (item) => ({ label: item?.title }),
-                },
+                name: "introSection",
+                label: "Introduction Section (Image + Text)",
+                ui: { itemProps: (item) => ({ label: item?.title || "Introduction" }) },
                 fields: [
                   { type: "string", name: "title", label: "Title" },
                   { type: "string", name: "description", label: "Description", ui: { component: "textarea" } },
-                  { type: "image", name: "image", label: "Screenshot Image" },
+                  { type: "image", name: "image", label: "Image" },
                 ],
               },
-            ],
-          },
-          {
-            type: "object",
-            name: "howWeOperate",
-            label: "How We Operate",
-            fields: [
-              { type: "string", name: "title", label: "Section Title" },
-              { type: "string", name: "description", label: "Section Description", ui: { component: "textarea" } },
               {
-                type: "object",
-                name: "items",
-                label: "Operation Items",
-                list: true,
-                ui: {
-                  itemProps: (item) => ({ label: item?.title }),
-                },
+                name: "missionSection",
+                label: "Mission / Text Section",
+                ui: { itemProps: (item) => ({ label: item?.title || "Mission" }) },
                 fields: [
                   { type: "string", name: "title", label: "Title" },
-                  { type: "string", name: "description", label: "Description" },
-                  { type: "string", name: "icon", label: "Icon (lucide icon name)" },
+                  {
+                    type: "object",
+                    name: "paragraphs",
+                    label: "Paragraphs",
+                    list: true,
+                    fields: [
+                      { type: "string", name: "text", label: "Text", ui: { component: "textarea" } },
+                    ],
+                  },
+                ],
+              },
+              {
+                name: "principlesSection",
+                label: "Guiding Principles (Cards with Images)",
+                ui: { itemProps: (item) => ({ label: item?.title || "Guiding Principles" }) },
+                fields: [
+                  { type: "string", name: "title", label: "Section Title" },
+                  {
+                    type: "object",
+                    name: "items",
+                    label: "Principles",
+                    list: true,
+                    ui: { itemProps: (item) => ({ label: item?.title }) },
+                    fields: [
+                      { type: "string", name: "title", label: "Title" },
+                      { type: "string", name: "description", label: "Description", ui: { component: "textarea" } },
+                      { type: "image", name: "image", label: "Screenshot Image" },
+                    ],
+                  },
+                ],
+              },
+              {
+                name: "howWeOperateSection",
+                label: "How We Operate (Icon Cards)",
+                ui: { itemProps: (item) => ({ label: item?.title || "How We Operate" }) },
+                fields: [
+                  { type: "string", name: "title", label: "Section Title" },
+                  { type: "string", name: "description", label: "Section Description", ui: { component: "textarea" } },
+                  {
+                    type: "object",
+                    name: "items",
+                    label: "Operation Items",
+                    list: true,
+                    ui: { itemProps: (item) => ({ label: item?.title }) },
+                    fields: [
+                      { type: "string", name: "title", label: "Title" },
+                      { type: "string", name: "description", label: "Description" },
+                      { type: "string", name: "icon", label: "Icon (lucide icon name)" },
+                    ],
+                  },
+                ],
+              },
+              {
+                name: "globalCta",
+                label: "CTA Section",
+                ui: { itemProps: () => ({ label: "CTA Section" }) },
+                fields: [
+                  { type: "string", name: "title", label: "Title" },
+                  { type: "string", name: "subtitle", label: "Subtitle", ui: { component: "textarea" } },
+                  { type: "string", name: "primaryButtonText", label: "Primary Button Text" },
+                  { type: "string", name: "primaryButtonLink", label: "Primary Button Link" },
+                  { type: "string", name: "secondaryButtonText", label: "Secondary Button Text" },
+                  { type: "string", name: "secondaryButtonLink", label: "Secondary Button Link" },
                 ],
               },
             ],
@@ -1062,6 +1151,15 @@ export default defineConfig({
         format: "mdx",
         ui: {
           router: ({ document }) => `/${document._sys.filename}`,
+          filename: {
+            readonly: false,
+            slugify: (values) => {
+              return values?.title
+                ?.toLowerCase()
+                .replace(/\s+/g, '-')
+                .replace(/[^a-z0-9-]/g, '') || '';
+            },
+          },
         },
         fields: [
           { type: "string", name: "title", label: "Page Title", isTitle: true, required: true },
@@ -1122,6 +1220,28 @@ export default defineConfig({
                   { type: "string", name: "href", label: "URL" },
                 ],
               },
+              {
+                type: "object",
+                name: "featuresDropdown",
+                label: "Features Dropdown",
+                description: "Configure the features dropdown menu items",
+                fields: [
+                  { type: "string", name: "label", label: "Dropdown Label" },
+                  {
+                    type: "object",
+                    name: "items",
+                    label: "Feature Items",
+                    list: true,
+                    ui: { itemProps: (item) => ({ label: item?.title }) },
+                    fields: [
+                      { type: "string", name: "title", label: "Title" },
+                      { type: "string", name: "description", label: "Description" },
+                      { type: "string", name: "href", label: "URL" },
+                      { type: "string", name: "icon", label: "Icon (lucide icon name: QrCode, Users, MonitorPlay, BarChart3)" },
+                    ],
+                  },
+                ],
+              },
             ],
           },
           {
@@ -1161,12 +1281,13 @@ export default defineConfig({
           {
             type: "object",
             name: "cta",
-            label: "Global CTA",
+            label: "Default CTA Settings",
+            description: "Default values for the CTA section component when added to pages",
             fields: [
-              { type: "string", name: "title", label: "Title" },
-              { type: "string", name: "subtitle", label: "Subtitle" },
-              { type: "string", name: "buttonText", label: "Button Text" },
-              { type: "string", name: "buttonLink", label: "Button Link" },
+              { type: "string", name: "title", label: "Default Title" },
+              { type: "string", name: "subtitle", label: "Default Subtitle" },
+              { type: "string", name: "buttonText", label: "Default Button Text" },
+              { type: "string", name: "buttonLink", label: "Default Button Link" },
             ],
           },
         ],

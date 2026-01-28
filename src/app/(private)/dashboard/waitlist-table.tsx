@@ -566,18 +566,258 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
     })();
   };
 
-  if (loading) return (
-    <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-6">
-      <p className="text-sm text-muted-foreground">Loading…</p>
-    </div>
-  );
+  const renderContent = () => {
+    if (loading) return (
+      <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-6">
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      </div>
+    );
 
-  if (!loading && entries.length === 0) return (
-    <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-10 text-center">
-      <h2 className="text-base font-semibold">No entries yet</h2>
-      <p className="mt-1 text-sm text-muted-foreground">Add your first guest to start the queue.</p>
-    </div>
-  );
+    if (entries.length === 0) return (
+      <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-10 text-center">
+        <h2 className="text-base font-semibold">No entries yet</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Add your first guest to start the queue.</p>
+      </div>
+    );
+
+    return (
+      <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl overflow-hidden w-full min-w-0" ref={tableRef}>
+        {/* Mobile (xs/sm): card list */}
+        <div className="md:hidden">
+          <ul className="divide-y divide-border">
+            {entries.map((e) => {
+              const number = e.ticket_number ?? e.queue_position ?? null;
+              return (
+                <li key={e.id} className={highlightIds.has(e.id) ? "row-flash" : ""}>
+                  <div className="p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Badge variant="secondary" className="text-xs">
+                            #{number ?? "—"}
+                          </Badge>
+                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                            <Clock className="h-3.5 w-3.5" />
+                            <span>{getWaitTime(e.created_at)}</span>
+                          </div>
+                        </div>
+
+                        {showName ? (
+                          <div className="mt-2 text-sm font-medium truncate">
+                            <span className="inline-flex items-center gap-2 min-w-0">
+                              <span className="truncate">{e.customer_name ?? "—"}</span>
+                              {e.is_returning ? (
+                                <HoverClickTooltip content={loyaltyTooltip(e)} side="bottom" align="start">
+                                  <button
+                                    type="button"
+                                    className="inline-flex items-center shrink-0"
+                                    aria-label="Loyalty user"
+                                    title="Loyalty user"
+                                  >
+                                    <Crown className="h-4 w-4 text-orange-500" />
+                                  </button>
+                                </HoverClickTooltip>
+                              ) : null}
+                            </span>
+                          </div>
+                        ) : null}
+                        {showPhone ? (
+                          <div className="mt-0.5 text-sm text-muted-foreground truncate">
+                            {e.phone}
+                          </div>
+                        ) : null}
+                      </div>
+
+                      <div className="shrink-0 inline-flex items-center gap-2">
+                        <Button
+                          onClick={() => copyPersonalUrl(e.token)}
+                          variant="outline"
+                          size="icon"
+                          title="Copy personal page URL"
+                          aria-label="Copy personal page URL"
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" aria-label="Open menu">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {renderRowMenuItems(e)}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <div className="inline-flex items-center gap-1.5 text-sm">
+                        <User className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span>{typeof e.party_size === "number" ? e.party_size : "—"}</span>
+                      </div>
+                      {e.seating_preference ? <SeatingPreferenceBadge>{e.seating_preference}</SeatingPreferenceBadge> : null}
+                      {showPhone ? (
+                        <div className="text-xs">
+                          {getNotificationDisplay(e.send_sms, e.send_whatsapp, e.sms_status, e.whatsapp_status)}
+                        </div>
+                      ) : null}
+                    </div>
+
+                    <div className="grid gap-2">
+                      {e.status === "waiting" ? (
+                        <Button disabled={isBusy(e.id)} onClick={() => call(e.id)} size="sm" className="w-full">
+                          Call
+                        </Button>
+                      ) : null}
+                      {e.status === "notified" ? (
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button
+                            disabled={isBusy(e.id)}
+                            onClick={() => checkIn(e.id)}
+                            size="sm"
+                            className="bg-emerald-500 text-black hover:bg-emerald-500/90"
+                          >
+                            Check-in
+                          </Button>
+                          <Button disabled={isBusy(e.id)} onClick={() => noShow(e.id)} size="sm" variant="destructive">
+                            No show
+                          </Button>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+
+        {/* Desktop (md+): table */}
+        <div className="hidden md:block overflow-x-auto max-w-full">
+          <table className="w-full text-sm min-w-0">
+            <thead className="bg-muted sticky top-0 z-10">
+              <tr>
+                <th className="text-left font-medium text-foreground px-4 py-2">Actions</th>
+                <th className="text-left font-medium text-foreground px-4 py-2">#</th>
+                {showName && <th className="text-left font-medium text-foreground px-4 py-2">Name</th>}
+                {showPhone && <th className="text-left font-medium text-foreground px-4 py-2">Phone</th>}
+                <th className="text-left font-medium text-foreground px-4 py-2">Party</th>
+                <th className="text-left font-medium text-foreground px-4 py-2">Preference</th>
+                {showPhone && <th className="text-left font-medium text-foreground px-4 py-2">Alerts</th>}
+                <th className="text-left font-medium text-foreground px-4 py-2">Wait time</th>
+                <th className="text-left font-medium text-foreground px-4 py-2"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {entries.map((e) => (
+                <tr key={e.id} className={`border-t border-border hover:bg-muted odd:bg-muted/50 ${highlightIds.has(e.id) ? "row-flash" : ""}`}>
+                  <td className="px-4 py-2">
+                    {e.status === 'waiting' && (
+                      <Button disabled={isBusy(e.id)} onClick={() => call(e.id)} size="sm">
+                        Call
+                      </Button>
+                    )}
+                    {e.status === 'notified' && (
+                      <div className="flex items-center gap-2">
+                        <Button
+                          disabled={isBusy(e.id)}
+                          onClick={() => checkIn(e.id)}
+                          size="sm"
+                          className="bg-emerald-500 text-black hover:bg-emerald-500/90"
+                        >
+                          Check-in
+                        </Button>
+                        <Button disabled={isBusy(e.id)} onClick={() => noShow(e.id)} size="sm" variant="destructive">
+                          No show
+                        </Button>
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-4 py-2">{e.ticket_number ?? e.queue_position ?? "-"}</td>
+                  {showName && (
+                    <td className="px-4 py-2">
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <span>{e.customer_name ?? "—"}</span>
+                          {e.is_returning ? (
+                            <HoverClickTooltip content={loyaltyTooltip(e)} side="bottom" align="start">
+                              <button
+                                type="button"
+                                className="inline-flex items-center"
+                                aria-label="Loyalty user"
+                                title="Loyalty user"
+                              >
+                                <Crown className="h-4 w-4 text-orange-500" />
+                              </button>
+                            </HoverClickTooltip>
+                          ) : null}
+                        </div>
+                      </div>
+                    </td>
+                  )}
+                  {showPhone && <td className="px-4 py-2">{e.phone}</td>}
+                  <td className="px-4 py-2">
+                    <div className="flex items-center gap-1.5">
+                      <User className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span>{typeof e.party_size === 'number' ? e.party_size : "—"}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-2">
+                    {e.seating_preference ? <SeatingPreferenceBadge>{e.seating_preference}</SeatingPreferenceBadge> : "—"}
+                  </td>
+                  {showPhone && (
+                    <td className="px-4 py-2">
+                      <span className="text-xs">{getNotificationDisplay(e.send_sms, e.send_whatsapp, e.sms_status, e.whatsapp_status)}</span>
+                    </td>
+                  )}
+                  <td className="px-4 py-2">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button type="button" className="flex items-center gap-1.5 w-fit cursor-default">
+                            <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                            <span>{getWaitTime(e.created_at)}</span>
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{formatDateTime(e.created_at, timeFormat)}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </td>
+                  <td className="px-4 py-2 text-right">
+                    <div className="inline-flex items-center gap-2">
+                      <Button
+                        onClick={() => copyPersonalUrl(e.token)}
+                        variant="outline"
+                        size="icon"
+                        title="Copy personal page URL"
+                        aria-label="Copy personal page URL"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" aria-label="Open menu">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {renderRowMenuItems(e)}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
 
   const renderRowMenuItems = (e: Entry) => (
     <>
@@ -631,241 +871,8 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
   };
 
   return (
-    <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl overflow-hidden w-full min-w-0" ref={tableRef}>
-      {/* Mobile (xs/sm): card list */}
-      <div className="md:hidden">
-        <ul className="divide-y divide-border">
-          {entries.map((e) => {
-            const number = e.ticket_number ?? e.queue_position ?? null;
-            return (
-              <li key={e.id} className={highlightIds.has(e.id) ? "row-flash" : ""}>
-                <div className="p-4 space-y-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Badge variant="secondary" className="text-xs">
-                          #{number ?? "—"}
-                        </Badge>
-                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                          <Clock className="h-3.5 w-3.5" />
-                          <span>{getWaitTime(e.created_at)}</span>
-                        </div>
-                      </div>
-
-                      {showName ? (
-                        <div className="mt-2 text-sm font-medium truncate">
-                          <span className="inline-flex items-center gap-2 min-w-0">
-                            <span className="truncate">{e.customer_name ?? "—"}</span>
-                            {e.is_returning ? (
-                              <HoverClickTooltip content={loyaltyTooltip(e)} side="bottom" align="start">
-                                <button
-                                  type="button"
-                                  className="inline-flex items-center shrink-0"
-                                  aria-label="Loyalty user"
-                                  title="Loyalty user"
-                                >
-                                  <Crown className="h-4 w-4 text-orange-500" />
-                                </button>
-                              </HoverClickTooltip>
-                            ) : null}
-                          </span>
-                        </div>
-                      ) : null}
-                      {showPhone ? (
-                        <div className="mt-0.5 text-sm text-muted-foreground truncate">
-                          {e.phone}
-                        </div>
-                      ) : null}
-                    </div>
-
-                    <div className="shrink-0 inline-flex items-center gap-2">
-                      <Button
-                        onClick={() => copyPersonalUrl(e.token)}
-                        variant="outline"
-                        size="icon"
-                        title="Copy personal page URL"
-                        aria-label="Copy personal page URL"
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" aria-label="Open menu">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          {renderRowMenuItems(e)}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <div className="inline-flex items-center gap-1.5 text-sm">
-                      <User className="h-3.5 w-3.5 text-muted-foreground" />
-                      <span>{typeof e.party_size === "number" ? e.party_size : "—"}</span>
-                    </div>
-                    {e.seating_preference ? <SeatingPreferenceBadge>{e.seating_preference}</SeatingPreferenceBadge> : null}
-                    {showPhone ? (
-                      <div className="text-xs">
-                        {getNotificationDisplay(e.send_sms, e.send_whatsapp, e.sms_status, e.whatsapp_status)}
-                      </div>
-                    ) : null}
-                  </div>
-
-                  <div className="grid gap-2">
-                    {e.status === "waiting" ? (
-                      <Button disabled={isBusy(e.id)} onClick={() => call(e.id)} size="sm" className="w-full">
-                        Call
-                      </Button>
-                    ) : null}
-                    {e.status === "notified" ? (
-                      <div className="grid grid-cols-2 gap-2">
-                        <Button
-                          disabled={isBusy(e.id)}
-                          onClick={() => checkIn(e.id)}
-                          size="sm"
-                          className="bg-emerald-500 text-black hover:bg-emerald-500/90"
-                        >
-                          Check-in
-                        </Button>
-                        <Button disabled={isBusy(e.id)} onClick={() => noShow(e.id)} size="sm" variant="destructive">
-                          No show
-                        </Button>
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-
-      {/* Desktop (md+): table */}
-      <div className="hidden md:block overflow-x-auto max-w-full">
-        <table className="w-full text-sm min-w-0">
-          <thead className="bg-muted sticky top-0 z-10">
-            <tr>
-              <th className="text-left font-medium text-foreground px-4 py-2">Actions</th>
-              <th className="text-left font-medium text-foreground px-4 py-2">#</th>
-              {showName && <th className="text-left font-medium text-foreground px-4 py-2">Name</th>}
-              {showPhone && <th className="text-left font-medium text-foreground px-4 py-2">Phone</th>}
-              <th className="text-left font-medium text-foreground px-4 py-2">Party</th>
-              <th className="text-left font-medium text-foreground px-4 py-2">Preference</th>
-              {showPhone && <th className="text-left font-medium text-foreground px-4 py-2">Alerts</th>}
-              <th className="text-left font-medium text-foreground px-4 py-2">Wait time</th>
-              <th className="text-left font-medium text-foreground px-4 py-2"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {entries.map((e) => (
-              <tr key={e.id} className={`border-t border-border hover:bg-muted odd:bg-muted/50 ${highlightIds.has(e.id) ? "row-flash" : ""}`}>
-                <td className="px-4 py-2">
-                  {e.status === 'waiting' && (
-                    <Button disabled={isBusy(e.id)} onClick={() => call(e.id)} size="sm">
-                      Call
-                    </Button>
-                  )}
-                  {e.status === 'notified' && (
-                    <div className="flex items-center gap-2">
-                      <Button
-                        disabled={isBusy(e.id)}
-                        onClick={() => checkIn(e.id)}
-                        size="sm"
-                        className="bg-emerald-500 text-black hover:bg-emerald-500/90"
-                      >
-                        Check-in
-                      </Button>
-                      <Button disabled={isBusy(e.id)} onClick={() => noShow(e.id)} size="sm" variant="destructive">
-                        No show
-                      </Button>
-                    </div>
-                  )}
-                </td>
-                <td className="px-4 py-2">{e.ticket_number ?? e.queue_position ?? "-"}</td>
-                {showName && (
-                  <td className="px-4 py-2">
-                    <div className="flex flex-col">
-                      <div className="flex items-center gap-2">
-                        <span>{e.customer_name ?? "—"}</span>
-                        {e.is_returning ? (
-                          <HoverClickTooltip content={loyaltyTooltip(e)} side="bottom" align="start">
-                            <button
-                              type="button"
-                              className="inline-flex items-center"
-                              aria-label="Loyalty user"
-                              title="Loyalty user"
-                            >
-                              <Crown className="h-4 w-4 text-orange-500" />
-                            </button>
-                          </HoverClickTooltip>
-                        ) : null}
-                      </div>
-                    </div>
-                  </td>
-                )}
-                {showPhone && <td className="px-4 py-2">{e.phone}</td>}
-                <td className="px-4 py-2">
-                  <div className="flex items-center gap-1.5">
-                    <User className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span>{typeof e.party_size === 'number' ? e.party_size : "—"}</span>
-                  </div>
-                </td>
-                <td className="px-4 py-2">
-                  {e.seating_preference ? <SeatingPreferenceBadge>{e.seating_preference}</SeatingPreferenceBadge> : "—"}
-                </td>
-                {showPhone && (
-                  <td className="px-4 py-2">
-                    <span className="text-xs">{getNotificationDisplay(e.send_sms, e.send_whatsapp, e.sms_status, e.whatsapp_status)}</span>
-                  </td>
-                )}
-                <td className="px-4 py-2">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button type="button" className="flex items-center gap-1.5 w-fit cursor-default">
-                          <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span>{getWaitTime(e.created_at)}</span>
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>{formatDateTime(e.created_at, timeFormat)}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </td>
-                <td className="px-4 py-2 text-right">
-                  <div className="inline-flex items-center gap-2">
-                    <Button
-                      onClick={() => copyPersonalUrl(e.token)}
-                      variant="outline"
-                      size="icon"
-                      title="Copy personal page URL"
-                      aria-label="Copy personal page URL"
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" aria-label="Open menu">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {renderRowMenuItems(e)}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
+    <>
+      {renderContent()}
       {/* Edit entry */}
       <Dialog open={!!editingId} onOpenChange={(v) => (!v ? setEditingId(null) : undefined)}>
         <DialogContent className="sm:max-w-2xl p-0 overflow-hidden">
@@ -948,7 +955,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }
 

@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
-import { useTheme } from "next-themes";
+import { cn } from "@/lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,31 +22,34 @@ import {
 type Entry = { status: string; created_at: string; eta_minutes: number | null; queue_position: number | null; waitlist_id?: string; ticket_number?: number | null; notified_at?: string | null; seating_preference?: string | null; party_size?: number | null };
 type Business =
   | {
-      name: string | null;
-      logo_url: string | null;
-      accent_color?: string | null;
-      background_color?: string | null;
-      website_url?: string | null;
-      instagram_url?: string | null;
-      facebook_url?: string | null;
-      google_maps_url?: string | null;
-      menu_url?: string | null;
-    }
+    name: string | null;
+    logo_url: string | null;
+    accent_color?: string | null;
+    background_color?: string | null;
+    website_url?: string | null;
+    instagram_url?: string | null;
+    facebook_url?: string | null;
+    google_maps_url?: string | null;
+    menu_url?: string | null;
+  }
   | null;
 
 export default function ClientStatus({ token }: { token: string }) {
   const router = useRouter();
-  const { setTheme } = useTheme();
   const [data, setData] = useState<Entry | null>(null);
   const [loading, setLoading] = useState(true);
   const [nowServing, setNowServing] = useState<number | null>(null);
   const [aheadCount, setAheadCount] = useState<number | null>(null);
   const [business, setBusiness] = useState<Business>(null);
   const [locationPhone, setLocationPhone] = useState<string | null>(null);
+  const [locationAddress, setLocationAddress] = useState<string | null>(null);
+  const [locationCity, setLocationCity] = useState<string | null>(null);
+  const [locationName, setLocationName] = useState<string | null>(null);
   const [isLive, setIsLive] = useState(false);
   const [displayToken, setDisplayToken] = useState<string | null>(null);
   const [waitlistName, setWaitlistName] = useState<string | null>(null);
   const [waitlistId, setWaitlistId] = useState<string | null>(null);
+  const [customerName, setCustomerName] = useState<string | null>(null);
   const [cancelPending, setCancelPending] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
   const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
@@ -60,10 +63,8 @@ export default function ClientStatus({ token }: { token: string }) {
 
   if (!supabaseRef.current) supabaseRef.current = createClient();
 
-  // Public pages should follow the user's OS theme by default.
-  useEffect(() => {
-    setTheme("system");
-  }, [setTheme]);
+  // Public pages: Do not force any theme change to avoid causing logout or cookie issues.
+  // The theme will be whatever the user has set in their browser/app.
 
   async function load(silent: boolean = false) {
     if (!silent && !data) setLoading(true);
@@ -74,6 +75,7 @@ export default function ClientStatus({ token }: { token: string }) {
       setNowServing(null);
       setBusiness(null);
       setLocationPhone(null);
+      setLocationAddress(null);
       setDisplayToken(null);
       setWaitlistId(null);
       if (!silent || !data) setLoading(false);
@@ -86,9 +88,13 @@ export default function ClientStatus({ token }: { token: string }) {
     setAheadCount(typeof j.aheadCount === "number" ? j.aheadCount : null);
     setBusiness(j.business || null);
     setLocationPhone(typeof j.locationPhone === "string" && j.locationPhone.trim().length ? j.locationPhone.trim() : null);
+    setLocationAddress(typeof j.locationAddress === "string" && j.locationAddress.trim().length ? j.locationAddress.trim() : null);
+    setLocationCity(typeof j.locationCity === "string" && j.locationCity.trim().length ? j.locationCity.trim() : null);
+    setLocationName(typeof j.locationName === "string" && j.locationName.trim().length ? j.locationName.trim() : null);
     setDisplayToken((j.displayToken as string | null) || null);
     setWaitlistName((j.waitlistName as string | null) || null);
     setWaitlistId((entry?.waitlist_id as string | undefined) || null);
+    setCustomerName((j.customerName as string | null) || null);
     if (!silent || !data) setLoading(false);
   }
 
@@ -194,12 +200,12 @@ export default function ClientStatus({ token }: { token: string }) {
   // Stop streaming after terminal state; expiry handling is done via API (410).
   useEffect(() => {
     if (loading) return;
-    const isTerminal = (s: string | undefined) => s === "seated" || s === "cancelled" || s === "archived";
+    const isTerminalCheck = (s: string | undefined) => s === "seated" || s === "cancelled" || s === "archived";
     if (!data) {
       router.replace(`/`);
       return;
     }
-    if (isTerminal(data?.status)) {
+    if (isTerminalCheck(data?.status)) {
       // stop realtime subscriptions once final
       const supabase = supabaseRef.current!;
       if (statusChannelRef.current) {
@@ -223,7 +229,12 @@ export default function ClientStatus({ token }: { token: string }) {
   // We use the primary color from business settings via server payload (not available here),
   // so we skip dynamic application unless extended in the API. For now, keep theme tokens.
 
-  const isUserTurn = data.ticket_number !== null && data.ticket_number === nowServing;
+  const isNotified = data.status === "notified";
+  const isNoShow = data.status === "archived";
+  const isSeated = data.status === "seated";
+  const isCancelled = data.status === "cancelled";
+
+  const isUserTurn = isNotified;
 
   const yourNumber = typeof data.ticket_number === 'number' ? data.ticket_number : (typeof data.queue_position === 'number' ? data.queue_position : null);
 
@@ -246,6 +257,7 @@ export default function ClientStatus({ token }: { token: string }) {
     if (parts.length >= 2) return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
     return raw.slice(0, 2).toUpperCase();
   })();
+
   const cancelReservation = async () => {
     setCancelError(null);
     setCancelPending(true);
@@ -267,40 +279,22 @@ export default function ClientStatus({ token }: { token: string }) {
     }
   };
 
+  // Now serving indicator for header
+  const nowServingDisplay = typeof nowServing === 'number' ? nowServing : null;
+  const isClosed = nowServingDisplay === null && !isLive;
+
   return (
     <main className="min-h-dvh bg-background text-foreground flex flex-col">
-      <div className="flex-1 flex flex-col px-4 py-6 sm:py-10">
+      <div className="flex-1 flex flex-col px-4 py-4">
         <div className="mx-auto w-full max-w-md flex flex-col flex-1">
           {/* Header */}
-          <div className="flex items-center justify-between gap-3 mb-6">
-            <div className="flex items-center gap-3">
-              <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-border bg-muted flex items-center justify-center">
-                {business?.logo_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={business.logo_url} alt="Logo" className="h-full w-full object-cover" />
-                ) : (
-                  <span className="text-sm font-semibold text-muted-foreground">{initials}</span>
-                )}
-              </div>
-              <div className="flex flex-col">
-                {business?.name ? (
-                  <p className="text-sm font-medium text-muted-foreground leading-none mb-1">{business.name}</p>
-                ) : null}
-                {waitlistName ? (
-                  <h1 className="text-xl sm:text-2xl font-bold tracking-tight leading-none">{waitlistName}</h1>
-                ) : null}
-              </div>
-            </div>
-            {business?.menu_url && business.menu_url.trim() && !isTerminal ? (
-              <a href={business.menu_url.trim()} target="_blank" rel="noopener noreferrer">
-                <Button size="sm" className="text-xs px-3 py-1.5 sm:text-sm sm:px-4 sm:py-2">
-                  <Utensils className="w-4 h-4 mr-2" />
-                  Menu
-                </Button>
-              </a>
+          <div className="flex items-center justify-between gap-3 mb-4">
+            {waitlistName ? (
+              <h1 className="text-xl w-full text-center sm:text-2xl font-bold tracking-tight">{waitlistName}</h1>
             ) : null}
           </div>
-          {isTerminal ? (
+
+          {isCancelled ? (
             <div className="bg-card ring-1 ring-border rounded-xl p-6 text-center">
               <h2 className="text-2xl font-bold text-foreground">This ticket is closed</h2>
               <p className="mt-2 text-muted-foreground">
@@ -308,156 +302,216 @@ export default function ClientStatus({ token }: { token: string }) {
               </p>
               {typeof yourNumber === "number" ? (
                 <div className="py-6 border-y border-border mt-6">
-                  <p className="text-sm text-muted-foreground">Your ticket number</p>
-                  <div className="mt-2 text-5xl font-extrabold text-foreground">{yourNumber}</div>
-                </div>
-              ) : null}
-            </div>
-          ) : isUserTurn ? (
-            <div className="bg-emerald-50 dark:bg-emerald-950/30 ring-1 ring-emerald-200 dark:ring-emerald-800 rounded-xl p-6 text-center">
-              <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 mb-4">
-                <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                </svg>
-              </div>
-              <h2 className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">It&apos;s your turn!</h2>
-              <p className="mt-2 text-foreground">Please proceed to {business?.name || "the venue"}</p>
-              {typeof yourNumber === 'number' ? (
-                <div className="py-6 border-y border-emerald-200 dark:border-emerald-800 mt-6">
-                  <p className="text-sm text-muted-foreground">Your ticket number</p>
+                  <p className="text-md text-foreground">Your ticket number</p>
                   <div className="mt-2 text-5xl font-extrabold text-foreground">{yourNumber}</div>
                 </div>
               ) : null}
             </div>
           ) : (
-            <div className="space-y-4">
-              {/* Almost your turn alert */}
-              {typeof yourNumber === 'number' && typeof nowServing === 'number' && (yourNumber - nowServing === 1) ? (
-                <div className="rounded-xl border border-yellow-500/50 bg-yellow-50 dark:bg-yellow-950/30 text-yellow-800 dark:text-yellow-200 px-4 py-3">
-                  <div className="font-semibold">Almost your turn!</div>
-                  <div className="text-sm opacity-90">Please head back to the restaurant.</div>
+            <div className="space-y-6">
+              {/* Flexible Status Banner */}
+              <div className={cn(
+                "rounded-xl overflow-hidden shadow-sm ring-1 flex items-center mb-6",
+                (isClosed || isNoShow)
+                  ? "bg-red-50 dark:bg-red-950/20 ring-red-200 dark:ring-red-900/50"
+                  : (yourNumber && nowServing && (yourNumber - nowServing === 1))
+                    ? "bg-yellow-50 dark:bg-yellow-950/30 ring-yellow-200 dark:ring-yellow-800/50"
+                    : isUserTurn
+                      ? "bg-emerald-600 text-white shadow-emerald-200/50 dark:shadow-none ring-emerald-500"
+                      : "bg-emerald-50 dark:bg-emerald-950/20 ring-emerald-200 dark:ring-emerald-800/50"
+              )}>
+                {!isClosed && !isNoShow && !isSeated && (
+                  <div className={cn(
+                    "flex items-center gap-3 px-4 py-3 border-r",
+                    isClosed
+                      ? "border-red-100 dark:border-red-900/30 text-red-700"
+                      : (yourNumber && nowServing && (yourNumber - nowServing === 1))
+                        ? "border-yellow-200 dark:border-yellow-800/50 text-yellow-800"
+                        : isUserTurn
+                          ? "border-white/20 text-white"
+                          : "border-emerald-100 dark:border-emerald-800/50 text-emerald-700"
+                  )}>
+                    <span className="relative flex h-2.5 w-2.5">
+                      {isLive ? (
+                        <>
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                        </>
+                      ) : (
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-muted-foreground/40"></span>
+                      )}
+                    </span>
+                    <span className="text-3xl font-black tabular-nums tracking-tighter">
+                      {nowServingDisplay ?? '-'}
+                    </span>
+                  </div>
+                )}
+                <div className="flex-1 px-4 py-3 leading-tight">
+                  <p className={cn(
+                    "text-[10px] font-bold uppercase tracking-widest mb-0.5",
+                    (isClosed || isNoShow) ? "text-red-600/70" : (yourNumber && nowServing && (yourNumber - nowServing === 1)) ? "text-yellow-700/70" : isUserTurn ? "text-emerald-100" : "text-emerald-600/70"
+                  )}>
+                    {(isClosed || isNoShow) ? "Status" : isSeated ? "Thank you" : "Now calling"}
+                  </p>
+                  <p className={cn(
+                    "text-sm font-bold",
+                    (isClosed || isNoShow) ? "text-red-700" : (yourNumber && nowServing && (yourNumber - nowServing === 1)) ? "text-yellow-800" : isUserTurn ? "text-white" : "text-emerald-700"
+                  )}>
+                    {isClosed ? "Waitlist Closed" : isNoShow ? "Sorry, your place in the waitlist expired and is no longer valid." : isSeated ? "We hope you enjoyed our service!" : isUserTurn ? "It's your turn! Thank you for waiting." : (yourNumber && nowServing && (yourNumber - nowServing === 1)) ? "Almost your turn! Head back to the restaurant." : "Please wait for your turn."}
+                  </p>
                 </div>
-              ) : null}
+              </div>
 
-              {/* Your ticket */}
-              <div className="bg-card ring-1 ring-border rounded-xl p-6 text-center">
-                <p className="text-sm text-muted-foreground">Your ticket number</p>
-                <div className="mt-2 text-6xl font-extrabold text-foreground">{typeof yourNumber === 'number' ? yourNumber : '-'}</div>
-
-                <div className="mt-6 flex items-center justify-center gap-4 flex-wrap">
-                  {typeof data.party_size === 'number' ? (
-                    <div className="flex items-center gap-1.5 text-lg font-medium">
-                      <User className="h-5 w-5" />
-                      <span>{data.party_size}</span>
+              <div className="bg-card ring-1 ring-border rounded-xl p-6 overflow-hidden">
+                <div className="grid grid-cols-2 gap-4 items-center">
+                  {/* Left Column: Title and Number */}
+                  <div className="text-center border-r border-border pr-4">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                      Your number
+                    </p>
+                    <div className="text-5xl sm:text-6xl font-extrabold text-foreground tabular-nums">
+                      {typeof yourNumber === 'number' ? yourNumber : '-'}
                     </div>
-                  ) : null}
-                  {data.seating_preference ? (
-                    <Badge variant="secondary" className="text-sm px-2.5 py-0.5">{data.seating_preference}</Badge>
-                  ) : null}
+                  </div>
+
+                  {/* Right Column: Details simplified */}
+                  <div className="flex flex-col justify-center gap-4 pl-2">
+                    {customerName && (
+                      <div>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none mb-1">Name</p>
+                        <p className="text-sm font-bold text-foreground truncate">{customerName}</p>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-1 gap-4">
+                      {typeof data.party_size === 'number' ? (
+                        <div>
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none mb-1">Party</p>
+                          <div className="flex items-center gap-1">
+                            <User className="h-3.5 w-3.5 text-muted-foreground" />
+                            <span className="text-sm font-bold text-foreground">{data.party_size}</span>
+                          </div>
+                        </div>
+                      ) : null}
+                      {data.seating_preference ? (
+                        <div>
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none mb-1">Preference</p>
+                          <p className="text-sm font-bold text-foreground truncate">{data.seating_preference}</p>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
                 </div>
 
                 {typeof data.eta_minutes === 'number' && (!(typeof yourNumber === 'number' && typeof nowServing === 'number' && (yourNumber - nowServing <= 1))) ? (
-                  <div className="mt-6 rounded-xl bg-muted/50 ring-1 ring-border p-4">
-                    <p className="text-sm text-muted-foreground">Estimated wait time</p>
-                    <p className="mt-1 text-2xl font-semibold">{data.eta_minutes} min</p>
+                  <div className="mt-6 rounded-xl bg-muted/50 ring-1 ring-border p-3 text-center">
+                    <p className="text-xs text-muted-foreground">Estimated wait time</p>
+                    <p className="mt-1 text-xl font-semibold">{data.eta_minutes} min</p>
+                  </div>
+                ) : null}
+
+                {/* Cancel button below both columns centered */}
+                {!isTerminal ? (
+                  <div className="mt-8 flex justify-center">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" size="sm" className="text-foreground h-8 text-sm" disabled={cancelPending}>
+                          Remove me from the waitlist
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent showCloseButton={false}>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Cancel your reservation?</AlertDialogTitle>
+                        </AlertDialogHeader>
+                        <AlertDialogBody>
+                          <AlertDialogDescription>
+                            You&apos;ll be removed from the waitlist. You can rejoin if needed.
+                          </AlertDialogDescription>
+                        </AlertDialogBody>
+                        <AlertDialogFooter>
+                          <AlertDialogAction onClick={cancelReservation} disabled={cancelPending}>
+                            {cancelPending ? "Removing…" : "Remove me"}
+                          </AlertDialogAction>
+                          <AlertDialogCancel>Remain in the waitlist</AlertDialogCancel>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                    {cancelError ? <p className="mt-2 text-xs text-destructive text-center w-full">{cancelError}</p> : null}
                   </div>
                 ) : null}
               </div>
 
-              {/* Now serving */}
-              <div className="bg-card ring-1 ring-border rounded-xl p-6 text-center">
-                <div className="flex items-center justify-center gap-2 text-sm font-semibold">
-                  <span className="relative flex h-3 w-3">
-                    {isLive ? (
-                      <>
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                      </>
-                    ) : (
-                      <span className="relative inline-flex rounded-full h-3 w-3 bg-muted-foreground/40"></span>
-                    )}
-                  </span>
-                  <span className={isLive ? "text-foreground" : "text-muted-foreground"}>Now serving</span>
-                </div>
-                <div className="mt-2 text-4xl font-bold text-foreground">{typeof nowServing === 'number' ? nowServing : '-'}</div>
-                {typeof aheadCount === "number" ? (
-                  <div className="mt-2 text-sm text-muted-foreground">
-                    {aheadCount === 0 ? "No one ahead of you" : `${aheadCount} ${aheadCount === 1 ? "person" : "people"} ahead of you`}
-                  </div>
-                ) : null}
-              </div>
+              {/* Restaurant Section */}
+              {(business?.name || links.length || telHref || locationAddress) ? (
+                <div className="bg-muted/50 ring-1 ring-border rounded-xl p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-border bg-muted flex items-center justify-center">
+                      {business?.logo_url ? (
+                        <img src={business.logo_url} alt="Logo" className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="text-xs font-semibold text-muted-foreground">{initials}</span>
+                      )}
+                    </div>
 
-              {/* Links */}
-              {(links.length || telHref) ? (
-                <div className="flex flex-wrap justify-center gap-2">
-                  {links.map((l) => (
-                    <a
-                      key={l.key}
-                      href={l.url.trim()}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs bg-card text-card-foreground ring-1 ring-border rounded-full hover:bg-muted transition-colors"
-                    >
-                      <l.icon className="w-3.5 h-3.5" />
-                      {l.label}
-                    </a>
-                  ))}
-                  {telHref ? (
-                    <a
-                      href={telHref}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 text-xs bg-card text-card-foreground ring-1 ring-border rounded-full hover:bg-muted transition-colors"
-                    >
-                      <PhoneCall className="w-3.5 h-3.5" />
-                      {locationPhone}
+                    <div className="flex-1 min-w-0">
+                      {business?.name ? (
+                        <p className="text-sm font-semibold text-foreground">{business.name}</p>
+                      ) : null}
+                      {locationAddress || locationCity ? (
+                        <p className="text-xs text-muted-foreground truncate">
+                          {[locationAddress, locationCity].filter(Boolean).join(", ")}
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  {/* View Menu Button */}
+                  {business?.menu_url && business.menu_url.trim() ? (
+                    <a href={business.menu_url.trim()} target="_blank" rel="noopener noreferrer" className="block">
+                      <Button size="lg" className="w-full" variant="outline">
+                        <Utensils className="w-5 h-5 mr-2" />
+                        View Menu
+                      </Button>
                     </a>
                   ) : null}
-                </div>
-              ) : null}
 
-              {/* Cancel button */}
-              {!isTerminal ? (
-                <div className="flex flex-col items-center gap-2 pt-2">
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="sm" className="text-muted-foreground" disabled={cancelPending}>
-                        Remove me from the waitlist
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent showCloseButton={false}>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Cancel your reservation?</AlertDialogTitle>
-                      </AlertDialogHeader>
-                      <AlertDialogBody>
-                        <AlertDialogDescription>
-                          You&apos;ll be removed from the waitlist. You can rejoin if needed.
-                        </AlertDialogDescription>
-                      </AlertDialogBody>
-                      <AlertDialogFooter>
-                        <AlertDialogAction onClick={cancelReservation} disabled={cancelPending}>
-                          {cancelPending ? "Removing…" : "Remove me"}
-                        </AlertDialogAction>
-                        <AlertDialogCancel>Remain in the waitlist</AlertDialogCancel>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                  {cancelError ? <p className="text-xs text-destructive">{cancelError}</p> : null}
+                  {(links.length || telHref) ? (
+                    <div className="flex flex-wrap gap-2 mt-4">
+                      {links.map((l) => (
+                        <a
+                          key={l.key}
+                          href={l.url.trim()}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs bg-background text-foreground ring-1 ring-border rounded-full hover:bg-muted transition-colors"
+                        >
+                          <l.icon className="w-3.5 h-3.5" />
+                          {l.label}
+                        </a>
+                      ))}
+                      {telHref ? (
+                        <a
+                          href={telHref}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs bg-background text-foreground ring-1 ring-border rounded-full hover:bg-muted transition-colors"
+                        >
+                          <PhoneCall className="w-3.5 h-3.5" />
+                          {locationPhone}
+                        </a>
+                      ) : null}
+                    </div>
+                  ) : null}
                 </div>
               ) : null}
             </div>
           )}
 
           {/* Footer */}
-          <div className="mt-8 flex items-center justify-center gap-1">
+          <div className="mt-auto pt-8 flex items-center justify-center gap-1">
             <span className="text-xs font-medium text-muted-foreground">Powered by</span>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/waitq.svg" alt="WaitQ" className="h-4 w-auto logo-light" />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/waitq-variant.svg" alt="WaitQ" className="h-4 w-auto logo-dark" />
           </div>
         </div>
       </div>
-    </main>
+    </main >
   );
 }
-
-

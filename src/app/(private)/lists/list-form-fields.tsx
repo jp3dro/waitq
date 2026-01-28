@@ -92,10 +92,21 @@ export default function ListFormFields({
           <Input
             value={name}
             maxLength={MAX_LIST_NAME_LEN}
-            onChange={(e) => onNameChange(e.target.value.slice(0, MAX_LIST_NAME_LEN))}
+            onChange={(e) => {
+              // Use target.value directly, maxLength attribute handles truncation
+              onNameChange(e.target.value);
+            }}
+            onBlur={(e) => {
+              // Ensure value is trimmed on blur
+              const trimmed = e.target.value.slice(0, MAX_LIST_NAME_LEN);
+              if (trimmed !== name) {
+                onNameChange(trimmed);
+              }
+            }}
             placeholder="Enter list name"
             aria-invalid={nameError ? true : undefined}
             className={nameError ? "border-destructive focus-visible:ring-destructive" : undefined}
+            autoComplete="off"
           />
           <p className="text-xs text-muted-foreground tabular-nums">{remainingName} characters left</p>
           {nameError ? <p className="text-xs text-destructive">{nameError}</p> : null}

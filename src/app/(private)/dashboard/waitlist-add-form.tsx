@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { PhoneInput, type Country } from "@/components/ui/phone-input";
 import { toastManager } from "@/hooks/use-toast";
@@ -85,6 +85,7 @@ export default function AddForm({
     onPendingChange?.(isPending);
   }, [isPending, onPendingChange]);
 
+  const initialized = useRef(false);
   useEffect(() => {
     if (isPublic) {
       if (!publicConfig) {
@@ -93,7 +94,10 @@ export default function AddForm({
         return;
       }
       setWaitlists([publicConfig.waitlist]);
-      reset((v) => ({ ...v, waitlistId: publicConfig.waitlist.id }));
+      if (!initialized.current) {
+        reset((v) => ({ ...v, waitlistId: publicConfig.waitlist.id }));
+        initialized.current = true;
+      }
       setFetching(false);
       return;
     }
@@ -105,11 +109,16 @@ export default function AddForm({
       } catch {
         j = {};
       }
-      setWaitlists(j.waitlists || []);
-      if (defaultWaitlistId) {
-        reset((v) => ({ ...v, waitlistId: defaultWaitlistId }));
-      } else if ((j.waitlists || []).length > 0) {
-        reset((v) => ({ ...v, waitlistId: j.waitlists[0].id }));
+      const fetchedWaitlists = j.waitlists || [];
+      setWaitlists(fetchedWaitlists);
+
+      if (!initialized.current) {
+        if (defaultWaitlistId) {
+          reset((v) => ({ ...v, waitlistId: defaultWaitlistId }));
+        } else if (fetchedWaitlists.length > 0) {
+          reset((v) => ({ ...v, waitlistId: fetchedWaitlists[0].id }));
+        }
+        initialized.current = true;
       }
       setFetching(false);
     })();

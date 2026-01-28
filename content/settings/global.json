@@ -3,16 +3,44 @@
     "logo": "/waitq.svg",
     "siteName": "WaitQ",
     "navLinks": [
-      { "label": "Features", "href": "/features/virtual-waitlist" },
       { "label": "Pricing", "href": "/pricing" },
       { "label": "For Restaurants", "href": "/restaurant-waitlist-app" }
-    ]
+    ],
+    "featuresDropdown": {
+      "label": "Features",
+      "items": [
+        {
+          "title": "Self Check-in",
+          "description": "Let guests join the waitlist from a kiosk or their phones",
+          "href": "/features/self-check-in",
+          "icon": "QrCode"
+        },
+        {
+          "title": "Virtual Waitlist",
+          "description": "Real-time queue management with SMS notifications",
+          "href": "/features/virtual-waitlist",
+          "icon": "Users"
+        },
+        {
+          "title": "Virtual Waiting Room",
+          "description": "Public displays and status pages for guests",
+          "href": "/features/virtual-waiting-room",
+          "icon": "MonitorPlay"
+        },
+        {
+          "title": "Analytics",
+          "description": "Track waitlist performance and customer insights",
+          "href": "/features/analytics",
+          "icon": "BarChart3"
+        }
+      ]
+    }
   },
   "footer": {
     "copyright": "© 2026 WaitQ. All rights reserved.",
     "links": [
       { "label": "Terms", "href": "/terms" },
-      { "label": "Privacy", "href": "/privacy" },
+      { "label": "Privacy", "href": "/Privacy-Policy" },
       { "label": "Contact", "href": "/contact" }
     ],
     "social": [
@@ -21,9 +49,9 @@
     ]
   },
   "cta": {
-    "title": "Ready to transform your waitlist?",
-    "subtitle": "Join thousands of restaurants using WaitQ to improve guest experience.",
-    "buttonText": "Start free trial",
+    "title": "Smarter queue management starts here",
+    "subtitle": "Start your free trial today. No credit card required.",
+    "buttonText": "Try for Free",
     "buttonLink": "/signup"
   }
 }

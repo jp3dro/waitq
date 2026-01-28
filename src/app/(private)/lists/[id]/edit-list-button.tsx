@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   Dialog,
@@ -83,10 +83,11 @@ export default function EditListButton({
     }
   }, [displayEnabled, displayShowName, displayShowQr]);
 
-  // If parent controls open state, reset fields when opening
+  // When parent controlled open state transitions to true, reset fields
+  const prevControlledOpen = useRef<boolean | undefined>(undefined);
   useEffect(() => {
     if (typeof controlledOpen === 'boolean') {
-      if (controlledOpen) {
+      if (controlledOpen && !prevControlledOpen.current) {
         setName(initialName);
         setLocationId(initialLocationId || locations[0]?.id || "");
         setKioskEnabled(initialKioskEnabled);
@@ -100,6 +101,7 @@ export default function EditListButton({
         setAverageWaitMinutes(initialAverageWaitMinutes);
         setMessage(null);
       }
+      prevControlledOpen.current = controlledOpen;
     }
   }, [controlledOpen, initialName, initialLocationId, initialKioskEnabled, initialKioskQrEnabled, initialDisplayEnabled, initialDisplayShowName, initialDisplayShowQr, initialAskName, initialAskPhone, initialAskEmail, initialAverageWaitMinutes, locations]);
 

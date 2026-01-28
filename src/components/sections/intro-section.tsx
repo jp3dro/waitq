@@ -23,7 +23,7 @@ export function IntroSection({
 }: IntroSectionProps) {
   const imageContent = (
     <div className="relative">
-      <div className="aspect-[4/3] overflow-hidden">
+      <div className="aspect-[16/9] overflow-hidden">
         {image ? (
           <Image
             src={image}

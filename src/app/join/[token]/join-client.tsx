@@ -120,9 +120,6 @@ export default function JoinPage({ params }: { params: Promise<{ token: string }
               )}
             </div>
             <div className="flex flex-col">
-              {data.businessName ? (
-                <p className="text-sm font-medium text-muted-foreground leading-none mb-1">{data.businessName}</p>
-              ) : null}
               <h1 className="text-xl sm:text-2xl font-bold tracking-tight leading-none">{data.listName}</h1>
             </div>
           </div>

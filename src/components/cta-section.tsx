@@ -8,9 +8,27 @@ import { ContactModal } from "@/components/contact-modal";
 interface CTASectionProps {
   variant?: "default" | "compact" | "inline";
   className?: string;
+  // Global CTA props from TinaCMS
+  title?: string;
+  subtitle?: string;
+  primaryButtonText?: string;
+  primaryButtonLink?: string;
+  secondaryButtonText?: string;
+  secondaryButtonLink?: string;
+  trustMessage?: string;
 }
 
-export function CTASection({ variant = "default", className = "" }: CTASectionProps) {
+export function CTASection({ 
+  variant = "default", 
+  className = "",
+  title = "Smarter queue management starts here",
+  subtitle = "Start your free trial today. No credit card required.",
+  primaryButtonText = "Try for Free",
+  primaryButtonLink = "/signup",
+  secondaryButtonText,
+  secondaryButtonLink,
+  trustMessage,
+}: CTASectionProps) {
   if (variant === "compact") {
     return (
       <section
@@ -22,15 +40,15 @@ export function CTASection({ variant = "default", className = "" }: CTASectionPr
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex flex-col flex-1">
             <h3 className="text-xl sm:text-2xl font-bold tracking-tight">
-              Smarter queue management starts here
+              {title}
             </h3>
             <p className="mt-1 text-sm sm:text-base opacity-90">
-              Start your free trial today. No credit card required.
+              {subtitle}
             </p>
           </div>
           <div className="flex flex-col sm:flex-row justify-end md:self-center">
             <Button asChild size="sm" variant="secondary" className="h-10 px-4">
-              <Link href="/signup">Try for Free</Link>              
+              <Link href={primaryButtonLink}>{primaryButtonText}</Link>              
             </Button>
           </div>
         </div>
@@ -42,43 +60,57 @@ export function CTASection({ variant = "default", className = "" }: CTASectionPr
     return (
       <div className={`flex flex-col sm:flex-row items-center justify-between gap-4 p-6 bg-muted rounded-xl ${className}`}>
         <div className="flex-1">
-          <h3 className="text-xl font-bold">Smarter queue management starts here</h3>
+          <h3 className="text-xl font-bold">{title}</h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            Start your free trial today. No credit card required.
+            {subtitle}
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
           <Button asChild>
-            <Link href="/signup">
-              Try Free <ArrowRight className="ml-2 h-4 w-4" />
+            <Link href={primaryButtonLink}>
+              {primaryButtonText} <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
-          <ContactModal>
-            <Button variant="outline">Contact Sales</Button>
-          </ContactModal>
+          {secondaryButtonText && secondaryButtonLink ? (
+            <Button asChild variant="outline">
+              <Link href={secondaryButtonLink}>{secondaryButtonText}</Link>
+            </Button>
+          ) : (
+            <ContactModal>
+              <Button variant="outline">Contact Sales</Button>
+            </ContactModal>
+          )}
         </div>
       </div>
     );
   }
 
+  // Default variant - full width banner
   return (
-    <section className={`py-20 border-t bg-primary text-primary-foreground ${className}`}>
-      <div className="mx-auto max-w-4xl px-6 lg:px-8 text-center">
-        <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-          Smarter queue management starts here
-        </h2>
-        <p className="mt-4 text-lg opacity-90">
-          Start your free trial today. No credit card required.
-        </p>
-        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Button asChild size="lg" variant="secondary">
-            <Link href="/signup">Try Free</Link>
-          </Button>
-          <ContactModal>
-            <Button size="lg" variant="outline" className="border-primary-foreground/30 hover:bg-primary-foreground/10">
-              Contact Sales
+    <section className={`py-6 bg-primary text-primary-foreground ${className}`}>
+      <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <h3 className="text-xl sm:text-2xl font-bold tracking-tight">
+              {title}
+            </h3>
+            <p className="mt-1 text-sm opacity-90">
+              {subtitle}
+            </p>
+            {trustMessage && (
+              <p className="mt-2 text-xs opacity-70">{trustMessage}</p>
+            )}
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button asChild size="lg" variant="secondary">
+              <Link href={primaryButtonLink}>{primaryButtonText}</Link>
             </Button>
-          </ContactModal>
+            {secondaryButtonText && secondaryButtonLink && (
+              <Button asChild size="lg" variant="outline" className="border-primary-foreground/30 hover:bg-primary-foreground/10">
+                <Link href={secondaryButtonLink}>{secondaryButtonText}</Link>
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </section>

@@ -53,20 +53,23 @@ export async function GET(req: NextRequest) {
   let aheadCount: number | null = null;
   let business:
     | {
-        name: string | null;
-        logo_url: string | null;
-        accent_color?: string | null;
-        background_color?: string | null;
-        website_url?: string | null;
-        instagram_url?: string | null;
-        facebook_url?: string | null;
-        google_maps_url?: string | null;
-        menu_url?: string | null;
-      }
+      name: string | null;
+      logo_url: string | null;
+      accent_color?: string | null;
+      background_color?: string | null;
+      website_url?: string | null;
+      instagram_url?: string | null;
+      facebook_url?: string | null;
+      google_maps_url?: string | null;
+      menu_url?: string | null;
+    }
     | null = null;
   let displayToken: string | null = null;
   let waitlistName: string | null = null;
   let locationPhone: string | null = null;
+  let locationAddress: string | null = null;
+  let locationCity: string | null = null;
+  let locationName: string | null = null;
   if (entry?.waitlist_id) {
     const { data } = await admin
       .from("waitlist_entries")
@@ -105,11 +108,14 @@ export async function GET(req: NextRequest) {
     if (locationId) {
       const { data: loc } = await admin
         .from("business_locations")
-        .select("phone")
+        .select("name, phone, address, city")
         .eq("id", locationId)
         .maybeSingle();
       const p = (loc?.phone as string | null) || null;
+      locationName = (loc?.name as string | null) || null;
       locationPhone = p && p.trim().length ? p.trim() : null;
+      locationAddress = (loc?.address as string | null) || null;
+      locationCity = (loc?.city as string | null) || null;
     }
   }
 
@@ -133,7 +139,18 @@ export async function GET(req: NextRequest) {
     };
   }
 
-  return NextResponse.json({ entry, nowServing, aheadCount, business, displayToken, waitlistName, locationPhone });
+  // Fetch customer name from the entry (if available) for personalization
+  let customerName: string | null = null;
+  if (entry?.id) {
+    const { data: entryWithName } = await admin
+      .from("waitlist_entries")
+      .select("customer_name")
+      .eq("id", entry.id)
+      .maybeSingle();
+    customerName = (entryWithName?.customer_name as string | null) || null;
+  }
+
+  return NextResponse.json({ entry, nowServing, aheadCount, business, displayToken, waitlistName, locationPhone, locationAddress, locationCity, locationName, customerName });
 }
 
 

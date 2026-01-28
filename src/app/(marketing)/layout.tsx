@@ -1,11 +1,10 @@
 import Nav from "@/components/nav";
 import Link from "next/link";
 import Image from "next/image";
-import { CTASection } from "@/components/cta-section";
 import { ContactModal } from "@/components/contact-modal";
 import { Button } from "@/components/ui/button";
 
-export default function MarketingLayout({
+export default async function MarketingLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -17,14 +16,12 @@ export default function MarketingLayout({
       {/* Add top padding to account for fixed header */}
       <div className="flex-1 pt-20">
         {children}
-        <div className="mx-auto max-w-[1200px] px-6 lg:px-8 pb-8">
-          <CTASection variant="compact" />
-        </div>
       </div>
-      <footer className="border-t border-border bg-muted/30">
+      {/* CTA is now a per-page section component - add globalCta to page sections */}
+      <footer className="bg-muted">
         <div className="mx-auto max-w-[1200px] px-6 lg:px-8 py-16">
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-6 text-sm">
-            <div className="md:col-span-2">
+          <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-6 text-sm">
+            <div className="md:col-span-3">
               <Link href="/" className="flex items-center mb-4" aria-label="WaitQ home">
                 <Image src="/waitq.svg" alt="WaitQ" className="h-8 w-auto logo-light" width={108} height={32} />
                 <Image src="/waitq-variant.svg" alt="WaitQ" className="h-8 w-auto logo-dark" width={108} height={32} />
@@ -62,7 +59,7 @@ export default function MarketingLayout({
               <p className="font-semibold text-foreground mb-3">Legal & Account</p>
               <ul className="space-y-2 text-muted-foreground">
                 <li><Link href="/terms" className="hover:text-foreground transition">Terms of Service</Link></li>
-                <li><Link href="/terms#privacy" className="hover:text-foreground transition">Privacy Policy</Link></li>
+                <li><Link href="/Privacy-Policy" className="hover:text-foreground transition">Privacy Policy</Link></li>
                 <li><Link href="/login" className="hover:text-foreground transition">Log in</Link></li>
                 <li><Link href="/signup" className="hover:text-foreground transition">Sign up</Link></li>
               </ul>
@@ -73,5 +70,3 @@ export default function MarketingLayout({
     </div>
   );
 }
-
-

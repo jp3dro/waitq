@@ -10,13 +10,12 @@
   },
   "sections": [
     {
-      "_template": "introSection",
       "title": "Stop losing revenue to long waits and chaotic wait lines",
       "description": "WaitQ gives guests full control over their wait time and gives your front-of-house team a clear, real-time queue to keep things moving.",
-      "image": "/images/couple.jpg"
+      "image": "/images/couple.jpg",
+      "_template": "introSection"
     },
     {
-      "_template": "howItWorks",
       "title": "How WaitQ delivers a modern waiting experience",
       "items": [
         {
@@ -40,10 +39,10 @@
           "link": "/features/analytics",
           "linkText": "More about analytics"
         }
-      ]
+      ],
+      "_template": "howItWorks"
     },
     {
-      "_template": "twoColumnBenefits",
       "title": "Improve revenue, reviews, and repeat visits",
       "cards": [
         {
@@ -51,9 +50,15 @@
           "title": "Handle peak hours with ease",
           "image": "/images/bar friends.jpg",
           "bullets": [
-            { "text": "See who's waiting and who's next in a glance, and send \"table ready\" notifications with one tap" },
-            { "text": "Cut wait times with more efficient queue management" },
-            { "text": "No mistakes, crossed-out names, or constant \"how long?\" interruptions" }
+            {
+              "text": "See who's waiting and who's next in a glance, and send \"table ready\" notifications with one tap"
+            },
+            {
+              "text": "Cut wait times with more efficient queue management"
+            },
+            {
+              "text": "No mistakes, crossed-out names, or constant \"how long?\" interruptions"
+            }
           ]
         },
         {
@@ -61,15 +66,21 @@
           "title": "Better, consistent customer experience",
           "image": "/images/couple.jpg",
           "bullets": [
-            { "text": "Anyone can join the public digital waitlist from their phone or kiosk" },
-            { "text": "Replace crowded entrances with calm, accurate updates" },
-            { "text": "Customers get accurate wait times on public display or directly on their phones" }
+            {
+              "text": "Anyone can join the public digital waitlist from their phone or kiosk"
+            },
+            {
+              "text": "Replace crowded entrances with calm, accurate updates"
+            },
+            {
+              "text": "Customers get accurate wait times on public display or directly on their phones"
+            }
           ]
         }
-      ]
+      ],
+      "_template": "twoColumnBenefits"
     },
     {
-      "_template": "productShowcase",
       "title": "Modern, efficient waitlist management",
       "subtitle": "WaitQ is built for restaurants, but works for any busy customer-facing business.",
       "ctaText": "See how restaurants benefit from WaitQ",
@@ -90,10 +101,10 @@
           "description": "WaitQ is designed to be user-friendly and can be set up quickly with no training.",
           "image": "/images/friends.jpg"
         }
-      ]
+      ],
+      "_template": "productShowcase"
     },
     {
-      "_template": "bentoGrid",
       "title": "How we turn waiting time into a competitive advantage",
       "items": [
         {
@@ -121,10 +132,10 @@
           "description": "Track wait times, peak hours, and customer patterns to optimize operations.",
           "image": "/images/bar friends.jpg"
         }
-      ]
+      ],
+      "_template": "bentoGrid"
     },
     {
-      "_template": "faq",
       "title": "Frequently asked questions",
       "items": [
         {
@@ -159,17 +170,18 @@
           "question": "Is WaitQ easy to set up?",
           "answer": "Yes! WaitQ can be set up in under 5 minutes. Simply create an account, configure your waitlist settings, and you're ready to start managing your queue."
         }
-      ]
+      ],
+      "_template": "faq"
     },
     {
-      "_template": "globalCta",
       "title": "The smart way to manage walk-in customers",
       "subtitle": "Reduce wait times, improve customer satisfaction, and increase revenue by servicing more, happier clients.",
       "primaryButtonText": "Try WaitQ",
       "primaryButtonLink": "/signup",
       "secondaryButtonText": "See pricing",
       "secondaryButtonLink": "/pricing",
-      "trustMessage": "No credit card required • 2-minute setup • Cancel anytime"
+      "trustMessage": "No credit card required • 2-minute setup • Cancel anytime",
+      "_template": "globalCta"
     }
   ],
   "seo": {

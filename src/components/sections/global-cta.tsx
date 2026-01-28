@@ -28,7 +28,7 @@ export function GlobalCTA({
   trustMessage,
 }: GlobalCTAProps) {
   return (
-    <section className="pt-8 pb-4">
+    <section className="py-8">
       <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
         <div className="rounded-3xl bg-foreground text-background p-8 md:p-16 text-center">
           <h2 className="text-2xl md:text-4xl font-bold tracking-tight text-primary">

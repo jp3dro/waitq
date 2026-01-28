@@ -1,18 +1,11 @@
 "use client";
 
-import { Check, X } from "lucide-react";
-import Link from "next/link";
-import { Fragment } from "react";
-import { Button } from "@/components/ui/button";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { plans, pricingFeatures } from "@/lib/plans";
 import { useTina } from "tinacms/dist/react";
 import type { PricingQuery } from "../../../../tina/__generated__/types";
+import { PricingCards } from "@/components/sections/pricing-cards";
+import { FeatureComparison } from "@/components/sections/feature-comparison";
+import { SocialProof } from "@/components/sections/social-proof";
+import { FAQSection } from "@/components/sections/faq-section";
 
 interface PricingClientProps {
   query: string;
@@ -23,6 +16,38 @@ interface PricingClientProps {
 export function PricingClient(props: PricingClientProps) {
   const { data } = useTina(props);
   const page = data.pricing;
+
+  // Get sections from the new flexible sections array
+  const sections = (page as unknown as { sections?: Array<{
+    __typename?: string;
+    title?: string;
+    categories?: Array<{
+      name?: string;
+      features?: Array<{
+        name?: string;
+        free?: string;
+        base?: string;
+        premium?: string;
+      } | null> | null;
+    } | null> | null;
+    stats?: Array<{ value?: string; label?: string } | null> | null;
+    testimonial?: { quote?: string; author?: string; role?: string } | null;
+    items?: Array<{ question?: string; answer?: string } | null> | null;
+  }> }).sections || [];
+
+  // Get pricing cards from the new structure
+  const pricingCards = (page as unknown as { pricingCards?: { plans?: Array<{
+    planId?: string;
+    name?: string;
+    description?: string;
+    price?: string;
+    period?: string;
+    highlighted?: boolean;
+    highlightLabel?: string;
+    features?: Array<{ text?: string } | null> | null;
+    ctaText?: string;
+    ctaLink?: string;
+  } | null> | null } }).pricingCards;
 
   return (
     <main className="py-20">
@@ -36,257 +61,51 @@ export function PricingClient(props: PricingClientProps) {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-[1100px] mx-auto mb-20">
-          {/* Free Plan */}
-          <div className="rounded-2xl border border-border bg-card p-8">
-            <div>
-              <h3 className="text-2xl font-bold">{plans.free.name}</h3>
-              <p className="mt-2 text-muted-foreground">{plans.free.description}</p>
-            </div>
-            <div className="mt-6 flex items-baseline gap-2">
-              <span className="text-5xl font-bold">€0</span>
-              <span className="text-lg text-muted-foreground">/mo</span>
-            </div>
-            <ul className="mt-8 space-y-3">
-              <li className="flex items-start gap-3">
-                <Check className="h-5 w-5 shrink-0 text-green-600 mt-0.5" />
-                <span className="text-muted-foreground">{plans.free.limits.messagesPerMonth} SMS total</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <Check className="h-5 w-5 shrink-0 text-green-600 mt-0.5" />
-                <span className="text-muted-foreground">{plans.free.limits.locations} location</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <Check className="h-5 w-5 shrink-0 text-green-600 mt-0.5" />
-                <span className="text-muted-foreground">{plans.free.limits.users} user</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <Check className="h-5 w-5 shrink-0 text-green-600 mt-0.5" />
-                <span className="text-muted-foreground">Today analytics only</span>
-              </li>
-            </ul>
-            <Button asChild className="w-full mt-8" variant="outline" size="lg">
-              <Link href="/signup">Get started</Link>
-            </Button>
-          </div>
-
-          {/* Base Plan - Most Popular */}
-          <div className="rounded-2xl border-2 border-primary bg-card p-8 relative shadow-lg">
-            <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-              <span className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-medium">
-                Most Popular
-              </span>
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold">{plans.base.name}</h3>
-              <p className="mt-2 text-muted-foreground">{plans.base.description}</p>
-            </div>
-            <div className="mt-6 flex items-baseline gap-2">
-              <span className="text-5xl font-bold">€{plans.base.priceMonthlyEUR}</span>
-              <span className="text-lg text-muted-foreground">/mo</span>
-            </div>
-            <ul className="mt-8 space-y-3">
-              <li className="flex items-start gap-3">
-                <Check className="h-5 w-5 shrink-0 text-green-600 mt-0.5" />
-                <span className="text-muted-foreground">{plans.base.limits.messagesPerMonth} SMS / month</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <Check className="h-5 w-5 shrink-0 text-green-600 mt-0.5" />
-                <span className="text-muted-foreground">{plans.base.limits.locations} locations</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <Check className="h-5 w-5 shrink-0 text-green-600 mt-0.5" />
-                <span className="text-muted-foreground">{plans.base.limits.users} users</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <Check className="h-5 w-5 shrink-0 text-green-600 mt-0.5" />
-                <span className="text-muted-foreground">30-day analytics</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <Check className="h-5 w-5 shrink-0 text-green-600 mt-0.5" />
-                <span className="text-muted-foreground">Bidirectional SMS</span>
-              </li>
-            </ul>
-            <Button asChild className="w-full mt-8" size="lg">
-              <Link href="/signup">Get started</Link>
-            </Button>
-          </div>
-
-          {/* Premium Plan */}
-          <div className="rounded-2xl border border-border bg-card p-8">
-            <div>
-              <h3 className="text-2xl font-bold">{plans.premium.name}</h3>
-              <p className="mt-2 text-muted-foreground">{plans.premium.description}</p>
-            </div>
-            <div className="mt-6 flex items-baseline gap-2">
-              <span className="text-5xl font-bold">€{plans.premium.priceMonthlyEUR}</span>
-              <span className="text-lg text-muted-foreground">/mo</span>
-            </div>
-            <ul className="mt-8 space-y-3">
-              <li className="flex items-start gap-3">
-                <Check className="h-5 w-5 shrink-0 text-green-600 mt-0.5" />
-                <span className="text-muted-foreground">{plans.premium.limits.messagesPerMonth} SMS / month</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <Check className="h-5 w-5 shrink-0 text-green-600 mt-0.5" />
-                <span className="text-muted-foreground">{plans.premium.limits.locations} locations</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <Check className="h-5 w-5 shrink-0 text-green-600 mt-0.5" />
-                <span className="text-muted-foreground">{plans.premium.limits.users} users</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <Check className="h-5 w-5 shrink-0 text-green-600 mt-0.5" />
-                <span className="text-muted-foreground">30-day analytics</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <Check className="h-5 w-5 shrink-0 text-green-600 mt-0.5" />
-                <span className="text-muted-foreground">Priority support</span>
-              </li>
-            </ul>
-            <Button asChild className="w-full mt-8" variant="outline" size="lg">
-              <Link href="/signup">Get started</Link>
-            </Button>
-          </div>
-        </div>
+        {pricingCards?.plans && (
+          <PricingCards plans={pricingCards.plans} />
+        )}
       </div>
 
-      {/* Feature Comparison Table */}
-      <section className="py-12" id="features">
-        <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-          <h2 className="text-3xl font-bold tracking-tight text-center mb-10">
-            Compare all features
-          </h2>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-4 px-4 font-semibold">Feature</th>
-                  <th className="text-center py-4 px-4 font-semibold">Free</th>
-                  <th className="text-center py-4 px-4 font-semibold">Base</th>
-                  <th className="text-center py-4 px-4 font-semibold">Premium</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.entries(
-                  pricingFeatures.reduce((acc, feature) => {
-                    if (!acc[feature.category]) {
-                      acc[feature.category] = [];
-                    }
-                    acc[feature.category].push(feature);
-                    return acc;
-                  }, {} as Record<string, typeof pricingFeatures>)
-                ).map(([category, features]) => (
-                  <Fragment key={category}>
-                    <tr className="border-t">
-                      <td colSpan={4} className="py-4 px-4 font-semibold bg-muted/50">
-                        {category}
-                      </td>
-                    </tr>
-                    {features.map((feature) => (
-                      <tr key={`${category}:${feature.name}`} className="border-b border-border/50">
-                        <td className="py-3 px-4 text-sm">{feature.name}</td>
-                        <td className="py-3 px-4 text-center">
-                          {typeof feature.free === "boolean" ? (
-                            feature.free ? (
-                              <Check className="h-5 w-5 text-green-600 mx-auto" />
-                            ) : (
-                              <X className="h-5 w-5 text-muted-foreground/50 mx-auto" />
-                            )
-                          ) : (
-                            <span className="text-sm text-muted-foreground">{feature.free}</span>
-                          )}
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          {typeof feature.base === "boolean" ? (
-                            feature.base ? (
-                              <Check className="h-5 w-5 text-green-600 mx-auto" />
-                            ) : (
-                              <X className="h-5 w-5 text-muted-foreground/50 mx-auto" />
-                            )
-                          ) : (
-                            <span className="text-sm text-muted-foreground">{feature.base}</span>
-                          )}
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          {typeof feature.premium === "boolean" ? (
-                            feature.premium ? (
-                              <Check className="h-5 w-5 text-green-600 mx-auto" />
-                            ) : (
-                              <X className="h-5 w-5 text-muted-foreground/50 mx-auto" />
-                            )
-                          ) : (
-                            <span className="text-sm text-muted-foreground">{feature.premium}</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </Fragment>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
+      {/* Dynamic Sections */}
+      {sections.map((section, index) => {
+        if (!section) return null;
 
-      {/* Social Proof */}
-      <section className="py-20" id="social-proof">
-        <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold tracking-tight">{page.socialProof?.title}</h2>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            {page.socialProof?.stats?.map((stat, index) => (
-              <div key={index} className="text-center">
-                <p className="text-5xl font-bold">{stat?.value}</p>
-                <p className="mt-2 text-sm text-muted-foreground">{stat?.label}</p>
-              </div>
-            ))}
-          </div>
-          {page.socialProof?.testimonial && (
-            <div className="mt-16 max-w-3xl mx-auto">
-              <div className="bg-muted/50 rounded-xl p-8">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-primary/10 rounded-full flex-shrink-0" />
-                  <div>
-                    <p className="text-lg italic">
-                      &ldquo;{page.socialProof.testimonial.quote}&rdquo;
-                    </p>
-                    <p className="mt-3 text-sm font-medium">
-                      — {page.socialProof.testimonial.author}, {page.socialProof.testimonial.role}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </section>
+        switch (section.__typename) {
+          case "PricingSectionsFeatureComparison":
+            return (
+              <FeatureComparison
+                key={index}
+                title={section.title || ""}
+                categories={section.categories || []}
+              />
+            );
 
-      {/* FAQ */}
-      <section className="py-20">
-        <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-          <div className="mx-auto max-w-3xl">
-            <div className="rounded-3xl bg-muted/30 p-6 md:p-10">
-              <h2 className="text-3xl font-bold tracking-tight text-center mb-10">
-                {page.faq?.title}
-              </h2>
-              <Accordion type="single" collapsible className="w-full space-y-4">
-                {page.faq?.items?.map((item, index) => (
-                  <AccordionItem key={index} value={`item-${index}`} className="bg-background rounded-lg px-6 border-0">
-                    <AccordionTrigger className="text-left font-medium hover:no-underline">
-                      {item?.question}
-                    </AccordionTrigger>
-                    <AccordionContent className="text-sm text-muted-foreground">
-                      {item?.answer}
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            </div>
-          </div>
-        </div>
-      </section>
+          case "PricingSectionsSocialProof":
+            return (
+              <SocialProof
+                key={index}
+                title={section.title || ""}
+                stats={section.stats}
+                testimonial={section.testimonial}
+              />
+            );
+
+          case "PricingSectionsFaq":
+            return (
+              <FAQSection
+                key={index}
+                title={section.title || ""}
+                items={(section.items || []).map(item => ({
+                  question: item?.question || "",
+                  answer: item?.answer || "",
+                }))}
+              />
+            );
+
+          default:
+            return null;
+        }
+      })}
     </main>
   );
 }
