@@ -48,9 +48,9 @@ type WaitlistRow = {
   ask_email?: boolean | null;
   seating_preferences: string[] | null;
   business_locations:
-    | { id: string; name: string; regular_hours?: unknown; timezone?: string | null }
-    | { id: string; name: string; regular_hours?: unknown; timezone?: string | null }[]
-    | null;
+  | { id: string; name: string; regular_hours?: unknown; timezone?: string | null }
+  | { id: string; name: string; regular_hours?: unknown; timezone?: string | null }[]
+  | null;
 };
 
 export default async function ListDetailsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -170,8 +170,8 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
   })();
 
   return (
-    <main className="py-5">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-8">
+    <main className="py-5 w-full min-w-0">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-8 w-full min-w-0">
         <ToastOnQuery />
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -183,30 +183,30 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
               </Button>
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight truncate">{wl.name}</h1>
               <div className="flex items-center gap-2 flex-wrap">
-              {!locationIsOpen ? (
-                <Badge variant="secondary" className="gap-1 bg-destructive/10 text-destructive ring-1 ring-inset ring-destructive/30">
-                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-destructive"></span>
-                  Closed
-                </Badge>
-              ) : isOpen ? (
-                <HoverClickTooltip content={openHelp} side="bottom">
-                  <button type="button" className="inline-flex items-center" aria-label="What does Open mean?">
-                    <Badge
-                      variant="secondary"
-                      className="gap-1 bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-200 dark:ring-emerald-800 cursor-help"
-                    >
-                      <span className="relative flex h-2.5 w-2.5">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                      </span>
-                      Open
-                    </Badge>
-                  </button>
-                </HoverClickTooltip>
-              ) : null}
+                {!locationIsOpen ? (
+                  <Badge variant="secondary" className="gap-1 bg-destructive/10 text-destructive ring-1 ring-inset ring-destructive/30">
+                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-destructive"></span>
+                    Closed
+                  </Badge>
+                ) : isOpen ? (
+                  <HoverClickTooltip content={openHelp} side="bottom">
+                    <button type="button" className="inline-flex items-center" aria-label="What does Open mean?">
+                      <Badge
+                        variant="secondary"
+                        className="gap-1 bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-200 dark:ring-emerald-800 cursor-help"
+                      >
+                        <span className="relative flex h-2.5 w-2.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                        </span>
+                        Open
+                      </Badge>
+                    </button>
+                  </HoverClickTooltip>
+                ) : null}
               </div>
             </div>
-            
+
           </div>
         </div>
 

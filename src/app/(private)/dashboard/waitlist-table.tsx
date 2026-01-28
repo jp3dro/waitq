@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { differenceInMinutes } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import { toastManager } from "@/hooks/use-toast";
-import { RefreshCw, Archive, Pencil, Trash2, MoreHorizontal, Copy, Clock, User, MessageSquare, Crown } from "lucide-react";
+import { RefreshCw, Archive, Pencil, Trash2, MoreHorizontal, Copy, Clock, User, MessageSquare, Crown, Check, X } from "lucide-react";
 import { Stepper } from "@/components/ui/stepper";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,7 @@ import { HoverClickTooltip } from "@/components/ui/hover-click-tooltip";
 type Entry = {
   id: string;
   customer_name: string | null;
+  email: string | null;
   phone: string;
   visits_count?: number | null;
   is_returning?: boolean | null;
@@ -78,17 +79,20 @@ const getWaitTime = (date: string) => {
   return `${minutes}m`;
 };
 
+const None = () => <span className="text-sm text-gray-400">None</span>;
+
 export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: string }) {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyIds, setBusyIds] = useState<Set<string>>(new Set());
-  const [waitlists, setWaitlists] = useState<{ id: string; name: string; display_token?: string; list_type?: string; seating_preferences?: string[]; ask_name?: boolean; ask_phone?: boolean }[]>([]);
+  const [waitlists, setWaitlists] = useState<{ id: string; name: string; display_token?: string; list_type?: string; seating_preferences?: string[]; ask_name?: boolean; ask_phone?: boolean; ask_email?: boolean }[]>([]);
   const [waitlistId, setWaitlistId] = useState<string | null>(fixedWaitlistId ?? null);
   const supabase = createClient();
   const refreshTimer = useRef<number | null>(null);
   const currentList = waitlists.find(w => w.id === waitlistId);
   const showName = currentList?.ask_name !== false;
   const showPhone = currentList?.ask_phone !== false;
+  const showEmail = currentList?.ask_email === true;
   const timeFormat = useTimeFormat();
   const prevIdsRef = useRef<Set<string>>(new Set());
   const [highlightIds, setHighlightIds] = useState<Set<string>>(new Set());
@@ -98,6 +102,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
   const [editForm, setEditForm] = useState({
     customerName: "",
     phone: "",
+    email: "",
     partySize: "",
     seatingPreference: ""
   });
@@ -354,6 +359,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
       setEditForm({
         customerName: entry.customer_name || "",
         phone: entry.phone || "",
+        email: entry.email || "",
         partySize: entry.party_size?.toString() || "",
         seatingPreference: entry.seating_preference || ""
       });
@@ -373,6 +379,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
     // Handle empty strings as null for database
     payload.customer_name = editForm.customerName.trim() || null;
     payload.phone = editForm.phone.trim() || null;
+    payload.email = editForm.email.trim() || null;
     payload.party_size = editForm.partySize ? parseInt(editForm.partySize, 10) : null;
     payload.seating_preference = editForm.seatingPreference.trim() || null;
 
@@ -380,6 +387,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
     updateEntryOptimistic(id, {
       customer_name: payload.customer_name,
       phone: payload.phone || "",
+      email: payload.email || null,
       party_size: payload.party_size,
       seating_preference: payload.seating_preference,
     } as any);
@@ -480,7 +488,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
         });
         if (res.ok) {
           toastManager.add({
-            title: "Checked in",
+            title: "Checked-in",
             description: "Customer marked as served",
             type: "success",
           });
@@ -588,13 +596,13 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
             {entries.map((e) => {
               const number = e.ticket_number ?? e.queue_position ?? null;
               return (
-                <li key={e.id} className={highlightIds.has(e.id) ? "row-flash" : ""}>
+                <li key={e.id} className={`${highlightIds.has(e.id) ? "row-flash" : ""} cursor-pointer hover:bg-muted/50 transition-colors`} onClick={() => edit(e.id)}>
                   <div className="p-4 space-y-3">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <Badge variant="secondary" className="text-xs">
-                            #{number ?? "—"}
+                            #{number ?? <None />}
                           </Badge>
                           <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                             <Clock className="h-3.5 w-3.5" />
@@ -605,7 +613,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                         {showName ? (
                           <div className="mt-2 text-sm font-medium truncate">
                             <span className="inline-flex items-center gap-2 min-w-0">
-                              <span className="truncate">{e.customer_name ?? "—"}</span>
+                              <span className="truncate">{e.customer_name ?? <None />}</span>
                               {e.is_returning ? (
                                 <HoverClickTooltip content={loyaltyTooltip(e)} side="bottom" align="start">
                                   <button
@@ -621,70 +629,48 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                             </span>
                           </div>
                         ) : null}
-                        {showPhone ? (
-                          <div className="mt-0.5 text-sm text-muted-foreground truncate">
-                            {e.phone}
-                          </div>
-                        ) : null}
                       </div>
 
-                      <div className="shrink-0 inline-flex items-center gap-2">
-                        <Button
-                          onClick={() => copyPersonalUrl(e.token)}
-                          variant="outline"
-                          size="icon"
-                          title="Copy personal page URL"
-                          aria-label="Copy personal page URL"
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" aria-label="Open menu">
-                              <MoreHorizontal className="h-4 w-4" />
+                      <div className="shrink-0">
+                        {e.status === 'waiting' && (
+                          <Button
+                            disabled={isBusy(e.id)}
+                            onClick={(event) => { event.stopPropagation(); call(e.id); }}
+                            size="sm"
+                          >
+                            Call
+                          </Button>
+                        )}
+                        {e.status === 'notified' && (
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="icon"
+                              className="h-9 w-9 bg-emerald-600 hover:bg-emerald-700 text-white border-0 shadow-sm"
+                              disabled={isBusy(e.id)}
+                              onClick={(event) => { event.stopPropagation(); checkIn(e.id); }}
+                            >
+                              <Check className="h-5 w-5" />
                             </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            {renderRowMenuItems(e)}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                            <Button
+                              size="icon"
+                              variant="destructive"
+                              className="h-9 w-9 shadow-sm border-0"
+                              disabled={isBusy(e.id)}
+                              onClick={(event) => { event.stopPropagation(); noShow(e.id); }}
+                            >
+                              <X className="h-5 w-5" />
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     </div>
 
                     <div className="flex items-center gap-3 flex-wrap">
                       <div className="inline-flex items-center gap-1.5 text-sm">
                         <User className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span>{typeof e.party_size === "number" ? e.party_size : "—"}</span>
+                        <span>{typeof e.party_size === "number" ? e.party_size : <None />}</span>
                       </div>
-                      {e.seating_preference ? <SeatingPreferenceBadge>{e.seating_preference}</SeatingPreferenceBadge> : null}
-                      {showPhone ? (
-                        <div className="text-xs">
-                          {getNotificationDisplay(e.send_sms, e.send_whatsapp, e.sms_status, e.whatsapp_status)}
-                        </div>
-                      ) : null}
-                    </div>
-
-                    <div className="grid gap-2">
-                      {e.status === "waiting" ? (
-                        <Button disabled={isBusy(e.id)} onClick={() => call(e.id)} size="sm" className="w-full">
-                          Call
-                        </Button>
-                      ) : null}
-                      {e.status === "notified" ? (
-                        <div className="grid grid-cols-2 gap-2">
-                          <Button
-                            disabled={isBusy(e.id)}
-                            onClick={() => checkIn(e.id)}
-                            size="sm"
-                            className="bg-emerald-500 text-black hover:bg-emerald-500/90"
-                          >
-                            Check-in
-                          </Button>
-                          <Button disabled={isBusy(e.id)} onClick={() => noShow(e.id)} size="sm" variant="destructive">
-                            No show
-                          </Button>
-                        </div>
-                      ) : null}
+                      {e.seating_preference ? <SeatingPreferenceBadge>{e.seating_preference}</SeatingPreferenceBadge> : <span className="text-xs ml-1"><None /></span>}
                     </div>
                   </div>
                 </li>
@@ -694,59 +680,97 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
         </div>
 
         {/* Desktop (md+): table */}
-        <div className="hidden md:block overflow-x-auto max-w-full">
-          <table className="w-full text-sm min-w-0">
+        <div className="hidden md:block overflow-x-auto w-full min-w-0">
+          <table className="w-full text-sm table-fixed border-separate border-spacing-0">
+            <colgroup>
+              <col className="w-[80px]" />{/* Number */}
+              <col className="w-[100px]" />{/* Actions */}
+              <col className="w-[60px]" />{/* Party */}
+              <col className="w-[150px]" />{/* Preference */}
+              <col className="w-auto" />{/* Name */}
+              <col className="w-[120px]" />{/* Wait time */}
+              {showPhone && <col className="w-[80px]" />}{/* Alerts */}
+            </colgroup>
             <thead className="bg-muted sticky top-0 z-10">
               <tr>
+                <th className="text-left font-medium text-foreground px-4 py-2">Number</th>
                 <th className="text-left font-medium text-foreground px-4 py-2">Actions</th>
-                <th className="text-left font-medium text-foreground px-4 py-2">#</th>
-                {showName && <th className="text-left font-medium text-foreground px-4 py-2">Name</th>}
-                {showPhone && <th className="text-left font-medium text-foreground px-4 py-2">Phone</th>}
-                <th className="text-left font-medium text-foreground px-4 py-2">Party</th>
+                <th className="text-left font-medium text-foreground px-4 py-2 text-left">Party</th>
                 <th className="text-left font-medium text-foreground px-4 py-2">Preference</th>
-                {showPhone && <th className="text-left font-medium text-foreground px-4 py-2">Alerts</th>}
+                {showName && <th className="text-left font-medium text-foreground px-4 py-2">Name</th>}
                 <th className="text-left font-medium text-foreground px-4 py-2">Wait time</th>
-                <th className="text-left font-medium text-foreground px-4 py-2"></th>
+                {showPhone && <th className="text-left font-medium text-foreground px-4 py-2">Alerts</th>}
               </tr>
             </thead>
             <tbody>
               {entries.map((e) => (
-                <tr key={e.id} className={`border-t border-border hover:bg-muted odd:bg-muted/50 ${highlightIds.has(e.id) ? "row-flash" : ""}`}>
+                <tr
+                  key={e.id}
+                  className={`border-t border-border hover:bg-muted odd:bg-muted/50 cursor-pointer transition-colors ${highlightIds.has(e.id) ? "row-flash" : ""}`}
+                  onClick={() => edit(e.id)}
+                >
+                  <td className="px-4 py-2 font-bold text-xl">{e.ticket_number ?? e.queue_position ?? <None />}</td>
                   <td className="px-4 py-2">
                     {e.status === 'waiting' && (
-                      <Button disabled={isBusy(e.id)} onClick={() => call(e.id)} size="sm">
+                      <Button
+                        disabled={isBusy(e.id)}
+                        onClick={(event) => { event.stopPropagation(); call(e.id); }}
+                        size="sm"
+                        className="h-8"
+                      >
                         Call
                       </Button>
                     )}
                     {e.status === 'notified' && (
                       <div className="flex items-center gap-2">
                         <Button
+                          size="icon"
+                          className="h-8 w-8 bg-emerald-600 hover:bg-emerald-700 text-white border-0 shadow-sm"
                           disabled={isBusy(e.id)}
-                          onClick={() => checkIn(e.id)}
-                          size="sm"
-                          className="bg-emerald-500 text-black hover:bg-emerald-500/90"
+                          onClick={(event) => { event.stopPropagation(); checkIn(e.id); }}
+                          title="Check-in"
                         >
-                          Check-in
+                          <Check className="h-4 w-4" />
                         </Button>
-                        <Button disabled={isBusy(e.id)} onClick={() => noShow(e.id)} size="sm" variant="destructive">
-                          No show
+                        <Button
+                          size="icon"
+                          variant="destructive"
+                          className="h-8 w-8 shadow-sm border-0"
+                          disabled={isBusy(e.id)}
+                          onClick={(event) => { event.stopPropagation(); noShow(e.id); }}
+                          title="No show"
+                        >
+                          <X className="h-4 w-4" />
                         </Button>
                       </div>
                     )}
                   </td>
-                  <td className="px-4 py-2">{e.ticket_number ?? e.queue_position ?? "-"}</td>
+                  <td className="px-4 py-2">
+                    <div className="flex items-center align-left gap-1.5 min-w-0">
+                      <User className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <span className="truncate">{typeof e.party_size === 'number' ? e.party_size : <None />}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-2 truncate">
+                    {e.seating_preference ? (
+                      <SeatingPreferenceBadge className="max-w-full">
+                        <span className="truncate">{e.seating_preference}</span>
+                      </SeatingPreferenceBadge>
+                    ) : <None />}
+                  </td>
                   {showName && (
-                    <td className="px-4 py-2">
-                      <div className="flex flex-col">
-                        <div className="flex items-center gap-2">
-                          <span>{e.customer_name ?? "—"}</span>
+                    <td className="px-4 py-2 min-w-0">
+                      <div className="flex flex-col min-w-0">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="truncate">{e.customer_name ?? <None />}</span>
                           {e.is_returning ? (
                             <HoverClickTooltip content={loyaltyTooltip(e)} side="bottom" align="start">
                               <button
                                 type="button"
-                                className="inline-flex items-center"
+                                className="inline-flex items-center shrink-0"
                                 aria-label="Loyalty user"
                                 title="Loyalty user"
+                                onClick={(ev) => ev.stopPropagation()}
                               >
                                 <Crown className="h-4 w-4 text-orange-500" />
                               </button>
@@ -756,26 +780,11 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                       </div>
                     </td>
                   )}
-                  {showPhone && <td className="px-4 py-2">{e.phone}</td>}
-                  <td className="px-4 py-2">
-                    <div className="flex items-center gap-1.5">
-                      <User className="h-3.5 w-3.5 text-muted-foreground" />
-                      <span>{typeof e.party_size === 'number' ? e.party_size : "—"}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-2">
-                    {e.seating_preference ? <SeatingPreferenceBadge>{e.seating_preference}</SeatingPreferenceBadge> : "—"}
-                  </td>
-                  {showPhone && (
-                    <td className="px-4 py-2">
-                      <span className="text-xs">{getNotificationDisplay(e.send_sms, e.send_whatsapp, e.sms_status, e.whatsapp_status)}</span>
-                    </td>
-                  )}
                   <td className="px-4 py-2">
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <button type="button" className="flex items-center gap-1.5 w-fit cursor-default">
+                          <button type="button" className="flex items-center gap-1.5 w-fit cursor-default" onClick={(ev) => ev.stopPropagation()}>
                             <Clock className="h-3.5 w-3.5 text-muted-foreground" />
                             <span>{getWaitTime(e.created_at)}</span>
                           </button>
@@ -786,30 +795,11 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                       </Tooltip>
                     </TooltipProvider>
                   </td>
-                  <td className="px-4 py-2 text-right">
-                    <div className="inline-flex items-center gap-2">
-                      <Button
-                        onClick={() => copyPersonalUrl(e.token)}
-                        variant="outline"
-                        size="icon"
-                        title="Copy personal page URL"
-                        aria-label="Copy personal page URL"
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
-
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" aria-label="Open menu">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          {renderRowMenuItems(e)}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </td>
+                  {showPhone && (
+                    <td className="px-4 py-2">
+                      <span className="text-xs">{getNotificationDisplay(e.send_sms, e.send_whatsapp, e.sms_status, e.whatsapp_status)}</span>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -873,86 +863,160 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
   return (
     <>
       {renderContent()}
+
       {/* Edit entry */}
       <Dialog open={!!editingId} onOpenChange={(v) => (!v ? setEditingId(null) : undefined)}>
         <DialogContent className="sm:max-w-2xl p-0 overflow-hidden">
-          <div className="flex max-h-[90vh] flex-col">
-            <div className="min-h-12 h-12 shrink-0 border-b border-border px-6 flex items-center">
-              <DialogHeader>
-                <DialogTitle className="truncate">Edit entry</DialogTitle>
-              </DialogHeader>
-            </div>
-
-            <div className="flex-1 overflow-y-auto px-6 py-4">
-              <form className="grid gap-4">
-                {showName && (
-                  <div className="grid gap-2">
-                    <Label>Customer name</Label>
-                    <Input
-                      type="text"
-                      value={editForm.customerName}
-                      onChange={(e) => setEditForm(prev => ({ ...prev, customerName: e.target.value }))}
-                      placeholder="Full name"
-                    />
-                  </div>
-                )}
-
-                <div className="flex gap-6">
-                  <div className="flex-none grid gap-2">
-                    <label className="text-sm font-medium">Number of people</label>
-                    <Stepper
-                      value={editForm.partySize ? parseInt(editForm.partySize, 10) : undefined}
-                      onChange={(value) => setEditForm(prev => ({ ...prev, partySize: value?.toString() || "" }))}
-                      min={1}
-                      max={30}
-                    />
-                  </div>
-                  {showPhone && (
-                    <div className="flex-1 grid gap-2">
-                      <Label>Phone</Label>
-                      <PhoneInput
-                        defaultCountry="PT"
-                        value={editForm.phone}
-                        onChange={(value) => setEditForm(prev => ({ ...prev, phone: value }))}
-                      />
-                    </div>
-                  )}
+          {(() => {
+            const entry = entries.find(e => e.id === editingId);
+            if (!entry) return null;
+            const number = entry.ticket_number ?? entry.queue_position ?? null;
+            return (
+              <div className="flex max-h-[90vh] flex-col">
+                <div className="min-h-12 h-12 shrink-0 border-b border-border px-6 flex items-center bg-card">
+                  <DialogHeader>
+                    <DialogTitle className="truncate">Visit Details</DialogTitle>
+                  </DialogHeader>
                 </div>
 
-                {(waitlists.find(w => w.id === waitlistId)?.seating_preferences || []).length > 0 && (
-                  <div className="grid gap-2">
-                    <Label>Seating preference</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {(waitlists.find(w => w.id === waitlistId)?.seating_preferences || []).map((s) => {
-                        const selected = editForm.seatingPreference === s;
-                        return (
-                          <button
-                            type="button"
-                            key={s}
-                            onClick={() => setEditForm(prev => ({ ...prev, seatingPreference: s }))}
-                            className={`inline-flex items-center rounded-full px-3 h-8 text-sm ring-1 ring-inset transition ${selected ? "bg-primary text-primary-foreground ring-primary" : "bg-card text-foreground ring-border hover:bg-muted"}`}
+                <div className="flex-1 overflow-y-auto px-6 py-4">
+                  {/* Top Read-only Summary */}
+                  <div className="bg-muted p-2 rounded-lg border border-border space-y-2 mb-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <Badge variant="secondary" className="text-xl py-4 px-3 font-bold border border-border bg-background">
+                          {number ?? <None />}
+                        </Badge>
+                        <div className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                          <Clock className="h-4 w-4" />
+                          <span>Waiting for {getWaitTime(entry.created_at)}</span>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="icon" onClick={() => copyPersonalUrl(entry.token)} title="Copy URL">
+                        <Copy className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+                    </div>
+
+                    <div className="flex gap-2">
+                      {entry.status === 'waiting' && (
+                        <Button className="flex-1" disabled={isBusy(entry.id)} onClick={() => call(entry.id)}>Call Customer</Button>
+                      )}
+                      {entry.status === 'notified' && (
+                        <>
+                          <Button
+                            className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white border-transparent"
+                            disabled={isBusy(entry.id)}
+                            onClick={() => checkIn(entry.id)}
                           >
-                            {s}
-                          </button>
-                        );
-                      })}
+                            <Check className="h-4 w-4 mr-2" />
+                            Check-in
+                          </Button>
+                          <Button
+                            className="flex-1"
+                            variant="destructive"
+                            disabled={isBusy(entry.id)}
+                            onClick={() => noShow(entry.id)}
+                          >
+                            <X className="h-4 w-4 mr-2" />
+                            No Show
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </div>
-                )}
-              </form>
-            </div>
 
-            <div className="sticky bottom-0 min-h-12 h-12 shrink-0 border-t border-border bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center">
-              <div className="ml-auto flex items-center gap-2">
-                <Button type="button" variant="outline" onClick={() => setEditingId(null)}>
-                  Cancel
-                </Button>
-                <Button type="button" disabled={isBusy(editingId)} onClick={saveEdit}>
-                  {isBusy(editingId) ? "Saving…" : "Save changes"}
-                </Button>
+                  <form className="grid gap-4">
+                    {showName && (
+                      <div className="grid gap-2">
+                        <Label>Customer name</Label>
+                        <Input
+                          type="text"
+                          value={editForm.customerName}
+                          onChange={(e) => setEditForm(prev => ({ ...prev, customerName: e.target.value }))}
+                          placeholder="Full name"
+                        />
+                      </div>
+                    )}
+
+                    <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+                      <div className="flex-none grid gap-2">
+                        <Label>Number of people</Label>
+                        <Stepper
+                          value={editForm.partySize ? parseInt(editForm.partySize, 10) : undefined}
+                          onChange={(value) => setEditForm(prev => ({ ...prev, partySize: value?.toString() || "" }))}
+                          min={1}
+                          max={30}
+                        />
+                      </div>
+                      {showPhone && (
+                        <div className="flex-1 grid gap-2">
+                          <Label>Phone (optional)</Label>
+                          <PhoneInput
+                            defaultCountry="PT"
+                            value={editForm.phone}
+                            onChange={(value) => setEditForm(prev => ({ ...prev, phone: value }))}
+                          />
+                        </div>
+                      )}
+                      {showEmail && !showPhone && <div className="flex-1" />}
+                    </div>
+
+                    {showEmail && (
+                      <div className="grid gap-2">
+                        <Label>Email (optional)</Label>
+                        <Input
+                          type="email"
+                          value={editForm.email}
+                          onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))}
+                          placeholder="email@example.com"
+                        />
+                      </div>
+                    )}
+
+                    {(waitlists.find(w => w.id === waitlistId)?.seating_preferences || []).length > 0 && (
+                      <div className="grid gap-2">
+                        <Label>Seating preference</Label>
+                        <div className="flex flex-wrap gap-2">
+                          {(waitlists.find(w => w.id === waitlistId)?.seating_preferences || []).map((s) => {
+                            const selected = editForm.seatingPreference === s;
+                            return (
+                              <button
+                                type="button"
+                                key={s}
+                                onClick={() => setEditForm(prev => ({ ...prev, seatingPreference: s }))}
+                                className={`inline-flex items-center rounded-full px-3 h-8 text-sm ring-1 ring-inset transition ${selected ? "bg-primary text-primary-foreground ring-primary" : "bg-card text-foreground ring-border hover:bg-muted"}`}
+                              >
+                                {s}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </form>
+                </div>
+
+                <div className="sticky bottom-0 min-h-12 h-12 shrink-0 border-t border-border bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center justify-between">
+                  <Button
+                    variant="ghost"
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10 -ml-2"
+                    onClick={() => { remove(entry.id); setEditingId(null); }}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button type="button" variant="outline" onClick={() => setEditingId(null)}>
+                      Cancel
+                    </Button>
+                    <Button type="button" disabled={isBusy(editingId)} onClick={saveEdit}>
+                      {isBusy(editingId) ? "Saving…" : "Save changes"}
+                    </Button>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </>
