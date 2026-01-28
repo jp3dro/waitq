@@ -24,7 +24,6 @@ import {
   Heart,
   Minus,
 } from "lucide-react";
-import { ContactButton } from "@/components/contact-button";
 import { useTina } from "tinacms/dist/react";
 import type { 
   FeatureQuery,
@@ -38,7 +37,7 @@ import { StatsRow } from "@/components/sections/stats-row";
 import { FAQSection } from "@/components/sections/faq-section";
 import { ArrowLink } from "@/components/sections/arrow-link";
 import { GlobalCTA } from "@/components/sections/global-cta";
-import { IntroSection } from "@/components/sections/intro-section";
+import { TwoColumnBenefits } from "@/components/sections/two-column-benefits";
 
 // Icon mapping for dynamic icons
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -84,7 +83,7 @@ export function FeaturePageClient(props: FeaturePageClientProps) {
         <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
+              <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
                 {page.hero?.title}
               </h1>
               <p className="mt-6 text-lg text-muted-foreground">
@@ -94,18 +93,15 @@ export function FeaturePageClient(props: FeaturePageClientProps) {
                 <Button asChild size="lg">
                   <Link href={page.hero?.primaryCtaLink || "/signup"}>{page.hero?.primaryCta}</Link>
                 </Button>
-                {page.hero?.secondaryCta && (
-                  <ContactButton>{page.hero.secondaryCta}</ContactButton>
-                )}
               </div>
             </div>
             <div className="relative">
-              <div className="aspect-[4/3] bg-muted rounded-2xl shadow-2xl overflow-hidden flex items-center justify-center">
+              <div className="aspect-[16/9] overflow-hidden flex items-center justify-center">
                 {page.hero?.heroImage ? (
-                  <Image src={page.hero.heroImage} alt="" fill className="object-cover" />
+                  <Image src={page.hero.heroImage} alt="" fill className="object-cover rounded-2xl" />
                 ) : (
                   <div className="flex items-center justify-center h-full">
-                    <ImageIcon className="w-24 h-24 text-muted-foreground/20" />
+                    <ImageIcon className="w-24 h-24 text-muted-foreground" />
                   </div>
                 )}
               </div>
@@ -156,12 +152,18 @@ export function FeaturePageClient(props: FeaturePageClientProps) {
                         </p>
                         {section.bullets && section.bullets.length > 0 && (
                           <ul className="mt-8 space-y-4">
-                            {section.bullets.map((bullet, bulletIndex) => (
-                              <li key={bulletIndex} className="flex items-start gap-3">
-                                <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                                <span className="text-muted-foreground">{bullet?.text}</span>
-                              </li>
-                            ))}
+                            {section.bullets.map((bullet, bulletIndex) => {
+                              const bulletWithIcon = bullet as { text?: string; icon?: string } | null;
+                              const BulletIcon = bulletWithIcon?.icon ? getIcon(bulletWithIcon.icon) : Check;
+                              return (
+                                <li key={bulletIndex} className="flex items-start gap-3">
+                                  <span className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                    <BulletIcon className="w-4 h-4 text-primary" />
+                                  </span>
+                                  <span className="text-muted-foreground mt-1">{bulletWithIcon?.text}</span>
+                                </li>
+                              );
+                            })}
                           </ul>
                         )}
                       </div>
@@ -191,43 +193,47 @@ export function FeaturePageClient(props: FeaturePageClientProps) {
             return (
               <section key={index} className="py-16">
                 <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-                  <div className="text-center mb-12">
+                  <div className="mb-8">
                     <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
                       {section.title}
                     </h2>
                     {section.subtitle && (
-                      <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
+                      <p className="mt-4 text-lg text-muted-foreground">
                         {section.subtitle}
                       </p>
                     )}
                   </div>
-                  
+
                   <div className="grid md:grid-cols-3 gap-8">
                     {section.steps?.map((step, stepIndex) => {
                       const stepWithImage = step as FeatureSectionsHowItWorksSteps & { image?: string };
                       return (
-                        <div key={stepIndex}>
-                          <div className="aspect-[4/3] bg-muted rounded-xl shadow-lg overflow-hidden mb-6">
+                        <div key={stepIndex} className="flex flex-col">
+                          {/* Image first */}
+                          <div className="aspect-[4/3] bg-muted rounded-md overflow-hidden mb-4 shadow-sm">
                             {stepWithImage?.image ? (
-                              <Image 
-                                src={stepWithImage.image} 
-                                alt={step?.title || ""} 
+                              <Image
+                                src={stepWithImage.image}
+                                alt={step?.title || ""}
                                 width={400}
                                 height={300}
-                                className="w-full h-full object-cover" 
+                                className="w-full h-full object-cover"
                               />
                             ) : (
-                              <div className="flex items-center justify-center h-full">
-                                <ImageIcon className="w-20 h-20 text-muted-foreground/20" />
+                              <div className="flex items-center justify-center h-full bg-gradient-to-br from-muted to-muted/50">
+                                <ImageIcon className="w-16 h-16 text-muted-foreground/30" />
                               </div>
                             )}
                           </div>
-                          <h3 className="text-xl font-semibold mb-2">{step?.title}</h3>
-                          <p className="text-sm text-muted-foreground mb-3">
+                          {/* Title */}
+                          <h3 className="font-semibold text-lg mb-4">{step?.title}</h3>
+                          {/* Description */}
+                          <p className="text-md text-muted-foreground mb-4">
                             {step?.description}
                           </p>
+                          {/* Link */}
                           {step?.link && step?.linkText && (
-                            <ArrowLink href={step.link}>
+                            <ArrowLink href={step.link} className="mt-auto">
                               {step.linkText}
                             </ArrowLink>
                           )}
@@ -440,6 +446,51 @@ export function FeaturePageClient(props: FeaturePageClientProps) {
                 items={section.items || []}
               />
             );
+
+          case "FeatureSectionsGlobalCta": {
+            const ctaSection = section as unknown as {
+              title: string;
+              subtitle: string;
+              primaryButtonText: string;
+              primaryButtonLink: string;
+              secondaryButtonText?: string;
+              secondaryButtonLink?: string;
+              trustMessage?: string;
+            };
+            return (
+              <GlobalCTA
+                key={index}
+                title={ctaSection.title}
+                subtitle={ctaSection.subtitle}
+                primaryButtonText={ctaSection.primaryButtonText}
+                primaryButtonLink={ctaSection.primaryButtonLink}
+                secondaryButtonText={ctaSection.secondaryButtonText}
+                secondaryButtonLink={ctaSection.secondaryButtonLink}
+                trustMessage={ctaSection.trustMessage}
+              />
+            );
+          }
+
+          case "FeatureSectionsTwoColumnBenefits": {
+            const benefitsSection = section as unknown as {
+              title: string;
+              subtitle?: string;
+              cards: Array<{
+                badge?: string;
+                title: string;
+                image?: string;
+                bullets?: Array<{ text: string }>;
+              }>;
+            };
+            return (
+              <TwoColumnBenefits
+                key={index}
+                title={benefitsSection.title}
+                subtitle={benefitsSection.subtitle}
+                cards={benefitsSection.cards || []}
+              />
+            );
+          }
 
           default:
             return null;

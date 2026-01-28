@@ -523,6 +523,7 @@ export default defineConfig({
                     list: true,
                     fields: [
                       { type: "string", name: "text", label: "Text" },
+                      { type: "string", name: "icon", label: "Icon (lucide icon name, optional)" },
                     ],
                   },
                 ],
@@ -750,6 +751,54 @@ export default defineConfig({
                   },
                 ],
               },
+              {
+                name: "globalCta",
+                label: "Global CTA Section",
+                ui: {
+                  itemProps: () => ({ label: "Global CTA" }),
+                },
+                fields: [
+                  { type: "string", name: "title", label: "Title" },
+                  { type: "string", name: "subtitle", label: "Subtitle", ui: { component: "textarea" } },
+                  { type: "string", name: "primaryButtonText", label: "Primary Button Text" },
+                  { type: "string", name: "primaryButtonLink", label: "Primary Button Link" },
+                  { type: "string", name: "secondaryButtonText", label: "Secondary Button Text" },
+                  { type: "string", name: "secondaryButtonLink", label: "Secondary Button Link" },
+                  { type: "string", name: "trustMessage", label: "Trust Message" },
+                ],
+              },
+              {
+                name: "twoColumnBenefits",
+                label: "Two Column Benefits (Two Cards Side by Side)",
+                ui: {
+                  itemProps: (item) => ({ label: item?.title || "Two Column Benefits" }),
+                },
+                fields: [
+                  { type: "string", name: "title", label: "Section Title" },
+                  { type: "string", name: "subtitle", label: "Section Subtitle" },
+                  {
+                    type: "object",
+                    name: "cards",
+                    label: "Benefit Cards (max 2)",
+                    list: true,
+                    ui: { itemProps: (item) => ({ label: item?.title }) },
+                    fields: [
+                      { type: "string", name: "badge", label: "Badge Text (optional)" },
+                      { type: "string", name: "title", label: "Title" },
+                      { type: "image", name: "image", label: "Image" },
+                      {
+                        type: "object",
+                        name: "bullets",
+                        label: "Bullet Points",
+                        list: true,
+                        fields: [
+                          { type: "string", name: "text", label: "Text" },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
             ],
           },
           // SEO
@@ -831,18 +880,29 @@ export default defineConfig({
           {
             type: "object",
             name: "benefits",
-            label: "Benefits Section",
+            label: "Benefits Section (Steps)",
             fields: [
               { type: "string", name: "title", label: "Section Title" },
               {
                 type: "object",
-                name: "sections",
-                label: "Benefit Cards",
+                name: "steps",
+                label: "Steps",
                 list: true,
                 ui: { itemProps: (item) => ({ label: item?.title }) },
                 fields: [
+                  { type: "number", name: "stepNumber", label: "Step Number" },
                   { type: "string", name: "title", label: "Title" },
-                  { type: "string", name: "description", label: "Description" },
+                  {
+                    type: "object",
+                    name: "bullets",
+                    label: "Bullet Points",
+                    list: true,
+                    fields: [
+                      { type: "string", name: "text", label: "Text" },
+                    ],
+                  },
+                  { type: "string", name: "link", label: "Link URL" },
+                  { type: "string", name: "linkText", label: "Link Text" },
                   { type: "image", name: "image", label: "Image" },
                 ],
               },
@@ -851,28 +911,34 @@ export default defineConfig({
           {
             type: "object",
             name: "beforeAfter",
-            label: "Before/After Section",
+            label: "Before/After Comparison",
             fields: [
               { type: "string", name: "title", label: "Section Title" },
+              { type: "string", name: "subtitle", label: "Section Subtitle" },
+              { type: "string", name: "beforeTitle", label: "Before Column Title" },
+              { type: "string", name: "afterTitle", label: "After Column Title" },
               {
                 type: "object",
-                name: "tabs",
-                label: "Tabs",
+                name: "beforeItems",
+                label: "Before Items",
                 list: true,
-                ui: { itemProps: (item) => ({ label: item?.label }) },
+                ui: { itemProps: (item) => ({ label: item?.title }) },
                 fields: [
-                  { type: "string", name: "id", label: "Tab ID" },
-                  { type: "string", name: "label", label: "Tab Label" },
-                  {
-                    type: "object",
-                    name: "items",
-                    label: "Items",
-                    list: true,
-                    fields: [
-                      { type: "string", name: "text", label: "Text" },
-                      { type: "boolean", name: "positive", label: "Positive (green check)" },
-                    ],
-                  },
+                  { type: "string", name: "title", label: "Title" },
+                  { type: "string", name: "description", label: "Description" },
+                  { type: "string", name: "icon", label: "Icon (lucide icon name)" },
+                ],
+              },
+              {
+                type: "object",
+                name: "afterItems",
+                label: "After Items",
+                list: true,
+                ui: { itemProps: (item) => ({ label: item?.title }) },
+                fields: [
+                  { type: "string", name: "title", label: "Title" },
+                  { type: "string", name: "description", label: "Description" },
+                  { type: "string", name: "icon", label: "Icon (lucide icon name)" },
                 ],
               },
             ],
@@ -880,19 +946,19 @@ export default defineConfig({
           {
             type: "object",
             name: "whyLove",
-            label: "Why Love Section",
+            label: "Why Love Section (Bento)",
             fields: [
               { type: "string", name: "title", label: "Section Title" },
               {
                 type: "object",
                 name: "items",
-                label: "Items",
+                label: "Bento Items (first 2 large, next 3 small)",
                 list: true,
                 ui: { itemProps: (item) => ({ label: item?.title }) },
                 fields: [
                   { type: "string", name: "title", label: "Title" },
                   { type: "string", name: "description", label: "Description" },
-                  { type: "string", name: "icon", label: "Icon (lucide icon name)" },
+                  { type: "image", name: "image", label: "Image" },
                 ],
               },
             ],

@@ -81,26 +81,24 @@
     },
     {
       "title": "Multiple ways for customers to join the wait",
-      "variant": "default",
-      "columns": 3,
-      "items": [
+      "steps": [
         {
           "title": "QR code",
           "description": "Display a QR code at the entrance or counter. Guests scan with their phone camera to join instantly.",
-          "icon": "QrCode"
+          "image": "/images/couple.jpg"
         },
         {
           "title": "Link",
           "description": "Share a direct link on your website, social media, or Google Business. Guests join from anywhere.",
-          "icon": "Link"
+          "image": "/images/friends.jpg"
         },
         {
           "title": "Public kiosk or tablet",
           "description": "Set up a dedicated check-in tablet at your entrance for guests who prefer a larger screen.",
-          "icon": "Tablet"
+          "image": "/images/bar friends.jpg"
         }
       ],
-      "_template": "threeColumnCards"
+      "_template": "howItWorks"
     },
     {
       "title": "Keep control of the check-in experience",
@@ -110,13 +108,20 @@
       "variant": "default",
       "bullets": [
         {
-          "text": "Your logo, colors, and welcome message"
+          "text": "Your logo, colors, and welcome message",
+          "icon": "Diamond"
         },
         {
-          "text": "Optional fields for seating preferences, notes"
+          "text": "Optional fields for seating preferences, notes",
+          "icon": "SlidersHorizontal"
         },
         {
-          "text": "Geo-fencing to limit check-ins to nearby guests"
+          "text": "Geo-fencing to limit check-ins to nearby guests",
+          "icon": "MapPin"
+        },
+        {
+          "text": "Set maximum party sizes and business hours",
+          "icon": "Clock"
         }
       ],
       "_template": "textWithImage"
@@ -150,6 +155,16 @@
         }
       ],
       "_template": "faq"
+    },
+    {
+      "title": "The smart way to manage walk-in customers",
+      "subtitle": "Reduce wait times, improve customer satisfaction, and increase revenue by servicing more, happier clients.",
+      "primaryButtonText": "Try WaitQ",
+      "primaryButtonLink": "/signup",
+      "secondaryButtonText": "See pricing",
+      "secondaryButtonLink": "/pricing",
+      "trustMessage": "No credit card required • 2-minute setup • Cancel anytime",
+      "_template": "globalCta"
     }
   ],
   "seo": {

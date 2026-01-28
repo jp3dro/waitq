@@ -7,3 +7,8 @@ export { ArrowLink } from "./arrow-link";
 export { FAQSection } from "./faq-section";
 export { GlobalCTA } from "./global-cta";
 export { IntroSection } from "./intro-section";
+export { BeforeAfterComparison } from "./before-after-comparison";
+export { StepsSection } from "./steps-section";
+export { BentoGrid } from "./bento-grid";
+export { HowItWorksCards } from "./how-it-works-cards";
+export { TwoColumnBenefits } from "./two-column-benefits";
