@@ -73,10 +73,10 @@ export function TwoColumnBenefits({ title, subtitle, cards }: TwoColumnBenefitsP
                     <ul className="space-y-3">
                       {card.bullets.map((bullet, bulletIndex) => (
                         <li key={bulletIndex} className="flex items-start gap-3">
-                          <span className="text-primary font-semibold mt-0.5 flex-shrink-0 text-sm">
+                          <span className="text-primary font-semibold mt-0.5 flex-shrink-0">
                             <Check className="w-4 h-4" />
                           </span>
-                          <span className="text-sm text-muted-foreground">
+                          <span className="text-md text-gray-700">
                             {bullet?.text}
                           </span>
                         </li>

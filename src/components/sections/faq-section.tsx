@@ -33,7 +33,7 @@ export function FAQSection({ title, items }: FAQSectionProps) {
         <Accordion
           type="single"
           collapsible
-          className="w-full space-y-4 bg-muted p-6 md:p-10 rounded-xl"
+          className="w-full space-y-4 bg-muted p-6 md:p-8 rounded-xl"
         >
           {items.map((item, index) => {
             if (!item?.question) return null;

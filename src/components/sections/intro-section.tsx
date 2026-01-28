@@ -23,13 +23,13 @@ export function IntroSection({
 }: IntroSectionProps) {
   const imageContent = (
     <div className="relative">
-      <div className="aspect-[4/3] bg-muted rounded-2xl shadow-xl overflow-hidden">
+      <div className="aspect-[4/3] overflow-hidden">
         {image ? (
           <Image
             src={image}
             alt={title}
             fill
-            className="object-cover"
+            className="object-cover rounded-xl shadow-xl"
           />
         ) : (
           <div className="flex items-center justify-center h-full">
@@ -45,15 +45,15 @@ export function IntroSection({
 
   const textContent = (
     <div>
-      <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{title}</h2>
+      <h2 className="text-2xl md:text-2xl lg:text-3xl font-bold tracking-tight">{title}</h2>
       <p className="mt-4 text-lg text-muted-foreground">{description}</p>
     </div>
   );
 
   return (
-    <section className="pb-6 -mt-10">
+    <section className="pt-10">
       <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="grid md:grid-cols-2 gap-12 items-center">
           {imageOnRight ? (
             <>
               {textContent}

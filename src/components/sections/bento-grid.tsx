@@ -31,12 +31,12 @@ export function BentoGrid({ title, items }: BentoGridProps) {
         </div>
 
         {/* Bento Box Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
           {/* First two items - Large cards (3 cols each) */}
           {items.slice(0, 2).map((item, index) => (
             <div
               key={index}
-              className="lg:col-span-3 rounded-2xl border border-border bg-card p-6 flex flex-col"
+              className="md:col-span-3 rounded-2xl border border-orange-200 bg-orange-100 p-6 flex flex-col"
             >
               <h3 className="font-semibold text-lg mb-2">{item.title}</h3>
               <p className="text-sm text-muted-foreground mb-4">
@@ -64,7 +64,7 @@ export function BentoGrid({ title, items }: BentoGridProps) {
           {items.slice(2, 5).map((item, index) => (
             <div
               key={index + 2}
-              className="lg:col-span-2 rounded-2xl border border-border bg-card p-5 flex flex-col"
+              className="md:col-span-2 rounded-2xl border border-orange-200 bg-orange-100 p-5 flex flex-col"
             >
               <h3 className="font-semibold mb-2">{item.title}</h3>
               <p className="text-sm text-muted-foreground mb-4">
