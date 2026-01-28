@@ -12,7 +12,7 @@ const figtree = Figtree({ variable: "--font-sans", subsets: ["latin"], display: 
 export const metadata: Metadata = {
   metadataBase: typeof process !== "undefined" && process.env.NEXT_PUBLIC_SITE_URL ? new URL(process.env.NEXT_PUBLIC_SITE_URL) : undefined,
   icons: {
-    icon: "/waitq-square.svg",
+    icon: "/favicon.ico",
   },
 };
 

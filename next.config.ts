@@ -8,6 +8,16 @@ const nextConfig: NextConfig = {
   },
   // Required to support PostHog trailing slash API requests
   skipTrailingSlashRedirect: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "assets.tina.io",
+        port: "",
+        pathname: "/**",
+      },
+    ],
+  },
   async rewrites() {
     return [
       {
