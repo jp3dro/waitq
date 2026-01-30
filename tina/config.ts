@@ -794,22 +794,25 @@ export default defineConfig({
         ],
       },
       // ============================================
-      // RESTAURANT WAITLIST APP PAGE
+      // LANDING PAGES
       // ============================================
       {
-        name: "restaurantPage",
-        label: "Restaurant Waitlist App Page",
-        path: "content/pages",
+        name: "landingPage",
+        label: "Landing Pages",
+        path: "content/landing-pages",
         format: "json",
         ui: {
+          // Allow adding more landing pages without touching code.
           allowedActions: {
-            create: false,
-            delete: false,
+            create: true,
+            delete: true,
           },
-          router: () => `/restaurant-waitlist-app`,
-        },
-        match: {
-          include: "restaurant-waitlist-app",
+          // Keep the existing canonical URL for the restaurant page.
+          // For all other landing pages, use /landing/<filename>.
+          router: ({ document }) =>
+            document?._sys?.filename === "restaurant-waitlist-app"
+              ? `/restaurant-waitlist-app`
+              : `/landing/${document._sys.filename}`,
         },
         fields: [
           {

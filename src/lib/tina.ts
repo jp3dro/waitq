@@ -15,8 +15,8 @@ export async function getPricingPageData() {
 }
 
 // Helper to get restaurant page data
-export async function getRestaurantPageData() {
-  const result = await client.queries.restaurantPage({ relativePath: "restaurant-waitlist-app.json" });
+export async function getLandingPageData(slug: string) {
+  const result = await client.queries.landingPage({ relativePath: `${slug}.json` });
   return result;
 }
 

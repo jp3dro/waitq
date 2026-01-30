@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "TINA_PUBLIC_IS_LOCAL=true tinacms dev -c \"next dev --turbopack\"",
     "build": "tinacms build && next build --turbopack",
+    "build:local": "tinacms build --skip-cloud-checks && next build --turbopack",
     "start": "next start",
     "lint": "eslint",
     "clean": "rm -rf .next"

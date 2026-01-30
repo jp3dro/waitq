@@ -1,7 +1,7 @@
 "use client";
 
 import { useTina } from "tinacms/dist/react";
-import type { HomeQuery, PricingQuery, RestaurantPageQuery, FeatureQuery, TermsQuery } from "../../tina/__generated__/types";
+import type { HomeQuery, PricingQuery, LandingPageQuery, FeatureQuery, TermsQuery } from "../../tina/__generated__/types";
 
 // Generic TinaCMS wrapper for visual editing
 export function useTinaData<T extends object>(props: {
@@ -30,10 +30,10 @@ export function usePricingData(props: {
   return useTina(props);
 }
 
-export function useRestaurantPageData(props: {
+export function useLandingPageData(props: {
   query: string;
   variables: Record<string, unknown>;
-  data: RestaurantPageQuery;
+  data: LandingPageQuery;
 }) {
   return useTina(props);
 }
