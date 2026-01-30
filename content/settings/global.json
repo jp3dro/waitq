@@ -38,12 +38,6 @@
           "description": "Track waitlist performance and customer insights",
           "href": "/features/analytics",
           "icon": "BarChart3"
-        },
-        {
-          "title": "Test",
-          "description": "Test",
-          "href": "/test",
-          "icon": "MonitorPlay"
         }
       ]
     }

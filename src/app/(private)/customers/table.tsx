@@ -112,6 +112,17 @@ export default function CustomersTable({
     if (!selectedVisit?.waitlist_id) return null;
     return waitlists.find((w) => w.id === selectedVisit.waitlist_id) || null;
   }, [selectedVisit?.waitlist_id, waitlists]);
+
+  // Keep the selected visit synced with refetches.
+  useEffect(() => {
+    if (!selectedVisit) return;
+    const next = visits.find((v) => v.id === selectedVisit.id) || null;
+    if (!next) {
+      setSelectedVisit(null);
+      return;
+    }
+    if (next !== selectedVisit) setSelectedVisit(next);
+  }, [visits, selectedVisit]);
   const loyaltyTooltip = (visit: VisitEntry) => {
     const total = typeof visit.visits_count === "number" ? visit.visits_count : null;
     const prior = total !== null ? Math.max(0, total - 1) : null;

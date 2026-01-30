@@ -79,25 +79,6 @@ function getWaitTimeCompact(date: string) {
   return `${minutes}m`;
 }
 
-function getWaitTimeLong(createdAt: string, notifiedAt: string | null) {
-  const start = new Date(createdAt);
-  const end = notifiedAt ? new Date(notifiedAt) : new Date();
-  const totalMinutes = differenceInMinutes(end, start);
-
-  if (totalMinutes < 1) return "< 1 minute";
-
-  const days = Math.floor(totalMinutes / (60 * 24));
-  const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
-  const minutes = totalMinutes % 60;
-
-  const parts: string[] = [];
-  if (days > 0) parts.push(`${days} day${days > 1 ? "s" : ""}`);
-  if (hours > 0) parts.push(`${hours} hour${hours > 1 ? "s" : ""}`);
-  if (minutes > 0) parts.push(`${minutes} minute${minutes > 1 ? "s" : ""}`);
-
-  return parts.join(", ");
-}
-
 function getStatusDisplay(status: string, notifiedAt: string | null) {
   if (status === "seated") {
     return {
@@ -162,6 +143,7 @@ export default function VisitDetailModal({
 }) {
   const timeFormat = useTimeFormat();
   const [busy, setBusy] = useState(false);
+  const [optimistic, setOptimistic] = useState<Partial<VisitEntry> | null>(null);
   const [form, setForm] = useState({
     customerName: "",
     phone: "",
@@ -169,6 +151,11 @@ export default function VisitDetailModal({
     partySize: 2 as number | null,
     seatingPreference: "",
   });
+
+  const effectiveVisit = useMemo(() => {
+    if (!visit) return null;
+    return { ...visit, ...(optimistic || {}) };
+  }, [optimistic, visit]);
 
   const showName = askName !== false;
   const showPhone = askPhone !== false;
@@ -178,6 +165,7 @@ export default function VisitDetailModal({
 
   useEffect(() => {
     if (!open || !visit) return;
+    setOptimistic(null);
     setForm({
       customerName: visit.customer_name || "",
       phone: visit.phone || "",
@@ -187,52 +175,51 @@ export default function VisitDetailModal({
     });
   }, [open, visit]);
 
-  const number = visit ? (visit.ticket_number ?? visit.queue_position ?? null) : null;
-  const statusDisplay = useMemo(() => {
-    if (!visit) return null;
-    return getStatusDisplay(visit.status, visit.notified_at);
-  }, [visit]);
+  useEffect(() => {
+    if (!open) setOptimistic(null);
+  }, [open]);
 
-  const waitTimeLong = useMemo(() => {
-    if (!visit) return "";
-    return getWaitTimeLong(visit.created_at, visit.notified_at);
-  }, [visit]);
+  const number = effectiveVisit ? (effectiveVisit.ticket_number ?? effectiveVisit.queue_position ?? null) : null;
+  const statusDisplay = useMemo(() => {
+    if (!effectiveVisit) return null;
+    return getStatusDisplay(effectiveVisit.status, effectiveVisit.notified_at);
+  }, [effectiveVisit]);
 
   const timelineEvents = useMemo(() => {
-    if (!visit) return [];
+    if (!effectiveVisit) return [];
     const events: { icon: LucideIcon; label: string; time: string }[] = [
       {
         icon: User,
         label: "Joined waitlist",
-        time: formatDateTime(visit.created_at, timeFormat),
+        time: formatDateTime(effectiveVisit.created_at, timeFormat),
       },
     ];
-    if (visit.notified_at) {
+    if (effectiveVisit.notified_at) {
       events.push({
         icon: Bell,
         label: "Called",
-        time: formatDateTime(visit.notified_at, timeFormat),
+        time: formatDateTime(effectiveVisit.notified_at, timeFormat),
       });
     }
-    if (visit.status === "seated") {
+    if (effectiveVisit.status === "seated") {
       events.push({
         icon: CheckCircle2,
         label: "Checked in",
-        time: formatDateTime(visit.notified_at || visit.created_at, timeFormat),
+        time: formatDateTime(effectiveVisit.notified_at || effectiveVisit.created_at, timeFormat),
       });
-    } else if (visit.status === "archived" && visit.notified_at) {
+    } else if (effectiveVisit.status === "archived" && effectiveVisit.notified_at) {
       events.push({ icon: XCircle, label: "Marked as no-show", time: "—" });
-    } else if (visit.status === "cancelled") {
+    } else if (effectiveVisit.status === "cancelled") {
       events.push({
         icon: XCircle,
         label: "Cancelled",
-        time: visit.cancelled_at ? formatDateTime(visit.cancelled_at, timeFormat) : "—",
+        time: effectiveVisit.cancelled_at ? formatDateTime(effectiveVisit.cancelled_at, timeFormat) : "—",
       });
     }
     return events;
-  }, [timeFormat, visit]);
+  }, [timeFormat, effectiveVisit]);
 
-  if (!visit || !statusDisplay) return null;
+  if (!visit || !effectiveVisit || !statusDisplay) return null;
 
   const dispatchRefresh = () => {
     const wlId = (visit.waitlist_id as string | undefined) || undefined;
@@ -301,6 +288,13 @@ export default function VisitDetailModal({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ id: visit.id, action: "call" }),
         });
+        // Keep modal open on call so staff can immediately check-in / no-show.
+        // Also add an activity event immediately (optimistic) while the refetch completes.
+        setOptimistic({
+          status: "notified",
+          notified_at: new Date().toISOString(),
+        });
+        toastManager.add({ title: "Called", description: "Customer marked as called", type: "success" });
       } else if (kind === "checkin") {
         await request("/api/waitlist", {
           method: "PATCH",
@@ -315,7 +309,7 @@ export default function VisitDetailModal({
         });
       }
       dispatchRefresh();
-      onOpenChange(false);
+      if (kind !== "call") onOpenChange(false);
     } catch (e) {
       toastManager.add({ title: "Error", description: e instanceof Error ? e.message : "Action failed", type: "error" });
     } finally {
@@ -348,242 +342,219 @@ export default function VisitDetailModal({
             </DialogHeader>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-6 py-4">
-            <div className="space-y-6">
-              {/* Summary */}
-              <div className={`rounded-lg p-4 border border-border ${statusDisplay.bgColor}`}>
-                <div className="flex items-start justify-between gap-3">
-                  <div className="space-y-1 min-w-0">
-                    <div className="flex items-center gap-3 flex-wrap">
-                      {typeof number === "number" ? (
-                        <Badge variant="secondary" className="text-xl py-3 px-3 font-bold border border-border bg-background">
-                          #{number}
-                        </Badge>
-                      ) : null}
-                      <div className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                        <Clock className="h-4 w-4" />
-                        <span>Waiting for {getWaitTimeCompact(visit.created_at)}</span>
+          <div className="flex-1 overflow-hidden px-6 py-4">
+            <div className="grid h-full gap-6 md:grid-cols-[1fr_360px]">
+              {/* Left panel */}
+              <div className="min-h-0 overflow-y-auto custom-scrollbar pr-1 space-y-6">
+                {/* Summary */}
+                <div className={`rounded-lg p-4 border border-border ${statusDisplay.bgColor}`}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-1 min-w-0">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        {typeof number === "number" ? (
+                          <Badge variant="secondary" className="text-xl py-3 px-3 font-bold border border-border bg-background">
+                            #{number}
+                          </Badge>
+                        ) : null}
+                        <div className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                          <Clock className="h-4 w-4" />
+                          <span>Waiting for {getWaitTimeCompact(effectiveVisit.created_at)}</span>
+                        </div>
+                      </div>
+                      <h3 className="text-lg font-semibold truncate">
+                        {effectiveVisit.customer_name || "Anonymous Customer"}
+                      </h3>
+                      <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
+                        {effectiveVisit.phone ? (
+                          <div className="flex items-center gap-1">
+                            <Phone className="h-3.5 w-3.5" />
+                            <span className="truncate">{effectiveVisit.phone}</span>
+                          </div>
+                        ) : null}
+                        {effectiveVisit.email ? (
+                          <div className="flex items-center gap-1">
+                            <Mail className="h-3.5 w-3.5" />
+                            <span className="truncate">{effectiveVisit.email}</span>
+                          </div>
+                        ) : null}
                       </div>
                     </div>
-                    <h3 className="text-lg font-semibold truncate">
-                      {visit.customer_name || "Anonymous Customer"}
-                    </h3>
-                    <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
-                      {visit.phone ? (
-                        <div className="flex items-center gap-1">
-                          <Phone className="h-3.5 w-3.5" />
-                          <span className="truncate">{visit.phone}</span>
-                        </div>
-                      ) : null}
-                      {visit.email ? (
-                        <div className="flex items-center gap-1">
-                          <Mail className="h-3.5 w-3.5" />
-                          <span className="truncate">{visit.email}</span>
-                        </div>
+                    <div className="shrink-0 flex items-start gap-2">
+                      <Badge className={`${statusDisplay.color} bg-transparent border-0`}>
+                        {statusDisplay.label}
+                      </Badge>
+                      {effectiveVisit.token ? (
+                        <Button variant="ghost" size="icon" onClick={copyPersonalUrl} title="Copy status URL" disabled={busy}>
+                          <Copy className="h-4 w-4 text-muted-foreground" />
+                        </Button>
                       ) : null}
                     </div>
                   </div>
-                  <div className="shrink-0 flex items-start gap-2">
-                    <Badge className={`${statusDisplay.color} bg-transparent border-0`}>
-                      {statusDisplay.label}
-                    </Badge>
-                    {visit.token ? (
-                      <Button variant="ghost" size="icon" onClick={copyPersonalUrl} title="Copy status URL" disabled={busy}>
-                        <Copy className="h-4 w-4 text-muted-foreground" />
+
+                  {effectiveVisit.status === "waiting" ? (
+                    <div className="mt-3">
+                      <Button className="w-full" disabled={busy} onClick={() => doAction("call")}>
+                        Call Customer
                       </Button>
-                    ) : null}
-                  </div>
-                </div>
-
-                {visit.status === "waiting" ? (
-                  <div className="mt-3">
-                    <Button className="w-full" disabled={busy} onClick={() => doAction("call")}>
-                      Call Customer
-                    </Button>
-                  </div>
-                ) : null}
-                {visit.status === "notified" ? (
-                  <div className="mt-3 flex gap-2">
-                    <Button
-                      className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white border-transparent"
-                      disabled={busy}
-                      onClick={() => doAction("checkin")}
-                    >
-                      <Check className="h-4 w-4 mr-2" />
-                      Check-in
-                    </Button>
-                    <Button className="flex-1" variant="destructive" disabled={busy} onClick={() => doAction("noshow")}>
-                      <X className="h-4 w-4 mr-2" />
-                      No Show
-                    </Button>
-                  </div>
-                ) : null}
-              </div>
-
-              {/* Edit fields */}
-              <div className="space-y-4">
-                {showName ? (
-                  <div className="grid gap-2">
-                    <Label>Customer name</Label>
-                    <Input
-                      type="text"
-                      value={form.customerName}
-                      onChange={(e) => setForm((p) => ({ ...p, customerName: e.target.value }))}
-                      placeholder="Full name"
-                    />
-                  </div>
-                ) : null}
-
-                <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-                  {showPartySize ? (
-                    <div className="flex-none grid gap-2">
-                      <Label>Number of people</Label>
-                      <Stepper
-                        value={typeof form.partySize === "number" ? form.partySize : undefined}
-                        onChange={(value) => setForm((p) => ({ ...p, partySize: typeof value === "number" ? value : null }))}
-                        min={1}
-                        max={30}
-                      />
                     </div>
                   ) : null}
-                  {showPhone ? (
-                    <div className="flex-1 grid gap-2">
-                      <Label>Phone (optional)</Label>
-                      <PhoneInput
-                        defaultCountry="PT"
-                        value={form.phone}
-                        onChange={(value) => setForm((p) => ({ ...p, phone: value }))}
-                      />
+                  {effectiveVisit.status === "notified" ? (
+                    <div className="mt-3 flex gap-2">
+                      <Button
+                        className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white border-transparent"
+                        disabled={busy}
+                        onClick={() => doAction("checkin")}
+                      >
+                        <Check className="h-4 w-4 mr-2" />
+                        Check-in
+                      </Button>
+                      <Button className="flex-1" variant="destructive" disabled={busy} onClick={() => doAction("noshow")}>
+                        <X className="h-4 w-4 mr-2" />
+                        No Show
+                      </Button>
                     </div>
                   ) : null}
                 </div>
 
-                {showEmail ? (
-                  <div className="grid gap-2">
-                    <Label>Email (optional)</Label>
-                    <Input
-                      type="email"
-                      value={form.email}
-                      onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
-                      placeholder="email@example.com"
-                    />
-                  </div>
-                ) : null}
-
-                {showSeatingPrefs ? (
-                  <div className="grid gap-2">
-                    <Label>Seating preference</Label>
-                    {seatingPreferences.length > 0 ? (
-                      <div className="flex flex-wrap gap-2">
-                        {seatingPreferences.map((s) => {
-                          const selected = form.seatingPreference === s;
-                          return (
-                            <button
-                              type="button"
-                              key={s}
-                              onClick={() => setForm((p) => ({ ...p, seatingPreference: s }))}
-                              className={`inline-flex items-center rounded-full px-3 h-8 text-sm ring-1 ring-inset transition ${selected ? "bg-primary text-primary-foreground ring-primary" : "bg-card text-foreground ring-border hover:bg-muted"}`}
-                            >
-                              {s}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    ) : (
+                {/* Edit fields */}
+                <div className="space-y-4">
+                  {showName ? (
+                    <div className="grid gap-2">
+                      <Label>Customer name</Label>
                       <Input
                         type="text"
-                        value={form.seatingPreference}
-                        onChange={(e) => setForm((p) => ({ ...p, seatingPreference: e.target.value }))}
-                        placeholder="e.g. Outside"
+                        value={form.customerName}
+                        onChange={(e) => setForm((p) => ({ ...p, customerName: e.target.value }))}
+                        placeholder="Full name"
                       />
-                    )}
-                    {form.seatingPreference && seatingPreferences.length === 0 ? (
-                      <div className="text-xs text-muted-foreground">
-                        Current: <SeatingPreferenceBadge>{form.seatingPreference}</SeatingPreferenceBadge>
+                    </div>
+                  ) : null}
+
+                  <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+                    {showPartySize ? (
+                      <div className="flex-none grid gap-2">
+                        <Label>Number of people</Label>
+                        <Stepper
+                          value={typeof form.partySize === "number" ? form.partySize : undefined}
+                          onChange={(value) => setForm((p) => ({ ...p, partySize: typeof value === "number" ? value : null }))}
+                          min={1}
+                          max={30}
+                        />
+                      </div>
+                    ) : null}
+                    {showPhone ? (
+                      <div className="flex-1 grid gap-2">
+                        <Label>Phone (optional)</Label>
+                        <PhoneInput
+                          defaultCountry="PT"
+                          value={form.phone}
+                          onChange={(value) => setForm((p) => ({ ...p, phone: value }))}
+                        />
                       </div>
                     ) : null}
                   </div>
-                ) : null}
-              </div>
 
-              {/* Details */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {showPartySize ? (
-                  <div className="space-y-1">
-                    <div className="text-sm text-muted-foreground">Party size</div>
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-medium">{visit.party_size ?? "—"}</span>
+                  {showEmail ? (
+                    <div className="grid gap-2">
+                      <Label>Email (optional)</Label>
+                      <Input
+                        type="email"
+                        value={form.email}
+                        onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
+                        placeholder="email@example.com"
+                      />
+                    </div>
+                  ) : null}
+
+                  {showSeatingPrefs ? (
+                    <div className="grid gap-2">
+                      <Label>Seating preference</Label>
+                      {seatingPreferences.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                          {seatingPreferences.map((s) => {
+                            const selected = form.seatingPreference === s;
+                            return (
+                              <button
+                                type="button"
+                                key={s}
+                                onClick={() => setForm((p) => ({ ...p, seatingPreference: s }))}
+                                className={`inline-flex items-center rounded-full px-3 h-8 text-sm ring-1 ring-inset transition ${selected ? "bg-primary text-primary-foreground ring-primary" : "bg-card text-foreground ring-border hover:bg-muted"}`}
+                              >
+                                {s}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <Input
+                          type="text"
+                          value={form.seatingPreference}
+                          onChange={(e) => setForm((p) => ({ ...p, seatingPreference: e.target.value }))}
+                          placeholder="e.g. Outside"
+                        />
+                      )}
+                      {form.seatingPreference && seatingPreferences.length === 0 ? (
+                        <div className="text-xs text-muted-foreground">
+                          Current: <SeatingPreferenceBadge>{form.seatingPreference}</SeatingPreferenceBadge>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
+
+                {/* Notification Status */}
+                {(effectiveVisit.send_sms || effectiveVisit.send_whatsapp) ? (
+                  <div className="rounded-lg border border-border p-4 space-y-2">
+                    <h4 className="text-sm font-semibold">Notifications</h4>
+                    <div className="space-y-1 text-sm">
+                      {effectiveVisit.send_sms ? (
+                        <div className="flex items-center justify-between">
+                          <span>SMS</span>
+                          <Badge variant="secondary" className="text-xs">
+                            {effectiveVisit.sms_status || "pending"}
+                          </Badge>
+                        </div>
+                      ) : null}
+                      {effectiveVisit.send_whatsapp ? (
+                        <div className="flex items-center justify-between">
+                          <span>WhatsApp</span>
+                          <Badge variant="secondary" className="text-xs">
+                            {effectiveVisit.whatsapp_status || "pending"}
+                          </Badge>
+                        </div>
+                      ) : null}
                     </div>
                   </div>
                 ) : null}
-                <div className="space-y-1">
-                  <div className="text-sm text-muted-foreground">Wait time</div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">{waitTimeLong}</span>
+              </div>
+
+              {/* Right panel: Activity log */}
+              <aside className="min-h-0 overflow-y-auto custom-scrollbar pl-6 border-l border-border">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-semibold">Activity</h4>
                   </div>
-                </div>
-                {showSeatingPrefs ? (
                   <div className="space-y-1">
-                    <div className="text-sm text-muted-foreground">Seating preference</div>
-                    {visit.seating_preference ? (
-                      <SeatingPreferenceBadge>{visit.seating_preference}</SeatingPreferenceBadge>
-                    ) : (
-                      <span className="text-sm font-medium">—</span>
-                    )}
-                  </div>
-                ) : null}
-              </div>
-
-              {/* Activity Timeline */}
-              <div className="space-y-2">
-                <h4 className="text-sm font-medium">Activity</h4>
-                <div className="space-y-1">
-                  {timelineEvents.map((event, index) => {
-                    const Icon = event.icon;
-                    return (
-                      <div key={index} className="flex gap-2 items-start">
-                        <div className="flex flex-col items-center">
-                          <div className="rounded-full p-1 text-primary">
-                            <Icon className="h-3.5 w-3.5" />
+                    {timelineEvents.map((event, index) => {
+                      const Icon = event.icon;
+                      return (
+                        <div key={index} className="flex gap-2 items-start">
+                          <div className="flex flex-col items-center">
+                            <div className="rounded-full p-1 text-primary">
+                              <Icon className="h-3.5 w-3.5" />
+                            </div>
+                            {index < timelineEvents.length - 1 ? <div className="w-0.5 h-4 bg-border" /> : null}
                           </div>
-                          {index < timelineEvents.length - 1 ? <div className="w-0.5 h-4 bg-border" /> : null}
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm">{event.label}</div>
+                            <div className="text-xs text-muted-foreground">{event.time}</div>
+                          </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm">{event.label}</div>
-                          <div className="text-xs text-muted-foreground">{event.time}</div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Notification Status */}
-              {(visit.send_sms || visit.send_whatsapp) ? (
-                <div className="rounded-lg border border-border p-4 space-y-2">
-                  <h4 className="text-sm font-semibold">Notifications</h4>
-                  <div className="space-y-1 text-sm">
-                    {visit.send_sms ? (
-                      <div className="flex items-center justify-between">
-                        <span>SMS</span>
-                        <Badge variant="secondary" className="text-xs">
-                          {visit.sms_status || "pending"}
-                        </Badge>
-                      </div>
-                    ) : null}
-                    {visit.send_whatsapp ? (
-                      <div className="flex items-center justify-between">
-                        <span>WhatsApp</span>
-                        <Badge variant="secondary" className="text-xs">
-                          {visit.whatsapp_status || "pending"}
-                        </Badge>
-                      </div>
-                    ) : null}
+                      );
+                    })}
                   </div>
                 </div>
-              ) : null}
+              </aside>
             </div>
           </div>
 

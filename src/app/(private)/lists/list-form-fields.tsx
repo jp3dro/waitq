@@ -141,13 +141,13 @@ export default function ListFormFields({
               <SelectValue placeholder="Select list type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="eat_in">
+              <SelectItem value="eat_in" textValue="Eat in">
                 <div className="flex flex-col items-start">
                   <span>Eat in</span>
                   <span className="text-xs text-muted-foreground">Party size and seating preferences</span>
                 </div>
               </SelectItem>
-              <SelectItem value="take_out">
+              <SelectItem value="take_out" textValue="Take out">
                 <div className="flex flex-col items-start">
                   <span>Take out</span>
                   <span className="text-xs text-muted-foreground">No party size or seating</span>

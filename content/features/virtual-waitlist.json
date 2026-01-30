@@ -1,5 +1,5 @@
 {
-  "slug": "virtual-waitlist",
+  "slug": "digital-waitlist",
   "hero": {
     "title": "The virtual waitlist that keeps customers in the loop",
     "subtitle": "Turn waitlists into warm welcomes. Manage walk-ins, reservations, and SMS updates in one intuitive platform designed for restaurants.",
@@ -9,14 +9,13 @@
   },
   "sections": [
     {
-      "_template": "textWithImage",
       "title": "WaitQ turns your physical queue into a virtual waitlist that updates in real time.",
       "description": "Guests join from their phone or a tablet at your door. They see their position, estimated wait, and get notified the moment their table is ready—all without crowding your entrance.",
       "imageOnRight": true,
-      "variant": "default"
+      "variant": "default",
+      "_template": "textWithImage"
     },
     {
-      "_template": "howItWorks",
       "title": "How our digital waitlist works",
       "steps": [
         {
@@ -34,37 +33,49 @@
           "description": "When the table is ready, one tap sends an SMS. Guests arrive promptly because they were already tracking their turn.",
           "icon": "Zap"
         }
-      ]
+      ],
+      "_template": "howItWorks"
     },
     {
-      "_template": "textWithImage",
       "title": "Keep seats calm and the floor moving",
       "description": "Guests who know their wait are happier guests. They don't crowd the host stand or interrupt servers. Your team can focus on hospitality, not queue management.",
       "imageOnRight": false,
       "variant": "muted-bg",
       "bullets": [
-        { "text": "Reduce perceived wait times by up to 35%" },
-        { "text": "Fewer walk-aways when guests see progress" },
-        { "text": "Staff handles more covers with less stress" }
-      ]
+        {
+          "text": "Reduce perceived wait times by up to 35%"
+        },
+        {
+          "text": "Fewer walk-aways when guests see progress"
+        },
+        {
+          "text": "Staff handles more covers with less stress"
+        }
+      ],
+      "_template": "textWithImage"
     },
     {
-      "_template": "textWithImage",
       "title": "Customers queue, but without queueing",
       "description": "Guests don't have to physically stand in line. They can browse nearby shops, grab a coffee, or wait in their car—and return exactly when needed.",
       "imageOnRight": true,
       "variant": "muted-bg",
       "bullets": [
-        { "text": "Real-time position updates on their phone" },
-        { "text": "SMS notification when table is ready" },
-        { "text": "No app download required" }
-      ]
+        {
+          "text": "Real-time position updates on their phone"
+        },
+        {
+          "text": "SMS notification when table is ready"
+        },
+        {
+          "text": "No app download required"
+        }
+      ],
+      "_template": "textWithImage"
     },
     {
-      "_template": "threeColumnCards",
       "title": "Pick how people join your waitlist",
-      "columns": 2,
       "variant": "default",
+      "columns": 2,
       "items": [
         {
           "title": "Host-managed check-in",
@@ -79,34 +90,49 @@
           "link": "/features/self-check-in",
           "linkText": "Learn about self check-in"
         }
-      ]
+      ],
+      "_template": "threeColumnCards"
     },
     {
-      "_template": "textWithImage",
       "title": "Customize your waiting experience to fit your workflow",
       "description": "Collect the information you need: seating preferences, special requests, marketing opt-ins. WaitQ adapts to your service style, not the other way around.",
       "imageOnRight": true,
       "variant": "default",
       "bullets": [
-        { "text": "Custom fields for party size, seating area, notes" },
-        { "text": "Optional geo-fencing to limit remote check-ins" },
-        { "text": "Branded check-in page with your logo and colors" }
-      ]
+        {
+          "text": "Custom fields for party size, seating area, notes"
+        },
+        {
+          "text": "Optional geo-fencing to limit remote check-ins"
+        },
+        {
+          "text": "Branded check-in page with your logo and colors"
+        }
+      ],
+      "_template": "textWithImage"
     },
     {
-      "_template": "testimonialWithStats",
       "title": "How WaitQ is improving waiting experiences worldwide",
       "quote": "WaitQ cut our wait times by 35%. Guests love the SMS updates and our staff stays organized.",
       "author": "Maria",
       "role": "GM at Bistro Verde",
       "stats": [
-        { "value": "2,000+", "label": "Restaurants using WaitQ" },
-        { "value": "4.8★", "label": "Average customer rating" },
-        { "value": "4.8★", "label": "Trustpilot rating" }
-      ]
+        {
+          "value": "2,000+",
+          "label": "Restaurants using WaitQ"
+        },
+        {
+          "value": "4.8★",
+          "label": "Average customer rating"
+        },
+        {
+          "value": "4.8★",
+          "label": "Trustpilot rating"
+        }
+      ],
+      "_template": "testimonialWithStats"
     },
     {
-      "_template": "faq",
       "title": "Virtual waitlist FAQs",
       "items": [
         {
@@ -133,11 +159,12 @@
           "question": "Do you offer real-time analytics and why is it important?",
           "answer": "Yes! WaitQ provides real-time and historical analytics on wait times, party sizes, and peak hours. This data helps you optimize staffing, predict busy periods, and improve the guest experience."
         }
-      ]
+      ],
+      "_template": "faq"
     }
   ],
   "seo": {
-    "title": "Virtual Waitlist Software - WaitQ",
+    "title": "Digital Waitlist Software - WaitQ",
     "description": "Reduce wait anxiety with our real-time virtual waitlist that lets customers see their position in line from their own devices and at all times.",
     "ogImage": "/images/og-virtual-waitlist.png"
   }

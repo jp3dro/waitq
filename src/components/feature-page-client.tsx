@@ -77,11 +77,11 @@ export function FeaturePageClient(props: FeaturePageClientProps) {
   return (
     <main>
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-b from-background to-muted/20 pt-20 pb-16">
+      <section className="relative bg-gradient-to-b from-background to-muted pt-20 pb-16">
         <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
                 {page.hero?.title}
               </h1>
               <p className="mt-6 text-lg text-muted-foreground">
@@ -96,7 +96,7 @@ export function FeaturePageClient(props: FeaturePageClientProps) {
             <div className="relative">
               <div className="aspect-[16/9] overflow-hidden flex items-center justify-center">
                 {page.hero?.heroImage ? (
-                  <Image src={page.hero.heroImage} alt="" fill className="object-cover rounded-2xl" />
+                  <Image src={page.hero.heroImage} alt="" fill className="object-cover shadow-xl rounded-xl" />
                 ) : (
                   <div className="flex items-center justify-center h-full">
                     <ImageIcon className="w-24 h-24 text-muted-foreground" />
@@ -116,23 +116,23 @@ export function FeaturePageClient(props: FeaturePageClientProps) {
           case "FeatureSectionsTextWithImage": {
             const variant = section.variant || "default";
             const containerClass = variant === "muted-bg" 
-              ? "rounded-3xl bg-muted/30 p-6 md:p-10" 
+              ? "rounded-3xl bg-muted p-6 md:p-10" 
               : variant === "card"
               ? "rounded-3xl border border-border p-6 md:p-10"
               : "";
             
             return (
-              <section key={index} className="py-12">
+              <section key={index} className="py-4">
                 <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
                   <div className={containerClass}>
-                    <div className="grid lg:grid-cols-2 gap-12 items-center">
+                    <div className="grid md:grid-cols-2  gap-12 items-center">
                       {!section.imageOnRight && (
                         <div className="relative">
-                          <div className={`aspect-[4/3] rounded-2xl shadow-xl overflow-hidden ${
+                          <div className={`aspect-[16/9] overflow-hidden ${
                             variant === "muted-bg" ? "bg-background" : "bg-muted"
                           }`}>
                             {section.image ? (
-                              <Image src={section.image} alt="" fill className="object-cover" />
+                              <Image src={section.image} alt="" fill className="object-cover shadow-xl rounded-xl" />
                             ) : (
                               <div className="flex items-center justify-center h-full">
                                 <ImageIcon className="w-24 h-24 text-muted-foreground/20" />
@@ -171,7 +171,7 @@ export function FeaturePageClient(props: FeaturePageClientProps) {
                             variant === "muted-bg" ? "bg-background" : "bg-muted"
                           }`}>
                             {section.image ? (
-                              <Image src={section.image} alt="" fill className="object-cover" />
+                              <Image src={section.image} alt="" fill className="object-cover shadow-xl rounded-xl" />
                             ) : (
                               <div className="flex items-center justify-center h-full">
                                 <ImageIcon className="w-24 h-24 text-muted-foreground/20" />
@@ -275,14 +275,14 @@ export function FeaturePageClient(props: FeaturePageClientProps) {
                       if (variant === "with-image") {
                         return (
                           <div key={itemIndex} className="group">
-                            <div className="aspect-[4/3] rounded-xl overflow-hidden mb-4 bg-muted">
+                            <div className="aspect-[4/3] overflow-hidden mb-4 bg-muted">
                               {item.image ? (
                                 <Image
                                   src={item.image}
                                   alt={item.title || ""}
                                   width={400}
                                   height={300}
-                                  className="w-full h-full object-cover"
+                                  className="w-full h-full object-cover shadow-xl rounded-xl"
                                 />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center">

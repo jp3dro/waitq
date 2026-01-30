@@ -80,6 +80,17 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
   const tableRef = useRef<HTMLDivElement>(null);
   const [selectedVisit, setSelectedVisit] = useState<Entry | null>(null);
 
+  // Keep the selected visit in sync with live updates.
+  useEffect(() => {
+    if (!selectedVisit) return;
+    const next = entries.find((e) => e.id === selectedVisit.id) || null;
+    if (!next) {
+      setSelectedVisit(null);
+      return;
+    }
+    if (next !== selectedVisit) setSelectedVisit(next);
+  }, [entries, selectedVisit]);
+
   const isBusy = (id: string | null | undefined) => {
     if (!id) return false;
     return busyIds.has(id);
@@ -288,6 +299,14 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
         ) : null}
       </div>
     );
+  };
+
+  const normalizeDeliveryStatus = (
+    v: unknown
+  ): 'pending' | 'sent' | 'delivered' | 'failed' | null | undefined => {
+    return v === 'pending' || v === 'sent' || v === 'delivered' || v === 'failed'
+      ? v
+      : (v == null ? (v as null | undefined) : null);
   };
 
   const archive = (id: string) => {
@@ -710,7 +729,14 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                   </td>
                   {showPhone && (
                     <td className="px-4 py-2">
-                      <span className="text-xs">{getNotificationDisplay(e.send_sms, e.send_whatsapp, e.sms_status, e.whatsapp_status)}</span>
+                      <span className="text-xs">
+                        {getNotificationDisplay(
+                          e.send_sms,
+                          e.send_whatsapp,
+                          normalizeDeliveryStatus(e.sms_status),
+                          normalizeDeliveryStatus(e.whatsapp_status)
+                        )}
+                      </span>
                     </td>
                   )}
                 </tr>
