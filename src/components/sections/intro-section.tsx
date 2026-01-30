@@ -29,7 +29,7 @@ export function IntroSection({
             src={image}
             alt={title}
             fill
-            className="object-cover rounded-xl shadow-xl"
+            className="object-cover rounded-xl"
           />
         ) : (
           <div className="flex items-center justify-center h-full">

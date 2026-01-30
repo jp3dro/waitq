@@ -164,9 +164,20 @@ export function ThreeColumnCards({
                 key={index}
                 className="rounded-xl border border-border bg-card p-6 shadow-sm"
               >
-                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                  <Icon className="w-6 h-6 text-primary" />
-                </div>
+                {item.image ? (
+                  <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-muted mb-4">
+                    <Image
+                      src={item.image}
+                      alt={item.title}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                    <Icon className="w-6 h-6 text-primary" />
+                  </div>
+                )}
                 <h3 className="font-semibold mb-2">{item.title}</h3>
                 <p className="text-sm text-muted-foreground">
                   {item.description}

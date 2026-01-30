@@ -7,9 +7,9 @@ interface GlobalCTAProps {
   title: string;
   subtitle: string;
   primaryButtonText: string;
-  primaryButtonLink: string;
+  primaryButtonLink?: string | null;
   secondaryButtonText?: string;
-  secondaryButtonLink?: string;
+  secondaryButtonLink?: string | null;
   trustMessage?: string;
 }
 
@@ -27,8 +27,15 @@ export function GlobalCTA({
   secondaryButtonLink,
   trustMessage,
 }: GlobalCTAProps) {
+  const primaryHref = (typeof primaryButtonLink === "string" && primaryButtonLink.trim().length)
+    ? primaryButtonLink
+    : "/signup";
+  const secondaryHref = (typeof secondaryButtonLink === "string" && secondaryButtonLink.trim().length)
+    ? secondaryButtonLink
+    : null;
+
   return (
-    <section className="py-8">
+    <section className="pt-4 pb-16">
       <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
         <div className="rounded-3xl bg-orange-100 dark:bg-orange-400/10 text-background p-8 md:p-16 text-center">
           <h2 className="text-2xl md:text-4xl font-bold tracking-tight text-primary">
@@ -39,11 +46,11 @@ export function GlobalCTA({
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button asChild size="lg" className="px-8">
-              <Link href={primaryButtonLink}>{primaryButtonText}</Link>
+              <Link href={primaryHref}>{primaryButtonText}</Link>
             </Button>
-            {secondaryButtonText && secondaryButtonLink && (
+            {secondaryButtonText && secondaryHref && (
               <Button asChild size="lg" variant="outline" className="px-8 text-foreground bg-background hover:text-foreground">
-                <Link href={secondaryButtonLink}>{secondaryButtonText}</Link>
+                <Link href={secondaryHref}>{secondaryButtonText}</Link>
               </Button>
             )}
           </div>

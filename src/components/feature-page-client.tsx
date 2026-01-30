@@ -36,6 +36,8 @@ import { FAQSection } from "@/components/sections/faq-section";
 import { ArrowLink } from "@/components/sections/arrow-link";
 import { GlobalCTA } from "@/components/sections/global-cta";
 import { TwoColumnBenefits } from "@/components/sections/two-column-benefits";
+import { HowItWorksCards } from "@/components/sections/how-it-works-cards";
+import { CTASection } from "@/components/cta-section";
 
 // Icon mapping for dynamic icons
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -128,11 +130,11 @@ export function FeaturePageClient(props: FeaturePageClientProps) {
                     <div className="grid md:grid-cols-2  gap-12 items-center">
                       {!section.imageOnRight && (
                         <div className="relative">
-                          <div className={`aspect-[16/9] overflow-hidden ${
+                          <div className={`aspect-[4/3] rounded-xl shadow-xl overflow-hidden ${
                             variant === "muted-bg" ? "bg-background" : "bg-muted"
                           }`}>
                             {section.image ? (
-                              <Image src={section.image} alt="" fill className="object-cover shadow-xl rounded-xl" />
+                              <Image src={section.image} alt="" fill className="object-cover rounded-xl" />
                             ) : (
                               <div className="flex items-center justify-center h-full">
                                 <ImageIcon className="w-24 h-24 text-muted-foreground/20" />
@@ -151,14 +153,23 @@ export function FeaturePageClient(props: FeaturePageClientProps) {
                         {section.bullets && section.bullets.length > 0 && (
                           <ul className="mt-8 space-y-4">
                             {section.bullets.map((bullet, bulletIndex) => {
-                              const bulletWithIcon = bullet as { text?: string; icon?: string } | null;
+                              const bulletWithIcon = bullet as { text?: string; description?: string; icon?: string } | null;
                               const BulletIcon = bulletWithIcon?.icon ? getIcon(bulletWithIcon.icon) : Check;
                               return (
                                 <li key={bulletIndex} className="flex items-start gap-3">
                                   <span className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                                     <BulletIcon className="w-4 h-4 text-primary" />
                                   </span>
-                                  <span className="text-muted-foreground mt-1">{bulletWithIcon?.text}</span>
+                                  <div className="min-w-0 pt-0.5">
+                                    <div className="text-foreground font-medium">
+                                      {bulletWithIcon?.text}
+                                    </div>
+                                    {bulletWithIcon?.description ? (
+                                      <div className="mt-1 text-sm text-muted-foreground">
+                                        {bulletWithIcon.description}
+                                      </div>
+                                    ) : null}
+                                  </div>
                                 </li>
                               );
                             })}
@@ -171,7 +182,7 @@ export function FeaturePageClient(props: FeaturePageClientProps) {
                             variant === "muted-bg" ? "bg-background" : "bg-muted"
                           }`}>
                             {section.image ? (
-                              <Image src={section.image} alt="" fill className="object-cover shadow-xl rounded-xl" />
+                              <Image src={section.image} alt="" fill className="object-cover rounded-xl" />
                             ) : (
                               <div className="flex items-center justify-center h-full">
                                 <ImageIcon className="w-24 h-24 text-muted-foreground/20" />
@@ -243,6 +254,36 @@ export function FeaturePageClient(props: FeaturePageClientProps) {
               </section>
             );
 
+          case "FeatureSectionsHowItWorksCards": {
+            const how = section as unknown as {
+              title?: string;
+              subtitle?: string;
+              columns?: number | null;
+              items?: Array<{
+                title?: string;
+                description?: string;
+                image?: string;
+                link?: string;
+                linkText?: string;
+              } | null> | null;
+            };
+            return (
+              <HowItWorksCards
+                key={index}
+                title={how.title || ""}
+                subtitle={how.subtitle || undefined}
+                columns={how.columns === 2 ? 2 : how.columns === 3 ? 3 : undefined}
+                items={(how.items || []).map((it) => ({
+                  title: it?.title || "",
+                  description: it?.description || "",
+                  image: it?.image || undefined,
+                  link: it?.link || undefined,
+                  linkText: it?.linkText || undefined,
+                }))}
+              />
+            );
+          }
+
           case "FeatureSectionsThreeColumnCards": {
             const sectionData = section as FeatureSectionsThreeColumnCards;
             const columns = sectionData.columns || 3;
@@ -309,9 +350,20 @@ export function FeaturePageClient(props: FeaturePageClientProps) {
                           key={itemIndex}
                           className="rounded-xl border border-border bg-card p-6 shadow-sm"
                         >
-                          <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                            <Icon className="w-6 h-6 text-primary" />
-                          </div>
+                          {item.image ? (
+                            <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-muted mb-4">
+                              <Image
+                                src={item.image}
+                                alt={item.title || ""}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                              <Icon className="w-6 h-6 text-primary" />
+                            </div>
+                          )}
                           <h3 className="font-semibold mb-2">{item.title}</h3>
                           <p className="text-sm text-muted-foreground">
                             {item.description}
@@ -333,7 +385,7 @@ export function FeaturePageClient(props: FeaturePageClientProps) {
           case "FeatureSectionsFeatureGrid":
             return (
               <section key={index} className="py-20">
-                <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
+                <div className="mx-auto max-w-[1200px] px-6 md:px-8">
                   <div className="rounded-3xl bg-muted/30 p-6 md:p-10">
                     <div className="text-center mb-16">
                       <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
@@ -455,6 +507,35 @@ export function FeaturePageClient(props: FeaturePageClientProps) {
                 secondaryButtonLink={ctaSection.secondaryButtonLink}
                 trustMessage={ctaSection.trustMessage}
               />
+            );
+          }
+
+          case "FeatureSectionsCtaSection": {
+            const cta = section as unknown as {
+              variant?: "default" | "compact" | "inline" | string;
+              title?: string;
+              subtitle?: string;
+              primaryButtonText?: string;
+              primaryButtonLink?: string;
+              secondaryButtonText?: string;
+              secondaryButtonLink?: string;
+              trustMessage?: string;
+            };
+            return (
+              <section key={index} className="py-10">
+                <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
+                  <CTASection
+                    variant={(cta.variant as "default" | "compact" | "inline") || "default"}
+                    title={cta.title}
+                    subtitle={cta.subtitle}
+                    primaryButtonText={cta.primaryButtonText}
+                    primaryButtonLink={cta.primaryButtonLink}
+                    secondaryButtonText={cta.secondaryButtonText}
+                    secondaryButtonLink={cta.secondaryButtonLink}
+                    trustMessage={cta.trustMessage}
+                  />
+                </div>
+              </section>
             );
           }
 

@@ -11,6 +11,8 @@ import {
 import { useTina } from "tinacms/dist/react";
 import type { AboutQuery } from "../../../../tina/__generated__/types";
 import { Button } from "@/components/ui/button";
+import { HowItWorksCards } from "@/components/sections/how-it-works-cards";
+import { CTASection } from "@/components/cta-section";
 
 // Icon mapping for dynamic icons
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -87,9 +89,9 @@ export function AboutClient(props: AboutClientProps) {
         switch (section.__typename) {
           case "AboutSectionsIntroSection":
             return (
-              <section key={index} className="py-16">
+              <section key={index} className="py-8">
                 <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-                  <div className="grid lg:grid-cols-2 gap-12 items-center">
+                  <div className="grid md:grid-cols-2 gap-12 items-center">
                     <div className="relative">
                       <div className="aspect-[4/3] bg-muted rounded-2xl shadow-xl overflow-hidden">
                         {section.image ? (
@@ -124,7 +126,7 @@ export function AboutClient(props: AboutClientProps) {
 
           case "AboutSectionsMissionSection":
             return (
-              <section key={index} className="py-16">
+              <section key={index} className="py-8">
                 <div className="mx-auto max-w-[900px] px-6 lg:px-8">
                   <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-8">
                     {section.title}
@@ -142,9 +144,9 @@ export function AboutClient(props: AboutClientProps) {
 
           case "AboutSectionsPrinciplesSection":
             return (
-              <section key={index} className="py-16">
+              <section key={index} className="py-8">
                 <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-                  <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-center mb-12">
+                  <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-left mb-12">
                     {section.title}
                   </h2>
                   <div className="grid md:grid-cols-3 gap-8">
@@ -180,7 +182,7 @@ export function AboutClient(props: AboutClientProps) {
 
           case "AboutSectionsHowWeOperateSection":
             return (
-              <section key={index} className="py-16">
+              <section key={index} className="py-8">
                 <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
                   <div className="max-w-3xl mb-12">
                     <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
@@ -210,38 +212,36 @@ export function AboutClient(props: AboutClientProps) {
               </section>
             );
 
-          case "AboutSectionsGlobalCta":
+          case "AboutSectionsHowItWorksCards": {
+            const how = section as unknown as {
+              title?: string;
+              subtitle?: string;
+              columns?: number | null;
+              items?: Array<{
+                title?: string;
+                description?: string;
+                image?: string;
+                link?: string;
+                linkText?: string;
+              } | null> | null;
+            };
             return (
-              <section key={index} className="py-6 bg-primary text-primary-foreground">
-                <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div>
-                      <h3 className="text-xl sm:text-2xl font-bold tracking-tight">
-                        {section.title}
-                      </h3>
-                      <p className="mt-1 text-sm opacity-90">
-                        {section.subtitle}
-                      </p>
-                    </div>
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      {section.primaryButtonText && section.primaryButtonLink && (
-                        <Button asChild size="lg" variant="secondary">
-                          <Link href={section.primaryButtonLink}>{section.primaryButtonText}</Link>
-                        </Button>
-                      )}
-                      {section.secondaryButtonText && section.secondaryButtonLink && (
-                        <Button asChild size="lg" variant="outline" className="border-primary-foreground/30 hover:bg-primary-foreground/10">
-                          <Link href={section.secondaryButtonLink}>{section.secondaryButtonText}</Link>
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </section>
+              <HowItWorksCards
+                key={index}
+                title={how.title || ""}
+                subtitle={how.subtitle || undefined}
+                columns={how.columns === 2 ? 2 : how.columns === 3 ? 3 : undefined}
+                items={(how.items || []).map((it) => ({
+                  title: it?.title || "",
+                  description: it?.description || "",
+                  image: it?.image || undefined,
+                  link: it?.link || undefined,
+                  linkText: it?.linkText || undefined,
+                }))}
+              />
             );
+          }
 
-          default:
-            return null;
         }
       })}
     </main>

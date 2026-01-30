@@ -28,6 +28,8 @@ import { IntroSection } from "@/components/sections/intro-section";
 import { ArrowLink } from "@/components/sections/arrow-link";
 import { BentoGrid } from "@/components/sections/bento-grid";
 import { IconCards } from "@/components/sections/icon-cards";
+import { HowItWorksCards } from "@/components/sections/how-it-works-cards";
+import { CTASection } from "@/components/cta-section";
 
 // Icon mapping for dynamic icons
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -240,6 +242,35 @@ export function LandingClient(props: LandingClientProps) {
               />
             );
           }
+          case "LandingPageSectionsHowItWorksCards": {
+            const how = s as unknown as {
+              title?: string;
+              subtitle?: string;
+              columns?: number | null;
+              items?: Array<{
+                title?: string;
+                description?: string;
+                image?: string;
+                link?: string;
+                linkText?: string;
+              } | null> | null;
+            };
+            return (
+              <HowItWorksCards
+                key={index}
+                title={how.title || ""}
+                subtitle={how.subtitle || undefined}
+                columns={how.columns === 2 ? 2 : how.columns === 3 ? 3 : undefined}
+                items={(how.items || []).map((it) => ({
+                  title: it?.title || "",
+                  description: it?.description || "",
+                  image: it?.image || undefined,
+                  link: it?.link || undefined,
+                  linkText: it?.linkText || undefined,
+                }))}
+              />
+            );
+          }
           case "LandingPageSectionsFaq": {
             return (
               <FAQSection
@@ -264,6 +295,34 @@ export function LandingClient(props: LandingClientProps) {
                 secondaryButtonLink={s.secondaryButtonLink || ""}
                 trustMessage={s.trustMessage || ""}
               />
+            );
+          }
+          case "LandingPageSectionsCtaSection": {
+            const cta = s as unknown as {
+              variant?: "default" | "compact" | "inline" | string;
+              title?: string;
+              subtitle?: string;
+              primaryButtonText?: string;
+              primaryButtonLink?: string;
+              secondaryButtonText?: string;
+              secondaryButtonLink?: string;
+              trustMessage?: string;
+            };
+            return (
+              <section key={index} className="py-10">
+                <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
+                  <CTASection
+                    variant={(cta.variant as "default" | "compact" | "inline") || "default"}
+                    title={cta.title}
+                    subtitle={cta.subtitle}
+                    primaryButtonText={cta.primaryButtonText}
+                    primaryButtonLink={cta.primaryButtonLink}
+                    secondaryButtonText={cta.secondaryButtonText}
+                    secondaryButtonLink={cta.secondaryButtonLink}
+                    trustMessage={cta.trustMessage}
+                  />
+                </div>
+              </section>
             );
           }
           default:

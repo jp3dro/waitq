@@ -13,6 +13,7 @@ import { TwoColumnBenefits } from "@/components/sections/two-column-benefits";
 import { HowItWorksCards } from "@/components/sections/how-it-works-cards";
 import { IntroSection } from "@/components/sections/intro-section";
 import { ProductShowcase } from "@/components/sections/product-showcase";
+import { CTASection } from "@/components/cta-section";
 
 interface HomeClientProps {
   query: string;
@@ -130,6 +131,7 @@ export function HomeClient(props: HomeClientProps) {
               <HowItWorksCards
                 key={index}
                 title={section.title || ""}
+                columns={section.columns === 2 ? 2 : section.columns === 3 ? 3 : undefined}
                 items={(section.items || []).map(item => ({
                   title: item?.title || "",
                   description: item?.description || "",
@@ -207,6 +209,24 @@ export function HomeClient(props: HomeClientProps) {
                 secondaryButtonLink={section.secondaryButtonLink || undefined}
                 trustMessage={section.trustMessage || undefined}
               />
+            );
+
+          case "HomeSectionsCtaSection":
+            return (
+              <section key={index} className="py-10">
+                <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
+                  <CTASection
+                    variant={(section.variant as "default" | "compact" | "inline") || "default"}
+                    title={section.title || undefined}
+                    subtitle={section.subtitle || undefined}
+                    primaryButtonText={section.primaryButtonText || undefined}
+                    primaryButtonLink={section.primaryButtonLink || undefined}
+                    secondaryButtonText={section.secondaryButtonText || undefined}
+                    secondaryButtonLink={section.secondaryButtonLink || undefined}
+                    trustMessage={section.trustMessage || undefined}
+                  />
+                </div>
+              </section>
             );
 
           default:

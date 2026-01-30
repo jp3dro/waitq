@@ -114,12 +114,13 @@ export default defineConfig({
               },
               {
                 name: "howItWorks",
-                label: "How It Works (3 Cards with Images)",
+                label: "Cards with Images and link",
                 ui: {
                   itemProps: (item) => ({ label: item?.title || "How It Works" }),
                 },
                 fields: [
                   { type: "string", name: "title", label: "Section Title" },
+                  { type: "number", name: "columns", label: "Max columns (2 or 3)" },
                   {
                     type: "object",
                     name: "items",
@@ -233,6 +234,45 @@ export default defineConfig({
                       { type: "string", name: "answer", label: "Answer", ui: { component: "textarea" } },
                     ],
                   },
+                ],
+              },
+              {
+                name: "howItWorksCards",
+                label: "Cards with Images and link",
+                ui: { itemProps: (item) => ({ label: item?.title || "How It Works" }) },
+                fields: [
+                  { type: "string", name: "title", label: "Section Title" },
+                  { type: "string", name: "subtitle", label: "Section Subtitle", ui: { component: "textarea" } },
+                  { type: "number", name: "columns", label: "Max columns (2 or 3)" },
+                  {
+                    type: "object",
+                    name: "items",
+                    label: "Cards",
+                    list: true,
+                    ui: { itemProps: (item) => ({ label: item?.title }) },
+                    fields: [
+                      { type: "string", name: "title", label: "Title" },
+                      { type: "string", name: "description", label: "Description", ui: { component: "textarea" } },
+                      { type: "image", name: "image", label: "Image" },
+                      { type: "string", name: "link", label: "Link URL" },
+                      { type: "string", name: "linkText", label: "Link Text" },
+                    ],
+                  },
+                ],
+              },
+              {
+                name: "ctaSection",
+                label: "CTA Section (Banner / Inline / Compact)",
+                ui: { itemProps: () => ({ label: "CTA Section" }) },
+                fields: [
+                  { type: "string", name: "variant", label: "Variant (default, compact, inline)" },
+                  { type: "string", name: "title", label: "Title" },
+                  { type: "string", name: "subtitle", label: "Subtitle", ui: { component: "textarea" } },
+                  { type: "string", name: "primaryButtonText", label: "Primary Button Text" },
+                  { type: "string", name: "primaryButtonLink", label: "Primary Button Link" },
+                  { type: "string", name: "secondaryButtonText", label: "Secondary Button Text" },
+                  { type: "string", name: "secondaryButtonLink", label: "Secondary Button Link" },
+                  { type: "string", name: "trustMessage", label: "Trust Message" },
                 ],
               },
               {
@@ -423,6 +463,49 @@ export default defineConfig({
                   },
                 ],
               },
+              {
+                name: "ctaSection",
+                label: "CTA Section",
+                ui: {
+                  itemProps: () => ({ label: "CTA Section" }),
+                },
+                fields: [
+                  { type: "string", name: "variant", label: "Variant (default, compact, inline)" },
+                  { type: "string", name: "title", label: "Title" },
+                  { type: "string", name: "subtitle", label: "Subtitle", ui: { component: "textarea" } },
+                  { type: "string", name: "primaryButtonText", label: "Primary Button Text" },
+                  { type: "string", name: "primaryButtonLink", label: "Primary Button Link" },
+                  { type: "string", name: "secondaryButtonText", label: "Secondary Button Text" },
+                  { type: "string", name: "secondaryButtonLink", label: "Secondary Button Link" },
+                  { type: "string", name: "trustMessage", label: "Trust Message" },
+                ],
+              },
+              {
+                name: "howItWorksCards",
+                label: "Cards with Images and link",
+                ui: {
+                  itemProps: (item) => ({ label: item?.title || "How It Works" }),
+                },
+                fields: [
+                  { type: "string", name: "title", label: "Section Title" },
+                  { type: "string", name: "subtitle", label: "Section Subtitle", ui: { component: "textarea" } },
+                  { type: "number", name: "columns", label: "Max columns (2 or 3)" },
+                  {
+                    type: "object",
+                    name: "items",
+                    label: "Cards",
+                    list: true,
+                    ui: { itemProps: (item) => ({ label: item?.title }) },
+                    fields: [
+                      { type: "string", name: "title", label: "Title" },
+                      { type: "string", name: "description", label: "Description", ui: { component: "textarea" } },
+                      { type: "image", name: "image", label: "Image" },
+                      { type: "string", name: "link", label: "Link URL" },
+                      { type: "string", name: "linkText", label: "Link Text" },
+                    ],
+                  },
+                ],
+              },
             ],
           },
           // SEO
@@ -491,6 +574,7 @@ export default defineConfig({
                     list: true,
                     fields: [
                       { type: "string", name: "text", label: "Text" },
+                      { type: "string", name: "description", label: "Description (optional)", ui: { component: "textarea" } },
                       { type: "string", name: "icon", label: "Icon (lucide icon name, optional)" },
                     ],
                   },
@@ -544,6 +628,32 @@ export default defineConfig({
                       { type: "string", name: "icon", label: "Icon (lucide icon name)" },
                       { type: "image", name: "image", label: "Step Image" },
                       { type: "string", name: "link", label: "Learn More Link" },
+                      { type: "string", name: "linkText", label: "Link Text" },
+                    ],
+                  },
+                ],
+              },
+              {
+                name: "howItWorksCards",
+                label: "Cards with Images and link",
+                ui: {
+                  itemProps: (item) => ({ label: item?.title || "How It Works" }),
+                },
+                fields: [
+                  { type: "string", name: "title", label: "Section Title" },
+                  { type: "string", name: "subtitle", label: "Section Subtitle", ui: { component: "textarea" } },
+                  { type: "number", name: "columns", label: "Max columns (2 or 3)" },
+                  {
+                    type: "object",
+                    name: "items",
+                    label: "Cards",
+                    list: true,
+                    ui: { itemProps: (item) => ({ label: item?.title }) },
+                    fields: [
+                      { type: "string", name: "title", label: "Title" },
+                      { type: "string", name: "description", label: "Description", ui: { component: "textarea" } },
+                      { type: "image", name: "image", label: "Image" },
+                      { type: "string", name: "link", label: "Link URL" },
                       { type: "string", name: "linkText", label: "Link Text" },
                     ],
                   },
@@ -666,6 +776,23 @@ export default defineConfig({
                   itemProps: () => ({ label: "Global CTA" }),
                 },
                 fields: [
+                  { type: "string", name: "title", label: "Title" },
+                  { type: "string", name: "subtitle", label: "Subtitle", ui: { component: "textarea" } },
+                  { type: "string", name: "primaryButtonText", label: "Primary Button Text" },
+                  { type: "string", name: "primaryButtonLink", label: "Primary Button Link" },
+                  { type: "string", name: "secondaryButtonText", label: "Secondary Button Text" },
+                  { type: "string", name: "secondaryButtonLink", label: "Secondary Button Link" },
+                  { type: "string", name: "trustMessage", label: "Trust Message" },
+                ],
+              },
+              {
+                name: "ctaSection",
+                label: "CTA Section",
+                ui: {
+                  itemProps: () => ({ label: "CTA Section" }),
+                },
+                fields: [
+                  { type: "string", name: "variant", label: "Variant (default, compact, inline)" },
                   { type: "string", name: "title", label: "Title" },
                   { type: "string", name: "subtitle", label: "Subtitle", ui: { component: "textarea" } },
                   { type: "string", name: "primaryButtonText", label: "Primary Button Text" },
@@ -981,6 +1108,45 @@ export default defineConfig({
                 ],
               },
               {
+                name: "howItWorksCards",
+                label: "Cards with Images and link",
+                ui: { itemProps: (item) => ({ label: item?.title || "How It Works" }) },
+                fields: [
+                  { type: "string", name: "title", label: "Section Title" },
+                  { type: "string", name: "subtitle", label: "Section Subtitle", ui: { component: "textarea" } },
+                  { type: "number", name: "columns", label: "Max columns (2 or 3)" },
+                  {
+                    type: "object",
+                    name: "items",
+                    label: "Cards",
+                    list: true,
+                    ui: { itemProps: (item) => ({ label: item?.title }) },
+                    fields: [
+                      { type: "string", name: "title", label: "Title" },
+                      { type: "string", name: "description", label: "Description", ui: { component: "textarea" } },
+                      { type: "image", name: "image", label: "Image" },
+                      { type: "string", name: "link", label: "Link URL" },
+                      { type: "string", name: "linkText", label: "Link Text" },
+                    ],
+                  },
+                ],
+              },
+              {
+                name: "ctaSection",
+                label: "CTA Section (Banner / Inline / Compact)",
+                ui: { itemProps: () => ({ label: "CTA Section" }) },
+                fields: [
+                  { type: "string", name: "variant", label: "Variant (default, compact, inline)" },
+                  { type: "string", name: "title", label: "Title" },
+                  { type: "string", name: "subtitle", label: "Subtitle", ui: { component: "textarea" } },
+                  { type: "string", name: "primaryButtonText", label: "Primary Button Text" },
+                  { type: "string", name: "primaryButtonLink", label: "Primary Button Link" },
+                  { type: "string", name: "secondaryButtonText", label: "Secondary Button Text" },
+                  { type: "string", name: "secondaryButtonLink", label: "Secondary Button Link" },
+                  { type: "string", name: "trustMessage", label: "Trust Message" },
+                ],
+              },
+              {
                 name: "globalCta",
                 label: "Global CTA Section",
                 ui: {
@@ -1112,6 +1278,45 @@ export default defineConfig({
                       { type: "string", name: "icon", label: "Icon (lucide icon name)" },
                     ],
                   },
+                ],
+              },
+              {
+                name: "howItWorksCards",
+                label: "Cards with Images and link",
+                ui: { itemProps: (item) => ({ label: item?.title || "How It Works" }) },
+                fields: [
+                  { type: "string", name: "title", label: "Section Title" },
+                  { type: "string", name: "subtitle", label: "Section Subtitle", ui: { component: "textarea" } },
+                  { type: "number", name: "columns", label: "Max columns (2 or 3)" },
+                  {
+                    type: "object",
+                    name: "items",
+                    label: "Cards",
+                    list: true,
+                    ui: { itemProps: (item) => ({ label: item?.title }) },
+                    fields: [
+                      { type: "string", name: "title", label: "Title" },
+                      { type: "string", name: "description", label: "Description", ui: { component: "textarea" } },
+                      { type: "image", name: "image", label: "Image" },
+                      { type: "string", name: "link", label: "Link URL" },
+                      { type: "string", name: "linkText", label: "Link Text" },
+                    ],
+                  },
+                ],
+              },
+              {
+                name: "ctaSection",
+                label: "CTA Section (Banner / Inline / Compact)",
+                ui: { itemProps: () => ({ label: "CTA Section" }) },
+                fields: [
+                  { type: "string", name: "variant", label: "Variant (default, compact, inline)" },
+                  { type: "string", name: "title", label: "Title" },
+                  { type: "string", name: "subtitle", label: "Subtitle", ui: { component: "textarea" } },
+                  { type: "string", name: "primaryButtonText", label: "Primary Button Text" },
+                  { type: "string", name: "primaryButtonLink", label: "Primary Button Link" },
+                  { type: "string", name: "secondaryButtonText", label: "Secondary Button Text" },
+                  { type: "string", name: "secondaryButtonLink", label: "Secondary Button Link" },
+                  { type: "string", name: "trustMessage", label: "Trust Message" },
                 ],
               },
               {

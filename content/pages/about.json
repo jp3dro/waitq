@@ -5,13 +5,12 @@
   },
   "sections": [
     {
-      "_template": "introSection",
       "title": "WaitQ started in 2026 and is built by a small team who believes software shouldn't be complicated.",
       "description": "We're a fully bootstrapped project, moving fast, staying focused, and shipping only the features that actually solve real problems.",
-      "image": ""
+      "image": "/images/bar friends.jpg",
+      "_template": "introSection"
     },
     {
-      "_template": "missionSection",
       "title": "Our mission: everyone make the most out of their time",
       "paragraphs": [
         {
@@ -23,10 +22,10 @@
         {
           "text": "We see WaitQ as the waitlist system that reduces no-shows, increases customer turnover, and brings a sense of calm to an activity no one likes: waiting. All with virtually zero operational overhead."
         }
-      ]
+      ],
+      "_template": "missionSection"
     },
     {
-      "_template": "principlesSection",
       "title": "Our guiding principles",
       "items": [
         {
@@ -44,10 +43,10 @@
           "description": "Our software should be running in minutes, not days. No unnecessary complexity. No feature creep. Just what works.",
           "image": ""
         }
-      ]
+      ],
+      "_template": "principlesSection"
     },
     {
-      "_template": "howWeOperateSection",
       "title": "How we operate",
       "description": "WaitQ is a small independent and bootstrapped business based in Portugal. We're a remote team focused on delivering lightweight but powerful platforms that actually bring back precious time to our clients.",
       "items": [
@@ -66,16 +65,14 @@
           "description": "No hidden fees. No per-user charges. What you see is what you pay.",
           "icon": "Heart"
         }
-      ]
+      ],
+      "_template": "howWeOperateSection"
     },
     {
-      "_template": "globalCta",
-      "title": "Smarter queue management starts here",
-      "subtitle": "Start your free trial today. No credit card required.",
-      "primaryButtonText": "Try for Free",
-      "primaryButtonLink": "/signup",
-      "secondaryButtonText": "",
-      "secondaryButtonLink": ""
+      "title": "swsw",
+      "subtitle": "swsws",
+      "primaryButtonText": "swsws",
+      "_template": "globalCta"
     }
   ],
   "seo": {

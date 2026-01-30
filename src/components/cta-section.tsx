@@ -12,9 +12,9 @@ interface CTASectionProps {
   title?: string;
   subtitle?: string;
   primaryButtonText?: string;
-  primaryButtonLink?: string;
+  primaryButtonLink?: string | null;
   secondaryButtonText?: string;
-  secondaryButtonLink?: string;
+  secondaryButtonLink?: string | null;
   trustMessage?: string;
 }
 
@@ -29,6 +29,16 @@ export function CTASection({
   secondaryButtonLink,
   trustMessage,
 }: CTASectionProps) {
+  const safePrimaryButtonLink =
+    typeof primaryButtonLink === "string" && primaryButtonLink.trim().length > 0
+      ? primaryButtonLink
+      : "/signup";
+
+  const safeSecondaryButtonLink =
+    typeof secondaryButtonLink === "string" && secondaryButtonLink.trim().length > 0
+      ? secondaryButtonLink
+      : null;
+
   if (variant === "compact") {
     return (
       <section
@@ -48,7 +58,7 @@ export function CTASection({
           </div>
           <div className="flex flex-col sm:flex-row justify-end md:self-center">
             <Button asChild size="sm" variant="secondary" className="h-10 px-4">
-              <Link href={primaryButtonLink}>{primaryButtonText}</Link>              
+              <Link href={safePrimaryButtonLink}>{primaryButtonText}</Link>
             </Button>
           </div>
         </div>
@@ -67,13 +77,13 @@ export function CTASection({
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
           <Button asChild>
-            <Link href={primaryButtonLink}>
+            <Link href={safePrimaryButtonLink}>
               {primaryButtonText} <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
-          {secondaryButtonText && secondaryButtonLink ? (
+          {secondaryButtonText && safeSecondaryButtonLink ? (
             <Button asChild variant="outline">
-              <Link href={secondaryButtonLink}>{secondaryButtonText}</Link>
+              <Link href={safeSecondaryButtonLink}>{secondaryButtonText}</Link>
             </Button>
           ) : (
             <ContactModal>
@@ -103,11 +113,11 @@ export function CTASection({
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
             <Button asChild size="lg" variant="secondary">
-              <Link href={primaryButtonLink}>{primaryButtonText}</Link>
+              <Link href={safePrimaryButtonLink}>{primaryButtonText}</Link>
             </Button>
-            {secondaryButtonText && secondaryButtonLink && (
+            {secondaryButtonText && safeSecondaryButtonLink && (
               <Button asChild size="lg" variant="outline" className="border-primary-foreground/30 hover:bg-primary-foreground/10">
-                <Link href={secondaryButtonLink}>{secondaryButtonText}</Link>
+                <Link href={safeSecondaryButtonLink}>{secondaryButtonText}</Link>
               </Button>
             )}
           </div>

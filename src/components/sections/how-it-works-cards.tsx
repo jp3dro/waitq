@@ -15,6 +15,7 @@ interface HowItWorksItem {
 interface HowItWorksCardsProps {
   title: string;
   subtitle?: string;
+  columns?: 2 | 3;
   items: HowItWorksItem[];
 }
 
@@ -23,8 +24,12 @@ interface HowItWorksCardsProps {
  * Image is shown FIRST, then title, description, and link below.
  * Link appears directly below the description text, not aligned to bottom.
  */
-export function HowItWorksCards({ title, subtitle, items }: HowItWorksCardsProps) {
+export function HowItWorksCards({ title, subtitle, columns, items }: HowItWorksCardsProps) {
   if (!items || items.length === 0) return null;
+
+  const count = items.length;
+  const requestedMax = columns === 2 ? 2 : 3;
+  const maxCols = Math.min(requestedMax, count >= 3 ? 3 : count >= 2 ? 2 : 1);
 
   return (
     <section className="py-16">
@@ -39,7 +44,15 @@ export function HowItWorksCards({ title, subtitle, items }: HowItWorksCardsProps
             </p>
           )}
         </div>
-        <div className="grid md:grid-cols-3 gap-8">
+        <div
+          className={[
+            "grid gap-8",
+            maxCols >= 2 ? "md:grid-cols-2" : "",
+            maxCols >= 3 ? "lg:grid-cols-3" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
           {items.map((item, index) => (
             <div key={index}>
               {/* Image */}
