@@ -684,6 +684,16 @@ const putSchema = z.object({
   id: z.string().uuid(),
   customer_name: z.string().nullable().optional(),
   phone: z.string().nullable().optional(),
+  email: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((v) => {
+      if (typeof v !== "string") return v;
+      const t = v.trim();
+      return t.length ? t : null;
+    })
+    .refine((v) => v === null || v === undefined || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), "Invalid email"),
   party_size: z.number().nullable().optional(),
   seating_preference: z.string().nullable().optional(),
 });

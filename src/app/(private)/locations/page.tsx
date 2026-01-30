@@ -73,15 +73,21 @@ const validateDayRanges = (ranges: TimeRange[]) => {
   if (parsed.some((r) => r.start === null || r.end === null)) {
     return "Start and end times are required";
   }
-  if (parsed.some((r) => (r.start as number) >= (r.end as number))) {
-    return "Start time must be earlier than end time";
-  }
-  const sorted = parsed
-    .map((r) => ({ start: r.start as number, end: r.end as number }))
-    .sort((a, b) => a.start - b.start);
-  for (let i = 1; i < sorted.length; i += 1) {
-    if (sorted[i].start < sorted[i - 1].end) {
-      return "Times overlap with another set of times";
+  // Allow overnight hours where end < start (e.g., 11:00 to 02:00)
+  // Only validate non-overnight ranges for start < end
+  // For overnight ranges (end < start), the range wraps past midnight which is valid
+  const nonOvernightRanges = parsed.filter((r) => (r.end as number) >= (r.start as number));
+  
+  // Check for overlaps only among non-overnight ranges on the same day
+  // Overnight ranges are allowed and won't overlap with same-day ranges in the traditional sense
+  if (nonOvernightRanges.length > 1) {
+    const sorted = nonOvernightRanges
+      .map((r) => ({ start: r.start as number, end: r.end as number }))
+      .sort((a, b) => a.start - b.start);
+    for (let i = 1; i < sorted.length; i += 1) {
+      if (sorted[i].start < sorted[i - 1].end) {
+        return "Times overlap with another set of times";
+      }
     }
   }
   return null;
@@ -193,6 +199,7 @@ function RegularHoursEditor({
   return (
     <div className="space-y-3 pb-3">
       <Label>Working hours</Label>
+      <p className="text-xs text-muted-foreground">For overnight hours (e.g., 11:00 AM to 2:00 AM), set the end time earlier than the start time. The system will understand it extends to the next day.</p>
       <div className="space-y-1">
         {dayOptions.map((day) => {
           const ranges = hours[day.key] || [];

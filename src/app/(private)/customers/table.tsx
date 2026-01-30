@@ -13,9 +13,11 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import VisitDetailModal from "@/components/visit-detail-modal";
+import UpgradeRequiredDialog from "@/components/upgrade-required-dialog";
 import { HoverClickTooltip } from "@/components/ui/hover-click-tooltip";
 import { useTimeFormat } from "@/components/time-format-provider";
 import { formatDateTime } from "@/lib/date-time";
+import type { PlanId } from "@/lib/plans";
 
 type Location = {
   id: string;
@@ -26,6 +28,11 @@ type Waitlist = {
   id: string;
   name: string;
   location_id: string | null;
+  list_type?: "eat_in" | "take_out" | null;
+  seating_preferences?: string[] | null;
+  ask_name?: boolean | null;
+  ask_phone?: boolean | null;
+  ask_email?: boolean | null;
 };
 
 type VisitEntry = {
@@ -94,11 +101,17 @@ export default function CustomersTable({
   const [loading, setLoading] = useState(true);
   const [locationId, setLocationId] = useState<string>("all");
   const [waitlistId, setWaitlistId] = useState<string>("all");
-  const [dateRange, setDateRange] = useState<"today" | "yesterday" | "7" | "15" | "30">("today");
+  const [dateRange, setDateRange] = useState<"today" | "yesterday" | "7" | "15" | "30" | "90">("today");
   const [selectedVisit, setSelectedVisit] = useState<VisitEntry | null>(null);
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [planId, setPlanId] = useState<PlanId>("free");
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
   const pageSize = 50;
+  const selectedWaitlist = useMemo(() => {
+    if (!selectedVisit?.waitlist_id) return null;
+    return waitlists.find((w) => w.id === selectedVisit.waitlist_id) || null;
+  }, [selectedVisit?.waitlist_id, waitlists]);
   const loyaltyTooltip = (visit: VisitEntry) => {
     const total = typeof visit.visits_count === "number" ? visit.visits_count : null;
     const prior = total !== null ? Math.max(0, total - 1) : null;
@@ -162,17 +175,41 @@ export default function CustomersTable({
     setPage(1);
   }, [locationId, waitlistId, dateRange]);
 
+  // Fetch plan info
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/plan", { cache: "no-store" });
+        const j = await res.json().catch(() => ({}));
+        if (res.ok && typeof j?.planId === "string") {
+          setPlanId(j.planId as PlanId);
+        }
+      } catch { }
+    })();
+  }, []);
+
   return (
     <div className="space-y-4">
       {/* Filters - always visible */}
       <div className="flex flex-wrap items-center gap-4">
-        <Tabs value={dateRange} onValueChange={(v) => setDateRange(v as typeof dateRange)}>
+        <Tabs
+          value={dateRange}
+          onValueChange={(v) => {
+            const next = v as typeof dateRange;
+            if (planId !== "premium" && next === "90") {
+              setUpgradeOpen(true);
+              return;
+            }
+            setDateRange(next);
+          }}
+        >
           <TabsList variant="default">
             <TabsTrigger value="today">Today</TabsTrigger>
             <TabsTrigger value="yesterday">Yesterday</TabsTrigger>
             <TabsTrigger value="7">Last 7 days</TabsTrigger>
             <TabsTrigger value="15">Last 15 days</TabsTrigger>
             <TabsTrigger value="30">Last 30 days</TabsTrigger>
+            <TabsTrigger value="90">Last 90 days</TabsTrigger>
           </TabsList>
         </Tabs>
 
@@ -221,14 +258,13 @@ export default function CustomersTable({
                   <th className="text-left font-medium text-foreground px-4 py-2">Customer</th>
                   <th className="text-left font-medium text-foreground px-4 py-2">Preferences</th>
                   <th className="text-left font-medium text-foreground px-4 py-2">Party</th>
-                  <th className="text-left font-medium text-foreground px-4 py-2">Began waiting</th>
                   <th className="text-left font-medium text-foreground px-4 py-2">Wait time</th>
                   <th className="text-left font-medium text-foreground px-4 py-2">Status</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td colSpan={6} className="px-4 py-10 text-center">
+                  <td colSpan={5} className="px-4 py-10 text-center">
                     <div className="flex flex-col items-center gap-3">
                       <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
                       <p className="text-sm text-muted-foreground">Loading visits...</p>
@@ -253,7 +289,6 @@ export default function CustomersTable({
                   <th className="text-left font-medium text-foreground px-4 py-2">Customer</th>
                   <th className="text-left font-medium text-foreground px-4 py-2">Preferences</th>
                   <th className="text-left font-medium text-foreground px-4 py-2">Party</th>
-                  <th className="text-left font-medium text-foreground px-4 py-2">Began waiting</th>
                   <th className="text-left font-medium text-foreground px-4 py-2">Wait time</th>
                   <th className="text-left font-medium text-foreground px-4 py-2">Status</th>
                 </tr>
@@ -296,9 +331,6 @@ export default function CustomersTable({
                       )}
                     </td>
                     <td className="px-4 py-2">{visit.party_size || "—"}</td>
-                    <td className="px-4 py-2">
-                      {formatDateTime(visit.created_at, timeFormat)}
-                    </td>
                     <td className="px-4 py-2">
                       {getWaitTime(visit.created_at, visit.notified_at)}
                     </td>
@@ -355,6 +387,21 @@ export default function CustomersTable({
         visit={selectedVisit}
         open={!!selectedVisit}
         onOpenChange={(open) => !open && setSelectedVisit(null)}
+        listType={(selectedWaitlist?.list_type === "take_out" || selectedWaitlist?.list_type === "eat_in") ? selectedWaitlist.list_type : "eat_in"}
+        seatingPreferences={Array.isArray(selectedWaitlist?.seating_preferences) ? selectedWaitlist!.seating_preferences! : []}
+        askName={selectedWaitlist?.ask_name !== false}
+        askPhone={selectedWaitlist?.ask_phone !== false}
+        askEmail={selectedWaitlist?.ask_email === true}
+      />
+
+      {/* Upgrade required dialog for 90 days */}
+      <UpgradeRequiredDialog
+        open={upgradeOpen}
+        onOpenChange={setUpgradeOpen}
+        title="Upgrade to unlock 90-day history"
+        description="Your current plan includes visits history up to 30 days. Upgrade to Premium to view visits up to 90 days."
+        ctaLabel="View plans"
+        ctaHref="/subscriptions"
       />
     </div>
   );

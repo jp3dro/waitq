@@ -14,13 +14,13 @@
         "highlighted": false,
         "features": [
           {
-            "text": "50 SMS total"
+            "text": "50 SMS / month"
           },
           {
             "text": "1 location"
           },
           {
-            "text": "2 users"
+            "text": "1 user"
           },
           {
             "text": "Today analytics only"
@@ -75,7 +75,7 @@
             "text": "100 users"
           },
           {
-            "text": "30-day analytics"
+            "text": "90-day analytics"
           },
           {
             "text": "Priority support"
@@ -141,7 +141,7 @@
           "features": [
             {
               "name": "SMS Notifications",
-              "free": "50 total",
+              "free": "50 / mo",
               "base": "1,000 / mo",
               "premium": "5,000 / mo"
             },
@@ -166,7 +166,7 @@
               "name": "Usage Statistics",
               "free": "Today only",
               "base": "30 days",
-              "premium": "30 days"
+              "premium": "90 days"
             },
             {
               "name": "Data Export (CSV)",

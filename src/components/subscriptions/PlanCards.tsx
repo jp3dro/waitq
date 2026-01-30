@@ -61,12 +61,10 @@ export default function PlanCards({ mode, currentPlanId, disabled, onFreeAction,
                   {plan.limits.users} {pluralize(plan.limits.users, "Staff user", "Staff users")}
                 </li>
                 <li>
-                  {plan.limits.reservationsPerMonth} reservations/queues{" "}
-                  {plan.id === "free" ? "total" : "per month"}
+                  {plan.limits.reservationsPerMonth} reservations/queues per month
                 </li>
                 <li>
-                  {plan.limits.messagesPerMonth} SMS/emails{" "}
-                  {plan.id === "free" ? "total" : "per month"}
+                  {plan.limits.messagesPerMonth} SMS/emails per month
                 </li>
                 {plan.features.map((f, idx) => (
                   <li key={idx}>{f}</li>

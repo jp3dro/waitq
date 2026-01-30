@@ -36,7 +36,7 @@ export const plans: Record<PlanId, PlanDefinition> = {
     priceMonthlyEUR: 0,
     limits: {
       locations: 1,
-      users: 2,
+      users: 1,
       reservationsPerMonth: 50,
       messagesPerMonth: 50,
     },
@@ -80,7 +80,7 @@ export const plans: Record<PlanId, PlanDefinition> = {
       messagesPerMonth: 5000,
     },
     features: [
-      "Advanced analytics up to 30 days",
+      "Advanced analytics up to 90 days",
     ],
     stripe: {
       productId: process.env.NEXT_PUBLIC_STRIPE_PRODUCT_ID, // Auto-switches per environment
@@ -171,7 +171,7 @@ export const pricingFeatures = [
   {
     category: "Communications",
     name: "SMS Notifications",
-    free: "50 total",
+    free: "50 / mo",
     base: "1,000 / mo",
     premium: "5,000 / mo",
   },
@@ -194,7 +194,7 @@ export const pricingFeatures = [
     name: "Usage Statistics",
     free: "Today analytics only",
     base: "Advanced analytics up to 30 days",
-    premium: "Advanced analytics up to 30 days",
+    premium: "Advanced analytics up to 90 days",
   },
   {
     category: "Analytics & Reports",

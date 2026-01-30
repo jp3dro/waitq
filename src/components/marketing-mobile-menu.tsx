@@ -7,12 +7,14 @@ import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ContactModal } from "@/components/contact-modal";
+import type { FeatureItem } from "@/components/nav";
 
 type Props = {
   isAuthed: boolean;
+  featureItems?: FeatureItem[];
 };
 
-export default function MarketingMobileMenu({ isAuthed }: Props) {
+export default function MarketingMobileMenu({ isAuthed, featureItems = [] }: Props) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -54,15 +56,11 @@ export default function MarketingMobileMenu({ isAuthed }: Props) {
             <div className="space-y-2">
               <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Features</div>
               <div className="grid">
-                <Button asChild variant="ghost" className="justify-start" onClick={() => setOpen(false)}>
-                  <Link href="/features/self-check-in">Self Check-in</Link>
-                </Button>
-                <Button asChild variant="ghost" className="justify-start" onClick={() => setOpen(false)}>
-                  <Link href="/features/virtual-waitlist">Virtual Waitlist</Link>
-                </Button>
-                <Button asChild variant="ghost" className="justify-start" onClick={() => setOpen(false)}>
-                  <Link href="/features/virtual-waiting-room">Virtual Waiting Room</Link>
-                </Button>
+                {featureItems.map((item) => (
+                  <Button key={item.href} asChild variant="ghost" className="justify-start" onClick={() => setOpen(false)}>
+                    <Link href={item.href}>{item.title}</Link>
+                  </Button>
+                ))}
               </div>
             </div>
 

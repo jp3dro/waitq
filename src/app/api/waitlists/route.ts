@@ -83,6 +83,7 @@ const postSchema = z.object({
   askPhone: z.boolean().optional().default(true),
   askEmail: z.boolean().optional().default(false),
   averageWaitMinutes: z.number().int().positive().optional(),
+  listType: z.enum(["eat_in", "take_out"]).optional().default("eat_in"),
 });
 
 export async function POST(req: NextRequest) {
@@ -97,7 +98,7 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   let businessId = parse.data.businessId;
-  const { name, kioskEnabled, kioskQrEnabled, displayEnabled, displayShowName, displayShowQr, askName, askPhone, askEmail, averageWaitMinutes } = parse.data as {
+  const { name, kioskEnabled, kioskQrEnabled, displayEnabled, displayShowName, displayShowQr, askName, askPhone, askEmail, averageWaitMinutes, listType } = parse.data as {
     name: string;
     locationId?: string;
     kioskEnabled?: boolean;
@@ -109,6 +110,7 @@ export async function POST(req: NextRequest) {
     askPhone?: boolean;
     askEmail?: boolean;
     averageWaitMinutes?: number;
+    listType?: "eat_in" | "take_out";
   };
   let { locationId } = parse.data as { name: string; locationId?: string };
   if (!businessId) {
@@ -142,7 +144,7 @@ export async function POST(req: NextRequest) {
       display_enabled: displayEnabled !== false,
       display_show_name: displayShowName !== false,
       display_show_qr: displayShowQr === true,
-      list_type: "restaurants",
+      list_type: listType || "eat_in",
       ask_name: askName !== false,
       ask_phone: askPhone !== false,
       ask_email: askEmail === true,
@@ -255,6 +257,7 @@ const patchSchema = z.object({
   askPhone: z.boolean().optional(),
   askEmail: z.boolean().optional(),
   averageWaitMinutes: z.number().int().positive().nullable().optional(),
+  listType: z.enum(["eat_in", "take_out"]).optional(),
 });
 
 export async function PUT(req: NextRequest) {
@@ -271,7 +274,7 @@ export async function PUT(req: NextRequest) {
   const businessId = await resolveCurrentBusinessId(supabase as any, user.id);
   if (!businessId) return NextResponse.json({ error: "No business found" }, { status: 404 });
 
-  const { id, name, locationId, kioskEnabled, kioskQrEnabled, displayEnabled, displayShowName, displayShowQr, askName, askPhone, askEmail, averageWaitMinutes } = parse.data;
+  const { id, name, locationId, kioskEnabled, kioskQrEnabled, displayEnabled, displayShowName, displayShowQr, askName, askPhone, askEmail, averageWaitMinutes, listType } = parse.data;
   const payload: Record<string, unknown> = {};
   if (typeof name === "string") payload.name = name;
   if (typeof locationId === "string") payload.location_id = locationId;
@@ -284,6 +287,7 @@ export async function PUT(req: NextRequest) {
   if (typeof askPhone === "boolean") payload.ask_phone = askPhone;
   if (typeof askEmail === "boolean") payload.ask_email = askEmail;
   if (averageWaitMinutes !== undefined) payload.average_wait_minutes = averageWaitMinutes;
+  if (typeof listType === "string") payload.list_type = listType;
 
   if (Object.keys(payload).length === 0) return NextResponse.json({ error: "No fields to update" }, { status: 400 });
 

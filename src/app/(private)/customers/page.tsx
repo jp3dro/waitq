@@ -35,7 +35,7 @@ export default async function CustomersPage() {
 
   const { data: waitlists } = await supabase
     .from("waitlists")
-    .select("id, name, location_id")
+    .select("id, name, location_id, list_type, seating_preferences, ask_name, ask_phone, ask_email")
     .eq("business_id", businessId)
     .order("created_at", { ascending: true });
 

@@ -17,6 +17,8 @@ import { HoverClickTooltip } from "@/components/ui/hover-click-tooltip";
 type Location = { id: string; name: string };
 const MAX_LIST_NAME_LEN = 30;
 
+export type ListType = "eat_in" | "take_out";
+
 type ListFormFieldsProps = {
   name: string;
   onNameChange: (v: string) => void;
@@ -43,6 +45,8 @@ type ListFormFieldsProps = {
   onKioskEnabledChange: (v: boolean) => void;
   averageWaitMinutes: number | null;
   onAverageWaitMinutesChange: (v: number | null) => void;
+  listType?: ListType;
+  onListTypeChange?: (v: ListType) => void;
 };
 
 export default function ListFormFields({
@@ -71,6 +75,8 @@ export default function ListFormFields({
   onKioskEnabledChange,
   averageWaitMinutes,
   onAverageWaitMinutesChange,
+  listType = "eat_in",
+  onListTypeChange,
 }: ListFormFieldsProps) {
   const baseId = useId();
   const askNameId = `${baseId}-ask-name`;
@@ -124,6 +130,29 @@ export default function ListFormFields({
                   {l.name}
                 </SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="grid gap-2">
+          <Label>List type</Label>
+          <Select value={listType} onValueChange={(v) => onListTypeChange?.(v as ListType)} disabled={isPending}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select list type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="eat_in">
+                <div className="flex flex-col items-start">
+                  <span>Eat in</span>
+                  <span className="text-xs text-muted-foreground">Party size and seating preferences</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="take_out">
+                <div className="flex flex-col items-start">
+                  <span>Take out</span>
+                  <span className="text-xs text-muted-foreground">No party size or seating</span>
+                </div>
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>

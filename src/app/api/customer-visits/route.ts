@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const locationId = searchParams.get("locationId") || "all";
   const waitlistId = searchParams.get("waitlistId") || "all";
-  const dateRange = (searchParams.get("dateRange") || "today") as "today" | "yesterday" | "7" | "15" | "30";
+  const dateRange = (searchParams.get("dateRange") || "today") as "today" | "yesterday" | "7" | "15" | "30" | "90";
   const page = Math.max(1, Number(searchParams.get("page") || "1") || 1);
   const pageSize = Math.min(200, Math.max(1, Number(searchParams.get("pageSize") || "50") || 50));
 

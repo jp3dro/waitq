@@ -12,12 +12,37 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
-import { QrCode, Users, MonitorPlay } from "lucide-react";
+import { QrCode, Users, MonitorPlay, BarChart3, type LucideIcon } from "lucide-react";
 import { ContactModal } from "@/components/contact-modal";
+import { getGlobalSettings } from "@/lib/tina";
+
+// Icon mapping for dynamic icon rendering from TinaCMS
+const iconMap: Record<string, LucideIcon> = {
+  QrCode,
+  Users,
+  MonitorPlay,
+  BarChart3,
+};
+
+export type FeatureItem = {
+  title: string;
+  description: string;
+  href: string;
+  icon: string;
+};
 
 export default async function Nav() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  
+  // Fetch feature items from TinaCMS
+  let featureItems: FeatureItem[] = [];
+  try {
+    const globalSettings = await getGlobalSettings();
+    featureItems = (globalSettings.data.global.header?.featuresDropdown?.items || []) as FeatureItem[];
+  } catch {
+    // Fallback to empty array if TinaCMS fails
+  }
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 px-4 pt-4">
@@ -36,66 +61,31 @@ export default async function Nav() {
                   <NavigationMenuTrigger className="h-7 px-3 bg-transparent">Features</NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <ul className="grid w-[400px]">
-                      <li>
-                        <NavigationMenuLink asChild>
-                          <Link
-                            href="/features/self-check-in"
-                            className="group block select-none space-y-1 rounded-lg p-4 no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground border border-transparent hover:border-border"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                                <QrCode className="h-5 w-5" />
-                              </div>
-                              <div className="flex-1">
-                                <div className="text-sm font-semibold leading-none mb-1.5">Self Check-in</div>
-                                <p className="line-clamp-2 text-xs leading-snug text-muted-foreground">
-                                  Let guests join the waitlist from a kiosk or their phones
-                                </p>
-                              </div>
-                            </div>
-                          </Link>
-                        </NavigationMenuLink>
-                      </li>
-                      <li>
-                        <NavigationMenuLink asChild>
-                          <Link
-                            href="/features/virtual-waitlist"
-                            className="group block select-none space-y-1 rounded-lg p-4 no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground border border-transparent hover:border-border"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                                <Users className="h-5 w-5" />
-                              </div>
-                              <div className="flex-1">
-                                <div className="text-sm font-semibold leading-none mb-1.5">Virtual Waitlist</div>
-                                <p className="line-clamp-2 text-xs leading-snug text-muted-foreground">
-                                  Real-time queue management with SMS notifications
-                                </p>
-                              </div>
-                            </div>
-                          </Link>
-                        </NavigationMenuLink>
-                      </li>
-                      <li>
-                        <NavigationMenuLink asChild>
-                          <Link
-                            href="/features/virtual-waiting-room"
-                            className="group block select-none space-y-1 rounded-lg p-4 no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground border border-transparent hover:border-border"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                                <MonitorPlay className="h-5 w-5" />
-                              </div>
-                              <div className="flex-1">
-                                <div className="text-sm font-semibold leading-none mb-1.5">Virtual Waiting Room</div>
-                                <p className="line-clamp-2 text-xs leading-snug text-muted-foreground">
-                                  Public displays and status pages for guests
-                                </p>
-                              </div>
-                            </div>
-                          </Link>
-                        </NavigationMenuLink>
-                      </li>
+                      {featureItems.map((item) => {
+                        const IconComponent = iconMap[item.icon] || QrCode;
+                        return (
+                          <li key={item.href}>
+                            <NavigationMenuLink asChild>
+                              <Link
+                                href={item.href}
+                                className="group block select-none space-y-1 rounded-lg p-4 no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground border border-transparent hover:border-border"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                    <IconComponent className="h-5 w-5" />
+                                  </div>
+                                  <div className="flex-1">
+                                    <div className="text-sm font-semibold leading-none mb-1.5">{item.title}</div>
+                                    <p className="line-clamp-2 text-xs leading-snug text-muted-foreground">
+                                      {item.description}
+                                    </p>
+                                  </div>
+                                </div>
+                              </Link>
+                            </NavigationMenuLink>
+                          </li>
+                        );
+                      })}
                     </ul>
                   </NavigationMenuContent>
                 </NavigationMenuItem>
@@ -130,7 +120,7 @@ export default async function Nav() {
             </div>
 
             <div className="md:hidden">
-              <MarketingMobileMenu isAuthed={!!user} />
+              <MarketingMobileMenu isAuthed={!!user} featureItems={featureItems} />
             </div>
           </div>
         </div>

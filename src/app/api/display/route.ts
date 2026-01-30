@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
   }
 
   const admin = getAdminClient();
-  const listSelect = "id, name, kiosk_enabled, kiosk_qr_enabled, display_enabled, display_show_name, display_show_qr, business_id, location_id, ask_name, ask_phone, ask_email, average_wait_minutes, business_locations:location_id(regular_hours, timezone, seating_preferences)";
+  const listSelect = "id, name, kiosk_enabled, kiosk_qr_enabled, display_enabled, display_show_name, display_show_qr, business_id, location_id, ask_name, ask_phone, ask_email, average_wait_minutes, list_type, business_locations:location_id(regular_hours, timezone, seating_preferences)";
   let list = null as any;
   const { data: listData, error: listErr } = await admin
     .from("waitlists")
@@ -144,6 +144,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     listId: list.id,
     listName: list.name,
+    listType: list.list_type || "eat_in",
     kioskEnabled: !!list.kiosk_enabled,
     displayEnabled,
     showNameOnDisplay,

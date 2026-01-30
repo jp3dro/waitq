@@ -3,8 +3,14 @@
     "logo": "/waitq.svg",
     "siteName": "WaitQ",
     "navLinks": [
-      { "label": "Pricing", "href": "/pricing" },
-      { "label": "For Restaurants", "href": "/restaurant-waitlist-app" }
+      {
+        "label": "Pricing",
+        "href": "/pricing"
+      },
+      {
+        "label": "For Restaurants",
+        "href": "/restaurant-waitlist-app"
+      }
     ],
     "featuresDropdown": {
       "label": "Features",
@@ -32,6 +38,12 @@
           "description": "Track waitlist performance and customer insights",
           "href": "/features/analytics",
           "icon": "BarChart3"
+        },
+        {
+          "title": "Test",
+          "description": "Test",
+          "href": "/test",
+          "icon": "MonitorPlay"
         }
       ]
     }
@@ -39,13 +51,28 @@
   "footer": {
     "copyright": "© 2026 WaitQ. All rights reserved.",
     "links": [
-      { "label": "Terms", "href": "/terms" },
-      { "label": "Privacy", "href": "/Privacy-Policy" },
-      { "label": "Contact", "href": "/contact" }
+      {
+        "label": "Terms",
+        "href": "/terms"
+      },
+      {
+        "label": "Privacy",
+        "href": "/Privacy-Policy"
+      },
+      {
+        "label": "Contact",
+        "href": "/contact"
+      }
     ],
     "social": [
-      { "platform": "Twitter", "url": "https://twitter.com/waitqapp" },
-      { "platform": "LinkedIn", "url": "https://linkedin.com/company/waitq" }
+      {
+        "platform": "Twitter",
+        "url": "https://twitter.com/waitqapp"
+      },
+      {
+        "platform": "LinkedIn",
+        "url": "https://linkedin.com/company/waitq"
+      }
     ]
   },
   "cta": {

@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import type { Country } from "react-phone-number-input";
+import type { ListType } from "@/app/(private)/lists/list-form-fields";
 
 type Location = { id: string; name: string };
 
@@ -34,6 +35,7 @@ export default function MobileListActions({
   askPhone,
   askEmail,
   seatingPreferences,
+  listType = "eat_in",
   displayToken,
   businessName,
   businessCountry,
@@ -53,6 +55,7 @@ export default function MobileListActions({
   askPhone: boolean;
   askEmail: boolean;
   seatingPreferences: string[];
+  listType?: ListType;
   displayToken?: string | null;
   businessName?: string;
   businessCountry: Country;
@@ -132,6 +135,7 @@ export default function MobileListActions({
         initialAskPhone={askPhone}
         initialAskEmail={askEmail}
         initialSeatingPreferences={seatingPreferences}
+        initialListType={listType}
         locations={locations}
         hideTrigger
         controlledOpen={editOpen}

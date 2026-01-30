@@ -3,23 +3,14 @@ import { useEffect, useRef, useState } from "react";
 import { differenceInMinutes } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import { toastManager } from "@/hooks/use-toast";
-import { RefreshCw, Archive, Pencil, Trash2, MoreHorizontal, Copy, Clock, User, MessageSquare, Crown, Check, X } from "lucide-react";
-import { Stepper } from "@/components/ui/stepper";
-import { PhoneInput } from "@/components/ui/phone-input";
+import { RefreshCw, Archive, Pencil, Trash2, MoreHorizontal, Clock, User, MessageSquare, Crown, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SeatingPreferenceBadge } from "@/components/ui/seating-preference-badge";
 import { WhatsAppIcon } from "@/components/icons/whatsapp";
 import { useTimeFormat } from "@/components/time-format-provider";
 import { formatDateTime } from "@/lib/date-time";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import VisitDetailModal, { type VisitEntry as VisitDetailEntry } from "@/components/visit-detail-modal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,29 +26,14 @@ import {
 } from "@/components/ui/tooltip";
 import { HoverClickTooltip } from "@/components/ui/hover-click-tooltip";
 
-type Entry = {
-  id: string;
-  customer_name: string | null;
-  email: string | null;
-  phone: string;
+type Entry = VisitDetailEntry & {
   visits_count?: number | null;
   is_returning?: boolean | null;
-  status: string;
-  queue_position: number | null;
-  created_at: string;
-  ticket_number?: number | null;
-  token: string;
-  send_sms?: boolean | null;
-  send_whatsapp?: boolean | null;
-  party_size?: number | null;
-  seating_preference?: string | null;
   sms_message_id?: string | null;
-  sms_status?: 'pending' | 'sent' | 'delivered' | 'failed' | null;
   sms_sent_at?: string | null;
   sms_delivered_at?: string | null;
   sms_error_message?: string | null;
   whatsapp_message_id?: string | null;
-  whatsapp_status?: 'pending' | 'sent' | 'delivered' | 'failed' | null;
   whatsapp_sent_at?: string | null;
   whatsapp_delivered_at?: string | null;
   whatsapp_error_message?: string | null;
@@ -93,19 +69,16 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
   const showName = currentList?.ask_name !== false;
   const showPhone = currentList?.ask_phone !== false;
   const showEmail = currentList?.ask_email === true;
+  // Important: while `currentList` is loading/refreshing, default to hiding optional columns.
+  // This avoids briefly showing eat-in fields (party / seating) on take-out lists.
+  const showPartySize = currentList ? currentList.list_type !== "take_out" : false;
+  const showSeatingPrefs = currentList ? currentList.list_type !== "take_out" : false;
   const timeFormat = useTimeFormat();
   const prevIdsRef = useRef<Set<string>>(new Set());
   const [highlightIds, setHighlightIds] = useState<Set<string>>(new Set());
   const displayChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const tableRef = useRef<HTMLDivElement>(null);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({
-    customerName: "",
-    phone: "",
-    email: "",
-    partySize: "",
-    seatingPreference: ""
-  });
+  const [selectedVisit, setSelectedVisit] = useState<Entry | null>(null);
 
   const isBusy = (id: string | null | undefined) => {
     if (!id) return false;
@@ -195,14 +168,10 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
       .channel(`waitlist-entries-${waitlistId}`)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "waitlist_entries" },
-        (payload: { new?: { waitlist_id?: string }, old?: { waitlist_id?: string } }) => {
-          const affectedNew = payload.new?.waitlist_id;
-          const affectedOld = payload.old?.waitlist_id;
-          if (affectedNew === waitlistId || affectedOld === waitlistId) {
-            if (refreshTimer.current) window.clearTimeout(refreshTimer.current);
-            refreshTimer.current = window.setTimeout(() => { load(true); }, 60);
-          }
+        { event: "*", schema: "public", table: "waitlist_entries", filter: `waitlist_id=eq.${waitlistId}` },
+        () => {
+          if (refreshTimer.current) window.clearTimeout(refreshTimer.current);
+          refreshTimer.current = window.setTimeout(() => { load(true); }, 60);
         }
       )
       .on("broadcast", { event: "refresh" }, () => {
@@ -252,18 +221,19 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
     const res = await fetch("/api/waitlists", { cache: "no-store" });
     const j = await res.json();
     setWaitlists(j.waitlists || []);
-    if (selectId) setWaitlistId(selectId);
-    else if ((j.waitlists || []).length > 0) setWaitlistId(j.waitlists[0].id);
+    // Preserve current selection by default.
+    // This prevents "list jumping" (e.g. take-out list showing entries from another list)
+    // when the waitlists table updates (rename, settings change, etc).
+    const fetched = (j.waitlists || []) as { id: string }[];
+    const desired =
+      fixedWaitlistId ||
+      selectId ||
+      (waitlistId && fetched.some((w) => w.id === waitlistId) ? waitlistId : null) ||
+      (fetched[0]?.id ?? null);
+    if (desired) setWaitlistId(desired);
   }
 
   // Deleting lists is managed in Settings → Lists
-
-  const copyPersonalUrl = (token: string) => {
-    const url = `${window.location.origin}/w/${token}`;
-    navigator.clipboard.writeText(url).then(() => {
-      // Could add a toast here if desired
-    });
-  };
 
   // No-op: legacy dropdown positioning removed in favor of portal menu
 
@@ -356,71 +326,8 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
   const edit = (id: string) => {
     const entry = entries.find(e => e.id === id);
     if (entry) {
-      setEditForm({
-        customerName: entry.customer_name || "",
-        phone: entry.phone || "",
-        email: entry.email || "",
-        partySize: entry.party_size?.toString() || "",
-        seatingPreference: entry.seating_preference || ""
-      });
-      setEditingId(id);
+      setSelectedVisit(entry);
     }
-  };
-
-  const saveEdit = () => {
-    if (!editingId) return;
-    if (isBusy(editingId)) return;
-    const id = editingId;
-    setBusy(id, true);
-    const payload: any = {
-      id,
-    };
-
-    // Handle empty strings as null for database
-    payload.customer_name = editForm.customerName.trim() || null;
-    payload.phone = editForm.phone.trim() || null;
-    payload.email = editForm.email.trim() || null;
-    payload.party_size = editForm.partySize ? parseInt(editForm.partySize, 10) : null;
-    payload.seating_preference = editForm.seatingPreference.trim() || null;
-
-    // Optimistic update
-    updateEntryOptimistic(id, {
-      customer_name: payload.customer_name,
-      phone: payload.phone || "",
-      email: payload.email || null,
-      party_size: payload.party_size,
-      seating_preference: payload.seating_preference,
-    } as any);
-
-    (async () => {
-      try {
-        const res = await fetch("/api/waitlist", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-
-        if (res.ok) {
-          toastManager.add({
-            title: "Success",
-            description: "Customer updated successfully",
-            type: "success",
-          });
-          setEditingId(null);
-          try { window.dispatchEvent(new CustomEvent('wl:refresh', { detail: { waitlistId } })); } catch { }
-          void load(true);
-        } else {
-          toastManager.add({
-            title: "Error",
-            description: "Failed to update customer",
-            type: "error",
-          });
-          void load(true);
-        }
-      } finally {
-        setBusy(id, false);
-      }
-    })();
   };
 
   const remove = (id: string) => {
@@ -666,11 +573,13 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                     </div>
 
                     <div className="flex items-center gap-3 flex-wrap">
-                      <div className="inline-flex items-center gap-1.5 text-sm">
-                        <User className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span>{typeof e.party_size === "number" ? e.party_size : <None />}</span>
-                      </div>
-                      {e.seating_preference ? <SeatingPreferenceBadge>{e.seating_preference}</SeatingPreferenceBadge> : <span className="text-xs ml-1"><None /></span>}
+                      {showPartySize && (
+                        <div className="inline-flex items-center gap-1.5 text-sm">
+                          <User className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span>{typeof e.party_size === "number" ? e.party_size : <None />}</span>
+                        </div>
+                      )}
+                      {showSeatingPrefs && (e.seating_preference ? <SeatingPreferenceBadge>{e.seating_preference}</SeatingPreferenceBadge> : <span className="text-xs ml-1"><None /></span>)}
                     </div>
                   </div>
                 </li>
@@ -685,8 +594,8 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
             <colgroup>
               <col className="w-[80px]" />{/* Number */}
               <col className="w-[100px]" />{/* Actions */}
-              <col className="w-[60px]" />{/* Party */}
-              <col className="w-[150px]" />{/* Preference */}
+              {showPartySize && <col className="w-[60px]" />}{/* Party */}
+              {showSeatingPrefs && <col className="w-[150px]" />}{/* Preference */}
               <col className="w-auto" />{/* Name */}
               <col className="w-[120px]" />{/* Wait time */}
               {showPhone && <col className="w-[80px]" />}{/* Alerts */}
@@ -695,8 +604,8 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
               <tr>
                 <th className="text-left font-medium text-foreground px-4 py-2">Number</th>
                 <th className="text-left font-medium text-foreground px-4 py-2">Actions</th>
-                <th className="text-left font-medium text-foreground px-4 py-2 text-left">Party</th>
-                <th className="text-left font-medium text-foreground px-4 py-2">Preference</th>
+                {showPartySize && <th className="text-left font-medium text-foreground px-4 py-2">Party</th>}
+                {showSeatingPrefs && <th className="text-left font-medium text-foreground px-4 py-2">Preference</th>}
                 {showName && <th className="text-left font-medium text-foreground px-4 py-2">Name</th>}
                 <th className="text-left font-medium text-foreground px-4 py-2">Wait time</th>
                 {showPhone && <th className="text-left font-medium text-foreground px-4 py-2">Alerts</th>}
@@ -745,19 +654,23 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                       </div>
                     )}
                   </td>
-                  <td className="px-4 py-2">
-                    <div className="flex items-center align-left gap-1.5 min-w-0">
-                      <User className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                      <span className="truncate">{typeof e.party_size === 'number' ? e.party_size : <None />}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-2 truncate">
-                    {e.seating_preference ? (
-                      <SeatingPreferenceBadge className="max-w-full">
-                        <span className="truncate">{e.seating_preference}</span>
-                      </SeatingPreferenceBadge>
-                    ) : <None />}
-                  </td>
+                  {showPartySize && (
+                    <td className="px-4 py-2">
+                      <div className="flex items-center align-left gap-1.5 min-w-0">
+                        <User className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        <span className="truncate">{typeof e.party_size === 'number' ? e.party_size : <None />}</span>
+                      </div>
+                    </td>
+                  )}
+                  {showSeatingPrefs && (
+                    <td className="px-4 py-2 truncate">
+                      {e.seating_preference ? (
+                        <SeatingPreferenceBadge className="max-w-full">
+                          <span className="truncate">{e.seating_preference}</span>
+                        </SeatingPreferenceBadge>
+                      ) : <None />}
+                    </td>
+                  )}
                   {showName && (
                     <td className="px-4 py-2 min-w-0">
                       <div className="flex flex-col min-w-0">
@@ -864,161 +777,16 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
     <>
       {renderContent()}
 
-      {/* Edit entry */}
-      <Dialog open={!!editingId} onOpenChange={(v) => (!v ? setEditingId(null) : undefined)}>
-        <DialogContent className="sm:max-w-2xl p-0 overflow-hidden">
-          {(() => {
-            const entry = entries.find(e => e.id === editingId);
-            if (!entry) return null;
-            const number = entry.ticket_number ?? entry.queue_position ?? null;
-            return (
-              <div className="flex max-h-[90vh] flex-col">
-                <div className="min-h-12 h-12 shrink-0 border-b border-border px-6 flex items-center bg-card">
-                  <DialogHeader>
-                    <DialogTitle className="truncate">Visit Details</DialogTitle>
-                  </DialogHeader>
-                </div>
-
-                <div className="flex-1 overflow-y-auto px-6 py-4">
-                  {/* Top Read-only Summary */}
-                  <div className="bg-muted p-2 rounded-lg border border-border space-y-2 mb-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <Badge variant="secondary" className="text-xl py-4 px-3 font-bold border border-border bg-background">
-                          {number ?? <None />}
-                        </Badge>
-                        <div className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                          <Clock className="h-4 w-4" />
-                          <span>Waiting for {getWaitTime(entry.created_at)}</span>
-                        </div>
-                      </div>
-                      <Button variant="ghost" size="icon" onClick={() => copyPersonalUrl(entry.token)} title="Copy URL">
-                        <Copy className="h-4 w-4 text-muted-foreground" />
-                      </Button>
-                    </div>
-
-                    <div className="flex gap-2">
-                      {entry.status === 'waiting' && (
-                        <Button className="flex-1" disabled={isBusy(entry.id)} onClick={() => call(entry.id)}>Call Customer</Button>
-                      )}
-                      {entry.status === 'notified' && (
-                        <>
-                          <Button
-                            className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white border-transparent"
-                            disabled={isBusy(entry.id)}
-                            onClick={() => checkIn(entry.id)}
-                          >
-                            <Check className="h-4 w-4 mr-2" />
-                            Check-in
-                          </Button>
-                          <Button
-                            className="flex-1"
-                            variant="destructive"
-                            disabled={isBusy(entry.id)}
-                            onClick={() => noShow(entry.id)}
-                          >
-                            <X className="h-4 w-4 mr-2" />
-                            No Show
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  <form className="grid gap-4">
-                    {showName && (
-                      <div className="grid gap-2">
-                        <Label>Customer name</Label>
-                        <Input
-                          type="text"
-                          value={editForm.customerName}
-                          onChange={(e) => setEditForm(prev => ({ ...prev, customerName: e.target.value }))}
-                          placeholder="Full name"
-                        />
-                      </div>
-                    )}
-
-                    <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-                      <div className="flex-none grid gap-2">
-                        <Label>Number of people</Label>
-                        <Stepper
-                          value={editForm.partySize ? parseInt(editForm.partySize, 10) : undefined}
-                          onChange={(value) => setEditForm(prev => ({ ...prev, partySize: value?.toString() || "" }))}
-                          min={1}
-                          max={30}
-                        />
-                      </div>
-                      {showPhone && (
-                        <div className="flex-1 grid gap-2">
-                          <Label>Phone (optional)</Label>
-                          <PhoneInput
-                            defaultCountry="PT"
-                            value={editForm.phone}
-                            onChange={(value) => setEditForm(prev => ({ ...prev, phone: value }))}
-                          />
-                        </div>
-                      )}
-                      {showEmail && !showPhone && <div className="flex-1" />}
-                    </div>
-
-                    {showEmail && (
-                      <div className="grid gap-2">
-                        <Label>Email (optional)</Label>
-                        <Input
-                          type="email"
-                          value={editForm.email}
-                          onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))}
-                          placeholder="email@example.com"
-                        />
-                      </div>
-                    )}
-
-                    {(waitlists.find(w => w.id === waitlistId)?.seating_preferences || []).length > 0 && (
-                      <div className="grid gap-2">
-                        <Label>Seating preference</Label>
-                        <div className="flex flex-wrap gap-2">
-                          {(waitlists.find(w => w.id === waitlistId)?.seating_preferences || []).map((s) => {
-                            const selected = editForm.seatingPreference === s;
-                            return (
-                              <button
-                                type="button"
-                                key={s}
-                                onClick={() => setEditForm(prev => ({ ...prev, seatingPreference: s }))}
-                                className={`inline-flex items-center rounded-full px-3 h-8 text-sm ring-1 ring-inset transition ${selected ? "bg-primary text-primary-foreground ring-primary" : "bg-card text-foreground ring-border hover:bg-muted"}`}
-                              >
-                                {s}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-                  </form>
-                </div>
-
-                <div className="sticky bottom-0 min-h-12 h-12 shrink-0 border-t border-border bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center justify-between">
-                  <Button
-                    variant="ghost"
-                    className="text-destructive hover:text-destructive hover:bg-destructive/10 -ml-2"
-                    onClick={() => { remove(entry.id); setEditingId(null); }}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete
-                  </Button>
-                  <div className="flex items-center gap-2">
-                    <Button type="button" variant="outline" onClick={() => setEditingId(null)}>
-                      Cancel
-                    </Button>
-                    <Button type="button" disabled={isBusy(editingId)} onClick={saveEdit}>
-                      {isBusy(editingId) ? "Saving…" : "Save changes"}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            );
-          })()}
-        </DialogContent>
-      </Dialog>
+      <VisitDetailModal
+        visit={selectedVisit}
+        open={!!selectedVisit}
+        onOpenChange={(open) => !open && setSelectedVisit(null)}
+        listType={(currentList?.list_type === "take_out" || currentList?.list_type === "eat_in") ? currentList.list_type : "eat_in"}
+        seatingPreferences={currentList?.seating_preferences || []}
+        askName={currentList?.ask_name !== false}
+        askPhone={currentList?.ask_phone !== false}
+        askEmail={currentList?.ask_email === true}
+      />
     </>
   );
 }

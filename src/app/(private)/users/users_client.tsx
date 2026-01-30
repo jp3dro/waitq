@@ -340,7 +340,7 @@ export default function UsersClient() {
                   <tr key={m.id} className="border-t border-border hover:bg-muted odd:bg-muted/50">
                     <td className="px-4 py-2 font-medium">{m.name || "—"}</td>
                     <td className="px-4 py-2 text-muted-foreground">{m.email || m.user_id || "Unknown"}</td>
-                    <td className="px-4 py-2 capitalize">{m.role === 'admin' ? 'Owner/Admin' : m.role}</td>
+                    <td className="px-4 py-2 capitalize">{(ownerId && m.user_id === ownerId) ? 'Owner' : m.role === 'admin' ? 'Admin' : m.role}</td>
                     <td className="px-4 py-2">
                       {m.status === 'pending' ? (
                         <span className="inline-flex items-center rounded-md bg-yellow-50 dark:bg-yellow-900/30 px-2 py-1 text-xs font-medium text-yellow-800 dark:text-yellow-500 ring-1 ring-inset ring-yellow-600/20 dark:ring-yellow-500/30">Pending</span>
@@ -463,10 +463,13 @@ export default function UsersClient() {
                 </div>
                 <div className="grid gap-2">
                   <Label>Role</Label>
-                  {editingMember?.role === "admin" ? (
-                    <div className="text-sm text-muted-foreground rounded-md border border-border bg-muted/50 px-3 py-2">
-                      Owner / Admin
-                    </div>
+                  {(ownerId && editingMember?.user_id === ownerId) ? (
+                    <>
+                      <div className="text-sm text-muted-foreground rounded-md border border-border bg-muted/50 px-3 py-2">
+                        Owner
+                      </div>
+                      <p className="text-xs text-muted-foreground">Owner role cannot be changed.</p>
+                    </>
                   ) : (
                     <Select value={editRole} onValueChange={(v) => setEditRole(v as any)}>
                       <SelectTrigger>
@@ -478,9 +481,6 @@ export default function UsersClient() {
                       </SelectContent>
                     </Select>
                   )}
-                  {editingMember?.role === "admin" ? (
-                    <p className="text-xs text-muted-foreground">Owner role cannot be changed.</p>
-                  ) : null}
                 </div>
               </div>
             </div>

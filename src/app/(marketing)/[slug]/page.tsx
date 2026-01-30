@@ -43,8 +43,29 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
+// Common metadata/asset file patterns that should not be handled by this route
+const INVALID_SLUG_PATTERNS = [
+  /^apple-touch-icon/i,
+  /^favicon/i,
+  /^robots\.txt$/i,
+  /^sitemap/i,
+  /^manifest/i,
+  /^browserconfig/i,
+  /^mstile/i,
+  /\.(png|jpg|jpeg|gif|svg|ico|webp|xml|json|txt|css|js|woff|woff2|ttf|eot)$/i,
+];
+
+function isInvalidSlug(slug: string): boolean {
+  return INVALID_SLUG_PATTERNS.some((pattern) => pattern.test(slug));
+}
+
 export default async function LegalPage({ params }: Props) {
   const { slug } = await params;
+
+  // Early return for known non-page requests (metadata files, assets, etc.)
+  if (isInvalidSlug(slug)) {
+    notFound();
+  }
 
   try {
     const { data, query, variables } = await client.queries.terms({ relativePath: `${slug}.mdx` });

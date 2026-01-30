@@ -38,6 +38,7 @@ type WaitlistConfig = {
   ask_email?: boolean;
   location_is_open?: boolean;
   location_status_reason?: string | null;
+  list_type?: "eat_in" | "take_out";
 };
 
 type PublicConfig = {
@@ -388,17 +389,19 @@ export default function AddForm({
           </div>
         )}
         <div className="grid gap-4">
-          <div className="grid gap-2">
-            <label className="text-sm font-medium">Number of people</label>
-            <div className="w-fit">
-              <Stepper
-                value={watch("partySize")}
-                onChange={(value) => setValue("partySize", value)}
-                min={1}
-                max={30}
-              />
+          {current?.list_type !== "take_out" && (
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Number of people</label>
+              <div className="w-fit">
+                <Stepper
+                  value={watch("partySize")}
+                  onChange={(value) => setValue("partySize", value)}
+                  min={1}
+                  max={30}
+                />
+              </div>
             </div>
-          </div>
+          )}
 
           {collectPhone && (
             <div className="grid gap-2">
@@ -434,7 +437,7 @@ export default function AddForm({
             )}
           </div>
         ) : null}
-        {(waitlists.find(w => w.id === watch("waitlistId"))?.seating_preferences || []).length > 0 ? (
+        {current?.list_type !== "take_out" && (waitlists.find(w => w.id === watch("waitlistId"))?.seating_preferences || []).length > 0 ? (
           <div className="grid gap-2">
             <label className="text-sm font-medium">Seating preference</label>
             <div className="flex flex-wrap gap-2">

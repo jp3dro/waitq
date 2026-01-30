@@ -47,6 +47,7 @@ type WaitlistRow = {
   ask_phone: boolean | null;
   ask_email?: boolean | null;
   seating_preferences: string[] | null;
+  list_type?: string | null;
   business_locations:
   | { id: string; name: string; regular_hours?: unknown; timezone?: string | null }
   | { id: string; name: string; regular_hours?: unknown; timezone?: string | null }[]
@@ -78,6 +79,7 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
       ask_phone,
       ask_email,
       seating_preferences,
+      list_type,
       business_locations (
         id,
         name,
@@ -229,6 +231,7 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
             askPhone={wl.ask_phone !== false}
             askEmail={wl.ask_email === true}
             seatingPreferences={wl.seating_preferences || []}
+            listType={(wl.list_type === "eat_in" || wl.list_type === "take_out") ? wl.list_type : "eat_in"}
             displayToken={wl.display_token}
             businessName={businessName}
             businessCountry={businessCountry}
@@ -263,6 +266,7 @@ export default async function ListDetailsPage({ params }: { params: Promise<{ id
                 initialAskPhone={wl.ask_phone !== false}
                 initialAskEmail={wl.ask_email === true}
                 initialSeatingPreferences={wl.seating_preferences || []}
+                initialListType={(wl.list_type === "eat_in" || wl.list_type === "take_out") ? wl.list_type : "eat_in"}
                 locations={typedLocations}
               />
               {wl.display_token && wl.display_enabled !== false && (

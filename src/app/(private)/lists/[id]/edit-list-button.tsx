@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toastManager } from "@/hooks/use-toast";
-import ListFormFields from "@/app/(private)/lists/list-form-fields";
+import ListFormFields, { type ListType } from "@/app/(private)/lists/list-form-fields";
 
 type Location = { id: string; name: string };
 
@@ -28,6 +28,7 @@ export default function EditListButton({
   initialDisplayShowName = true,
   initialDisplayShowQr = false,
   initialAverageWaitMinutes = null,
+  initialListType = "eat_in",
   triggerId,
   hideTrigger = false,
   buttonClassName,
@@ -48,6 +49,7 @@ export default function EditListButton({
   initialAskEmail?: boolean;
   initialSeatingPreferences?: string[];
   initialAverageWaitMinutes?: number | null;
+  initialListType?: ListType;
   triggerId?: string;
   hideTrigger?: boolean;
   buttonClassName?: string;
@@ -67,6 +69,7 @@ export default function EditListButton({
   const [askPhone, setAskPhone] = useState<boolean>(initialAskPhone);
   const [askEmail, setAskEmail] = useState<boolean>(initialAskEmail);
   const [averageWaitMinutes, setAverageWaitMinutes] = useState<number | null>(initialAverageWaitMinutes);
+  const [listType, setListType] = useState<ListType>(initialListType);
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const router = useRouter();
@@ -99,11 +102,12 @@ export default function EditListButton({
         setAskPhone(initialAskPhone);
         setAskEmail(initialAskEmail);
         setAverageWaitMinutes(initialAverageWaitMinutes);
+        setListType(initialListType);
         setMessage(null);
       }
       prevControlledOpen.current = controlledOpen;
     }
-  }, [controlledOpen, initialName, initialLocationId, initialKioskEnabled, initialKioskQrEnabled, initialDisplayEnabled, initialDisplayShowName, initialDisplayShowQr, initialAskName, initialAskPhone, initialAskEmail, initialAverageWaitMinutes, locations]);
+  }, [controlledOpen, initialName, initialLocationId, initialKioskEnabled, initialKioskQrEnabled, initialDisplayEnabled, initialDisplayShowName, initialDisplayShowQr, initialAskName, initialAskPhone, initialAskEmail, initialAverageWaitMinutes, initialListType, locations]);
 
   const open = typeof controlledOpen === "boolean" ? controlledOpen : internalOpen;
   // Radix Dialog may re-run effects when `onOpenChange` identity changes.
@@ -129,6 +133,7 @@ export default function EditListButton({
     setAskPhone(initialAskPhone);
     setAskEmail(initialAskEmail);
     setAverageWaitMinutes(initialAverageWaitMinutes);
+    setListType(initialListType);
     setMessage(null);
   };
 
@@ -145,13 +150,14 @@ export default function EditListButton({
     setAskPhone(initialAskPhone);
     setAskEmail(initialAskEmail);
     setAverageWaitMinutes(initialAverageWaitMinutes);
+    setListType(initialListType);
     setMessage(null);
   };
 
   const save = () => {
     setMessage(null);
     startTransition(async () => {
-      const payload: { id: string; name?: string; locationId?: string; kioskEnabled?: boolean; kioskQrEnabled?: boolean; displayEnabled?: boolean; displayShowName?: boolean; displayShowQr?: boolean; askName?: boolean; askPhone?: boolean; askEmail?: boolean; averageWaitMinutes?: number | null } = { id: waitlistId };
+      const payload: { id: string; name?: string; locationId?: string; kioskEnabled?: boolean; kioskQrEnabled?: boolean; displayEnabled?: boolean; displayShowName?: boolean; displayShowQr?: boolean; askName?: boolean; askPhone?: boolean; askEmail?: boolean; averageWaitMinutes?: number | null; listType?: ListType } = { id: waitlistId };
 
       // Only include fields that have changed
       if (name !== initialName) {
@@ -169,6 +175,7 @@ export default function EditListButton({
       payload.askPhone = askPhone;
       payload.askEmail = askEmail;
       payload.averageWaitMinutes = averageWaitMinutes;
+      payload.listType = listType;
 
       // If no fields changed, just close modal and show success
       if (Object.keys(payload).length === 1) {
@@ -260,6 +267,8 @@ export default function EditListButton({
                   onKioskEnabledChange={setKioskEnabled}
                   averageWaitMinutes={averageWaitMinutes}
                   onAverageWaitMinutesChange={setAverageWaitMinutes}
+                  listType={listType}
+                  onListTypeChange={setListType}
                 />
                 {message ? <p className="text-sm text-destructive">{message}</p> : null}
               </div>

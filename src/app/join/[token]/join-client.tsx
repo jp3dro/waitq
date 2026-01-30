@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -33,17 +32,14 @@ type Payload = {
 
 export default function JoinPage({ params }: { params: Promise<{ token: string }> }) {
   const router = useRouter();
-  const { setTheme } = useTheme();
   const [token, setToken] = useState<string | null>(null);
   const [data, setData] = useState<Payload | null>(null);
   const [loading, setLoading] = useState(true);
   const [isPending, setIsPending] = useState(false);
   const [duplicateDialog, setDuplicateDialog] = useState<{ open: boolean; message: string }>({ open: false, message: "" });
 
-  // Public pages should follow the user's OS theme by default.
-  useEffect(() => {
-    setTheme("system");
-  }, [setTheme]);
+  // NOTE: Do not force theme here. Forcing "system" overwrites the user's saved preference
+  // (shared localStorage across tabs) and makes it impossible to pick Dark/Light in the app.
 
   useEffect(() => {
     params.then(({ token: t }) => setToken(t));

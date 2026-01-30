@@ -66,6 +66,16 @@ function getZonedParts(now: Date, timezone: string) {
   return { weekday, minutesSinceMidnight, timeLabel: `${pad2(Number.isFinite(hour) ? hour : 0)}:${pad2(Number.isFinite(minute) ? minute : 0)}` };
 }
 
+const PREV_DAY_MAP: Record<DayKey, DayKey> = {
+  sun: "sat",
+  mon: "sun",
+  tue: "mon",
+  wed: "tue",
+  thu: "wed",
+  fri: "thu",
+  sat: "fri",
+};
+
 export function getLocationOpenState(opts: {
   regularHours?: RegularHours | null;
   timezone?: string | null;
@@ -83,21 +93,58 @@ export function getLocationOpenState(opts: {
     local: { timezone, weekday, minutesSinceMidnight, timeLabel },
   };
 
+  // Check current day's ranges
   const ranges = Array.isArray(hours[weekday]) ? hours[weekday] : [];
-  if (!ranges.length) return emptyState;
-
+  
   for (const r of ranges) {
     const start = parseTimeToMinutes(r.start);
     let end = parseTimeToMinutes(r.end);
     if (start === null || end === null) continue;
+    
     // Treat "23:59" as inclusive end-of-day (i.e. up to 24:00) so "00:00-23:59" is always-open.
     if (end === 23 * 60 + 59) end = 24 * 60;
-    if (start <= minutesSinceMidnight && minutesSinceMidnight < end) {
-      return {
-        isOpen: true,
-        reason: null,
-        local: { timezone, weekday, minutesSinceMidnight, timeLabel },
-      };
+    
+    // Check if this is an overnight range (end < start, e.g., 22:00 to 02:00)
+    if (end < start) {
+      // Overnight range: open from start until midnight
+      if (minutesSinceMidnight >= start) {
+        return {
+          isOpen: true,
+          reason: null,
+          local: { timezone, weekday, minutesSinceMidnight, timeLabel },
+        };
+      }
+    } else {
+      // Normal range: open from start to end
+      if (start <= minutesSinceMidnight && minutesSinceMidnight < end) {
+        return {
+          isOpen: true,
+          reason: null,
+          local: { timezone, weekday, minutesSinceMidnight, timeLabel },
+        };
+      }
+    }
+  }
+
+  // Check previous day's overnight ranges that might extend into today
+  const prevDay = PREV_DAY_MAP[weekday];
+  const prevRanges = Array.isArray(hours[prevDay]) ? hours[prevDay] : [];
+  
+  for (const r of prevRanges) {
+    const start = parseTimeToMinutes(r.start);
+    const end = parseTimeToMinutes(r.end);
+    if (start === null || end === null) continue;
+    
+    // Only check overnight ranges (end < start)
+    if (end < start) {
+      // If current time is before the overnight end time, we're still in the previous day's shift
+      if (minutesSinceMidnight < end) {
+        return {
+          isOpen: true,
+          reason: null,
+          local: { timezone, weekday, minutesSinceMidnight, timeLabel },
+        };
+      }
     }
   }
 

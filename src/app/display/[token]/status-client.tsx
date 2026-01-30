@@ -23,13 +23,11 @@ import type { Country } from "@/components/ui/phone-input";
 import AddForm from "@/app/(private)/dashboard/waitlist-add-form";
 import { User, Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { useTheme } from "next-themes";
 
 type Entry = { id: string; ticket_number: number | null; queue_position: number | null; status: string; notified_at?: string | null; party_size?: number | null; seating_preference?: string | null; customer_name?: string | null };
-type Payload = { listId: string; listName: string; kioskEnabled?: boolean; displayEnabled?: boolean; showNameOnDisplay?: boolean; showQrOnDisplay?: boolean; locationIsOpen?: boolean; locationStatusReason?: string | null; askName?: boolean; askPhone?: boolean; askEmail?: boolean; businessCountry?: string | null; businessName?: string | null; brandLogo?: string | null; seatingPreferences?: string[]; estimatedMs?: number; entries: Entry[]; accentColor?: string; backgroundColor?: string };
+type Payload = { listId: string; listName: string; listType?: "eat_in" | "take_out"; kioskEnabled?: boolean; displayEnabled?: boolean; showNameOnDisplay?: boolean; showQrOnDisplay?: boolean; locationIsOpen?: boolean; locationStatusReason?: string | null; askName?: boolean; askPhone?: boolean; askEmail?: boolean; businessCountry?: string | null; businessName?: string | null; brandLogo?: string | null; seatingPreferences?: string[]; estimatedMs?: number; entries: Entry[]; accentColor?: string; backgroundColor?: string };
 
 export default function DisplayClient({ token }: { token: string }) {
-  const { setTheme } = useTheme();
   const [data, setData] = useState<Payload | null>(null);
   const [loading, setLoading] = useState(true);
   const timer = useRef<number | null>(null);
@@ -44,10 +42,8 @@ export default function DisplayClient({ token }: { token: string }) {
 
   if (!supabaseRef.current) supabaseRef.current = createClient();
 
-  // Public pages should follow the user's OS theme by default.
-  useEffect(() => {
-    setTheme("system");
-  }, [setTheme]);
+  // NOTE: Do not force theme here. Forcing "system" overwrites the user's saved preference
+  // (shared localStorage across tabs) and makes it impossible to pick Dark/Light in the app.
 
   async function load(silent: boolean = false) {
     if (!silent && !data) setLoading(true);
@@ -287,13 +283,13 @@ export default function DisplayClient({ token }: { token: string }) {
                         {showNameOnDisplay && e.customer_name ? (
                           <div className="text-base font-medium">{e.customer_name}</div>
                         ) : null}
-                        {typeof e.party_size === 'number' ? (
+                        {data.listType !== "take_out" && typeof e.party_size === 'number' ? (
                           <div className="flex items-center gap-1 text-base sm:text-lg font-medium">
                             <User className="h-4 w-4" />
                             <span>{e.party_size}</span>
                           </div>
                         ) : null}
-                        {e.seating_preference && (
+                        {data.listType !== "take_out" && e.seating_preference && (
                           <SeatingPreferenceBadge>{e.seating_preference}</SeatingPreferenceBadge>
                         )}
                       </div>
@@ -330,13 +326,13 @@ export default function DisplayClient({ token }: { token: string }) {
                         {showNameOnDisplay && e.customer_name ? (
                           <div className="text-lg sm:text-xl font-semibold">{e.customer_name}</div>
                         ) : null}
-                        {typeof e.party_size === 'number' ? (
+                        {data.listType !== "take_out" && typeof e.party_size === 'number' ? (
                           <div className="flex items-center gap-1 text-lg sm:text-xl font-medium">
                             <User className="h-5 w-5" />
                             <span>{e.party_size}</span>
                           </div>
                         ) : null}
-                        {e.seating_preference && (
+                        {data.listType !== "take_out" && e.seating_preference && (
                           <SeatingPreferenceBadge>{e.seating_preference}</SeatingPreferenceBadge>
                         )}
                       </div>

@@ -19,6 +19,7 @@ import {
     ExternalLink,
     Database,
     MessageSquare,
+    Check,
 } from "lucide-react";
 
 import { useTheme } from "next-themes";
@@ -138,7 +139,7 @@ function ExternalNavItem({
 }
 
 export default function PrivateSidebarClient({ userName, userEmail, businessLogoUrl, role }: Props) {
-    const { setTheme } = useTheme();
+    const { theme, setTheme } = useTheme();
     const router = useRouter();
     const isAdmin = role === "admin";
     const canSeeInternalAdminLinks = userEmail?.toLowerCase() === "jp3dro@gmail.com";
@@ -274,14 +275,17 @@ export default function PrivateSidebarClient({ userName, userEmail, businessLogo
                                             <DropdownMenuItem onClick={() => setTheme("light")} className="cursor-pointer">
                                                 <Sun className="mr-2 h-4 w-4" />
                                                 Light
+                                                {theme === "light" && <Check className="ml-auto h-4 w-4" />}
                                             </DropdownMenuItem>
                                             <DropdownMenuItem onClick={() => setTheme("dark")} className="cursor-pointer">
                                                 <Moon className="mr-2 h-4 w-4" />
                                                 Dark
+                                                {theme === "dark" && <Check className="ml-auto h-4 w-4" />}
                                             </DropdownMenuItem>
                                             <DropdownMenuItem onClick={() => setTheme("system")} className="cursor-pointer">
                                                 <Monitor className="mr-2 h-4 w-4" />
                                                 System
+                                                {theme === "system" && <Check className="ml-auto h-4 w-4" />}
                                             </DropdownMenuItem>
                                         </DropdownMenuSubContent>
                                     </DropdownMenuSub>

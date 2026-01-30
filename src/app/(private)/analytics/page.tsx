@@ -243,7 +243,7 @@ export default function AnalyticsPage() {
   const [analytics, setAnalytics] = React.useState<AnalyticsData | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
-  const [rangeMode, setRangeMode] = React.useState<"today" | "7" | "15" | "30">("today");
+  const [rangeMode, setRangeMode] = React.useState<"today" | "7" | "15" | "30" | "90">("today");
   const [planId, setPlanId] = React.useState<PlanId>("free");
   const [upgradeOpen, setUpgradeOpen] = React.useState(false);
   const [locations, setLocations] = React.useState<LocationRow[]>([]);
@@ -254,7 +254,7 @@ export default function AnalyticsPage() {
   const hasLoadedRef = React.useRef(false);
   const requestIdRef = React.useRef(0);
 
-  const loadAnalytics = React.useCallback(async (opts: { mode: "today" | "range"; days: 7 | 15 | 30; waitlistIds: string[] | null }) => {
+  const loadAnalytics = React.useCallback(async (opts: { mode: "today" | "range"; days: 7 | 15 | 30 | 90; waitlistIds: string[] | null }) => {
     const requestId = ++requestIdRef.current;
     try {
       if (!hasLoadedRef.current) setLoading(true);
@@ -455,7 +455,7 @@ export default function AnalyticsPage() {
   }, [planId, rangeMode]);
 
   React.useEffect(() => {
-    const days: 7 | 15 | 30 = rangeMode === "15" ? 15 : rangeMode === "30" ? 30 : 7;
+    const days: 7 | 15 | 30 | 90 = rangeMode === "15" ? 15 : rangeMode === "30" ? 30 : rangeMode === "90" ? 90 : 7;
     const mode = rangeMode === "today" ? "today" : "range";
     const candidateWaitlists = waitlists
       .filter((w) => (locationId === "all" ? true : w.location_id === locationId))
@@ -552,10 +552,14 @@ export default function AnalyticsPage() {
           <Tabs
             value={rangeMode}
             onValueChange={(v) => {
-              const next = v as "today" | "7" | "15" | "30";
+              const next = v as "today" | "7" | "15" | "30" | "90";
               if (planId === "free" && next !== "today") {
                 setUpgradeOpen(true);
                 setRangeMode("today");
+                return;
+              }
+              if (planId === "base" && next === "90") {
+                setUpgradeOpen(true);
                 return;
               }
               setRangeMode(next);
@@ -566,6 +570,7 @@ export default function AnalyticsPage() {
               <TabsTrigger value="7">Last 7 days</TabsTrigger>
               <TabsTrigger value="15">Last 15 days</TabsTrigger>
               <TabsTrigger value="30">Last 30 days</TabsTrigger>
+              <TabsTrigger value="90">Last 90 days</TabsTrigger>
             </TabsList>
           </Tabs>
 
@@ -717,7 +722,11 @@ export default function AnalyticsPage() {
         open={upgradeOpen}
         onOpenChange={setUpgradeOpen}
         title="Upgrade to unlock advanced analytics"
-        description="Your current plan includes Today analytics only. Upgrade to view advanced analytics up to 30 days."
+        description={
+          planId === "base"
+            ? "Your current plan includes analytics up to 30 days. Upgrade to Premium to view analytics up to 90 days."
+            : "Your current plan includes Today analytics only. Upgrade to view advanced analytics."
+        }
         ctaLabel="View plans"
         ctaHref="/subscriptions"
       />

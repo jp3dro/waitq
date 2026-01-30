@@ -38,17 +38,10 @@ export async function getPlanContext(businessId: string) {
     return { planId, limits, window };
   }
 
-  // Free tier: usage starts at business creation date and NEVER resets monthly.
+  // Free tier: usage resets monthly just like paid plans
   const planId = "free" as const;
   const limits = getPlanById(planId).limits;
-  const { data: biz } = await admin
-    .from("businesses")
-    .select("created_at")
-    .eq("id", businessId)
-    .maybeSingle();
-  const start = coerceDate((biz as unknown as { created_at?: string | null } | null)?.created_at) || new Date();
-  const end = new Date();
-  const window = { start, end };
+  const window = getMonthWindow();
   return { planId, limits, window };
 }
 
