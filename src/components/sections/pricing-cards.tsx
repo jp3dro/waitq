@@ -32,7 +32,7 @@ export function PricingCards({ plans }: PricingCardsProps) {
   if (!plans || plans.length === 0) return null;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-[1100px] mx-auto mb-20">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-[1100px] mx-auto mb-8">
       {plans.map((plan, index) => {
         if (!plan) return null;
         
@@ -41,7 +41,7 @@ export function PricingCards({ plans }: PricingCardsProps) {
         return (
           <div
             key={index}
-            className={`rounded-2xl p-8 relative ${
+            className={`rounded-2xl p-6 relative ${
               isHighlighted
                 ? "border-2 border-primary bg-card shadow-lg"
                 : "border border-border bg-card"

@@ -58,9 +58,7 @@ export async function generateStaticParams() {
     landingConn.data.landingPageConnection.edges?.flatMap((edge) => {
       const filename = edge?.node?._sys.filename;
       if (!filename) return [];
-      // Keep restaurant page at its canonical URL.
-      if (filename === "restaurant-waitlist-app") return [{ slug: [filename] }];
-      return [{ slug: ["landing", filename] }];
+      return [{ slug: [filename] }];
     }) || [];
 
   // Singleton / fixed-route marketing pages (still Tina-backed)
@@ -208,18 +206,16 @@ export async function generateMetadata({
   }
   // Landing pages
   if (
-    (slug.length === 1 && slug[0] === "restaurant-waitlist-app") ||
-    (slug.length === 2 && slug[0] === "landing")
+    slug.length === 1
   ) {
-    const landingSlug = slug.length === 1 ? "restaurant-waitlist-app" : slug[1];
     try {
-      const { data } = await getLandingPageData(landingSlug);
+      const { data } = await getLandingPageData(slug[0]);
       const seo = data.landingPage.seo;
 
-      const title = seo?.title || data.landingPage.hero?.title || landingSlug;
+      const title = seo?.title || data.landingPage.hero?.title || slug[0];
       const description =
         seo?.description || "Learn more about WaitQ and how it helps modern restaurants.";
-      const ogImage = seo?.ogImage || `/og-${landingSlug}.png`;
+      const ogImage = seo?.ogImage || `/og-${slug[0]}.png`;
 
       return {
         title,
@@ -237,7 +233,7 @@ export async function generateMetadata({
         },
       };
     } catch {
-      return { title: "Page Not Found", robots: { index: false, follow: false } };
+      // Not a landing page – let other resolvers (legal) handle it.
     }
   }
 
@@ -298,16 +294,12 @@ export default async function MarketingPage({
     const { data, query, variables } = await getAboutPageData();
     return <AboutClient data={data} query={query} variables={variables} />;
   }
-  if (
-    (slug.length === 1 && slug[0] === "restaurant-waitlist-app") ||
-    (slug.length === 2 && slug[0] === "landing")
-  ) {
-    const landingSlug = slug.length === 1 ? "restaurant-waitlist-app" : slug[1];
+  if (slug.length === 1) {
     try {
-      const { data, query, variables } = await getLandingPageData(landingSlug);
+      const { data, query, variables } = await getLandingPageData(slug[0]);
       return <LandingClient data={data} query={query} variables={variables} />;
     } catch {
-      notFound();
+      // Not a landing page – let other resolvers (legal) handle it.
     }
   }
 

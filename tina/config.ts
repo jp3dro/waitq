@@ -807,12 +807,9 @@ export default defineConfig({
             create: true,
             delete: true,
           },
-          // Keep the existing canonical URL for the restaurant page.
-          // For all other landing pages, use /landing/<filename>.
-          router: ({ document }) =>
-            document?._sys?.filename === "restaurant-waitlist-app"
-              ? `/restaurant-waitlist-app`
-              : `/landing/${document._sys.filename}`,
+          // Landing pages live at the root (no "/landing" prefix).
+          // Keep the restaurant page at its existing canonical URL.
+          router: ({ document }) => `/${document._sys.filename}`,
         },
         fields: [
           {
@@ -1149,7 +1146,7 @@ export default defineConfig({
       // ============================================
       {
         name: "terms",
-        label: "Terms & Legal Pages",
+        label: "Legal",
         path: "content/legal",
         format: "mdx",
         ui: {

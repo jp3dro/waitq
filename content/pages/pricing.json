@@ -10,17 +10,20 @@
         "name": "Free",
         "description": "Perfect for testing the waters and small establishments.",
         "price": "€0",
-        "period": "/mo",
+        "period": "/month",
         "highlighted": false,
         "features": [
           {
-            "text": "50 SMS / month"
+            "text": "1 Location"
           },
           {
-            "text": "1 location"
+            "text": "1 User"
           },
           {
-            "text": "1 user"
+            "text": "10 SMS notifications"
+          },
+          {
+            "text": "100 reservations"
           },
           {
             "text": "Today analytics only"
@@ -34,24 +37,24 @@
         "name": "Base",
         "description": "Essential features for growing busy restaurants.",
         "price": "€49",
-        "period": "/mo",
+        "period": "/month",
         "highlighted": true,
-        "highlightLabel": "Most Popular",
+        "highlightLabel": "Recommended",
         "features": [
           {
-            "text": "1,000 SMS / month"
+            "text": "5 Locations"
           },
           {
-            "text": "5 locations"
+            "text": "10 Users"
           },
           {
-            "text": "10 users"
+            "text": "1,000 SMS notifications"
           },
           {
-            "text": "30-day analytics"
+            "text": "5,000 reservations"
           },
           {
-            "text": "Bidirectional SMS"
+            "text": "Analytics up to 30 days"
           }
         ],
         "ctaText": "Get started",
@@ -62,23 +65,23 @@
         "name": "Premium",
         "description": "Unleash the full power with advanced analytics and support.",
         "price": "€99",
-        "period": "/mo",
+        "period": "/month",
         "highlighted": false,
         "features": [
           {
-            "text": "5,000 SMS / month"
+            "text": "100 Locations"
           },
           {
-            "text": "100 locations"
+            "text": "100 Users"
           },
           {
-            "text": "100 users"
+            "text": "3,000 SMS notifications"
           },
           {
-            "text": "90-day analytics"
+            "text": "Unlimited reservations"
           },
           {
-            "text": "Priority support"
+            "text": "Analytics up to 90 days"
           }
         ],
         "ctaText": "Get started",
@@ -93,6 +96,12 @@
         {
           "name": "Waitlist",
           "features": [
+            {
+              "name": "Waitlist reservations",
+              "free": "50 / month",
+              "base": "1,000 / month",
+              "premium": "5,000 / month"
+            },
             {
               "name": "Digital Waitlist",
               "free": "✓",
@@ -120,57 +129,40 @@
           ]
         },
         {
-          "name": "Reservations",
-          "features": [
-            {
-              "name": "Online Reservations",
-              "free": "✓",
-              "base": "✓",
-              "premium": "✓"
-            },
-            {
-              "name": "Email Confirmations",
-              "free": "✓",
-              "base": "✓",
-              "premium": "✓"
-            }
-          ]
-        },
-        {
           "name": "Communications",
           "features": [
             {
-              "name": "SMS Notifications",
-              "free": "50 / mo",
-              "base": "1,000 / mo",
-              "premium": "5,000 / mo"
-            },
-            {
-              "name": "Bidirectional SMS",
-              "free": "✗",
-              "base": "✓",
-              "premium": "✓"
-            },
-            {
-              "name": "Customizable SMS Templates",
-              "free": "✗",
-              "base": "✓",
-              "premium": "✓"
+              "name": "SMS/Email Notifications",
+              "free": "50 / month",
+              "base": "1,000 / month",
+              "premium": "5,000 / month"
             }
           ]
         },
         {
-          "name": "Analytics & Reports",
+          "name": "Analytics",
           "features": [
             {
-              "name": "Usage Statistics",
+              "name": "Analytics",
               "free": "Today only",
-              "base": "30 days",
-              "premium": "90 days"
+              "base": "Up to 30 days",
+              "premium": "Up to 90 days"
             },
             {
-              "name": "Data Export (CSV)",
-              "free": "✗",
+              "name": "Quick insights",
+              "free": "✓",
+              "base": "✓",
+              "premium": "✓"
+            },
+            {
+              "name": "Location Filters",
+              "free": "✓",
+              "base": "✓",
+              "premium": "✓"
+            },
+            {
+              "name": "List Filters",
+              "free": "✓",
               "base": "✓",
               "premium": "✓"
             }
@@ -186,10 +178,10 @@
               "premium": "100 Locations"
             },
             {
-              "name": "Multi-device Sync & Login",
-              "free": "✓",
-              "base": "✓",
-              "premium": "✓"
+              "name": "Multiple staff users",
+              "free": "✗",
+              "base": "10 Users",
+              "premium": "100 Users"
             }
           ]
         }

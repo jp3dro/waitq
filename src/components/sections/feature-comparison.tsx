@@ -59,7 +59,7 @@ export function FeatureComparison({ title, categories }: FeatureComparisonProps)
                 return (
                   <Fragment key={catIndex}>
                     <tr className="border-t">
-                      <td colSpan={4} className="py-4 px-4 font-semibold bg-muted/50">
+                      <td colSpan={4} className="py-4 px-4 font-bold text-lg bg-muted/50">
                         {category.name}
                       </td>
                     </tr>

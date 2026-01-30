@@ -58,8 +58,8 @@ export default async function MarketingLayout({
             <div>
               <p className="font-semibold text-foreground mb-3">Legal & Account</p>
               <ul className="space-y-2 text-muted-foreground">
-                <li><Link href="/terms" className="hover:text-foreground transition">Terms of Service</Link></li>
-                <li><Link href="/Privacy-Policy" className="hover:text-foreground transition">Privacy Policy</Link></li>
+                <li><Link href="/terms-and-conditions" className="hover:text-foreground transition">Terms and Conditions</Link></li>
+                <li><Link href="/privacy-policy" className="hover:text-foreground transition">Privacy Policy</Link></li>
                 <li><Link href="/login" className="hover:text-foreground transition">Log in</Link></li>
                 <li><Link href="/signup" className="hover:text-foreground transition">Sign up</Link></li>
               </ul>
