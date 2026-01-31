@@ -34,6 +34,61 @@
       "_template": "howItWorksTimeline"
     },
     {
+      "title": "Pick how people join your waitlist",
+      "subtitle": "",
+      "items": [
+        {
+          "title": "Host-managed check-in",
+          "description": "Staff adds guests at the door with name, phone number, and party size. Full control, zero friction.\n\n",
+          "image": "/images/bar friends.jpg"
+        },
+        {
+          "title": "Self-serve check-in",
+          "description": "Let customers check-in autonomously via a public link shared by QR code, website, physical kiosk, or  socials. Great to ease pressure of your staff and achieve higher service efficiency.",
+          "image": "/images/friends.jpg"
+        }
+      ],
+      "_template": "howItWorksCards"
+    },
+    {
+      "title": "Customize your waiting experience to fit your workflow",
+      "description": "",
+      "image": "/images/couple.jpg",
+      "imageOnRight": false,
+      "variant": "default",
+      "bullets": [
+        {
+          "text": "Multiple join methods",
+          "description": "With self check-in enabled, people can join the waitlist through any device or kiosk.",
+          "icon": ""
+        },
+        {
+          "text": "Personalized form",
+          "description": "Capture customer name, phone number, both or none? You decide.",
+          "icon": ""
+        },
+        {
+          "text": "Prevent abuse",
+          "description": "Set-up optional waitlist active hours or party size limits."
+        },
+        {
+          "text": "Multi-Location",
+          "description": "WaitQ manages multiple lists and locations.",
+          "icon": ""
+        }
+      ],
+      "_template": "textWithImage"
+    },
+    {
+      "variant": "inline",
+      "title": "A waitlist every customer wants to join.",
+      "subtitle": "Start for free today. No credit card required.",
+      "primaryButtonText": "Try WaitQ",
+      "primaryButtonLink": "/signup",
+      "trustMessage": "",
+      "_template": "ctaSection"
+    },
+    {
       "title": "The waitlist is virtual, but the gains are real",
       "cards": [
         {
@@ -70,52 +125,6 @@
         }
       ],
       "_template": "twoColumnBenefits"
-    },
-    {
-      "title": "Pick how people join your waitlist",
-      "subtitle": "",
-      "items": [
-        {
-          "title": "Host-managed check-in",
-          "description": "Staff adds guests at the door with name, phone number, and party size. Full control, zero friction.\n\n",
-          "image": "/images/bar friends.jpg"
-        },
-        {
-          "title": "Self-serve check-in",
-          "description": "Let customers check-in autonomously via a public link shared by QR code, website, physical kiosk, or  socials. Great to ease pressure of your staff and achieve higher service efficiency.",
-          "image": "/images/friends.jpg"
-        }
-      ],
-      "_template": "howItWorksCards"
-    },
-    {
-      "title": "Customize your waiting experience to fit your workflow",
-      "description": "",
-      "image": "/images/couple.jpg",
-      "imageOnRight": true,
-      "variant": "default",
-      "bullets": [
-        {
-          "text": "Multiple join methods",
-          "description": "With self check-in enabled, people can join the waitlist through any device or kiosk.",
-          "icon": ""
-        },
-        {
-          "text": "Personalized form",
-          "description": "Capture customer name, phone number, both or none? You decide.",
-          "icon": ""
-        },
-        {
-          "text": "Prevent abuse",
-          "description": "Set-up optional waitlist active hours or party size limits."
-        },
-        {
-          "text": "Multi-Location",
-          "description": "WaitQ manages multiple lists and locations.",
-          "icon": ""
-        }
-      ],
-      "_template": "textWithImage"
     },
     {
       "title": "Virtual waitlist FAQs",
