@@ -221,6 +221,14 @@
         }
       ],
       "_template": "faq"
+    },
+    {
+      "variant": "default",
+      "title": "The smart way to welcome customers",
+      "subtitle": "Reduce wait times, improve customer satisfaction, and increase revenue by servicing more, happier clients.",
+      "primaryButtonText": "Try WaitQ",
+      "primaryButtonLink": "/signup",
+      "_template": "ctaSection"
     }
   ],
   "seo": {
