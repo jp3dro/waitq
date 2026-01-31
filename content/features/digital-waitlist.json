@@ -40,12 +40,12 @@
         {
           "title": "Host-managed check-in",
           "description": "Staff adds guests at the door with name, phone number, and party size. Full control, zero friction.\n\n",
-          "image": "/images/bar friends.jpg"
+          "image": "/images/Restaurant front desk.webp"
         },
         {
           "title": "Self-serve check-in",
           "description": "Let customers check-in autonomously via a public link shared by QR code, website, physical kiosk, or  socials. Great to ease pressure of your staff and achieve higher service efficiency.",
-          "image": "/images/friends.jpg"
+          "image": "/images/Restaurant front desk qr code.webp"
         }
       ],
       "_template": "howItWorksCards"
