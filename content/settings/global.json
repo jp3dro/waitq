@@ -1,6 +1,6 @@
 {
   "header": {
-    "logo": "/waitq.svg",
+    "logo": "/images/waitq.svg",
     "siteName": "WaitQ",
     "navLinks": [
       {
@@ -26,12 +26,6 @@
           "description": "Real-time queue management with SMS notifications",
           "href": "/features/digital-waitlist",
           "icon": "Users"
-        },
-        {
-          "title": "Virtual Waiting Room",
-          "description": "Public displays and status pages for guests",
-          "href": "/features/virtual-waiting-room",
-          "icon": "MonitorPlay"
         },
         {
           "title": "Analytics",
