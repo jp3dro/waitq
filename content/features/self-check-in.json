@@ -2,7 +2,7 @@
   "slug": "self-check-in",
   "hero": {
     "title": "Let customers check themselves in",
-    "subtitle": "No staff queuing. On their own time. Customers choose how to enter the queue on their own, without lining up or worrying at staff.",
+    "subtitle": "Your waitlist, on autopilot. WaitQ lets customers check-in to your queue on their own, without lining up or waving at staff.",
     "primaryCta": "Try Free",
     "primaryCtaLink": "/signup",
     "secondaryCta": "See how it works",
@@ -10,33 +10,25 @@
   },
   "sections": [
     {
-      "title": "WaitQ lets customers check-in to your queue on their own, without lining up or worrying at staff.",
-      "description": "Display a QR code, share a link, or set up a tablet kiosk. Guests enter their details and join the waitlist in seconds—no staff interaction required.",
-      "image": "/images/couple.jpg",
-      "imageOnRight": false,
-      "variant": "default",
-      "_template": "textWithImage"
-    },
-    {
       "title": "How self-check-in works at WaitQ",
       "steps": [
         {
           "title": "Create check-in page",
-          "description": "Set up your custom-branded check-in page in minutes. Choose what information to collect: name, phone, party size, special requests.",
+          "description": "Set up a custom sign-up page that matches your restaurant brand. ",
           "icon": "Smartphone",
           "image": "/images/couple.jpg"
         },
         {
           "title": "Publicly display it",
-          "description": "Display the QR code at your entrance or share a link on your website and social media. Guests scan and join from their phone.",
+          "description": "Display it via QR code, tablet or kiosk at the door, or share it in your website and socials.",
           "icon": "QrCode",
           "image": "/images/friends.jpg"
         },
         {
-          "title": "Customer joins and waits",
-          "description": "Guests enter their info and immediately see their position. They can wait anywhere and track progress from their phone.",
+          "title": "Customers check in in seconds",
+          "description": "Fewer misheard names, fewer typos, less pressure on your staff.",
           "icon": "Users",
-          "image": "/images/bar friends.jpg"
+          "image": "/images/WaitQ%20Waiting%20Room.webp"
         }
       ],
       "_template": "howItWorksTimeline"
