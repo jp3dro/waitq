@@ -2,21 +2,13 @@
   "slug": "digital-waitlist",
   "hero": {
     "title": "The virtual waitlist that keeps customers in the loop",
-    "subtitle": "Turn waitlists into warm welcomes. Manage walk-ins, reservations, and SMS updates in one intuitive platform designed for restaurants.",
-    "primaryCta": "Try Free",
+    "subtitle": "Turn waitlists into warm welcomes. WaitQ turns your physical queue into a virtual waitlist that updates in real time.",
+    "primaryCta": "Wait better",
     "primaryCtaLink": "/signup",
     "secondaryCta": "See how it works",
-    "heroImage": "/images/bar friends.jpg"
+    "heroImage": "/images/WaitQ%20Host.webp"
   },
   "sections": [
-    {
-      "title": "WaitQ turns your physical queue into a virtual waitlist that updates in real time.",
-      "description": "Guests join from their phone or a tablet at your door. They see their position, estimated wait, and get notified the moment their table is ready—all without crowding your entrance.",
-      "image": "/images/bar friends.jpg",
-      "imageOnRight": false,
-      "variant": "default",
-      "_template": "textWithImage"
-    },
     {
       "title": "How our digital waitlist works",
       "steps": [
@@ -24,19 +16,19 @@
           "title": "Step 1: Check-in",
           "description": "Customers can check-in autonomously in their devices via QR code, link, or at a physical kiosk.",
           "icon": "QrCode",
-          "image": "/images/couple.jpg"
+          "image": "/images/WaitQ%20Add%20to%20waitlist.webp"
         },
         {
           "title": "Step 2: Waiting room",
           "description": "Customers get an wait time estimate at a virtual waiting room, staying in the loop even if they step away.",
           "icon": "Smartphone",
-          "image": "/images/friends.jpg"
+          "image": "/images/WaitQ Waiting Room.webp"
         },
         {
           "title": "Step 3: Seat with one tap",
           "description": "When it’s their turn, tap to notify the guest and mark them as seated. On to the next customer!",
           "icon": "Zap",
-          "image": "/images/couple.jpg"
+          "image": "/images/WaitQ%20One-tap%20check%20in.webp"
         }
       ],
       "_template": "howItWorksTimeline"
@@ -45,9 +37,9 @@
       "title": "The waitlist is virtual, but the gains are real",
       "cards": [
         {
-          "badge": "For owners",
+          "badge": "For managers",
           "title": "Keep hosts calm and the floor moving",
-          "image": "/images/bar friends.jpg",
+          "image": "/images/WaitQ%20Host.webp",
           "bullets": [
             {
               "text": "See who's waiting and who's next in a glance"
@@ -146,7 +138,7 @@
         },
         {
           "question": "What happens if guests step away or don't show up?",
-          "answer": "WaitQ sends reminder notifications. If a guest doesn't respond, you can mark them as a no-show and move to the next party. Historical data helps you predict no-show rates."
+          "answer": "WaitQ sends reminder notifications. If a guest doesn't respond, you can mark them as arrived, seated, skipped, or no-show, keeping the line moving without losing track of who’s next."
         },
         {
           "question": "Do you offer real-time analytics and why is it important?",
@@ -158,7 +150,7 @@
     {
       "variant": "",
       "title": "Smarter waitlist management starts here",
-      "subtitle": "Reduce wait times, improve customer satisfaction, and increase revenue by servicing more, happier clients.",
+      "subtitle": "Calm waits mean happier guests, better reviews, and more tables turned.",
       "primaryButtonText": "Try WaitQ",
       "primaryButtonLink": "/signup",
       "secondaryButtonText": "See pricing",
