@@ -69,15 +69,17 @@
       "_template": "howWeOperateSection"
     },
     {
-      "title": "swsw",
-      "subtitle": "swsws",
-      "primaryButtonText": "swsws",
+      "variant": "compact",
+      "title": "Ready to try WaitQ?",
+      "subtitle": "Reduce wait times, improve customer satisfaction, and increase revenue by servicing more, happier clients.",
+      "primaryButtonText": "Wait better",
+      "primaryButtonLink": "/signup",
       "_template": "ctaSection"
     }
   ],
   "seo": {
     "title": "About WaitQ - Our Story & Mission",
     "description": "Learn about WaitQ's mission to transform waiting experiences. We're a small, bootstrapped team building simple, powerful waitlist software.",
-    "ogImage": "/og-about.png"
+    "ogImage": "/images/og-about.png"
   }
 }
