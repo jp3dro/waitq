@@ -95,8 +95,8 @@
     {
       "title": "Keep control of the check-in experience",
       "description": "",
-      "image": "/images/friends.jpg",
-      "imageOnRight": true,
+      "image": "/images/Self check in customization options.webp",
+      "imageOnRight": false,
       "variant": "default",
       "bullets": [
         {
@@ -108,11 +108,6 @@
           "text": "Personalized form",
           "description": "Ask for the customer name, phone number or both? You decide.",
           "icon": "SlidersHorizontal"
-        },
-        {
-          "text": "Party size limits",
-          "description": "Enable party size limits to prevent abuse.",
-          "icon": "circle-pile"
         },
         {
           "text": "Waitlist hours",
