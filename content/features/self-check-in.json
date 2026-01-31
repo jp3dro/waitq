@@ -102,25 +102,29 @@
     },
     {
       "title": "Keep control of the check-in experience",
-      "description": "Customize what guests see and what information you collect. Add your branding, set party size limits, and enable geo-fencing to prevent remote abuse.",
+      "description": "",
       "image": "/images/friends.jpg",
       "imageOnRight": true,
       "variant": "default",
       "bullets": [
         {
-          "text": "Your logo, colors, and welcome message",
+          "text": "Custom branding",
+          "description": "Make the check-in form fit your brand and messaging.",
           "icon": "Diamond"
         },
         {
-          "text": "Optional fields for seating preferences, notes",
+          "text": "Personalized form",
+          "description": "Ask for the customer name, phone number or both? You decide.",
           "icon": "SlidersHorizontal"
         },
         {
-          "text": "Geo-fencing to limit check-ins to nearby guests",
-          "icon": "MapPin"
+          "text": "Party size limits",
+          "description": "Enable party size limits to prevent abuse.",
+          "icon": "circle-pile"
         },
         {
-          "text": "Set maximum party sizes and business hours",
+          "text": "Waitlist hours",
+          "description": "Define the active time periods to accept guests.",
           "icon": "Clock"
         }
       ],
@@ -138,20 +142,16 @@
           "answer": "No. Self check-in works in any web browser. Guests scan a QR code or tap a link—no app download required."
         },
         {
-          "question": "How does self-check-in work during rush?",
-          "answer": "Self check-in actually shines during rush hours. Instead of a line at the host stand, guests join from their phones while waiting outside, at the bar, or even from their car."
+          "question": "How does self-check-in work during a rush?",
+          "answer": "Self check-in actually shines during rush hours. Instead of a line at the host stand, guests join from their phones while waiting outside, at the bar, or even before they arrive."
         },
         {
-          "question": "Can I limit who can self check-in?",
-          "answer": "Yes! You can enable geo-fencing to only allow check-ins from nearby locations, set party size limits, or disable self check-in entirely during certain hours."
+          "question": "Can I control when self check-in is available?",
+          "answer": "Yes. You can turn it on/off and limit it to specific days or time windows (for example, only brunch hours)."
         },
         {
           "question": "Can I customize the check-in page to match my brand?",
           "answer": "Absolutely. Add your logo, choose your brand colors, customize the welcome message, and select which fields to show (name, phone, party size, seating preferences, etc.)."
-        },
-        {
-          "question": "What stops people from joining when they're not really there?",
-          "answer": "Geo-fencing limits check-ins to your location radius. You can also require phone verification or set short expiration windows for spots that aren't confirmed."
         }
       ],
       "_template": "faq"
