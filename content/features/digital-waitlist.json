@@ -22,7 +22,7 @@
           "title": "Step 2: Waiting room",
           "description": "Customers get an wait time estimate at a virtual waiting room, staying in the loop even if they step away.",
           "icon": "Smartphone",
-          "image": "/images/WaitQ Waiting Room.webp"
+          "image": "/images/WaitQ Waiting Room 2.webp"
         },
         {
           "title": "Step 3: Seat with one tap",
@@ -107,7 +107,7 @@
         },
         {
           "text": "Prevent abuse",
-          "description": "Set-up optional waitlist active hours."
+          "description": "Set-up optional waitlist active hours or party size limits."
         },
         {
           "text": "Multi-Location",
