@@ -29,15 +29,14 @@ import type {
   FeatureQuery,
   FeatureSectionsThreeColumnCards,
   FeatureSectionsTestimonialWithStats,
-  FeatureSectionsHowItWorksSteps,
 } from "../../tina/__generated__/types";
 import { TestimonialWithStats } from "@/components/sections/testimonial-with-stats";
 import { FAQSection } from "@/components/sections/faq-section";
 import { ArrowLink } from "@/components/sections/arrow-link";
-import { GlobalCTA } from "@/components/sections/global-cta";
 import { TwoColumnBenefits } from "@/components/sections/two-column-benefits";
 import { HowItWorksCards } from "@/components/sections/how-it-works-cards";
 import { CTASection } from "@/components/cta-section";
+import { renderMarketingSection } from "@/components/marketing/marketing-section-renderer";
 
 // Icon mapping for dynamic icons
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -65,6 +64,20 @@ function getIcon(iconName: string | null | undefined) {
   if (!iconName) return Users;
   return iconMap[iconName] || Users;
 }
+
+type HowItWorksTimelineStep = {
+  title?: string | null;
+  description?: string | null;
+  image?: string | null;
+  link?: string | null;
+  linkText?: string | null;
+};
+
+type HowItWorksTimelineSection = {
+  title?: string | null;
+  subtitle?: string | null;
+  steps?: Array<HowItWorksTimelineStep | null> | null;
+};
 
 interface FeaturePageClientProps {
   query: string;
@@ -198,24 +211,26 @@ export function FeaturePageClient(props: FeaturePageClientProps) {
             );
           }
 
-          case "FeatureSectionsHowItWorks":
+          case "FeatureSectionsHowItWorksTimeline":
+            {
+            const timeline = section as unknown as HowItWorksTimelineSection;
             return (
               <section key={index} className="py-16">
                 <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
                   <div className="mb-8">
                     <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
-                      {section.title}
+                      {timeline.title}
                     </h2>
-                    {section.subtitle && (
+                    {timeline.subtitle && (
                       <p className="mt-4 text-lg text-muted-foreground">
-                        {section.subtitle}
+                        {timeline.subtitle}
                       </p>
                     )}
                   </div>
 
                   <div className="grid md:grid-cols-3 gap-8">
-                    {section.steps?.map((step, stepIndex) => {
-                      const stepWithImage = step as FeatureSectionsHowItWorksSteps & { image?: string };
+                    {timeline.steps?.map((step, stepIndex) => {
+                      const stepWithImage = step as HowItWorksTimelineStep | null;
                       return (
                         <div key={stepIndex}>
                           {/* Image first */}
@@ -253,6 +268,7 @@ export function FeaturePageClient(props: FeaturePageClientProps) {
                 </div>
               </section>
             );
+            }
 
           case "FeatureSectionsHowItWorksCards": {
             const how = section as unknown as {
@@ -486,30 +502,6 @@ export function FeaturePageClient(props: FeaturePageClientProps) {
               />
             );
 
-          case "FeatureSectionsGlobalCta": {
-            const ctaSection = section as unknown as {
-              title: string;
-              subtitle: string;
-              primaryButtonText: string;
-              primaryButtonLink: string;
-              secondaryButtonText?: string;
-              secondaryButtonLink?: string;
-              trustMessage?: string;
-            };
-            return (
-              <GlobalCTA
-                key={index}
-                title={ctaSection.title}
-                subtitle={ctaSection.subtitle}
-                primaryButtonText={ctaSection.primaryButtonText}
-                primaryButtonLink={ctaSection.primaryButtonLink}
-                secondaryButtonText={ctaSection.secondaryButtonText}
-                secondaryButtonLink={ctaSection.secondaryButtonLink}
-                trustMessage={ctaSection.trustMessage}
-              />
-            );
-          }
-
           case "FeatureSectionsCtaSection": {
             const cta = section as unknown as {
               variant?: "default" | "compact" | "inline" | string;
@@ -561,7 +553,7 @@ export function FeaturePageClient(props: FeaturePageClientProps) {
           }
 
           default:
-            return null;
+            return renderMarketingSection(section, index);
         }
       })}
     </main>

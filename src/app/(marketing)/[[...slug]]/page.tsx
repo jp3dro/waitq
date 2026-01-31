@@ -19,21 +19,7 @@ import { LegalPageClient } from "../[slug]/legal-page-client";
 
 type RouteParams = { slug?: string[] };
 
-// Common metadata/asset file patterns that should not be handled by this route
-const INVALID_SLUG_PATTERNS = [
-  /^apple-touch-icon/i,
-  /^favicon/i,
-  /^robots\.txt$/i,
-  /^sitemap/i,
-  /^manifest/i,
-  /^browserconfig/i,
-  /^mstile/i,
-  /\.(png|jpg|jpeg|gif|svg|ico|webp|xml|json|txt|css|js|woff|woff2|ttf|eot)$/i,
-];
-
-function isInvalidSlug(slug: string): boolean {
-  return INVALID_SLUG_PATTERNS.some((pattern) => pattern.test(slug));
-}
+// Reserved slugs are handled explicitly by router branches below.
 
 export async function generateStaticParams() {
   const [featureConn, termsConn, landingConn] = await Promise.all([
@@ -204,17 +190,34 @@ export async function generateMetadata({
       },
     };
   }
+  // Legal pages (Terms & Legal Pages collection) — only for known legal slugs
+  if (slug.length === 1 && (slug[0] === "privacy-policy" || slug[0] === "terms-and-conditions")) {
+    const legalSlug = slug[0];
+    try {
+      const { data } = await client.queries.terms({ relativePath: `${legalSlug}.mdx` });
+      const seo = data.terms.seo;
+
+      const title = seo?.title || data.terms.title || "Legal";
+      const description = seo?.description || "WaitQ legal information and policies.";
+
+      return {
+        title,
+        description,
+        openGraph: { title, description },
+      };
+    } catch {
+      return { title: "Page Not Found", robots: { index: false, follow: false } };
+    }
+  }
+
   // Landing pages
-  if (
-    slug.length === 1
-  ) {
+  if (slug.length === 1) {
     try {
       const { data } = await getLandingPageData(slug[0]);
       const seo = data.landingPage.seo;
 
       const title = seo?.title || data.landingPage.hero?.title || slug[0];
-      const description =
-        seo?.description || "Learn more about WaitQ and how it helps modern restaurants.";
+      const description = seo?.description || "Learn more about WaitQ and how it helps modern restaurants.";
       const ogImage = seo?.ogImage || `/og-${slug[0]}.png`;
 
       return {
@@ -233,27 +236,7 @@ export async function generateMetadata({
         },
       };
     } catch {
-      // Not a landing page – let other resolvers (legal) handle it.
-    }
-  }
-
-  // Legal pages (Terms & Legal Pages collection)
-  if (slug.length === 1 && !isInvalidSlug(slug[0])) {
-    const legalSlug = slug[0];
-    try {
-      const { data } = await client.queries.terms({ relativePath: `${legalSlug}.mdx` });
-      const seo = data.terms.seo;
-
-      const title = seo?.title || data.terms.title || "Legal";
-      const description = seo?.description || "WaitQ legal information and policies.";
-
-      return {
-        title,
-        description,
-        openGraph: { title, description },
-      };
-    } catch {
-      return { title: "Page Not Found", robots: { index: false, follow: false } };
+      // Not a landing page.
     }
   }
 
@@ -294,17 +277,8 @@ export default async function MarketingPage({
     const { data, query, variables } = await getAboutPageData();
     return <AboutClient data={data} query={query} variables={variables} />;
   }
-  if (slug.length === 1) {
-    try {
-      const { data, query, variables } = await getLandingPageData(slug[0]);
-      return <LandingClient data={data} query={query} variables={variables} />;
-    } catch {
-      // Not a landing page – let other resolvers (legal) handle it.
-    }
-  }
-
   // Legal pages
-  if (slug.length === 1 && !isInvalidSlug(slug[0])) {
+  if (slug.length === 1 && (slug[0] === "privacy-policy" || slug[0] === "terms-and-conditions")) {
     const legalSlug = slug[0];
     try {
       const { data, query, variables } = await client.queries.terms({
@@ -313,6 +287,16 @@ export default async function MarketingPage({
       return <LegalPageClient data={data} query={query} variables={variables} />;
     } catch {
       notFound();
+    }
+  }
+
+  // Landing pages
+  if (slug.length === 1) {
+    try {
+      const { data, query, variables } = await getLandingPageData(slug[0]);
+      return <LandingClient data={data} query={query} variables={variables} />;
+    } catch {
+      // Not a landing page.
     }
   }
 

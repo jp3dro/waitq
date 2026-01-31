@@ -7,13 +7,8 @@ import { YouTubeLightbox } from "@/components/youtube-lightbox";
 import { useTina } from "tinacms/dist/react";
 import type { HomeQuery } from "../../../tina/__generated__/types";
 import { FAQSection } from "@/components/sections/faq-section";
-import { GlobalCTA } from "@/components/sections/global-cta";
-import { BentoGrid } from "@/components/sections/bento-grid";
-import { TwoColumnBenefits } from "@/components/sections/two-column-benefits";
-import { HowItWorksCards } from "@/components/sections/how-it-works-cards";
-import { IntroSection } from "@/components/sections/intro-section";
-import { ProductShowcase } from "@/components/sections/product-showcase";
 import { CTASection } from "@/components/cta-section";
+import { renderMarketingSection } from "@/components/marketing/marketing-section-renderer";
 
 interface HomeClientProps {
   query: string;
@@ -112,127 +107,7 @@ export function HomeClient(props: HomeClientProps) {
       </section>
 
       {/* Dynamic Sections */}
-      {page.sections?.map((section, index) => {
-        if (!section) return null;
-
-        switch (section.__typename) {
-          case "HomeSectionsIntroSection":
-            return (
-              <IntroSection
-                key={index}
-                title={section.title || ""}
-                description={section.description || ""}
-                image={section.image || undefined}
-              />
-            );
-
-          case "HomeSectionsHowItWorks":
-            return (
-              <HowItWorksCards
-                key={index}
-                title={section.title || ""}
-                columns={section.columns === 2 ? 2 : section.columns === 3 ? 3 : undefined}
-                items={(section.items || []).map(item => ({
-                  title: item?.title || "",
-                  description: item?.description || "",
-                  image: item?.image || undefined,
-                  link: item?.link || undefined,
-                  linkText: item?.linkText || undefined,
-                }))}
-              />
-            );
-
-          case "HomeSectionsTwoColumnBenefits":
-            return (
-              <TwoColumnBenefits
-                key={index}
-                title={section.title || ""}
-                cards={(section.cards || []).map(card => ({
-                  badge: card?.badge || undefined,
-                  title: card?.title || "",
-                  image: card?.image || undefined,
-                  bullets: card?.bullets?.map(b => ({ text: b?.text || "" })) || [],
-                }))}
-              />
-            );
-
-          case "HomeSectionsProductShowcase":
-            return (
-              <ProductShowcase
-                key={index}
-                title={section.title || ""}
-                subtitle={section.subtitle || undefined}
-                ctaText={section.ctaText || undefined}
-                ctaLink={section.ctaLink || undefined}
-                cards={(section.cards || []).map(card => ({
-                  title: card?.title || "",
-                  description: card?.description || "",
-                  image: card?.image || undefined,
-                }))}
-              />
-            );
-
-          case "HomeSectionsBentoGrid":
-            return (
-              <BentoGrid
-                key={index}
-                title={section.title || ""}
-                items={(section.items || []).map(item => ({
-                  title: item?.title || "",
-                  description: item?.description || "",
-                  image: item?.image || undefined,
-                }))}
-              />
-            );
-
-          case "HomeSectionsFaq":
-            return (
-              <FAQSection
-                key={index}
-                title={section.title || ""}
-                items={(section.items || []).map(item => ({
-                  question: item?.question || "",
-                  answer: item?.answer || "",
-                }))}
-              />
-            );
-
-          case "HomeSectionsGlobalCta":
-            return (
-              <GlobalCTA
-                key={index}
-                title={section.title || ""}
-                subtitle={section.subtitle || ""}
-                primaryButtonText={section.primaryButtonText || ""}
-                primaryButtonLink={section.primaryButtonLink || ""}
-                secondaryButtonText={section.secondaryButtonText || undefined}
-                secondaryButtonLink={section.secondaryButtonLink || undefined}
-                trustMessage={section.trustMessage || undefined}
-              />
-            );
-
-          case "HomeSectionsCtaSection":
-            return (
-              <section key={index} className="py-10">
-                <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-                  <CTASection
-                    variant={(section.variant as "default" | "compact" | "inline") || "default"}
-                    title={section.title || undefined}
-                    subtitle={section.subtitle || undefined}
-                    primaryButtonText={section.primaryButtonText || undefined}
-                    primaryButtonLink={section.primaryButtonLink || undefined}
-                    secondaryButtonText={section.secondaryButtonText || undefined}
-                    secondaryButtonLink={section.secondaryButtonLink || undefined}
-                    trustMessage={section.trustMessage || undefined}
-                  />
-                </div>
-              </section>
-            );
-
-          default:
-            return null;
-        }
-      })}
+      {page.sections?.map((section, index) => renderMarketingSection(section, index))}
     </main>
   );
 }

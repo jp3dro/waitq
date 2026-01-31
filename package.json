@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "TINA_PUBLIC_IS_LOCAL=true tinacms dev -c \"next dev --turbopack\"",
     "build": "tinacms build && next build --turbopack",
-    "build:local": "TINA_PUBLIC_IS_LOCAL=true tinacms build --local --skip-cloud-checks --datalayer-port 9100 && TINA_PUBLIC_IS_LOCAL=true next build --turbopack",
+    "build:local": "TINA_PUBLIC_IS_LOCAL=true tinacms dev --noWatch --noTelemetry --datalayer-port 9100 -c \"NODE_ENV=production next build --turbopack\"",
     "start": "next start",
     "lint": "eslint",
     "clean": "rm -rf .next"

@@ -39,7 +39,7 @@
           "image": "/images/couple.jpg"
         }
       ],
-      "_template": "howItWorks"
+      "_template": "howItWorksTimeline"
     },
     {
       "title": "The waitlist is virtual, but the gains are real",
@@ -163,7 +163,7 @@
       "secondaryButtonText": "See pricing",
       "secondaryButtonLink": "See pricing",
       "trustMessage": "No credit card required • 2-minute setup • Cancel anytime",
-      "_template": "globalCta"
+      "_template": "ctaSection"
     }
   ],
   "seo": {

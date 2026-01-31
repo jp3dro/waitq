@@ -1,30 +1,8 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
-import {
-  Globe,
-  MapPin,
-  Heart,
-  Image as ImageIcon,
-} from "lucide-react";
 import { useTina } from "tinacms/dist/react";
 import type { AboutQuery } from "../../../../tina/__generated__/types";
-import { Button } from "@/components/ui/button";
-import { HowItWorksCards } from "@/components/sections/how-it-works-cards";
-import { CTASection } from "@/components/cta-section";
-
-// Icon mapping for dynamic icons
-const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  Globe,
-  MapPin,
-  Heart,
-};
-
-function getIcon(iconName: string | null | undefined) {
-  if (!iconName) return Globe;
-  return iconMap[iconName] || Globe;
-}
+import { renderMarketingSection } from "@/components/marketing/marketing-section-renderer";
 
 interface AboutClientProps {
   query: string;
@@ -36,25 +14,7 @@ export function AboutClient(props: AboutClientProps) {
   const { data } = useTina(props);
   const page = data.about;
 
-  // Get sections from the new flexible sections array
-  const sections = (page as unknown as { sections?: Array<{
-    __typename?: string;
-    title?: string;
-    description?: string;
-    image?: string;
-    paragraphs?: Array<{ text?: string } | null> | null;
-    items?: Array<{
-      title?: string;
-      description?: string;
-      image?: string;
-      icon?: string;
-    } | null> | null;
-    primaryButtonText?: string;
-    primaryButtonLink?: string;
-    secondaryButtonText?: string;
-    secondaryButtonLink?: string;
-    subtitle?: string;
-  }> }).sections || [];
+  const sections = (page as unknown as { sections?: Array<Record<string, unknown> | null> }).sections || [];
 
   return (
     <main>
@@ -83,167 +43,7 @@ export function AboutClient(props: AboutClientProps) {
       </section>
 
       {/* Dynamic Sections */}
-      {sections.map((section, index) => {
-        if (!section) return null;
-
-        switch (section.__typename) {
-          case "AboutSectionsIntroSection":
-            return (
-              <section key={index} className="py-8">
-                <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-                  <div className="grid md:grid-cols-2 gap-12 items-center">
-                    <div className="relative">
-                      <div className="aspect-[4/3] bg-muted rounded-2xl shadow-xl overflow-hidden">
-                        {section.image ? (
-                          <Image
-                            src={section.image}
-                            alt={section.title || ""}
-                            fill
-                            className="object-cover"
-                          />
-                        ) : (
-                          <div className="flex items-center justify-center h-full">
-                            <div className="text-center p-8">
-                              <ImageIcon className="w-24 h-24 mx-auto text-muted-foreground/20" />
-                              <p className="mt-4 text-sm text-muted-foreground">Image</p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div>
-                      <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
-                        {section.title}
-                      </h2>
-                      <p className="mt-4 text-lg text-muted-foreground">
-                        {section.description}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </section>
-            );
-
-          case "AboutSectionsMissionSection":
-            return (
-              <section key={index} className="py-8">
-                <div className="mx-auto max-w-[900px] px-6 lg:px-8">
-                  <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-8">
-                    {section.title}
-                  </h2>
-                  <div className="space-y-6 text-muted-foreground">
-                    {section.paragraphs?.map((paragraph, pIndex) => (
-                      <p key={pIndex} className="text-lg leading-relaxed">
-                        {paragraph?.text}
-                      </p>
-                    ))}
-                  </div>
-                </div>
-              </section>
-            );
-
-          case "AboutSectionsPrinciplesSection":
-            return (
-              <section key={index} className="py-8">
-                <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-                  <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-left mb-12">
-                    {section.title}
-                  </h2>
-                  <div className="grid md:grid-cols-3 gap-8">
-                    {section.items?.map((item, iIndex) => (
-                      <div key={iIndex}>
-                        <div className="aspect-[4/3] rounded-xl overflow-hidden mb-4 bg-muted shadow-lg">
-                          {item?.image ? (
-                            <Image
-                              src={item.image}
-                              alt={item?.title || ""}
-                              width={400}
-                              height={300}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <div className="text-center p-8">
-                                <ImageIcon className="w-16 h-16 mx-auto text-muted-foreground/20" />
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        <h3 className="text-lg font-semibold mb-2">{item?.title}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {item?.description}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </section>
-            );
-
-          case "AboutSectionsHowWeOperateSection":
-            return (
-              <section key={index} className="py-8">
-                <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-                  <div className="max-w-3xl mb-12">
-                    <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
-                      {section.title}
-                    </h2>
-                    <p className="mt-4 text-lg text-muted-foreground">
-                      {section.description}
-                    </p>
-                  </div>
-                  <div className="grid md:grid-cols-3 gap-8">
-                    {section.items?.map((item, iIndex) => {
-                      const Icon = getIcon(item?.icon);
-                      return (
-                        <div key={iIndex} className="text-center">
-                          <div className="w-12 h-12 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                            <Icon className="w-6 h-6 text-primary" />
-                          </div>
-                          <h3 className="font-semibold mb-2">{item?.title}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            {item?.description}
-                          </p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </section>
-            );
-
-          case "AboutSectionsHowItWorksCards": {
-            const how = section as unknown as {
-              title?: string;
-              subtitle?: string;
-              columns?: number | null;
-              items?: Array<{
-                title?: string;
-                description?: string;
-                image?: string;
-                link?: string;
-                linkText?: string;
-              } | null> | null;
-            };
-            return (
-              <HowItWorksCards
-                key={index}
-                title={how.title || ""}
-                subtitle={how.subtitle || undefined}
-                columns={how.columns === 2 ? 2 : how.columns === 3 ? 3 : undefined}
-                items={(how.items || []).map((it) => ({
-                  title: it?.title || "",
-                  description: it?.description || "",
-                  image: it?.image || undefined,
-                  link: it?.link || undefined,
-                  linkText: it?.linkText || undefined,
-                }))}
-              />
-            );
-          }
-
-        }
-      })}
+      {sections.map((section, index) => renderMarketingSection(section, index))}
     </main>
   );
 }

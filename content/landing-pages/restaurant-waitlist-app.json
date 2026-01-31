@@ -187,7 +187,7 @@
       ]
     },
     {
-      "_template": "globalCta",
+      "_template": "ctaSection",
       "title": "The smart way to manage walk-in customers",
       "subtitle": "Reduce wait times, improve customer satisfaction, and increase revenue by servicing more, happier clients.",
       "primaryButtonText": "Try WaitQ",

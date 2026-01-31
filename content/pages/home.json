@@ -40,7 +40,7 @@
           "linkText": "More about analytics"
         }
       ],
-      "_template": "howItWorks"
+      "_template": "howItWorksCards"
     },
     {
       "title": "Improve revenue, reviews, and repeat visits",
@@ -181,7 +181,7 @@
       "secondaryButtonText": "See pricing",
       "secondaryButtonLink": "/pricing",
       "trustMessage": "No credit card required • 2-minute setup • Cancel anytime",
-      "_template": "globalCta"
+      "_template": "ctaSection"
     }
   ],
   "seo": {

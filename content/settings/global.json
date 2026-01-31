@@ -22,9 +22,9 @@
           "icon": "QrCode"
         },
         {
-          "title": "Virtual Waitlist",
+          "title": "Digital Waitlist",
           "description": "Real-time queue management with SMS notifications",
-          "href": "/features/virtual-waitlist",
+          "href": "/features/digital-waitlist",
           "icon": "Users"
         },
         {

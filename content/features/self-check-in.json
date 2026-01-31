@@ -39,7 +39,7 @@
           "image": "/images/bar friends.jpg"
         }
       ],
-      "_template": "howItWorks"
+      "_template": "howItWorksTimeline"
     },
     {
       "title": "Keep the line moving, without the stress",
@@ -98,7 +98,7 @@
           "image": "/images/bar friends.jpg"
         }
       ],
-      "_template": "howItWorks"
+      "_template": "howItWorksTimeline"
     },
     {
       "title": "Keep control of the check-in experience",
@@ -164,7 +164,7 @@
       "secondaryButtonText": "See pricing",
       "secondaryButtonLink": "/pricing",
       "trustMessage": "No credit card required • 2-minute setup • Cancel anytime",
-      "_template": "globalCta"
+      "_template": "ctaSection"
     }
   ],
   "seo": {
