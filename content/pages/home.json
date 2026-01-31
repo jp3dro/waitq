@@ -12,7 +12,7 @@
     {
       "title": "Stop losing revenue to long waits and chaotic wait lines",
       "description": "WaitQ brings order to the door with clear, real-time wait updates. that lead to fewer walk-aways on busy nights.",
-      "image": "/images/couple.jpg",
+      "image": "/images/WaitQ%20Hero.webp",
       "_template": "introSection"
     },
     {
@@ -21,14 +21,14 @@
         {
           "title": "Check in customers in a breeze",
           "description": "Customers check in themselves or staff adds them, from any device.",
-          "image": "/images/bar friends.jpg",
+          "image": "/images/WaitQ%20Your%20ticket.webp",
           "link": "/features/self-check-in",
           "linkText": "More about self-check-in"
         },
         {
           "title": "Know exactly who's next",
           "description": "See who's waiting, notify them when it's their turn and reduce cancellations.",
-          "image": "/images/WaitQ%20Next.webp",
+          "image": "/images/WaitQ%20Next%20in%20line.webp",
           "link": "/features/virtual-waitlist",
           "linkText": "More about digital waitlist"
         },
@@ -46,9 +46,9 @@
       "title": "Improve revenue, reviews, and repeat visits",
       "cards": [
         {
-          "badge": "For owners",
+          "badge": "For managers",
           "title": "Handle peak hours with ease",
-          "image": "/images/bar friends.jpg",
+          "image": "/images/WaitQ Host.webp",
           "bullets": [
             {
               "text": "See who's waiting and who's next in a glance, and send \"table ready\" notifications with one tap"
@@ -64,7 +64,7 @@
         {
           "badge": "For customers",
           "title": "Better, consistent customer experience",
-          "image": "/images/couple.jpg",
+          "image": "/images/bar%20friends.jpg",
           "bullets": [
             {
               "text": "Anyone can join the public digital waitlist from their phone or kiosk"
@@ -110,7 +110,7 @@
         {
           "title": "Real-time waitlist",
           "description": "Easily run waitlists that show who's waiting, who's next in real-time, even across multiple locations.",
-          "image": "/images/bar friends.jpg"
+          "image": "/images/WaitQ%20Locations.png"
         },
         {
           "title": "Virtual waiting room",
@@ -120,7 +120,7 @@
         {
           "title": "Public display",
           "description": "Display waiting times on any device: TVs, tablets or phones.",
-          "image": "/images/couple.jpg"
+          "image": "/images/WaitQ%20Next%20in%20line%202.webp"
         },
         {
           "title": "Notifications",
