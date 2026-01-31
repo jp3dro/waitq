@@ -18,8 +18,8 @@ interface CTASectionProps {
   trustMessage?: string;
 }
 
-export function CTASection({ 
-  variant = "default", 
+export function CTASection({
+  variant = "default",
   className = "",
   title = "Smarter queue management starts here",
   subtitle = "Start your free trial today. No credit card required.",
@@ -43,7 +43,7 @@ export function CTASection({
     return (
       <section
         className={[
-          "rounded-2xl border border-primary bg-primary text-primary-foreground shadow-md px-6 py-5",
+          "rounded-2xl border border-primary bg-primary dark:bg-primary/10 text-primary-foreground dark:text-foreground shadow-md px-6 py-5",
           className,
         ].join(" ")}
       >
@@ -52,12 +52,12 @@ export function CTASection({
             <h3 className="text-xl sm:text-2xl font-bold tracking-tight">
               {title}
             </h3>
-            <p className="mt-1 text-sm sm:text-base opacity-90">
+            <p className="mt-1 text-sm sm:text-base opacity-90 dark:text-muted-foreground">
               {subtitle}
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row justify-end md:self-center">
-            <Button asChild size="sm" variant="secondary" className="h-10 px-4">
+          <div className="flex flex-col sm:flex-row justify-end md:self-center gap-2">
+            <Button asChild size="sm" variant="secondary">
               <Link href={safePrimaryButtonLink}>{primaryButtonText}</Link>
             </Button>
           </div>
@@ -97,26 +97,26 @@ export function CTASection({
 
   // Default variant - full width banner
   return (
-    <section className={`py-6 bg-primary text-primary-foreground ${className}`}>
+    <section className={`py-8 md:py-12 rounded-2xl bg-primary dark:bg-primary/10 text-primary-foreground dark:text-foreground ${className}`}>
       <div className="mx-auto max-w-[1200px] px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div>
-            <h3 className="text-xl sm:text-2xl font-bold tracking-tight">
+        <div className="flex flex-col items-center text-center gap-10">
+          <div className="max-w-3xl">
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight">
               {title}
             </h3>
-            <p className="mt-1 text-sm opacity-90">
+            <p className="mt-6 text-lg sm:text-xl opacity-90 dark:text-muted-foreground">
               {subtitle}
             </p>
             {trustMessage && (
-              <p className="mt-2 text-xs opacity-70">{trustMessage}</p>
+              <p className="mt-4 text-sm opacity-70 dark:text-muted-foreground/80">{trustMessage}</p>
             )}
           </div>
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-row gap-4">
             <Button asChild size="lg" variant="secondary">
               <Link href={safePrimaryButtonLink}>{primaryButtonText}</Link>
             </Button>
             {secondaryButtonText && safeSecondaryButtonLink && (
-              <Button asChild size="lg" variant="outline" className="border-primary-foreground/30 hover:bg-primary-foreground/10">
+              <Button asChild size="lg" variant="outline" className="bg-transparent border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground dark:border-border dark:text-foreground dark:hover:bg-muted/50">
                 <Link href={safeSecondaryButtonLink}>{secondaryButtonText}</Link>
               </Button>
             )}

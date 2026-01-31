@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 @import "tw-animate-css";
 
 /* Tailwind v4 dark mode should match next-themes `data-theme=\"dark\"` */
