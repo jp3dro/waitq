@@ -157,8 +157,8 @@
       "_template": "faq"
     },
     {
-      "title": "The smart way to manage walk-in customers",
-      "subtitle": "Reduce wait times, improve customer satisfaction, and increase revenue by servicing more, happier clients.",
+      "title": "Smarter check-in, smarter business",
+      "subtitle": "Guests join the waitlist in seconds, your staff focuses on service, and suddenly your business is more efficient.",
       "primaryButtonText": "Try WaitQ",
       "primaryButtonLink": "/signup",
       "secondaryButtonText": "See pricing",
@@ -170,6 +170,6 @@
   "seo": {
     "title": "Self Check-in for Waitlists - WaitQ",
     "description": "Let guests join your waitlist with QR codes or kiosk check-in. No app downloads required. Reduce front-door congestion.",
-    "ogImage": "/og-self-check-in.png"
+    "ogImage": "/images/og-self-check-in.png"
   }
 }
