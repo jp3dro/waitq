@@ -21,14 +21,14 @@
         {
           "title": "Check in customers in a breeze",
           "description": "Customers check in themselves or staff adds them, from any device.",
-          "image": "/images/WaitQ%20Your%20ticket.webp",
+          "image": "/images/WaitQ 1.webp",
           "link": "/features/self-check-in",
           "linkText": "More about self-check-in"
         },
         {
           "title": "Know exactly who's next",
           "description": "See who's waiting, notify them when it's their turn and reduce cancellations.",
-          "image": "/images/WaitQ%20Next%20in%20line.webp",
+          "image": "/images/WaitQ 2.webp",
           "link": "/features/virtual-waitlist",
           "linkText": "More about digital waitlist"
         },
