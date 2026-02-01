@@ -28,7 +28,66 @@
           "title": "Customers check in in seconds",
           "description": "Fewer misheard names, fewer typos, less pressure on your staff.",
           "icon": "Users",
-          "image": "/images/WaitQ%20Waiting%20Room.webp"
+          "image": "/images/WaitQ%20Ticket%20Iphone.webp"
+        }
+      ],
+      "_template": "howItWorksTimeline"
+    },
+    {
+      "title": "Keep control of the check-in experience",
+      "description": "",
+      "image": "/images/Self check-in.webp",
+      "imageOnRight": false,
+      "variant": "default",
+      "bullets": [
+        {
+          "text": "Custom branding",
+          "description": "Make the check-in form fit your brand and messaging.",
+          "icon": "Diamond"
+        },
+        {
+          "text": "Personalized form",
+          "description": "Ask for the customer name, phone number or both? You decide.",
+          "icon": "SlidersHorizontal"
+        },
+        {
+          "text": "Waitlist hours",
+          "description": "Define the active time periods to accept guests.",
+          "icon": "Clock"
+        }
+      ],
+      "_template": "textWithImage"
+    },
+    {
+      "variant": "compact",
+      "title": "A waitlist every customer will want to join.",
+      "subtitle": "Start your free trial today. No credit card required.",
+      "primaryButtonText": "Try WaitQ",
+      "primaryButtonLink": "/signup",
+      "secondaryButtonText": "See pricing",
+      "secondaryButtonLink": "/pricing",
+      "_template": "ctaSection"
+    },
+    {
+      "title": "Multiple ways for customers to join the wait",
+      "steps": [
+        {
+          "title": "QR code",
+          "description": "Display a QR code at the entrance or counter. Guests scan with their phone camera to join instantly.",
+          "icon": "qr-code",
+          "image": ""
+        },
+        {
+          "title": "Link",
+          "description": "Share a direct link on your website, social media, or Google Business. Guests join from anywhere.",
+          "icon": "link",
+          "image": ""
+        },
+        {
+          "title": "Public kiosk or tablet",
+          "description": "Set up a dedicated check-in tablet at your entrance for guests who prefer a larger screen.",
+          "icon": "monitor-smartphone",
+          "image": ""
         }
       ],
       "_template": "howItWorksTimeline"
@@ -39,6 +98,7 @@
         {
           "badge": "For managers",
           "title": "Keep the line moving, without the stress",
+          "image": "/images/WaitQ%20QR%20Code%20entrancee.webp",
           "bullets": [
             {
               "text": "Smoother service, even during peak hours"
@@ -69,90 +129,6 @@
         }
       ],
       "_template": "twoColumnBenefits"
-    },
-    {
-      "title": "Keep the line moving, without the stress",
-      "description": "No more managing a crowd at the door. Guests join at their own pace, and your team focuses on seating—not clipboard management.",
-      "image": "/images/couple.jpg",
-      "imageOnRight": false,
-      "variant": "muted-bg",
-      "bullets": [
-        {
-          "text": "Reduce crowding at the host stand"
-        },
-        {
-          "text": "Staff handles more guests with less effort"
-        },
-        {
-          "text": "Peak hours feel calmer for everyone"
-        }
-      ],
-      "_template": "textWithImage"
-    },
-    {
-      "title": "Customers join the queue on their terms",
-      "description": "Some guests prefer self-service; others want to speak to a host. WaitQ supports both. Self-check-in is an option, not a requirement.",
-      "image": "/images/couple.jpg",
-      "imageOnRight": false,
-      "variant": "muted-bg",
-      "bullets": [
-        {
-          "text": "QR code for quick mobile check-in"
-        },
-        {
-          "text": "Tablet kiosk for those who prefer a screen"
-        },
-        {
-          "text": "Staff can still add guests manually"
-        }
-      ],
-      "_template": "textWithImage"
-    },
-    {
-      "title": "Multiple ways for customers to join the wait",
-      "steps": [
-        {
-          "title": "QR code",
-          "description": "Display a QR code at the entrance or counter. Guests scan with their phone camera to join instantly.",
-          "image": "/images/WaitQ QR Code entrancee.webp"
-        },
-        {
-          "title": "Link",
-          "description": "Share a direct link on your website, social media, or Google Business. Guests join from anywhere.",
-          "image": "/images/friends.jpg"
-        },
-        {
-          "title": "Public kiosk or tablet",
-          "description": "Set up a dedicated check-in tablet at your entrance for guests who prefer a larger screen.",
-          "image": "/images/WaitQ Izakaya Kiosk.webp"
-        }
-      ],
-      "_template": "howItWorksTimeline"
-    },
-    {
-      "title": "Keep control of the check-in experience",
-      "description": "",
-      "image": "/images/Self check-in.webp",
-      "imageOnRight": false,
-      "variant": "default",
-      "bullets": [
-        {
-          "text": "Custom branding",
-          "description": "Make the check-in form fit your brand and messaging.",
-          "icon": "Diamond"
-        },
-        {
-          "text": "Personalized form",
-          "description": "Ask for the customer name, phone number or both? You decide.",
-          "icon": "SlidersHorizontal"
-        },
-        {
-          "text": "Waitlist hours",
-          "description": "Define the active time periods to accept guests.",
-          "icon": "Clock"
-        }
-      ],
-      "_template": "textWithImage"
     },
     {
       "title": "Frequently Asked Questions",
