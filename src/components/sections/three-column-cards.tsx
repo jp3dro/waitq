@@ -16,7 +16,7 @@ function toPascalCase(input: string) {
 }
 
 function getIcon(iconName: string | null | undefined) {
-  const fallback = (icons as any).Users || (icons as any).CircleHelp || (icons as any).HelpCircle;
+  const fallback = (icons as any).Users || (icons as any).CircleAlert || (icons as any).Info || Object.values(icons as any)[0];
   const raw = typeof iconName === "string" ? iconName.trim() : "";
   if (!raw) return fallback;
 
