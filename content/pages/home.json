@@ -110,17 +110,17 @@
         {
           "title": "Real-time waitlist",
           "description": "Easily run waitlists that show who's waiting, who's next in real-time, even across multiple locations.",
-          "image": "/images/WaitQ%20Locations.png"
+          "image": "/images/Locations.webp"
         },
         {
           "title": "Virtual waiting room",
           "description": "Guests see their position in line in a virtual waiting room, fully customized with your branding.",
-          "image": "/images/WaitQ%20Restaurant%20Details.webp"
+          "image": ""
         },
         {
           "title": "Public display",
           "description": "Display waiting times on any device: TVs, tablets or phones.",
-          "image": "/images/WaitQ%20Next%20in%20line%202.webp"
+          "image": "/images/Public display.webp"
         },
         {
           "title": "Notifications",
