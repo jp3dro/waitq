@@ -3,7 +3,7 @@
   "hero": {
     "title": "Let customers check themselves in",
     "subtitle": "Your waitlist, on autopilot. WaitQ lets customers check-in to your queue on their own, without lining up or waving at staff.",
-    "primaryCta": "Try Free",
+    "primaryCta": "Set up your waitlist",
     "primaryCtaLink": "/signup",
     "secondaryCta": "See how it works",
     "heroImage": "/images/WaitQ Kiosk.webp"
@@ -13,16 +13,16 @@
       "title": "How self-check-in works at WaitQ",
       "steps": [
         {
-          "title": "Create check-in page",
-          "description": "Set up a custom sign-up page that matches your restaurant brand. ",
-          "icon": "Smartphone",
-          "image": "/images/couple.jpg"
+          "title": "Create custom waitlist",
+          "description": "Set up a custom waitlist that matches your restaurant brand and enable the self check-in option.",
+          "icon": "",
+          "image": "/images/Create waitlist 2.webp"
         },
         {
           "title": "Publicly display it",
           "description": "Display it via QR code, tablet or kiosk at the door, or share it in your website and socials.",
           "icon": "QrCode",
-          "image": "/images/friends.jpg"
+          "image": "/images/Public%20waitlist.webp"
         },
         {
           "title": "Customers check in in seconds",
@@ -69,27 +69,6 @@
       "_template": "ctaSection"
     },
     {
-      "title": "Multiple ways for customers to join the wait",
-      "items": [
-        {
-          "title": "QR code",
-          "description": "Display a QR code at the entrance or counter. Guests scan with their phone camera to join instantly.",
-          "icon": "qr-code"
-        },
-        {
-          "title": "Kiosk or tablet",
-          "description": "Set up a dedicated check-in tablet at your entrance for guests who prefer a larger screen.",
-          "icon": "monitor-smartphone"
-        },
-        {
-          "title": "Public link",
-          "description": "Share a direct link on your website, social media, or Google Business. Guests join from anywhere.",
-          "icon": "link"
-        }
-      ],
-      "_template": "threeColumnCards"
-    },
-    {
       "title": "No bottlenecks at the door, everyone moves at their pace",
       "cards": [
         {
@@ -126,6 +105,27 @@
         }
       ],
       "_template": "twoColumnBenefits"
+    },
+    {
+      "title": "Multiple ways for customers to join the wait",
+      "items": [
+        {
+          "title": "QR code",
+          "description": "Display a QR code at the entrance or counter. Guests scan with their phone camera to join instantly.",
+          "icon": "qr-code"
+        },
+        {
+          "title": "Kiosk or tablet",
+          "description": "Set up a dedicated check-in tablet at your entrance for guests who prefer a larger screen.",
+          "icon": "monitor-smartphone"
+        },
+        {
+          "title": "Public link",
+          "description": "Share a direct link on your website, social media, or Google Business. Guests join from anywhere.",
+          "icon": "link"
+        }
+      ],
+      "_template": "threeColumnCards"
     },
     {
       "title": "Frequently Asked Questions",
