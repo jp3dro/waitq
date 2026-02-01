@@ -70,25 +70,12 @@
       "_template": "textWithImage"
     },
     {
-      "title": "Trusted by top restaurants worldwide",
-      "quote": "WaitQ cut our wait times by 35%. Guests love the SMS updates and our staff stays organized.",
-      "author": "Maria",
-      "role": "GM at Bistro Verde",
-      "stats": [
-        {
-          "value": "2,000+",
-          "label": "Restaurants using WaitQ"
-        },
-        {
-          "value": "4.8★",
-          "label": "Average customer rating"
-        },
-        {
-          "value": "4.8★",
-          "label": "Trustpilot rating"
-        }
-      ],
-      "_template": "testimonialWithStats"
+      "variant": "default",
+      "title": "Use waiting data to improve your service",
+      "subtitle": "Reduce wait times, improve customer satisfaction, and increase revenue by servicing more, happier clients.",
+      "primaryButtonText": "Try WaitQ",
+      "primaryButtonLink": "/signup",
+      "_template": "ctaSection"
     },
     {
       "title": "Analytics FAQs",
