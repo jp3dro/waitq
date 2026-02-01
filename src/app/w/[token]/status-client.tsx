@@ -365,16 +365,13 @@ export default function ClientStatus({ token }: { token: string }) {
               <div className="bg-card ring-1 ring-border rounded-xl p-6 overflow-hidden">
                 <div className="grid grid-cols-2 gap-4 items-center">
                   {/* Left Column: Title and Number */}
-                  <div className="text-center border-r border-border pr-4">
+                  <div className="text-center pr-4">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
                       Your number
                     </p>
                     <div className="text-5xl sm:text-6xl font-extrabold text-foreground tabular-nums">
                       {typeof yourNumber === 'number' ? yourNumber : '-'}
                     </div>
-                    {customerName ? (
-                      <p className="mt-2 text-sm font-semibold text-foreground truncate">{customerName}</p>
-                    ) : null}
                   </div>
 
                   {/* Right Column: Details simplified */}
