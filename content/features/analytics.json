@@ -26,14 +26,14 @@
         {
           "title": "Average wait times",
           "description": "How long each customer waits and how it it’s evolving over time.",
-          "icon": "chart-column-decreasing"
+          "icon": "Chart-column-decreasing"
         }
       ],
       "_template": "threeColumnCards"
     },
     {
       "title": "Run the queue with real-time clarity",
-      "description": "See who’s waiting, who’s next, and who’s been notified and keep everything under control.",
+      "description": "See who’s waiting, who’s next, and who’s been notified to keep service under control.",
       "image": "/images/Real-time%20waitlist.webp",
       "imageOnRight": true,
       "variant": "default",
