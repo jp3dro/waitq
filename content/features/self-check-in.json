@@ -34,6 +34,43 @@
       "_template": "howItWorksTimeline"
     },
     {
+      "title": "No bottlenecks at the door, everyone moves at their pace",
+      "cards": [
+        {
+          "badge": "For managers",
+          "title": "Keep the line moving, without the stress",
+          "bullets": [
+            {
+              "text": "Smoother service, even during peak hours"
+            },
+            {
+              "text": "Consistent first impression, even when you’re slammed"
+            },
+            {
+              "text": "Your staff keeps focused on seating, not taking names"
+            }
+          ]
+        },
+        {
+          "badge": "For customers",
+          "title": "Customers join the queue on their terms",
+          "image": "/images/couple.jpg",
+          "bullets": [
+            {
+              "text": "Anyone can add themselves to the list, from anywhere"
+            },
+            {
+              "text": "No app downloads required"
+            },
+            {
+              "text": "Fewer walk-aways because the wait feels clearer"
+            }
+          ]
+        }
+      ],
+      "_template": "twoColumnBenefits"
+    },
+    {
       "title": "Keep the line moving, without the stress",
       "description": "No more managing a crowd at the door. Guests join at their own pace, and your team focuses on seating—not clipboard management.",
       "image": "/images/couple.jpg",
