@@ -253,6 +253,7 @@ export default function AnalyticsPage() {
   const supabase = createClient();
   const hasLoadedRef = React.useRef(false);
   const requestIdRef = React.useRef(0);
+  const lastFocusRefreshAtRef = React.useRef(0);
 
   const loadAnalytics = React.useCallback(async (opts: { mode: "today" | "range"; days: 7 | 15 | 30 | 90; waitlistIds: string[] | null }) => {
     const requestId = ++requestIdRef.current;
@@ -464,6 +465,37 @@ export default function AnalyticsPage() {
     loadAnalytics({ mode, days, waitlistIds: wlIds });
   }, [loadAnalytics, rangeMode, locationId, waitlistId, waitlists]);
 
+  // Refresh analytics when returning to the page (Next.js can keep client state on back/forward).
+  React.useEffect(() => {
+    const refresh = () => {
+      if (!hasLoadedRef.current) return;
+      if (loading) return;
+      const now = Date.now();
+      if (now - lastFocusRefreshAtRef.current < 1000) return;
+      lastFocusRefreshAtRef.current = now;
+
+      const days: 7 | 15 | 30 | 90 = rangeMode === "15" ? 15 : rangeMode === "30" ? 30 : rangeMode === "90" ? 90 : 7;
+      const mode = rangeMode === "today" ? "today" : "range";
+      const candidateWaitlists = waitlists
+        .filter((w) => (locationId === "all" ? true : w.location_id === locationId))
+        .filter((w) => (waitlistId === "all" ? true : w.id === waitlistId));
+      const wlIds = (locationId === "all" && waitlistId === "all") ? null : candidateWaitlists.map((w) => w.id);
+      loadAnalytics({ mode, days, waitlistIds: wlIds });
+    };
+
+    const onVisible = () => {
+      if (typeof document === "undefined") return;
+      if (!document.hidden) refresh();
+    };
+
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", refresh);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", refresh);
+    };
+  }, [loadAnalytics, loading, rangeMode, locationId, waitlistId, waitlists]);
+
   if (loading && !analytics) {
     return (
       <main className="py-5">
@@ -628,26 +660,66 @@ export default function AnalyticsPage() {
           {/* Key Metrics */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
             <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-2 sm:p-3">
-              <p className="text-xs text-muted-foreground">{isToday ? "Visitors today" : "Total visitors"}</p>
+              <div className="flex items-center gap-1">
+                <p className="text-xs text-muted-foreground">{isToday ? "Visitors today" : "Total visitors"}</p>
+                <HoverClickTooltip
+                  content={isToday
+                    ? "Number of people who joined the waitlist today (from midnight to now) for the selected filters."
+                    : "Number of people who joined the waitlist during the selected period for the selected filters."}
+                  side="bottom"
+                >
+                  <button type="button" className="inline-flex items-center" aria-label="Visitors help">
+                    <CircleHelp className="h-3 w-3 text-muted-foreground" />
+                  </button>
+                </HoverClickTooltip>
+              </div>
               <p className="mt-0.5 text-base sm:text-lg font-semibold">{analytics.totalVisitors.toLocaleString()}</p>
             </div>
             {!isToday ? (
               <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-2 sm:p-3">
-                <p className="text-xs text-muted-foreground">Daily average</p>
+                <div className="flex items-center gap-1">
+                  <p className="text-xs text-muted-foreground">Daily average</p>
+                  <HoverClickTooltip content="Total visitors divided by the number of days in the selected period." side="bottom">
+                    <button type="button" className="inline-flex items-center" aria-label="Daily average help">
+                      <CircleHelp className="h-3 w-3 text-muted-foreground" />
+                    </button>
+                  </HoverClickTooltip>
+                </div>
                 <p className="mt-0.5 text-base sm:text-lg font-semibold">{analytics.dailyAvg}</p>
               </div>
             ) : (
               <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-2 sm:p-3">
-                <p className="text-xs text-muted-foreground">Today (so far)</p>
+                <div className="flex items-center gap-1">
+                  <p className="text-xs text-muted-foreground">Today (so far)</p>
+                  <HoverClickTooltip content="Today’s analytics are calculated from midnight up to this time." side="bottom">
+                    <button type="button" className="inline-flex items-center" aria-label="Today so far help">
+                      <CircleHelp className="h-3 w-3 text-muted-foreground" />
+                    </button>
+                  </HoverClickTooltip>
+                </div>
                 <p className="mt-0.5 text-base sm:text-lg font-semibold">{dateToClockLabel(new Date(), timeFormat)}</p>
               </div>
             )}
             <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-2 sm:p-3">
-              <p className="text-xs text-muted-foreground">Avg wait time</p>
+              <div className="flex items-center gap-1">
+                <p className="text-xs text-muted-foreground">Avg wait time</p>
+                <HoverClickTooltip content="Average time from joining the waitlist to being called (based on entries that were called in this period)." side="bottom">
+                  <button type="button" className="inline-flex items-center" aria-label="Average wait time help">
+                    <CircleHelp className="h-3 w-3 text-muted-foreground" />
+                  </button>
+                </HoverClickTooltip>
+              </div>
               <p className="mt-0.5 text-base sm:text-lg font-semibold">{formatMinutesAsDuration(analytics.avgWaitTimeMin)}</p>
             </div>
             <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-2 sm:p-3">
-              <p className="text-xs text-muted-foreground">Avg service time</p>
+              <div className="flex items-center gap-1">
+                <p className="text-xs text-muted-foreground">Avg service time</p>
+                <HoverClickTooltip content="Approximate throughput: the average time between consecutive 'called' events." side="bottom">
+                  <button type="button" className="inline-flex items-center" aria-label="Average service time help">
+                    <CircleHelp className="h-3 w-3 text-muted-foreground" />
+                  </button>
+                </HoverClickTooltip>
+              </div>
               <p className="mt-0.5 text-base sm:text-lg font-semibold">{formatMinutesAsDuration(analytics.avgServiceTimeMin)}</p>
             </div>
             <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-2 sm:p-3">

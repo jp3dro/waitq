@@ -372,6 +372,9 @@ export default function ClientStatus({ token }: { token: string }) {
                     <div className="text-5xl sm:text-6xl font-extrabold text-foreground tabular-nums">
                       {typeof yourNumber === 'number' ? yourNumber : '-'}
                     </div>
+                    {customerName ? (
+                      <p className="mt-2 text-sm font-semibold text-foreground truncate">{customerName}</p>
+                    ) : null}
                   </div>
 
                   {/* Right Column: Details simplified */}

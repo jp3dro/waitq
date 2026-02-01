@@ -3,52 +3,38 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import {
-  Users,
-  Zap,
-  Monitor,
-  MapPin,
-  Smartphone,
-  BarChart3,
-  Clock,
-  QrCode,
-  MonitorPlay,
-  MousePointerClick,
-  SlidersHorizontal,
-  Check,
-  Link as LinkIcon,
-  Tablet,
-  Globe,
-  Diamond,
-  Heart,
-  Minus,
-} from "lucide-react";
+import { icons } from "lucide-react";
 
-// Icon mapping for dynamic icons
-const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  Users,
-  Zap,
-  Monitor,
-  MapPin,
-  Smartphone,
-  BarChart3,
-  Clock,
-  QrCode,
-  MonitorPlay,
-  MousePointerClick,
-  SlidersHorizontal,
-  Check,
-  Link: LinkIcon,
-  Tablet,
-  Globe,
-  Diamond,
-  Heart,
-  Minus,
-};
+function toPascalCase(input: string) {
+  return String(input || "")
+    .trim()
+    .replace(/[_\s-]+/g, " ")
+    .split(" ")
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join("");
+}
 
 function getIcon(iconName: string | null | undefined) {
-  if (!iconName) return Users;
-  return iconMap[iconName] || Users;
+  const fallback = (icons as any).Users || (icons as any).CircleHelp || (icons as any).HelpCircle;
+  const raw = typeof iconName === "string" ? iconName.trim() : "";
+  if (!raw) return fallback;
+
+  // Try direct name (case-sensitive)
+  const direct = (icons as any)[raw];
+  if (direct) return direct;
+
+  // Try normalized PascalCase (supports "arrow-right", "arrow right", "arrow_right")
+  const pascal = toPascalCase(raw);
+  const byPascal = (icons as any)[pascal];
+  if (byPascal) return byPascal;
+
+  // Try case-insensitive match
+  const lower = raw.toLowerCase();
+  const key = Object.keys(icons).find((k) => k.toLowerCase() === lower);
+  if (key) return (icons as any)[key];
+
+  return fallback;
 }
 
 interface CardItem {

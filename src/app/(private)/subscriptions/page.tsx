@@ -12,12 +12,37 @@ import PlanCards from "@/components/subscriptions/PlanCards";
 import SubscriptionReturnRefresh from "@/components/subscription-return-refresh";
 import { Progress } from "@/components/ui/progress";
 import { DateTimeText } from "@/components/date-time-text";
+import { syncPolarSubscriptionForUser } from "@/lib/polar-sync";
+
+type PolarOrder = {
+  id: string;
+  created_at: string;
+  status: string;
+  total_amount: number;
+  currency: string;
+  is_invoice_generated?: boolean;
+  invoice_number?: string | null;
+};
+
+type PolarOrderWithInvoice = PolarOrder & { invoiceUrl?: string | null };
+
+function polarApiBase() {
+  const server = (process.env.POLAR_SERVER || "").toLowerCase().trim();
+  return server === "production" ? "https://api.polar.sh" : "https://sandbox-api.polar.sh";
+}
+
+function formatCurrencyMinor(amountMinor: number, currency: string) {
+  const c = (currency || "usd").toUpperCase();
+  // Polar amounts are integer minor units (e.g. cents) for common currencies.
+  const major = amountMinor / 100;
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: c }).format(major);
+}
 
 
-function formatEUR(amount: number) {
+function formatUSD(amount: number) {
   return amount === 0
-    ? "€0"
-    : new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR" }).format(
+    ? "$0"
+    : new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(
       amount
     );
 }
@@ -40,6 +65,7 @@ type SubscriptionRow = SubscriptionData & {
 };
 
 export default async function SubscriptionPage() {
+  const billingProvider = process.env.NEXT_PUBLIC_BILLING_PROVIDER || "stripe";
   const supabase = await createClient();
   const {
     data: { user },
@@ -48,6 +74,7 @@ export default async function SubscriptionPage() {
   let uiCustomerId: string | null = null;
   let uiSubscription: Stripe.Subscription | null = null;
   let uiInvoices: Stripe.Invoice[] = [];
+  let polarOrders: PolarOrderWithInvoice[] = [];
   let usageSummary:
     | {
         locations: { used: number; limit: number };
@@ -58,14 +85,28 @@ export default async function SubscriptionPage() {
         windowEnd: string;
       }
     | null = null;
+  if (user && billingProvider === "polar") {
+    // API-only sync: ensure our DB reflects Polar before rendering.
+    try {
+      await syncPolarSubscriptionForUser({ userId: user.id });
+    } catch {
+      // ignore; UI will fall back to cached DB row
+    }
+  }
+
   if (user) {
     // First, read any existing customer link from DB
     const { data: existingRow } = await supabase
       .from("subscriptions")
-      .select("plan_id, status, price_lookup_key, stripe_customer_id")
+      .select("plan_id, status, price_lookup_key, price_id, latest_invoice_id, current_period_start, current_period_end, trial_end, cancel_at_period_end, collection_method, stripe_customer_id")
       .eq("user_id", user.id)
       .neq("status", "canceled")
       .maybeSingle();
+
+    if (billingProvider !== "stripe") {
+      // In Polar mode, we rely on the DB row maintained by Polar webhooks.
+      current = (existingRow as SubscriptionData) || null;
+    }
 
     // console.log("🔍 SUPABASE DATA - Existing subscription row:", {
     //   user_id: user.id,
@@ -76,7 +117,7 @@ export default async function SubscriptionPage() {
     // });
 
     // Refresh subscription from Stripe on page load
-    try {
+    if (billingProvider === "stripe") try {
       const stripe = getStripe();
       const existing = (existingRow as SubscriptionRow | null);
       let customerId: string | null = existing?.stripe_customer_id || null;
@@ -680,6 +721,54 @@ export default async function SubscriptionPage() {
     }
   }
 
+  // Polar payment history (orders) for this user
+  if (billingProvider === "polar" && user) {
+    try {
+      const token = process.env.POLAR_ACCESS_TOKEN;
+      if (token) {
+        const listUrl = new URL("/v1/orders", polarApiBase());
+        listUrl.searchParams.set("limit", "12");
+        listUrl.searchParams.set("sorting", "-created_at");
+        // We attach `metadata.user_id` to checkout, so this reliably filters per user.
+        listUrl.searchParams.set("metadata[user_id]", user.id);
+
+        const res = await fetch(listUrl.toString(), {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: "no-store",
+        });
+        if (res.ok) {
+          const json = (await res.json()) as { items?: PolarOrder[] };
+          const items = Array.isArray(json.items) ? json.items : [];
+
+          // Best-effort: fetch invoice URL for generated invoices.
+          polarOrders = await Promise.all(
+            items.map(async (o) => {
+              let invoiceUrl: string | null = null;
+              if (o.is_invoice_generated) {
+                try {
+                  const invUrl = new URL(`/v1/orders/${o.id}/invoice`, polarApiBase());
+                  const invRes = await fetch(invUrl.toString(), {
+                    headers: { Authorization: `Bearer ${token}` },
+                    cache: "no-store",
+                  });
+                  if (invRes.ok) {
+                    const invJson = (await invRes.json()) as { url?: string | null };
+                    invoiceUrl = typeof invJson.url === "string" ? invJson.url : null;
+                  }
+                } catch {
+                  // ignore
+                }
+              }
+              return { ...o, invoiceUrl };
+            })
+          );
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }
+
   if (user) {
     try {
       const admin = getAdminClient();
@@ -741,7 +830,10 @@ export default async function SubscriptionPage() {
 
   // Determine current plan - consider common paid/trial statuses
   // Exclude 'incomplete' and 'unpaid' so users with failed/pending subs don't see them as active
-  const activeLikeStatuses = new Set(["active", "trialing", "past_due"]);
+  const activeLikeStatuses =
+    billingProvider === "polar"
+      ? new Set(["active", "trialing", "past_due", "paid", "confirmed", "complete", "completed", "succeeded"])
+      : new Set(["active", "trialing", "past_due"]);
   let currentPlanId: string = "free";
   if (current && current.status && activeLikeStatuses.has(current.status)) {
     // Prefer the plan_id we derived from Stripe subscription data, fallback to lookup key matching
@@ -778,10 +870,10 @@ export default async function SubscriptionPage() {
           </div>
         </div>
 
-        <PlanCards mode="manage" currentPlanId={currentPlanId} />
+        <PlanCards mode="manage" currentPlanId={currentPlanId} billingProvider={billingProvider === "polar" ? "polar" : "stripe"} />
 
         <div className="grid grid-cols-1 gap-4">
-          {hasActiveSubscription && uiSubscription && (
+          {billingProvider === "stripe" && hasActiveSubscription && uiSubscription && (
             <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="text-xl font-semibold">Active Subscription</div>
@@ -873,42 +965,86 @@ export default async function SubscriptionPage() {
             </div>
           ) : null}
 
-          {/* Always show Payment History section, even if empty */}
-          <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-6">
-            <div className="text-lg font-semibold mb-3">Payment History</div>
-            {uiInvoices.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-sm">
-                  <thead>
-                    <tr className="text-left text-muted-foreground">
-                      <th className="py-2 pr-4">Date</th>
-                      <th className="py-2 pr-4">Amount</th>
-                      <th className="py-2 pr-4">Status</th>
-                      <th className="py-2 pr-4">Invoice</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {uiInvoices.map((inv) => (
-                      <tr key={inv.id} className="border-t border-border/60">
-                        <td className="py-2 pr-4"><DateTimeText value={(inv.created || 0) * 1000} /></td>
-                        <td className="py-2 pr-4">{formatEUR(((inv.amount_paid || inv.amount_due || 0) as number) / 100)}</td>
-                        <td className="py-2 pr-4 capitalize">{inv.status as string}</td>
-                        <td className="py-2 pr-4">
-                          {inv.hosted_invoice_url ? (
-                            <a className="text-primary underline" href={inv.hosted_invoice_url} target="_blank" rel="noreferrer">View</a>
-                          ) : (
-                            "-"
-                          )}
-                        </td>
+          {billingProvider === "stripe" ? (
+            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-6">
+              <div className="text-lg font-semibold mb-3">Payment History</div>
+              {uiInvoices.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-muted-foreground">
+                        <th className="py-2 pr-4">Date</th>
+                        <th className="py-2 pr-4">Amount</th>
+                        <th className="py-2 pr-4">Status</th>
+                        <th className="py-2 pr-4">Invoice</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {uiInvoices.map((inv) => (
+                        <tr key={inv.id} className="border-t border-border/60">
+                          <td className="py-2 pr-4"><DateTimeText value={(inv.created || 0) * 1000} /></td>
+                          <td className="py-2 pr-4">{formatUSD(((inv.amount_paid || inv.amount_due || 0) as number) / 100)}</td>
+                          <td className="py-2 pr-4 capitalize">{inv.status as string}</td>
+                          <td className="py-2 pr-4">
+                            {inv.hosted_invoice_url ? (
+                              <a className="text-primary underline" href={inv.hosted_invoice_url} target="_blank" rel="noreferrer">View</a>
+                            ) : (
+                              "-"
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-sm text-muted-foreground py-2">No payment history yet.</div>
+              )}
+            </div>
+          ) : billingProvider === "polar" ? (
+            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-6">
+              <div className="text-lg font-semibold mb-3">Payment History</div>
+              {polarOrders.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-muted-foreground">
+                        <th className="py-2 pr-4">Date</th>
+                        <th className="py-2 pr-4">Amount</th>
+                        <th className="py-2 pr-4">Status</th>
+                        <th className="py-2 pr-4">Invoice</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {polarOrders.map((o) => (
+                        <tr key={o.id} className="border-t border-border/60">
+                          <td className="py-2 pr-4"><DateTimeText value={new Date(o.created_at).getTime()} /></td>
+                          <td className="py-2 pr-4">{formatCurrencyMinor(o.total_amount || 0, o.currency || "eur")}</td>
+                          <td className="py-2 pr-4 capitalize">{o.status}</td>
+                          <td className="py-2 pr-4">
+                            {o.invoiceUrl ? (
+                              <a className="text-primary underline" href={o.invoiceUrl} target="_blank" rel="noreferrer">View</a>
+                            ) : (
+                              "-"
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-sm text-muted-foreground py-2">No payment history yet.</div>
+              )}
+            </div>
+          ) : (
+            <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-6">
+              <div className="text-lg font-semibold mb-2">Payment History</div>
+              <div className="text-sm text-muted-foreground">
+                Payment history is only available in Stripe mode right now.
               </div>
-            ) : (
-              <div className="text-sm text-muted-foreground py-2">No payment history yet.</div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
       </div>

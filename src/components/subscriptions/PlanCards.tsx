@@ -12,13 +12,22 @@ type Props = {
   onFreeAction?: () => void;
   successPath?: string;
   cancelPath?: string;
+  billingProvider?: "stripe" | "polar";
 };
 
-export default function PlanCards({ mode, currentPlanId, disabled, onFreeAction, successPath, cancelPath }: Props) {
+export default function PlanCards({ mode, currentPlanId, disabled, onFreeAction, successPath, cancelPath, billingProvider }: Props) {
   const isManage = mode === "manage";
   const effectiveCurrentPlanId = isManage ? (currentPlanId ?? "free") : "free";
+  const provider = billingProvider || (process.env.NEXT_PUBLIC_BILLING_PROVIDER as "stripe" | "polar" | undefined) || "stripe";
+  const providerLabel = provider === "polar" ? "Polar" : "Stripe";
 
   const pluralize = (n: number, singular: string, plural?: string) => (n === 1 ? singular : (plural ?? `${singular}s`));
+  const formatUSD = (amount: number) =>
+    new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(amount);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -49,7 +58,7 @@ export default function PlanCards({ mode, currentPlanId, disabled, onFreeAction,
                   )}
                 </div>
                 <div className="mt-2 text-2xl font-bold">
-                  €{plan.priceMonthlyEUR} <span className="text-sm font-normal">/ month</span>
+                  {formatUSD(plan.priceMonthlyEUR)} <span className="text-sm font-normal">/ month</span>
                 </div>
                 <p className="mt-2 text-sm text-muted-foreground">{plan.description}</p>
               </div>
@@ -101,8 +110,9 @@ export default function PlanCards({ mode, currentPlanId, disabled, onFreeAction,
                   disabled={disabled}
                   successPath={!isManage ? successPath : undefined}
                   cancelPath={!isManage ? cancelPath : undefined}
+                  billingProvider={provider}
                 >
-                  {isManage ? (isCurrentPlan ? "Manage in Stripe" : isUpgradeable ? "Upgrade" : "Subscribe") : "Subscribe"}
+                  {isManage ? (isCurrentPlan ? `Manage in ${providerLabel}` : isUpgradeable ? "Upgrade" : "Subscribe") : "Subscribe"}
                 </SubscribeButton>
               )}
             </div>

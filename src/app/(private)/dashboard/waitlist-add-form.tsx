@@ -152,11 +152,24 @@ export default function AddForm({
   }, [blockedReason, onBlockedReasonChange]);
 
   const smsLimitReached = typeof smsUsage?.used === "number" && typeof smsUsage?.limit === "number" && smsUsage.used >= smsUsage.limit;
+  const phoneValue = watch("phone") || "";
+  const emailValue = watch("email") || "";
+  const sendSmsSelected = watch("sendSms");
+  const sendEmailSelected = watch("sendEmail");
+  const hasPhone = !!phoneValue.trim();
+  const hasEmail = !!emailValue.trim();
   useEffect(() => {
-    if (smsLimitReached) {
+    // Disable SMS sending when limit is reached or phone is empty.
+    if ((smsLimitReached || !hasPhone) && sendSmsSelected) {
       setValue("sendSms", false);
     }
-  }, [smsLimitReached, setValue]);
+  }, [smsLimitReached, hasPhone, sendSmsSelected, setValue]);
+  useEffect(() => {
+    // Disable email sending when email is empty.
+    if (!hasEmail && sendEmailSelected) {
+      setValue("sendEmail", false);
+    }
+  }, [hasEmail, sendEmailSelected, setValue]);
 
   const onSubmit = (values: FormValues) => {
     setMessage(null);
@@ -180,14 +193,16 @@ export default function AddForm({
             phone: values.phone || undefined,
             name: values.customerName || undefined,
             email: values.email || undefined,
+            sendSms: values.sendSms || undefined,
+            sendEmail: values.sendEmail || undefined,
             partySize: values.partySize,
             seatingPreference: values.seatingPreference,
           }),
         });
         const j = await res.json().catch(() => ({}));
         if (res.ok) {
-          const hadEmail = !!(values.email && values.email.trim());
-          const hadPhone = !!(values.phone && values.phone.trim());
+          const hadEmail = !!(values.sendEmail && values.email && values.email.trim());
+          const hadPhone = !!(values.sendSms && values.phone && values.phone.trim());
           reset({ phone: "", email: "", customerName: "", waitlistId: values.waitlistId, sendSms: false, sendEmail: false, partySize: 2, seatingPreference: undefined });
           setMessage(null);
           onPublicSuccess?.({ statusUrl: j?.statusUrl, ticketNumber: j?.ticketNumber, emailProvided: hadEmail, phoneProvided: hadPhone });
@@ -348,6 +363,8 @@ export default function AddForm({
 
   const collectPhone = current?.ask_phone !== false;
   const collectEmail = current?.ask_email === true;
+  const canToggleSendSms = collectPhone && hasPhone && (!smsLimitReached || isPublic);
+  const canToggleSendEmail = collectEmail && hasEmail;
 
   return (
     <div>
@@ -406,32 +423,65 @@ export default function AddForm({
           {collectPhone && (
             <div className="grid gap-2">
               <label className="text-sm font-medium">{isPublic ? "Phone number to receive confirmation (optional)" : "Phone (optional)"}</label>
-              <PhoneInput
-                defaultCountry={businessCountry}
-                value={watch("phone")}
-                onChange={(value) => setValue("phone", value)}
-              />
+              <div className="flex items-center gap-3">
+                <div className="flex-1 min-w-0">
+                  <PhoneInput
+                    defaultCountry={businessCountry}
+                    value={phoneValue}
+                    onChange={(value) => setValue("phone", value)}
+                  />
+                </div>
+                <div className="flex items-center gap-2 whitespace-nowrap">
+                  <input
+                    id="send-sms"
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-border text-primary focus:ring-ring disabled:opacity-50"
+                    disabled={!canToggleSendSms}
+                    {...register("sendSms")}
+                  />
+                  <label htmlFor="send-sms" className={`text-sm ${canToggleSendSms ? "" : "text-muted-foreground"}`}>
+                    Send SMS
+                  </label>
+                </div>
+              </div>
               {errors.phone && (
                 <p className="text-sm text-red-600">{errors.phone.message}</p>
               )}
+              {!isPublic && smsLimitReached ? (
+                <p className="text-xs text-muted-foreground">SMS limit reached for the current billing period.</p>
+              ) : null}
             </div>
           )}
         </div>
 
         {collectEmail ? (
           <div className="grid gap-2">
-            <label className="text-sm font-medium">{isPublic ? "E-mail to receive confirmation (optional)" : "Email"}</label>
-            <input
-              type="email"
-              inputMode="email"
-              autoComplete="email"
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
-              className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-base md:text-sm"
-              placeholder="name@example.com"
-              {...register("email")}
-            />
+            <label className="text-sm font-medium">{isPublic ? "E-mail to receive confirmation (optional)" : "Email (optional)"}</label>
+            <div className="flex items-center gap-3">
+              <input
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                className="block w-full rounded-md border-0 shadow-sm ring-1 ring-inset ring-border focus:ring-2 focus:ring-ring px-3 py-2 text-base md:text-sm"
+                placeholder="name@example.com"
+                {...register("email")}
+              />
+              <div className="flex items-center gap-2 whitespace-nowrap">
+                <input
+                  id="send-email"
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-border text-primary focus:ring-ring disabled:opacity-50"
+                  disabled={!canToggleSendEmail}
+                  {...register("sendEmail")}
+                />
+                <label htmlFor="send-email" className={`text-sm ${canToggleSendEmail ? "" : "text-muted-foreground"}`}>
+                  Send Email
+                </label>
+              </div>
+            </div>
             {errors.email && (
               <p className="text-sm text-red-600">{errors.email.message}</p>
             )}
@@ -439,7 +489,7 @@ export default function AddForm({
         ) : null}
         {current?.list_type !== "take_out" && (waitlists.find(w => w.id === watch("waitlistId"))?.seating_preferences || []).length > 0 ? (
           <div className="grid gap-2">
-            <label className="text-sm font-medium">Seating preference</label>
+            <label className="text-sm font-medium">Seating preference (optional)</label>
             <div className="flex flex-wrap gap-2">
               {(waitlists.find(w => w.id === watch("waitlistId"))?.seating_preferences || []).map((s) => {
                 const selected = watch("seatingPreference") === s;
@@ -456,26 +506,6 @@ export default function AddForm({
               })}
             </div>
           </div>
-        ) : null}
-        {!isPublic && (collectPhone || collectEmail) && (
-          <div className="flex items-center gap-4">
-            <label className="text-sm font-medium">Notify via</label>
-            {collectPhone ? (
-              <div className="flex items-center gap-2">
-                <input id="send-sms" type="checkbox" className="h-4 w-4 rounded border-border text-primary focus:ring-ring disabled:opacity-50" disabled={smsLimitReached} {...register("sendSms")} />
-                <label htmlFor="send-sms" className="text-sm">SMS</label>
-              </div>
-            ) : null}
-            {collectEmail ? (
-              <div className="flex items-center gap-2">
-                <input id="send-email" type="checkbox" className="h-4 w-4 rounded border-border text-primary focus:ring-ring" {...register("sendEmail")} />
-                <label htmlFor="send-email" className="text-sm">Email</label>
-              </div>
-            ) : null}
-          </div>
-        )}
-        {!isPublic && collectPhone && smsLimitReached ? (
-          <p className="text-xs text-muted-foreground">SMS limit reached for the current billing period.</p>
         ) : null}
         {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
       </form>

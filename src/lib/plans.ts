@@ -16,7 +16,7 @@ export interface PlanDefinition {
   id: PlanId;
   name: string;
   description: string;
-  priceMonthlyEUR: number; // in euros
+  priceMonthlyEUR: number; // monthly price in USD (legacy field name)
   features: string[]; // High-level features for the cards
   limits: Record<PlanLimitKeys, number>;
   // Stripe lookup keys allow us to resolve prices without hardcoding IDs

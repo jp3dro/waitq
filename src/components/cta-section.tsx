@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import { ContactModal } from "@/components/contact-modal";
 
 interface CTASectionProps {
   variant?: "default" | "compact" | "inline";
@@ -81,15 +80,6 @@ export function CTASection({
               {primaryButtonText} <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
-          {secondaryButtonText && safeSecondaryButtonLink ? (
-            <Button asChild variant="outline">
-              <Link href={safeSecondaryButtonLink}>{secondaryButtonText}</Link>
-            </Button>
-          ) : (
-            <ContactModal>
-              <Button variant="outline">Contact Sales</Button>
-            </ContactModal>
-          )}
         </div>
       </div>
     );

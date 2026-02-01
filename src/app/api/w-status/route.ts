@@ -141,11 +141,13 @@ export async function GET(req: NextRequest) {
 
   // Fetch customer name from the entry (if available) for personalization
   let customerName: string | null = null;
-  if (entry?.id) {
+  // Prefer whatever the RPC returned, but fall back to an admin lookup by token (RPCs may not include `id`).
+  customerName = (entry?.customer_name as string | null) || null;
+  if (!customerName) {
     const { data: entryWithName } = await admin
       .from("waitlist_entries")
       .select("customer_name")
-      .eq("id", entry.id)
+      .eq("token", token)
       .maybeSingle();
     customerName = (entryWithName?.customer_name as string | null) || null;
   }

@@ -45,28 +45,20 @@ export default async function OnboardingPage(props: {
         redirect("/lists");
     }
 
-    // Check if user has an active membership - if so, skip onboarding
+    // If user is an active *member* of an organization they do NOT own, skip onboarding.
+    // Note: owners also get a membership row created during onboarding step 2, so we must not redirect for owners.
     const { data: membership } = await supabase
         .from("memberships")
-        .select("id, business_id")
+        .select("id, business_id, businesses(owner_user_id)")
         .eq("user_id", user.id)
         .eq("status", "active")
+        .order("created_at", { ascending: true })
         .limit(1)
         .maybeSingle();
 
-    if (membership?.id) {
-        redirect("/lists");
-    }
-
-    // Also check if user owns a business
-    const { data: ownedBusiness } = await supabase
-        .from("businesses")
-        .select("id")
-        .eq("owner_user_id", user.id)
-        .limit(1)
-        .maybeSingle();
-
-    if (ownedBusiness?.id) {
+    const membershipOwnerId = (membership?.businesses as any)?.owner_user_id as string | undefined;
+    const isMemberNotOwner = !!membership?.id && !!membershipOwnerId && membershipOwnerId !== user.id;
+    if (isMemberNotOwner) {
         redirect("/lists");
     }
 
