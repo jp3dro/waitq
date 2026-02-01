@@ -45,7 +45,7 @@
         {
           "title": "Self-serve check-in",
           "description": "Let customers check-in autonomously via a public link shared by QR code, website, physical kiosk, or  socials. Great to ease pressure of your staff and achieve higher service efficiency.",
-          "image": "/images/Restaurant front desk qr code.webp"
+          "image": "/images/WaitQ%20Ticket%20Iphone.webp"
         }
       ],
       "_template": "howItWorksCards"
@@ -53,7 +53,7 @@
     {
       "title": "Customize your waiting experience to fit your workflow",
       "description": "",
-      "image": "/images/Waitlist%20customization.webp",
+      "image": "/images/Waitlist 2.png",
       "imageOnRight": false,
       "variant": "default",
       "bullets": [
@@ -94,7 +94,7 @@
         {
           "badge": "For managers",
           "title": "Keep hosts calm and the floor moving",
-          "image": "/images/WaitQ%20Host.webp",
+          "image": "/images/WaitQ Ramen.webp",
           "bullets": [
             {
               "text": "See who's waiting and who's next in a glance"
@@ -110,7 +110,7 @@
         {
           "badge": "For customers",
           "title": "Customers queue, but without queuing",
-          "image": "/images/couple.jpg",
+          "image": "/images/Restaurant%20front%20desk%20qr%20code.webp",
           "bullets": [
             {
               "text": "Anyone can add themselves to the list from their phone or at your kiosk"
