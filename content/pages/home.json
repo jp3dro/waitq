@@ -2,10 +2,10 @@
   "hero": {
     "title": "The waitlist management system that makes waits feel shorter",
     "subtitle": "Turn waitlists into warm welcomes. Keep customers informed, the entrance calm, and service flowing.",
-    "primaryCta": "Try for free",
+    "primaryCta": "Start your waitlist",
     "primaryCtaLink": "/signup",
-    "secondaryCta": "",
-    "videoId": "",
+    "secondaryCta": "See pricing",
+    "videoId": "/pricing",
     "trustMessage": "No credit card required • 5-minute setup • Cancel anytime"
   },
   "sections": [
