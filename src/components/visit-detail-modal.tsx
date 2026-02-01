@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { differenceInMinutes } from "date-fns";
 import {
   Bell,
@@ -144,6 +144,8 @@ export default function VisitDetailModal({
   const timeFormat = useTimeFormat();
   const [busy, setBusy] = useState(false);
   const [optimistic, setOptimistic] = useState<Partial<VisitEntry> | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const nameInputRef = useRef<HTMLInputElement | null>(null);
   const [form, setForm] = useState({
     customerName: "",
     phone: "",
@@ -166,6 +168,7 @@ export default function VisitDetailModal({
   useEffect(() => {
     if (!open || !visit) return;
     setOptimistic(null);
+    setValidationError(null);
     setForm({
       customerName: visit.customer_name || "",
       phone: visit.phone || "",
@@ -176,7 +179,10 @@ export default function VisitDetailModal({
   }, [open, visit]);
 
   useEffect(() => {
-    if (!open) setOptimistic(null);
+    if (!open) {
+      setOptimistic(null);
+      setValidationError(null);
+    }
   }, [open]);
 
   const number = effectiveVisit ? (effectiveVisit.ticket_number ?? effectiveVisit.queue_position ?? null) : null;
@@ -254,6 +260,16 @@ export default function VisitDetailModal({
 
   const saveChanges = async () => {
     if (busy) return;
+    if (showName && !form.customerName.trim()) {
+      setValidationError("Customer name is required.");
+      nameInputRef.current?.focus?.();
+      return;
+    }
+    if (showPartySize && !(typeof form.partySize === "number" && form.partySize >= 1)) {
+      setValidationError("Number of people is required.");
+      return;
+    }
+    setValidationError(null);
     setBusy(true);
     try {
       await request("/api/waitlist", {
@@ -334,7 +350,7 @@ export default function VisitDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl p-0 overflow-hidden">
+      <DialogContent className="sm:max-w-3xl p-0 overflow-hidden">
         <div className="flex max-h-[90vh] flex-col">
           <div className="min-h-12 h-12 shrink-0 border-b border-border px-6 flex items-center bg-card">
             <DialogHeader>
@@ -343,9 +359,9 @@ export default function VisitDetailModal({
           </div>
 
           <div className="flex-1 overflow-hidden px-6 py-4">
-            <div className="grid h-full gap-6 md:grid-cols-[1fr_360px]">
+            <div className="grid h-full gap-4 md:grid-cols-3">
               {/* Left panel */}
-              <div className="min-h-0 overflow-y-auto custom-scrollbar pr-1 space-y-6">
+              <div className="min-h-0 custom-scrollbar space-y-6 md:col-span-2">
                 {/* Summary */}
                 <div className={`rounded-lg p-4 border border-border ${statusDisplay.bgColor}`}>
                   <div className="flex items-start justify-between gap-3">
@@ -423,10 +439,18 @@ export default function VisitDetailModal({
                       <Label>Customer name</Label>
                       <Input
                         type="text"
+                        ref={nameInputRef}
                         value={form.customerName}
-                        onChange={(e) => setForm((p) => ({ ...p, customerName: e.target.value }))}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setForm((p) => ({ ...p, customerName: v }));
+                          if (validationError && v.trim().length) setValidationError(null);
+                        }}
                         placeholder="Full name"
                       />
+                      {validationError && validationError.toLowerCase().includes("name") ? (
+                        <p className="text-sm text-destructive">{validationError}</p>
+                      ) : null}
                     </div>
                   ) : null}
 
@@ -436,10 +460,16 @@ export default function VisitDetailModal({
                         <Label>Number of people</Label>
                         <Stepper
                           value={typeof form.partySize === "number" ? form.partySize : undefined}
-                          onChange={(value) => setForm((p) => ({ ...p, partySize: typeof value === "number" ? value : null }))}
+                          onChange={(value) => {
+                            setForm((p) => ({ ...p, partySize: typeof value === "number" ? value : null }));
+                            if (validationError && typeof value === "number" && value >= 1) setValidationError(null);
+                          }}
                           min={1}
                           max={30}
                         />
+                        {validationError && validationError.toLowerCase().includes("people") ? (
+                          <p className="text-sm text-destructive">{validationError}</p>
+                        ) : null}
                       </div>
                     ) : null}
                     {showPhone ? (
@@ -529,7 +559,7 @@ export default function VisitDetailModal({
               </div>
 
               {/* Right panel: Activity log */}
-              <aside className="min-h-0 overflow-y-auto custom-scrollbar pl-6 border-l border-border">
+              <aside className="min-h-0 custom-scrollbar md:px-4 md:border-l  md:col-span-1">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <h4 className="text-sm font-semibold">Activity</h4>

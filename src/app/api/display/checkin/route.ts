@@ -6,10 +6,11 @@ import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { broadcastRefresh } from "@/lib/realtime-broadcast";
 import { resend } from "@/lib/resend";
 import { normalizePhone } from "@/lib/phone";
-import { countEntriesInPeriod, getPlanContext } from "@/lib/plan-limits";
+import { countEntriesInPeriod, countSmsInPeriod, getPlanContext } from "@/lib/plan-limits";
 import { getLocationOpenState, type RegularHours } from "@/lib/location-hours";
 import { buildWaitlistTicketEmailHtml } from "@/lib/email-templates";
 import { getPostHogClient } from "@/lib/posthog-server";
+import { sendSms } from "@/lib/bulkgate";
 
 const schema = z.object({
   token: z.string().min(1),
@@ -20,6 +21,8 @@ const schema = z.object({
     .optional()
     .transform((v) => (typeof v === "string" ? v.trim() : undefined))
     .refine((v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), "Invalid email"),
+  sendSms: z.boolean().optional().default(false),
+  sendEmail: z.boolean().optional().default(false),
   partySize: z.number().int().positive().max(30, "Maximum 30 people allowed").optional(),
   seatingPreference: z.string().optional(),
 });
@@ -38,7 +41,7 @@ export async function POST(req: NextRequest) {
   const parse = schema.safeParse(json);
   if (!parse.success) return NextResponse.json({ error: parse.error.flatten() }, { status: 400 });
 
-  const { token: displayToken, phone, name, email, partySize, seatingPreference } = parse.data;
+  const { token: displayToken, phone, name, email, sendSms: shouldSendSms, sendEmail: shouldSendEmail, partySize, seatingPreference } = parse.data;
   const normalizedEmail = typeof email === "string" && email.trim().length ? email.trim().toLowerCase() : undefined;
 
   const admin = getAdminClient();
@@ -77,6 +80,8 @@ export async function POST(req: NextRequest) {
   if (list.ask_name !== false && !name) return NextResponse.json({ error: "Name is required" }, { status: 400 });
   const normalizedPhone = normalizePhone(phone);
   if (phone && !normalizedPhone) return NextResponse.json({ error: "Invalid phone number" }, { status: 400 });
+  if (shouldSendSms && !normalizedPhone) return NextResponse.json({ error: "Phone is required to send SMS" }, { status: 400 });
+  if (shouldSendEmail && !normalizedEmail) return NextResponse.json({ error: "Email is required to send email" }, { status: 400 });
 
   if (normalizedPhone) {
     const { data: existing } = await admin
@@ -149,14 +154,23 @@ export async function POST(req: NextRequest) {
 
   const statusUrl = `${process.env.NEXT_PUBLIC_SITE_URL || ""}/w/${data.token}`;
 
+  // Fetch business name once if we will send any notifications (SMS/Email).
+  let businessName: string | null = null;
+  if (list.business_id && (shouldSendEmail || shouldSendSms)) {
+    try {
+      const { data: biz } = await admin.from("businesses").select("name").eq("id", list.business_id).maybeSingle();
+      businessName = (biz?.name as string | undefined) ?? null;
+    } catch {
+      businessName = null;
+    }
+  }
+
   // Email confirmation (ticket + status link)
-  if (normalizedEmail) {
+  if (shouldSendEmail && normalizedEmail) {
     try {
       if (!process.env.RESEND_API_KEY) {
         console.warn("[kiosk-email] RESEND_API_KEY missing; email not sent", { email: normalizedEmail });
       } else {
-        const { data: biz } = await admin.from("businesses").select("name").eq("id", list.business_id).maybeSingle();
-        const businessName = (biz?.name as string | undefined) ?? null;
         const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://waitq.com";
         await resend.emails.send({
           from: process.env.RESEND_FROM_EMAIL || "WaitQ <noreply@waitq.com>",
@@ -173,6 +187,24 @@ export async function POST(req: NextRequest) {
       }
     } catch (e) {
       console.error("[kiosk-email] Failed to send ticket email", e);
+    }
+  }
+
+  // SMS confirmation (ticket + status link)
+  if (shouldSendSms && normalizedPhone) {
+    try {
+      if (list.business_id) {
+        const ctx = await getPlanContext(list.business_id);
+        const usedSms = await countSmsInPeriod(list.business_id, ctx.window.start, ctx.window.end);
+        if (usedSms < ctx.limits.messagesPerMonth) {
+          const text = `${businessName ? businessName : "WaitQ"} ticket ${typeof data.ticket_number === "number" ? `#${data.ticket_number}` : ""} — Status: ${statusUrl}`.trim();
+          await sendSms(normalizedPhone, text);
+        } else {
+          console.warn("[kiosk-sms] SMS limit reached; skipping SMS send");
+        }
+      }
+    } catch (e) {
+      console.error("[kiosk-sms] Failed to send ticket SMS", e);
     }
   }
 

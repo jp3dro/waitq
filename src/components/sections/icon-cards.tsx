@@ -1,37 +1,31 @@
 "use client";
 
-import {
-  Users,
-  Smartphone,
-  MessageSquare,
-  Clock,
-  QrCode,
-  Zap,
-  Monitor,
-  Heart,
-  BarChart3,
-  AlertCircle,
-  Check,
-} from "lucide-react";
+import { icons } from "lucide-react";
 
-// Icon mapping for dynamic icons
-const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  Users,
-  Smartphone,
-  MessageSquare,
-  Clock,
-  QrCode,
-  Zap,
-  Monitor,
-  Heart,
-  BarChart3,
-  AlertCircle,
-  Check,
-};
+function toPascalCase(input: string) {
+  return String(input || "")
+    .trim()
+    .replace(/[_\s-]+/g, " ")
+    .split(" ")
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join("");
+}
 
 function getIcon(iconName: string | null | undefined) {
-  if (!iconName) return AlertCircle;
-  return iconMap[iconName] || AlertCircle;
+  const fallback = (icons as any).AlertCircle || (icons as any).CircleHelp || (icons as any).HelpCircle;
+  const raw = typeof iconName === "string" ? iconName.trim() : "";
+  if (!raw) return fallback;
+
+  const direct = (icons as any)[raw];
+  if (direct) return direct;
+  const pascal = toPascalCase(raw);
+  const byPascal = (icons as any)[pascal];
+  if (byPascal) return byPascal;
+  const lower = raw.toLowerCase();
+  const key = Object.keys(icons).find((k) => k.toLowerCase() === lower);
+  if (key) return (icons as any)[key];
+  return fallback;
 }
 
 interface IconCardItem {
