@@ -6,7 +6,7 @@
     "primaryCta": "Try Free",
     "primaryCtaLink": "/signup",
     "secondaryCta": "See how it works",
-    "heroImage": "/images/couple.jpg"
+    "heroImage": "/images/WaitQ Kiosk.webp"
   },
   "sections": [
     {
@@ -56,7 +56,7 @@
       "title": "Customers join the queue on their terms",
       "description": "Some guests prefer self-service; others want to speak to a host. WaitQ supports both. Self-check-in is an option, not a requirement.",
       "image": "/images/couple.jpg",
-      "imageOnRight": true,
+      "imageOnRight": false,
       "variant": "muted-bg",
       "bullets": [
         {
@@ -77,7 +77,7 @@
         {
           "title": "QR code",
           "description": "Display a QR code at the entrance or counter. Guests scan with their phone camera to join instantly.",
-          "image": "/images/couple.jpg"
+          "image": "/images/WaitQ QR Code entrancee.webp"
         },
         {
           "title": "Link",
@@ -87,7 +87,7 @@
         {
           "title": "Public kiosk or tablet",
           "description": "Set up a dedicated check-in tablet at your entrance for guests who prefer a larger screen.",
-          "image": "/images/bar friends.jpg"
+          "image": "/images/WaitQ Izakaya Kiosk.webp"
         }
       ],
       "_template": "howItWorksTimeline"
@@ -95,7 +95,7 @@
     {
       "title": "Keep control of the check-in experience",
       "description": "",
-      "image": "/images/Self check in customization options.webp",
+      "image": "/images/Self check-in.webp",
       "imageOnRight": false,
       "variant": "default",
       "bullets": [
