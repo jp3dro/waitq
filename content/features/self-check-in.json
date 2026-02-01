@@ -28,7 +28,7 @@
           "title": "Customers check in in seconds",
           "description": "Fewer misheard names, fewer typos, less pressure on your staff.",
           "icon": "Users",
-          "image": "/images/WaitQ%20Ticket%20Iphone.webp"
+          "image": "/images/WaitQ%20QR%20Code%20entrancee.webp"
         }
       ],
       "_template": "howItWorksTimeline"
@@ -74,7 +74,7 @@
         {
           "badge": "For managers",
           "title": "Keep the line moving, without the stress",
-          "image": "/images/WaitQ%20QR%20Code%20entrancee.webp",
+          "image": "/images/WaitQ%20Vegetarian%20Restaurant%202.webp",
           "bullets": [
             {
               "text": "Smoother service, even during peak hours"
