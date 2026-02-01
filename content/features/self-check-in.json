@@ -10,7 +10,7 @@
   },
   "sections": [
     {
-      "title": "How self-check-in works at WaitQ",
+      "title": "How self check-in works at WaitQ",
       "steps": [
         {
           "title": "Create custom waitlist",
@@ -107,7 +107,7 @@
       "_template": "twoColumnBenefits"
     },
     {
-      "title": "Multiple ways for customers to join the wait",
+      "title": "Customers can join the wait on multiple ways",
       "items": [
         {
           "title": "QR code",
@@ -120,15 +120,29 @@
           "icon": "monitor-smartphone"
         },
         {
-          "title": "Public link",
-          "description": "Share a direct link on your website, social media, or Google Business. Guests join from anywhere.",
+          "title": "Social media",
+          "description": "Add a link to your waiting queue directly from Instagram, Facebook or other socials you use.",
+          "icon": "instagram"
+        },
+        {
+          "title": "Google Business",
+          "description": "Share a WaitQ link and let people join the waiting queue directly from Google Maps."
+        },
+        {
+          "title": "Website",
+          "description": "Place a link to your waiting list on your website.",
+          "icon": "globe"
+        },
+        {
+          "title": "... and more",
+          "description": "Share a direct link to your waitlist from anywhere you want. Be creative!",
           "icon": "link"
         }
       ],
       "_template": "threeColumnCards"
     },
     {
-      "title": "Frequently Asked Questions",
+      "title": "Frequently asked questions about self checking in to waitlists",
       "items": [
         {
           "question": "What is self check-in?",
