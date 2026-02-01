@@ -70,27 +70,24 @@
     },
     {
       "title": "Multiple ways for customers to join the wait",
-      "steps": [
+      "items": [
         {
           "title": "QR code",
           "description": "Display a QR code at the entrance or counter. Guests scan with their phone camera to join instantly.",
-          "icon": "qr-code",
-          "image": ""
+          "icon": "qr-code"
         },
         {
-          "title": "Link",
-          "description": "Share a direct link on your website, social media, or Google Business. Guests join from anywhere.",
-          "icon": "link",
-          "image": ""
-        },
-        {
-          "title": "Public kiosk or tablet",
+          "title": "Kiosk or tablet",
           "description": "Set up a dedicated check-in tablet at your entrance for guests who prefer a larger screen.",
-          "icon": "monitor-smartphone",
-          "image": ""
+          "icon": "monitor-smartphone"
+        },
+        {
+          "title": "Public link",
+          "description": "Share a direct link on your website, social media, or Google Business. Guests join from anywhere.",
+          "icon": "link"
         }
       ],
-      "_template": "howItWorksTimeline"
+      "_template": "threeColumnCards"
     },
     {
       "title": "No bottlenecks at the door, everyone moves at their pace",
