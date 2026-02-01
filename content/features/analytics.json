@@ -15,17 +15,17 @@
       "items": [
         {
           "title": "Number of customers",
-          "description": "Track daily, weekly, and monthly guest counts. See how traffic changes over time and identify your busiest periods.",
+          "description": "How many people waited per hour, day and week.",
           "icon": "Users"
         },
         {
           "title": "No-show rate",
-          "description": "Monitor how often guests don't show up. Historical trends help you adjust overbooking and reminder strategies.",
+          "description": "Unlock patterns on when is your service most pressured.",
           "icon": "circle-percent"
         },
         {
           "title": "Average wait times",
-          "description": "Measure actual wait times against estimates. Spot when waits spike and correlate with staffing or events.",
+          "description": "How long each customer waits and how it it’s evolving over time.",
           "icon": "chart-column-decreasing"
         }
       ],
@@ -33,37 +33,38 @@
     },
     {
       "title": "Run the queue with real-time clarity",
-      "description": "Live dashboards show current queue length, average wait, and staff activity. Make decisions in the moment, not after the rush.",
+      "description": "See who’s waiting, who’s next, and who’s been notified and keep everything under control.",
       "image": "/images/Real-time%20waitlist.webp",
-      "imageOnRight": false,
+      "imageOnRight": true,
       "variant": "default",
       "bullets": [
         {
-          "text": "Live queue length and wait times"
+          "text": "Assess live queue length and wait times"
         },
         {
-          "text": "Real-time staff activity tracking"
+          "text": "Move faster with a single view for the team"
         },
         {
-          "text": "Instant alerts when waits exceed thresholds"
+          "text": "Keep the queue fair and consistent, even when the shift gets hectic"
         }
       ],
       "_template": "textWithImage"
     },
     {
       "title": "Spot trends and fix bottlenecks",
-      "description": "Historical reports reveal patterns: which days are busiest, when no-shows spike, how party size affects turnover. Use data to staff smarter and seat faster.",
+      "description": "Historical reports reveal patterns. Compare weeks, months, or custom ranges and use that data to staff smarter and seat faster.",
       "imageOnRight": true,
-      "variant": "muted-bg",
+      "variant": "default",
       "bullets": [
         {
-          "text": "Day-by-day and hour-by-hour breakdowns"
+          "text": "Identify long-wait spikes that lead to walk-outs",
+          "description": ""
         },
         {
-          "text": "Compare weeks, months, or custom ranges"
+          "text": "Align headcount and roles to real peak patterns, not gut feel"
         },
         {
-          "text": "Export data for deeper analysis"
+          "text": "Measure if changes are working with confidence"
         }
       ],
       "_template": "textWithImage"
