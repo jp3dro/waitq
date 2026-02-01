@@ -98,7 +98,7 @@
       "beforeItems": [
         {
           "title": "Front-door chaos",
-          "description": "Crowds at the entrance slow seating, stress staff, and scare customers into leaving. You're juggling names and timing with no visibility.",
+          "description": "Crowds at the entrance slow seating, stress staff, and scare customers into leaving. You’re juggling names and timing with no visibility.",
           "icon": "Users"
         },
         {
@@ -212,8 +212,8 @@
     }
   ],
   "seo": {
-    "title": "WaitQ for Restaurants - Smart Waitlist Management",
-    "description": "Maximize table turnover and improve customer satisfaction with the smartest waitlist app for restaurants. Replace paper lists and expensive pagers.",
-    "ogImage": "/images/og-restaurants.png"
+    "title": "Restaurant Waitlist App - WaitQ",
+    "description": "Turn waiting customers into repeat visitors. WaitQ is the waitlist app for restaurants that keeps customers informed and your team coordinated.",
+    "ogImage": "/images/WaitQ Vegetarian Restaurant.webp"
   }
 }
