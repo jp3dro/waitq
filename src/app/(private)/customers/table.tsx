@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { differenceInMinutes } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { SeatingPreferenceBadge } from "@/components/ui/seating-preference-badge";
@@ -48,6 +48,7 @@ type VisitEntry = {
   created_at: string;
   notified_at: string | null;
   cancelled_at: string | null;
+  updated_at?: string | null;
   waitlist_id: string | null;
 };
 
@@ -136,9 +137,9 @@ export default function CustomersTable({
     );
   };
 
-  useEffect(() => {
-    async function fetchVisits() {
-      setLoading(true);
+  const fetchVisits = useCallback(
+    async (silent: boolean = false) => {
+      if (!silent) setLoading(true);
       try {
         const params = new URLSearchParams({
           locationId,
@@ -160,11 +161,27 @@ export default function CustomersTable({
         setVisits([]);
         setTotalCount(0);
       }
-      setLoading(false);
-    }
+      if (!silent) setLoading(false);
+    },
+    [locationId, waitlistId, dateRange, page]
+  );
 
-    fetchVisits();
-  }, [businessId, locationId, waitlistId, dateRange, page]);
+  useEffect(() => {
+    fetchVisits(false);
+  }, [businessId, fetchVisits]);
+
+  // Refresh table after modal edits/actions (VisitDetailModal dispatches `wl:refresh`).
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { waitlistId?: string } | undefined;
+      const wl = detail?.waitlistId;
+      if (!wl) return;
+      if (waitlistId !== "all" && waitlistId !== wl) return;
+      fetchVisits(true);
+    };
+    window.addEventListener("wl:refresh", handler as EventListener);
+    return () => window.removeEventListener("wl:refresh", handler as EventListener);
+  }, [fetchVisits, waitlistId]);
 
   const filteredWaitlists = useMemo(() => {
     if (locationId === "all") return waitlists;

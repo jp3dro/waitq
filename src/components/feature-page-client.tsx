@@ -3,27 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { 
-  Check, 
-  Users, 
-  Zap,
-  Monitor,
-  MapPin,
-  Smartphone,
-  BarChart3,
-  Clock,
-  QrCode,
-  MonitorPlay,
-  MousePointerClick,
-  SlidersHorizontal,
-  Image as ImageIcon,
-  Link as LinkIcon,
-  Tablet,
-  Globe,
-  Diamond,
-  Heart,
-  Minus,
-} from "lucide-react";
+import { Check, Image as ImageIcon, icons } from "lucide-react";
 import { useTina } from "tinacms/dist/react";
 import type { 
   FeatureQuery,
@@ -38,31 +18,29 @@ import { HowItWorksCards } from "@/components/sections/how-it-works-cards";
 import { CTASection } from "@/components/cta-section";
 import { renderMarketingSection } from "@/components/marketing/marketing-section-renderer";
 
-// Icon mapping for dynamic icons
-const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  Users,
-  Zap,
-  Monitor,
-  MapPin,
-  Smartphone,
-  BarChart3,
-  Clock,
-  QrCode,
-  MonitorPlay,
-  MousePointerClick,
-  SlidersHorizontal,
-  Check,
-  Link: LinkIcon,
-  Tablet,
-  Globe,
-  Diamond,
-  Heart,
-  Minus,
-};
+function toPascalCase(input: string) {
+  return String(input || "")
+    .trim()
+    .replace(/[_\s-]+/g, " ")
+    .split(" ")
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join("");
+}
 
 function getIcon(iconName: string | null | undefined) {
-  if (!iconName) return Users;
-  return iconMap[iconName] || Users;
+  const fallback = (icons as any).Users || (icons as any).CircleHelp || (icons as any).HelpCircle;
+  const raw = typeof iconName === "string" ? iconName.trim() : "";
+  if (!raw) return fallback;
+  const direct = (icons as any)[raw];
+  if (direct) return direct;
+  const pascal = toPascalCase(raw);
+  const byPascal = (icons as any)[pascal];
+  if (byPascal) return byPascal;
+  const lower = raw.toLowerCase();
+  const key = Object.keys(icons).find((k) => k.toLowerCase() === lower);
+  if (key) return (icons as any)[key];
+  return fallback;
 }
 
 type HowItWorksTimelineStep = {

@@ -138,7 +138,9 @@ export default function ListFormFields({
           <Label>List type</Label>
           <Select value={listType} onValueChange={(v) => onListTypeChange?.(v as ListType)} disabled={isPending}>
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select list type" />
+              <span className="truncate">
+                {listType === "take_out" ? "Take out" : "Eat in"}
+              </span>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="eat_in" textValue="Eat in">

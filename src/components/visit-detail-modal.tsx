@@ -48,6 +48,7 @@ export type VisitEntry = {
   created_at: string;
   notified_at: string | null;
   cancelled_at: string | null;
+  updated_at?: string | null;
 
   // Current-cycle
   ticket_number?: number | null;
@@ -207,14 +208,16 @@ export default function VisitDetailModal({
         time: formatDateTime(effectiveVisit.notified_at, timeFormat),
       });
     }
+    const statusChangedAt =
+      effectiveVisit.updated_at || effectiveVisit.notified_at || effectiveVisit.cancelled_at || effectiveVisit.created_at;
     if (effectiveVisit.status === "seated") {
       events.push({
         icon: CheckCircle2,
         label: "Checked in",
-        time: formatDateTime(effectiveVisit.notified_at || effectiveVisit.created_at, timeFormat),
+        time: formatDateTime(statusChangedAt, timeFormat),
       });
     } else if (effectiveVisit.status === "archived" && effectiveVisit.notified_at) {
-      events.push({ icon: XCircle, label: "Marked as no-show", time: "—" });
+      events.push({ icon: XCircle, label: "Marked as no-show", time: formatDateTime(statusChangedAt, timeFormat) });
     } else if (effectiveVisit.status === "cancelled") {
       events.push({
         icon: XCircle,

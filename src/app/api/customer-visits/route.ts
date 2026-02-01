@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  const baseSelect = "id, customer_name, phone, email, party_size, seating_preference, status, created_at, notified_at, cancelled_at, waitlist_id, visits_count, is_returning";
+  const baseSelect = "id, customer_name, phone, email, party_size, seating_preference, status, created_at, notified_at, cancelled_at, updated_at, waitlist_id, visits_count, is_returning";
 
   let q = admin
     .from("waitlist_entries")
@@ -95,7 +95,7 @@ export async function GET(req: NextRequest) {
   ) {
     let q2 = admin
       .from("waitlist_entries")
-      .select("id, customer_name, phone, email, party_size, seating_preference, status, created_at, notified_at, cancelled_at, waitlist_id", { count: "exact" })
+      .select("id, customer_name, phone, email, party_size, seating_preference, status, created_at, notified_at, cancelled_at, updated_at, waitlist_id", { count: "exact" })
       .eq("business_id", businessId)
       .gte("created_at", fromDate.toISOString())
       .order("created_at", { ascending: false })
