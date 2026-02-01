@@ -52,7 +52,7 @@
           ],
           "link": "/features/self-check-in",
           "linkText": "More about self-check-in",
-          "image": "/images/couple.jpg"
+          "image": "/images/WaitQ%20Izakaya%20Kiosk.webp"
         },
         {
           "stepNumber": 2,
@@ -70,7 +70,7 @@
           ],
           "link": "/features/virtual-waitlist",
           "linkText": "Explore digital waitlist",
-          "image": "/images/friends.jpg"
+          "image": "/images/WaitQ Vegetarian Restaurant 2.webp"
         },
         {
           "stepNumber": 3,
@@ -85,7 +85,7 @@
           ],
           "link": "/features/analytics",
           "linkText": "Analytics",
-          "image": "/images/bar friends.jpg"
+          "image": "/images/Managers.webp"
         }
       ],
       "_template": "stepsSection"
