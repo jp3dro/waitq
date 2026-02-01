@@ -34,8 +34,9 @@
     {
       "title": "Run the queue with real-time clarity",
       "description": "Live dashboards show current queue length, average wait, and staff activity. Make decisions in the moment, not after the rush.",
+      "image": "/images/Real-time%20waitlist.webp",
       "imageOnRight": false,
-      "variant": "muted-bg",
+      "variant": "default",
       "bullets": [
         {
           "text": "Live queue length and wait times"
