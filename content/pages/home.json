@@ -48,7 +48,7 @@
         {
           "badge": "For managers",
           "title": "Handle peak hours with ease",
-          "image": "/images/WaitQ Host.webp",
+          "image": "/images/WaitQ%20Ramen.webp",
           "bullets": [
             {
               "text": "See who's waiting and who's next in a glance, and send \"table ready\" notifications with one tap"
@@ -64,7 +64,7 @@
         {
           "badge": "For customers",
           "title": "Better, consistent customer experience",
-          "image": "/images/bar%20friends.jpg",
+          "image": "/images/Kiosk entrance 3.webp",
           "bullets": [
             {
               "text": "Anyone can join the public digital waitlist from their phone or kiosk"
@@ -89,17 +89,17 @@
         {
           "title": "Designed for walk-ins",
           "description": "WaitQ is made for trendy spots that seek a smoother flow when their house is full.",
-          "image": "/images/bar friends.jpg"
+          "image": "/images/couple.jpg"
         },
         {
           "title": "No apps or hardware required",
           "description": "WaitQ runs in your phone, tablet as well as TV and kiosk. No extra installs needed.",
-          "image": "/images/couple.jpg"
+          "image": "/images/Kiosk%20entrance%202.webp"
         },
         {
           "title": "Set up in 5 minutes",
           "description": "WaitQ is designed to be user-friendly and can be set up quickly with no training.",
-          "image": "/images/friends.jpg"
+          "image": "/images/WaitQ%20QR%20Code%20entrancee.webp"
         }
       ],
       "_template": "productShowcase"
