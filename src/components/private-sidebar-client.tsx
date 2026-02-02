@@ -20,6 +20,7 @@ import {
     Database,
     MessageSquare,
     Check,
+    User,
 } from "lucide-react";
 
 import { useTheme } from "next-themes";
@@ -35,18 +36,7 @@ import {
     DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogBody,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+
 import {
     Sidebar,
     SidebarContent,
@@ -143,7 +133,7 @@ export default function PrivateSidebarClient({ userName, userEmail, businessLogo
     const router = useRouter();
     const isAdmin = role === "admin";
     const canSeeInternalAdminLinks = userEmail?.toLowerCase() === "jp3dro@gmail.com";
-    const [deleting, setDeleting] = useState(false);
+
 
     const displayName = userName || userEmail?.split("@")[0] || "User";
     const initials = (() => {
@@ -291,52 +281,12 @@ export default function PrivateSidebarClient({ userName, userEmail, businessLogo
                                     </DropdownMenuSub>
                                 </DropdownMenuGroup>
                                 <DropdownMenuSeparator />
-                                <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                        <DropdownMenuItem
-                                            className="cursor-pointer text-destructive focus:text-destructive"
-                                            onSelect={(e) => e.preventDefault()}
-                                        >
-                                            <div className="flex items-center">
-                                                <span>Delete account</span>
-                                            </div>
-                                        </DropdownMenuItem>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                            <AlertDialogTitle>Delete your account?</AlertDialogTitle>
-                                        </AlertDialogHeader>
-                                        <AlertDialogBody>
-                                            <AlertDialogDescription>
-                                                This will permanently delete your user, business setup data, and activity from the database.
-                                                This cannot be undone.
-                                            </AlertDialogDescription>
-                                        </AlertDialogBody>
-                                        <AlertDialogFooter>
-                                            <AlertDialogAction
-                                                variant="destructive"
-                                                disabled={deleting}
-                                                onClick={async () => {
-                                                    setDeleting(true);
-                                                    try {
-                                                        const res = await fetch("/api/account/delete", { method: "POST" });
-                                                        const j = (await res.json().catch(() => ({}))) as { error?: string };
-                                                        if (!res.ok) throw new Error(j.error || "Failed to delete account");
-                                                        // Clear auth cookies/session after deletion
-                                                        window.location.href = "/auth/logout";
-                                                    } catch (e) {
-                                                        console.error(e);
-                                                        alert(e instanceof Error ? e.message : "Failed to delete account");
-                                                        setDeleting(false);
-                                                    }
-                                                }}
-                                            >
-                                                {deleting ? "Deleting…" : "Delete"}
-                                            </AlertDialogAction>
-                                            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
-                                        </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                </AlertDialog>
+                                <DropdownMenuItem asChild className="cursor-pointer">
+                                    <Link href="/profile" className="w-full flex items-center">
+                                        <User className="mr-2 h-4 w-4" />
+                                        Profile
+                                    </Link>
+                                </DropdownMenuItem>
                                 <DropdownMenuItem asChild className="cursor-pointer">
                                     <Link href="/auth/logout" className="w-full flex items-center">
                                         <LogOut className="mr-2 h-4 w-4" />
