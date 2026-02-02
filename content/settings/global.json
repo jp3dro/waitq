@@ -37,19 +37,68 @@
     }
   },
   "footer": {
-    "copyright": "© 2026 WaitQ. All rights reserved.",
-    "links": [
+    "description": "Modern virtual waitlist management for restaurants. Keep guests informed and reduce wait times.",
+    "copyright": "© 2026 WaitQ Inc. All rights reserved.",
+    "columns": [
       {
-        "label": "Terms",
-        "href": "/terms-and-conditions"
+        "title": "Features",
+        "links": [
+          {
+            "label": "Self Check-in",
+            "href": "/features/self-check-in"
+          },
+          {
+            "label": "Digital Waitlist",
+            "href": "/features/digital-waitlist"
+          },
+          {
+            "label": "Analytics",
+            "href": "/features/analytics"
+          }
+        ]
       },
       {
-        "label": "Privacy",
-        "href": "/privacy-policy"
+        "title": "Platform",
+        "links": [
+          {
+            "label": "About",
+            "href": "/about"
+          },
+          {
+            "label": "Contact",
+            "href": "/contact",
+            "isContactModal": true
+          },
+          {
+            "label": "Pricing",
+            "href": "/pricing"
+          },
+          {
+            "label": "WaitQ for Restaurants",
+            "href": "/restaurant-waitlist-app"
+          }
+        ]
       },
       {
-        "label": "Contact",
-        "href": "/contact"
+        "title": "Legal & Account",
+        "links": [
+          {
+            "label": "Terms and Conditions",
+            "href": "/terms-and-conditions"
+          },
+          {
+            "label": "Privacy Policy",
+            "href": "/privacy-policy"
+          },
+          {
+            "label": "Log in",
+            "href": "/login"
+          },
+          {
+            "label": "Sign up",
+            "href": "/signup"
+          }
+        ]
       }
     ],
     "social": [

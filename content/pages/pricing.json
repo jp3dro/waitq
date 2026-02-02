@@ -9,7 +9,7 @@
         "planId": "free",
         "name": "Free",
         "description": "Perfect for testing the waters and small establishments.",
-        "price": "€0",
+        "price": "$0",
         "period": "/month",
         "highlighted": false,
         "features": [
@@ -36,7 +36,7 @@
         "planId": "base",
         "name": "Base",
         "description": "Essential features for growing busy restaurants.",
-        "price": "€49",
+        "price": "$49",
         "period": "/month",
         "highlighted": true,
         "highlightLabel": "Recommended",
@@ -64,7 +64,7 @@
         "planId": "premium",
         "name": "Premium",
         "description": "Unleash the full power with advanced analytics and support.",
-        "price": "€99",
+        "price": "$99",
         "period": "/month",
         "highlighted": false,
         "features": [

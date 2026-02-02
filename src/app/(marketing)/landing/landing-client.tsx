@@ -95,10 +95,20 @@ export function LandingClient(props: LandingClientProps) {
             </div>
             <div className="relative">
               <div className="aspect-[16/9] overflow-hidden flex items-center justify-center">
-                {/* Landing pages don't currently define a hero image field (kept in sections). */}
-                <div className="flex items-center justify-center h-full">
-                  <ImageIcon className="w-24 h-24 text-muted-foreground" />
-                </div>
+                {page.hero?.heroImage ? (
+                  <Image
+                    src={page.hero.heroImage}
+                    alt={page.hero?.title || "Hero image"}
+                    width={800}
+                    height={450}
+                    className="object-cover rounded-lg"
+                    priority
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <ImageIcon className="w-24 h-24 text-muted-foreground" />
+                  </div>
+                )}
               </div>
             </div>
           </div>

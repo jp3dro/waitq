@@ -12,14 +12,11 @@ type Props = {
   onFreeAction?: () => void;
   successPath?: string;
   cancelPath?: string;
-  billingProvider?: "stripe" | "polar";
 };
 
-export default function PlanCards({ mode, currentPlanId, disabled, onFreeAction, successPath, cancelPath, billingProvider }: Props) {
+export default function PlanCards({ mode, currentPlanId, disabled, onFreeAction, successPath, cancelPath }: Props) {
   const isManage = mode === "manage";
   const effectiveCurrentPlanId = isManage ? (currentPlanId ?? "free") : "free";
-  const provider = billingProvider || (process.env.NEXT_PUBLIC_BILLING_PROVIDER as "stripe" | "polar" | undefined) || "stripe";
-  const providerLabel = provider === "polar" ? "Polar" : "Stripe";
 
   const pluralize = (n: number, singular: string, plural?: string) => (n === 1 ? singular : (plural ?? `${singular}s`));
   const formatUSD = (amount: number) =>
@@ -38,14 +35,13 @@ export default function PlanCards({ mode, currentPlanId, disabled, onFreeAction,
           effectiveCurrentPlanId !== "free" &&
           plan.id !== effectiveCurrentPlanId &&
           orderedPlans.findIndex((p) => p.id === plan.id) >
-            orderedPlans.findIndex((p) => p.id === effectiveCurrentPlanId);
+          orderedPlans.findIndex((p) => p.id === effectiveCurrentPlanId);
 
         return (
           <div
             key={plan.id}
-            className={`bg-card text-card-foreground ring-1 rounded-xl p-6 flex flex-col justify-between relative ${
-              isCurrentPlan ? "ring-primary/80 bg-accent/10" : "ring-border"
-            }`}
+            className={`bg-card text-card-foreground ring-1 rounded-xl p-6 flex flex-col justify-between relative ${isCurrentPlan ? "ring-primary/80 bg-accent/10" : "ring-border"
+              }`}
           >
             <div className="grow">
               <div className="mb-4">
@@ -102,17 +98,15 @@ export default function PlanCards({ mode, currentPlanId, disabled, onFreeAction,
                 )
               ) : (
                 <SubscribeButton
-                  lookupKey={plan.stripe.priceLookupKeyMonthly}
                   planId={plan.id}
                   className="w-full"
                   variant={isManage ? (isCurrentPlan ? "default" : isUpgradeable ? "outline" : "default") : "default"}
-                  isPortal={isManage ? isCurrentPlan : false}
+                  isPortal={isManage ? (isCurrentPlan || isUpgradeable) : false}
                   disabled={disabled}
                   successPath={!isManage ? successPath : undefined}
                   cancelPath={!isManage ? cancelPath : undefined}
-                  billingProvider={provider}
                 >
-                  {isManage ? (isCurrentPlan ? `Manage in ${providerLabel}` : isUpgradeable ? "Upgrade" : "Subscribe") : "Subscribe"}
+                  {isManage ? (isCurrentPlan ? "Manage subscription" : isUpgradeable ? "Upgrade via Portal" : "Subscribe") : "Subscribe"}
                 </SubscribeButton>
               )}
             </div>
