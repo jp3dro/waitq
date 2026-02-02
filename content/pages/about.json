@@ -7,44 +7,23 @@
     {
       "title": "WaitQ started in 2026 and is built by a small team who believes software shouldn't be complicated.",
       "description": "We're a fully bootstrapped project, moving fast, staying focused, and shipping only the features that actually solve real problems.",
-      "image": "/images/bar friends.jpg",
+      "image": "/images/About WaitQ.webp",
       "_template": "introSection"
     },
     {
-      "title": "Our mission: everyone make the most out of their time",
+      "title": "Our mission: make everyone get time back",
       "paragraphs": [
         {
           "text": "As avid travelers and foodies, we saw too many poor experiences in restaurants accepting no reservations around the world. Managers yelling names at doors. Unclear waiting times. Customers either desperately to ask staff if they were next or simply disappearing."
         },
         {
-          "text": "We built WaitQ to eliminate that chaos. Not with complexity nor with enterprise features that need training, but with a simple system that does one thing exceptionally well: it turns waiting from a liability into a competitive advantage. When everyone is aligned, that's when businesses actually win."
+          "text": "We wanted to build something that eliminate that chaos. Not with complexity nor with enterprise features that need training, but with a simple system that does one thing exceptionally well: turning waiting from a liability into a competitive advantage. "
         },
         {
           "text": "We see WaitQ as the waitlist system that reduces no-shows, increases customer turnover, and brings a sense of calm to an activity no one likes: waiting. All with virtually zero operational overhead."
         }
       ],
       "_template": "missionSection"
-    },
-    {
-      "title": "Our guiding principles",
-      "items": [
-        {
-          "title": "Time is everything",
-          "description": "We're focused on delivering light, effortless waiting experiences that save time to both customers and managers.",
-          "image": ""
-        },
-        {
-          "title": "Design for clarity",
-          "description": "Complexity is the enemy. We obsess over making every interaction obvious. Intuitive, and effortless.",
-          "image": ""
-        },
-        {
-          "title": "Less is more",
-          "description": "Our software should be running in minutes, not days. No unnecessary complexity. No feature creep. Just what works.",
-          "image": ""
-        }
-      ],
-      "_template": "principlesSection"
     },
     {
       "title": "How we operate",
@@ -64,6 +43,21 @@
           "title": "Transparent pricing",
           "description": "No hidden fees. No per-user charges. What you see is what you pay.",
           "icon": "Heart"
+        },
+        {
+          "title": "Time is everything",
+          "description": "We're focused on delivering light, effortless waiting experiences that save time to both customers and managers.",
+          "icon": "clock"
+        },
+        {
+          "title": "Intuitive interface",
+          "description": "Complexity is the enemy. We obsess over making every interaction obvious.",
+          "icon": "diamond"
+        },
+        {
+          "title": "No learning curve",
+          "description": "Our software should be running in minutes, not days. No feature creep. Just what works.",
+          "icon": "sparkles"
         }
       ],
       "_template": "howWeOperateSection"
