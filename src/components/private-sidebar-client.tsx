@@ -208,9 +208,9 @@ export default function PrivateSidebarClient({ userName, userEmail, businessLogo
                                 label="Supabase"
                             />
                             <ExternalNavItem
-                                href="https://dashboard.stripe.com/acct_1S9XLrAp5ApQoW6E/dashboard"
+                                href="https://sandbox.polar.sh/dashboard"
                                 icon={CreditCard}
-                                label="Stripe"
+                                label="Polar"
                             />
                             <ExternalNavItem
                                 href="https://portal.bulkgate.com/dashboard/"
@@ -291,52 +291,52 @@ export default function PrivateSidebarClient({ userName, userEmail, businessLogo
                                     </DropdownMenuSub>
                                 </DropdownMenuGroup>
                                 <DropdownMenuSeparator />
-                                    <AlertDialog>
-                                        <AlertDialogTrigger asChild>
-                                            <DropdownMenuItem
-                                                className="cursor-pointer text-destructive focus:text-destructive"
-                                                onSelect={(e) => e.preventDefault()}
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <DropdownMenuItem
+                                            className="cursor-pointer text-destructive focus:text-destructive"
+                                            onSelect={(e) => e.preventDefault()}
+                                        >
+                                            <div className="flex items-center">
+                                                <span>Delete account</span>
+                                            </div>
+                                        </DropdownMenuItem>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Delete your account?</AlertDialogTitle>
+                                        </AlertDialogHeader>
+                                        <AlertDialogBody>
+                                            <AlertDialogDescription>
+                                                This will permanently delete your user, business setup data, and activity from the database.
+                                                This cannot be undone.
+                                            </AlertDialogDescription>
+                                        </AlertDialogBody>
+                                        <AlertDialogFooter>
+                                            <AlertDialogAction
+                                                variant="destructive"
+                                                disabled={deleting}
+                                                onClick={async () => {
+                                                    setDeleting(true);
+                                                    try {
+                                                        const res = await fetch("/api/account/delete", { method: "POST" });
+                                                        const j = (await res.json().catch(() => ({}))) as { error?: string };
+                                                        if (!res.ok) throw new Error(j.error || "Failed to delete account");
+                                                        // Clear auth cookies/session after deletion
+                                                        window.location.href = "/auth/logout";
+                                                    } catch (e) {
+                                                        console.error(e);
+                                                        alert(e instanceof Error ? e.message : "Failed to delete account");
+                                                        setDeleting(false);
+                                                    }
+                                                }}
                                             >
-                                                <div className="flex items-center">
-                                                    <span>Delete account</span>
-                                                </div>
-                                            </DropdownMenuItem>
-                                        </AlertDialogTrigger>
-                                        <AlertDialogContent>
-                                            <AlertDialogHeader>
-                                                <AlertDialogTitle>Delete your account?</AlertDialogTitle>
-                                            </AlertDialogHeader>
-                                            <AlertDialogBody>
-                                                <AlertDialogDescription>
-                                                    This will permanently delete your user, business setup data, and activity from the database.
-                                                    This cannot be undone.
-                                                </AlertDialogDescription>
-                                            </AlertDialogBody>
-                                            <AlertDialogFooter>
-                                                <AlertDialogAction
-                                                    variant="destructive"
-                                                    disabled={deleting}
-                                                    onClick={async () => {
-                                                        setDeleting(true);
-                                                        try {
-                                                            const res = await fetch("/api/account/delete", { method: "POST" });
-                                                            const j = (await res.json().catch(() => ({}))) as { error?: string };
-                                                            if (!res.ok) throw new Error(j.error || "Failed to delete account");
-                                                            // Clear auth cookies/session after deletion
-                                                            window.location.href = "/auth/logout";
-                                                        } catch (e) {
-                                                            console.error(e);
-                                                            alert(e instanceof Error ? e.message : "Failed to delete account");
-                                                            setDeleting(false);
-                                                        }
-                                                    }}
-                                                >
-                                                    {deleting ? "Deleting…" : "Delete"}
-                                                </AlertDialogAction>
-                                                <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
-                                            </AlertDialogFooter>
-                                        </AlertDialogContent>
-                                    </AlertDialog>
+                                                {deleting ? "Deleting…" : "Delete"}
+                                            </AlertDialogAction>
+                                            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
                                 <DropdownMenuItem asChild className="cursor-pointer">
                                     <Link href="/auth/logout" className="w-full flex items-center">
                                         <LogOut className="mr-2 h-4 w-4" />

@@ -4,7 +4,6 @@ import { createRouteClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getStripe } from "@/lib/stripe";
 import { getPostHogClient } from "@/lib/posthog-server";
 
 function isMissingColumnError(errMsg: string, column: string) {
@@ -231,35 +230,6 @@ export async function submitBusinessInfo(formData: FormData) {
         if (attempt2.error) throw attempt2.error;
     } else if (attempt1.error) {
         throw attempt1.error;
-    }
-
-    // Stripe customer bootstrap (optional, but helps subscription UX)
-    try {
-        const stripe = getStripe();
-        const userEmail = user.email;
-        if (userEmail) {
-            let stripeCustomerId: string | null = null;
-            const list = await stripe.customers.list({ email: userEmail, limit: 1 });
-            stripeCustomerId = list.data.length > 0 ? list.data[0].id : null;
-            if (!stripeCustomerId) {
-                const created = await stripe.customers.create({
-                    email: userEmail,
-                    metadata: { user_id: user.id },
-                });
-                stripeCustomerId = created.id;
-            }
-            await admin.from("subscriptions").upsert(
-                {
-                    user_id: user.id,
-                    business_id: businessId,
-                    stripe_customer_id: stripeCustomerId,
-                    updated_at: new Date().toISOString(),
-                },
-                { onConflict: "user_id" }
-            );
-        }
-    } catch (e) {
-        console.error("Stripe init failed", e);
     }
 
     // Track onboarding step completion

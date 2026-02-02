@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { createRouteClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
-import { getStripe } from "@/lib/stripe";
 import { getPostHogClient } from "@/lib/posthog-server";
 
 export async function POST() {
@@ -24,36 +23,6 @@ export async function POST() {
   const ownedBusinessIds = (ownedBusinesses ?? [])
     .map((b) => (b as unknown as { id?: string }).id)
     .filter((v): v is string => typeof v === "string");
-
-  // Best-effort: cancel Stripe subscription(s) and delete customer record.
-  // We try by reading the subscriptions table first; if Stripe isn't configured, we continue deleting DB rows anyway.
-  try {
-    const stripe = getStripe();
-    const { data: subsRows } = await admin
-      .from("subscriptions")
-      .select("stripe_customer_id, stripe_subscription_id")
-      .or(`user_id.eq.${user.id}${ownedBusinessIds.length ? `,business_id.in.(${ownedBusinessIds.join(",")})` : ""}`)
-      .limit(50);
-    const rows = (subsRows || []) as { stripe_customer_id?: string | null; stripe_subscription_id?: string | null }[];
-    const subIds = Array.from(
-      new Set(rows.map((r) => r.stripe_subscription_id).filter((v): v is string => typeof v === "string" && v.length > 0))
-    );
-    const custIds = Array.from(
-      new Set(rows.map((r) => r.stripe_customer_id).filter((v): v is string => typeof v === "string" && v.length > 0))
-    );
-    for (const subId of subIds) {
-      try {
-        await stripe.subscriptions.cancel(subId, { prorate: false });
-      } catch { }
-    }
-    for (const custId of custIds) {
-      try {
-        await stripe.customers.del(custId);
-      } catch { }
-    }
-  } catch {
-    // Stripe not configured or not reachable; ignore.
-  }
 
   // Account deletion semantics:
   // - If the user owns businesses, delete those businesses entirely (cascades waitlists, locations, entries, memberships).
@@ -114,4 +83,3 @@ export async function POST() {
 
   return NextResponse.json({ ok: true });
 }
-

@@ -54,7 +54,7 @@ export default function PlanCards({ mode, currentPlanId, disabled, onFreeAction,
                   )}
                 </div>
                 <div className="mt-2 text-2xl font-bold">
-                  {formatUSD(plan.priceMonthlyEUR)} <span className="text-sm font-normal">/ month</span>
+                  {formatUSD(plan.priceMonthlyUSD)} <span className="text-sm font-normal">/ month</span>
                 </div>
                 <p className="mt-2 text-sm text-muted-foreground">{plan.description}</p>
               </div>
@@ -77,7 +77,7 @@ export default function PlanCards({ mode, currentPlanId, disabled, onFreeAction,
               </ul>
             </div>
             <div className="mt-4">
-              {plan.priceMonthlyEUR === 0 ? (
+              {plan.priceMonthlyUSD === 0 ? (
                 isManage ? (
                   // Hide "Included" when user has an active paid plan
                   effectiveCurrentPlanId !== "free" ? null : isCurrentPlan ? null : (

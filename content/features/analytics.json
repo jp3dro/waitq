@@ -5,7 +5,8 @@
     "subtitle": "WaitQ analytics surface insights and patterns from your waitlist data, empowering data-driven decisions. All without manual calculations or spreadsheets.",
     "primaryCta": "Try WaitQ free",
     "primaryCtaLink": "/signup",
-    "secondaryCta": "See how it works"
+    "secondaryCta": "See how it works",
+    "heroImage": "/images/WaitQ 2.webp"
   },
   "sections": [
     {
@@ -53,6 +54,7 @@
     {
       "title": "Spot trends and fix bottlenecks",
       "description": "Historical reports reveal patterns. Compare weeks, months, or custom ranges and use that data to staff smarter and seat faster.",
+      "image": "/images/WaitQ QR Code entrancee.webp",
       "imageOnRight": true,
       "variant": "default",
       "bullets": [

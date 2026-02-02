@@ -2,18 +2,17 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import OnboardingWizard from "./wizard";
-import { syncSubscriptionForUser } from "@/lib/subscription-sync";
+import { syncPolarSubscriptionForUser } from "@/lib/polar-sync";
 import { getAdminClient } from "@/lib/supabase/admin";
-import { getStripe } from "@/lib/stripe";
 import { headers } from "next/headers";
 
 export const metadata: Metadata = {
-  title: "Get Started",
-  description: "Set up your WaitQ account and start managing your restaurant waitlist.",
-  robots: {
-    index: false,
-    follow: false,
-  },
+    title: "Get Started",
+    description: "Set up your WaitQ account and start managing your restaurant waitlist.",
+    robots: {
+        index: false,
+        follow: false,
+    },
 };
 
 type SearchParams = Record<string, string | string[] | undefined>;
@@ -31,8 +30,6 @@ export default async function OnboardingPage(props: {
     const sp = await props.searchParams;
     const checkout =
         typeof sp.checkout === "string" ? sp.checkout : Array.isArray(sp.checkout) ? sp.checkout[0] : undefined;
-    const sessionId =
-        typeof sp.session_id === "string" ? sp.session_id : Array.isArray(sp.session_id) ? sp.session_id[0] : undefined;
 
     const { data: profile } = await supabase
         .from("profiles")
@@ -46,7 +43,6 @@ export default async function OnboardingPage(props: {
     }
 
     // If user is an active *member* of an organization they do NOT own, skip onboarding.
-    // Note: owners also get a membership row created during onboarding step 2, so we must not redirect for owners.
     const { data: membership } = await supabase
         .from("memberships")
         .select("id, business_id, businesses(owner_user_id)")
@@ -62,59 +58,28 @@ export default async function OnboardingPage(props: {
         redirect("/lists");
     }
 
-    // If coming back from Stripe Checkout, try to confirm subscription and complete onboarding.
-    // This prevents a loop where `/subscriptions` is gated behind `onboarding_completed`.
+    // If coming back from Polar Checkout, try to confirm subscription and complete onboarding.
     if (checkout === "success") {
         let hasActiveSubscription = false;
-        let shouldRedirect = false;
 
-        // 1) Prefer deterministic verification using the checkout session id (no webhook timing/race).
-        if (sessionId) {
-            try {
-                const stripe = getStripe();
-                const session = await stripe.checkout.sessions.retrieve(sessionId, { expand: ["subscription"] });
-                const isPaid = session.payment_status === "paid";
-                const sub = session.subscription as any;
-                const status = typeof sub?.status === "string" ? sub.status : null;
-                const isActiveLike = status === "active" || status === "trialing" || status === "past_due";
-                
-                if (isPaid && isActiveLike) {
-                    hasActiveSubscription = true;
-                    shouldRedirect = true;
-                }
-            } catch (e) {
-                console.error("[onboarding] Failed to retrieve checkout session from Stripe:", e);
-                // Continue to fallback sync below
-            }
+        try {
+            const synced = await syncPolarSubscriptionForUser({ userId: user.id });
+            hasActiveSubscription = synced.planId === "base" || synced.planId === "premium";
+        } catch (e) {
+            console.error("[onboarding] Failed to sync subscription during onboarding return:", e);
         }
 
-        // 2) Fallback: sync by user/email and infer plan (handles webhook delays or session lookup failures).
-        if (!hasActiveSubscription) {
-            try {
-                const synced = await syncSubscriptionForUser({ userId: user.id, email: user.email });
-                hasActiveSubscription = synced.planId === "base" || synced.planId === "premium";
-                if (hasActiveSubscription) {
-                    shouldRedirect = true;
-                }
-            } catch (e) {
-                console.error("[onboarding] Failed to sync subscription during onboarding return:", e);
-            }
-        }
-
-        // 3) If we confirmed an active paid subscription, complete onboarding and redirect.
-        if (shouldRedirect && hasActiveSubscription) {
-            // Sync once more to ensure DB is fully up-to-date before redirect
-            await syncSubscriptionForUser({ userId: user.id, email: user.email });
+        // If we confirmed an active paid subscription, complete onboarding and redirect.
+        if (hasActiveSubscription) {
             const admin = getAdminClient();
             await admin
                 .from("profiles")
                 .upsert({ id: user.id, onboarding_completed: true, onboarding_step: 5 }, { onConflict: "id" });
-            // redirect() throws NEXT_REDIRECT which is expected Next.js behavior - don't catch it
             redirect("/lists");
         }
     }
 
-    // Fetch existing business/location/list info if available to pre-fill (canonical tables first)
+    // Fetch existing business/location/list info if available to pre-fill
     const { data: business } = await supabase
         .from("businesses")
         .select("id, name, country_code")
@@ -155,13 +120,12 @@ export default async function OnboardingPage(props: {
     };
     const hasSetupData = !!businessId && !!location?.id && !!listName.trim();
     const inferredStep = (() => {
-        // Prefer persisted step, but if data exists, ensure the user lands at least on plan selection.
         const persisted = clampStep(profile?.onboarding_step);
         if (hasSetupData) return Math.max(persisted, 5);
         return persisted;
     })();
 
-    // Best-effort country prefill from geo headers (Vercel / Cloudflare / generic proxies).
+    // Best-effort country prefill from geo headers
     const h = await headers();
     const inferredCountry = (() => {
         const raw =
