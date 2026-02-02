@@ -136,7 +136,17 @@
       "_template": "bentoGrid"
     },
     {
-      "title": "Frequently asked questions",
+      "title": "The smart way to manage walk-in customers",
+      "subtitle": "Reduce wait times, improve customer satisfaction, and increase revenue by servicing more, happier clients.",
+      "primaryButtonText": "Try WaitQ",
+      "primaryButtonLink": "/signup",
+      "secondaryButtonText": "See pricing",
+      "secondaryButtonLink": "/pricing",
+      "trustMessage": "No credit card required • 2-minute setup • Cancel anytime",
+      "_template": "ctaSection"
+    },
+    {
+      "title": "WaitQ FAQs",
       "items": [
         {
           "question": "What is a waitlist management system?",
@@ -163,8 +173,8 @@
           "answer": "No. Customers receive SMS text messages with a link to track their place in line. They can view their status from any web browser without downloading anything."
         },
         {
-          "question": "Can you show me a live demo of the waitlist in operation before I try?",
-          "answer": "Absolutely! Contact us and we'll schedule a live demo to show you how WaitQ works in a real restaurant environment."
+          "question": "Does WaitQ also handles reservations?",
+          "answer": "For now, we are focusing on waitlists and walk-ins. Our software can be used in tandem with other tools that handle table management."
         },
         {
           "question": "Is WaitQ easy to set up?",
@@ -172,16 +182,6 @@
         }
       ],
       "_template": "faq"
-    },
-    {
-      "title": "The smart way to manage walk-in customers",
-      "subtitle": "Reduce wait times, improve customer satisfaction, and increase revenue by servicing more, happier clients.",
-      "primaryButtonText": "Try WaitQ",
-      "primaryButtonLink": "/signup",
-      "secondaryButtonText": "See pricing",
-      "secondaryButtonLink": "/pricing",
-      "trustMessage": "No credit card required • 2-minute setup • Cancel anytime",
-      "_template": "ctaSection"
     }
   ],
   "seo": {
