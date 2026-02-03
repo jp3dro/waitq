@@ -185,6 +185,7 @@
     }
   ],
   "seo": {
+    "indexable": true,
     "title": "WaitQ - Digital Waitlist Management System",
     "description": "Modern waitlist management that reduces wait times, improves customer experience and turns waiting into a competitive advantage",
     "ogImage": "/images/og-home.png"
