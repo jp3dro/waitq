@@ -169,6 +169,7 @@
     }
   ],
   "seo": {
+    "indexable": true,
     "title": "Digital Waitlist Software - WaitQ",
     "description": "Reduce wait anxiety with our real-time virtual waitlist that lets customers see their position in line from their own devices and at all times.",
     "ogImage": "/images/og-virtual-waitlist.png"
