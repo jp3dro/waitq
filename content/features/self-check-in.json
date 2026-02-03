@@ -179,6 +179,7 @@
     }
   ],
   "seo": {
+    "indexable": true,
     "title": "Self Check-in for Waitlists - WaitQ",
     "description": "Let guests join your waitlist with QR codes or kiosk check-in. No app downloads required. Reduce front-door congestion.",
     "ogImage": "/images/og-self-check-in.png"
