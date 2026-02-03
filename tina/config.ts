@@ -702,7 +702,10 @@ export default defineConfig({
         path: "content/features",
         format: "json",
         ui: {
-          router: ({ document }) => `/features/${document._sys.filename}`,
+          router: ({ document }) => {
+            const slug = (document as any).seo?.slug || document._sys.filename;
+            return `/features/${slug}`;
+          },
         },
         fields: [
           { type: "string", name: "slug", label: "URL Slug", required: true },
@@ -759,7 +762,10 @@ export default defineConfig({
           },
           // Landing pages live at the root (no "/landing" prefix).
           // Keep the restaurant page at its existing canonical URL.
-          router: ({ document }) => `/${document._sys.filename}`,
+          router: ({ document }) => {
+            const slug = (document as any).seo?.slug || document._sys.filename;
+            return `/${slug}`;
+          },
         },
         fields: [
           {
@@ -859,7 +865,10 @@ export default defineConfig({
         path: "content/legal",
         format: "mdx",
         ui: {
-          router: ({ document }) => `/${document._sys.filename}`,
+          router: ({ document }) => {
+            const slug = (document as any).seo?.slug || document._sys.filename;
+            return `/${slug}`;
+          },
           filename: {
             readonly: false,
             slugify: (values) => {

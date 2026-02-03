@@ -19,20 +19,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     const features = (featuresData.data.featureConnection.edges || [])
         .filter((edge) => (edge?.node?.seo as any)?.indexable !== false)
-        .map((edge) => ({
-            url: `${baseUrl}/features/${edge?.node?._sys.filename}`,
-            lastModified: new Date(),
-            changeFrequency: 'weekly' as const,
-            priority: 0.7,
-        }));
+        .map((edge) => {
+            const node = edge?.node;
+            const seo = node?.seo as any;
+            // Use custom slug if set, otherwise use filename
+            const slug = seo?.slug || node?._sys.filename;
+            return {
+                url: `${baseUrl}/features/${slug}`,
+                lastModified: new Date(),
+                changeFrequency: 'weekly' as const,
+                priority: 0.7,
+            };
+        });
 
     const landingPages = (landingPagesData.data.landingPageConnection.edges || [])
         .filter((edge) => (edge?.node?.seo as any)?.indexable !== false)
         .map((edge) => {
-            const filename = edge?.node?._sys.filename;
-            // The restaurant landing page might be at root if matched correctly in config
+            const node = edge?.node;
+            const seo = node?.seo as any;
+            // Use custom slug if set, otherwise use filename
+            const slug = seo?.slug || node?._sys.filename;
             return {
-                url: `${baseUrl}/${filename}`,
+                url: `${baseUrl}/${slug}`,
                 lastModified: new Date(),
                 changeFrequency: 'weekly' as const,
                 priority: 0.8,
@@ -41,14 +49,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     const legalPages = (legalPagesData.data.termsConnection.edges || [])
         .filter((edge) => (edge?.node?.seo as any)?.indexable !== false)
-        .map((edge) => ({
-            url: `${baseUrl}/${edge?.node?._sys.filename}`,
-            lastModified: new Date(),
-            changeFrequency: 'monthly' as const,
-            priority: 0.3,
-        }));
+        .map((edge) => {
+            const node = edge?.node;
+            const seo = node?.seo as any;
+            // Use custom slug if set, otherwise use filename
+            const slug = seo?.slug || node?._sys.filename;
+            return {
+                url: `${baseUrl}/${slug}`,
+                lastModified: new Date(),
+                changeFrequency: 'monthly' as const,
+                priority: 0.3,
+            };
+        });
 
     const aboutPages = (aboutData.data.aboutConnection.edges || [])
+        .filter((edge) => (edge?.node?.seo as any)?.indexable !== false)
         .map((edge) => ({
             url: `${baseUrl}/about`,
             lastModified: new Date(),
