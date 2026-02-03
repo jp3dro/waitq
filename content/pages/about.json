@@ -72,6 +72,7 @@
     }
   ],
   "seo": {
+    "indexable": true,
     "title": "About WaitQ - Our Story & Mission",
     "description": "Learn about WaitQ's mission to transform waiting experiences. We're a small, bootstrapped team building simple, powerful waitlist software.",
     "ogImage": "/images/og-about.png"
