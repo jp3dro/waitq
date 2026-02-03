@@ -18,6 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ]);
 
     const features = (featuresData.data.featureConnection.edges || [])
+        .filter((edge) => (edge?.node?.seo as any)?.indexable !== false)
         .map((edge) => ({
             url: `${baseUrl}/features/${edge?.node?._sys.filename}`,
             lastModified: new Date(),
@@ -26,6 +27,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         }));
 
     const landingPages = (landingPagesData.data.landingPageConnection.edges || [])
+        .filter((edge) => (edge?.node?.seo as any)?.indexable !== false)
         .map((edge) => {
             const filename = edge?.node?._sys.filename;
             // The restaurant landing page might be at root if matched correctly in config
@@ -38,6 +40,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         });
 
     const legalPages = (legalPagesData.data.termsConnection.edges || [])
+        .filter((edge) => (edge?.node?.seo as any)?.indexable !== false)
         .map((edge) => ({
             url: `${baseUrl}/${edge?.node?._sys.filename}`,
             lastModified: new Date(),

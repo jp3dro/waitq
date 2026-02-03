@@ -85,6 +85,7 @@ export async function generateMetadata({
         "virtual waitlist",
         "restaurant waitlist software",
       ],
+      ...(seo?.indexable === false && { robots: { index: false, follow: true } }),
       alternates: {
         canonical:
           typeof process !== "undefined" && process.env.NEXT_PUBLIC_SITE_URL
@@ -124,6 +125,7 @@ export async function generateMetadata({
       return {
         title,
         description,
+        ...(seo?.indexable === false && { robots: { index: false, follow: true } }),
         openGraph: {
           title: `${title} - WaitQ`,
           description,
@@ -153,6 +155,7 @@ export async function generateMetadata({
     return {
       title,
       description,
+      ...(seo?.indexable === false && { robots: { index: false, follow: true } }),
       openGraph: {
         title: `${title} - WaitQ`,
         description,
@@ -177,6 +180,7 @@ export async function generateMetadata({
     return {
       title,
       description,
+      ...(seo?.indexable === false && { robots: { index: false, follow: true } }),
       openGraph: {
         title: `${title} - WaitQ`,
         description,
@@ -203,6 +207,7 @@ export async function generateMetadata({
       return {
         title,
         description,
+        ...(seo?.indexable === false && { robots: { index: false, follow: true } }),
         openGraph: { title, description },
       };
     } catch {
@@ -223,6 +228,7 @@ export async function generateMetadata({
       return {
         title,
         description,
+        ...(seo?.indexable === false && { robots: { index: false, follow: true } }),
         openGraph: {
           title: `${title} - WaitQ`,
           description,

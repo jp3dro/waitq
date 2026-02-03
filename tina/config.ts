@@ -596,6 +596,8 @@ export default defineConfig({
             name: "seo",
             label: "SEO Settings",
             fields: [
+              { type: "string", name: "slug", label: "Custom Slug", description: "Override the default URL slug for this page" },
+              { type: "boolean", name: "indexable", label: "Indexable by Search Engines", description: "When enabled (default), search engines can discover this page. Disable to add noindex tag.", ui: { component: "toggle" } },
               { type: "string", name: "title", label: "Meta Title" },
               { type: "string", name: "description", label: "Meta Description", ui: { component: "textarea" } },
               { type: "image", name: "ogImage", label: "Open Graph Image" },
@@ -682,6 +684,8 @@ export default defineConfig({
             name: "seo",
             label: "SEO Settings",
             fields: [
+              { type: "string", name: "slug", label: "Custom Slug", description: "Override the default URL slug for this page" },
+              { type: "boolean", name: "indexable", label: "Indexable by Search Engines", description: "When enabled (default), search engines can discover this page. Disable to add noindex tag.", ui: { component: "toggle" } },
               { type: "string", name: "title", label: "Meta Title" },
               { type: "string", name: "description", label: "Meta Description", ui: { component: "textarea" } },
               { type: "image", name: "ogImage", label: "Open Graph Image" },
@@ -730,6 +734,8 @@ export default defineConfig({
             name: "seo",
             label: "SEO Settings",
             fields: [
+              { type: "string", name: "slug", label: "Custom Slug", description: "Override the default URL slug for this page" },
+              { type: "boolean", name: "indexable", label: "Indexable by Search Engines", description: "When enabled (default), search engines can discover this page. Disable to add noindex tag.", ui: { component: "toggle" } },
               { type: "string", name: "title", label: "Meta Title" },
               { type: "string", name: "description", label: "Meta Description", ui: { component: "textarea" } },
               { type: "image", name: "ogImage", label: "Open Graph Image" },
@@ -785,6 +791,8 @@ export default defineConfig({
             name: "seo",
             label: "SEO Settings",
             fields: [
+              { type: "string", name: "slug", label: "Custom Slug", description: "Override the default URL slug for this page" },
+              { type: "boolean", name: "indexable", label: "Indexable by Search Engines", description: "When enabled (default), search engines can discover this page. Disable to add noindex tag.", ui: { component: "toggle" } },
               { type: "string", name: "title", label: "Meta Title" },
               { type: "string", name: "description", label: "Meta Description", ui: { component: "textarea" } },
               { type: "image", name: "ogImage", label: "Open Graph Image" },
@@ -833,6 +841,8 @@ export default defineConfig({
             name: "seo",
             label: "SEO Settings",
             fields: [
+              { type: "string", name: "slug", label: "Custom Slug", description: "Override the default URL slug for this page" },
+              { type: "boolean", name: "indexable", label: "Indexable by Search Engines", description: "When enabled (default), search engines can discover this page. Disable to add noindex tag.", ui: { component: "toggle" } },
               { type: "string", name: "title", label: "Meta Title" },
               { type: "string", name: "description", label: "Meta Description", ui: { component: "textarea" } },
               { type: "image", name: "ogImage", label: "Open Graph Image" },
@@ -874,6 +884,8 @@ export default defineConfig({
             name: "seo",
             label: "SEO Settings",
             fields: [
+              { type: "string", name: "slug", label: "Custom Slug", description: "Override the default URL slug for this page" },
+              { type: "boolean", name: "indexable", label: "Indexable by Search Engines", description: "When enabled (default), search engines can discover this page. Disable to add noindex tag.", ui: { component: "toggle" } },
               { type: "string", name: "title", label: "Meta Title" },
               { type: "string", name: "description", label: "Meta Description", ui: { component: "textarea" } },
             ],
