@@ -232,6 +232,7 @@
     }
   ],
   "seo": {
+    "indexable": true,
     "title": "WaitQ Pricing Plans",
     "description": "Simple, transparent pricing for digital waitlist management. See plans that scale with your business.",
     "ogImage": "/images/og-pricing.png"
