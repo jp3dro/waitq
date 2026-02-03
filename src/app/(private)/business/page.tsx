@@ -44,7 +44,7 @@ export default async function BusinessPage() {
   // Some deployments may not have the newest optional columns yet (schema cache lag / missing migrations).
   // Always fallback to a minimal select so the page still loads.
   const fullSelect =
-    "id, name, logo_url, cover_url, accent_color, background_color, country_code, time_format, owner_user_id, created_at, website_url, instagram_url, facebook_url, google_maps_url, menu_url, vat_id";
+    "id, name, logo_url, cover_url, accent_color, background_color, country_code, time_format, owner_user_id, created_at, website_url, instagram_url, facebook_url, google_maps_url, menu_url";
   const fallbackSelect =
     "id, name, logo_url, cover_url, accent_color, background_color, country_code, time_format, owner_user_id, created_at";
 

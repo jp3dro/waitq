@@ -74,6 +74,12 @@ function SignupPageContent() {
       // Identify user and capture signup completion
       posthog.identify(data.user.id, { email: data.user.email });
       posthog.capture('signup_completed', { method: 'email' });
+      // Best-effort: create profile + internal notification (for setups with instant session).
+      try {
+        await fetch("/api/auth/after-signup", { method: "POST" });
+      } catch {
+        // ignore
+      }
       router.push("/lists");
       router.refresh();
       return;

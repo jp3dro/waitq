@@ -162,7 +162,6 @@ export async function submitBusinessInfo(formData: FormData) {
 
     const businessName = (formData.get("businessName") as string | null)?.trim() || "";
     const country = (formData.get("country") as string | null)?.trim() || "";
-    const vatId = (formData.get("vatId") as string | null)?.trim() || "";
     if (businessName.length < 2) throw new Error("Business name must be at least 2 characters");
     if (!country) throw new Error("Please select a country");
 
@@ -172,37 +171,6 @@ export async function submitBusinessInfo(formData: FormData) {
         businessName,
         country,
     });
-
-    // Handle VAT data if provided
-    if (vatId) {
-        try {
-            const vatRes = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/vat/validate`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ countryCode: country, vatId }),
-            });
-            const vatData = await vatRes.json();
-
-            const updateData: Record<string, unknown> = {
-                vat_id: vatId,
-                vat_id_valid: vatData.valid,
-                vat_id_validated_at: new Date().toISOString(),
-            };
-
-            if (vatData.valid) {
-                updateData.vat_id_name = vatData.name;
-                updateData.vat_id_address = vatData.address;
-            }
-
-            await admin
-                .from("businesses")
-                .update(updateData)
-                .eq("id", businessId);
-        } catch (error) {
-            console.error("VAT validation failed:", error);
-            // Continue without VAT data rather than failing the whole process
-        }
-    }
 
     // Membership
     const { error: membershipErr } = await admin
@@ -215,22 +183,10 @@ export async function submitBusinessInfo(formData: FormData) {
 
     // Persist to profile for prefill
     const baseProfile = { id: user.id, business_name: businessName, country, onboarding_step: 3 } as Record<string, unknown>;
-    const attempt1 = await supabase
+    const attempt = await supabase
         .from("profiles")
-        .upsert(
-            { ...baseProfile, vat_id: vatId || null },
-            { onConflict: "id" }
-        );
-    if (attempt1.error && isMissingColumnError(attempt1.error.message, "vat_id")) {
-        // Some production DBs may not have `profiles.vat_id` (or PostgREST schema cache is stale).
-        // VAT is persisted on `businesses` anyway; don't block onboarding on this.
-        const attempt2 = await supabase
-            .from("profiles")
-            .upsert(baseProfile, { onConflict: "id" });
-        if (attempt2.error) throw attempt2.error;
-    } else if (attempt1.error) {
-        throw attempt1.error;
-    }
+        .upsert(baseProfile, { onConflict: "id" });
+    if (attempt.error) throw attempt.error;
 
     // Track onboarding step completion
     const posthog = getPostHogClient();

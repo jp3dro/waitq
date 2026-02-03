@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteClient } from "@/lib/supabase/server";
+import { resend } from "@/lib/resend";
+import { renderNewUserInternalEmail } from "@/lib/emails/new-user-internal";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -37,6 +39,31 @@ export async function GET(req: NextRequest) {
         // If profile doesn't exist (e.g. created before trigger), create it now
         if (!profile) {
           await supabase.from('profiles').insert({ id: user.id });
+          try {
+            const from =
+              process.env.RESEND_FROM_INTERNAL ||
+              (process.env.NODE_ENV === "production"
+                ? "WaitQ <noreply@waitq.app>"
+                : "WaitQ <onboarding@resend.dev>");
+            const { subject, html, text } = renderNewUserInternalEmail({
+              userId: user.id,
+              email: user.email ?? null,
+              name: (user.user_metadata as any)?.full_name ?? (user.user_metadata as any)?.name ?? null,
+              provider: (user.app_metadata as any)?.provider ?? null,
+              createdAt: (user as any)?.created_at ?? null,
+              siteUrl: process.env.NEXT_PUBLIC_SITE_URL || null,
+            });
+            const to = process.env.INTERNAL_SIGNUP_NOTIFY_TO || "joao@azor.studio";
+            await resend.emails.send({
+              from,
+              to,
+              subject,
+              html,
+              text,
+            });
+          } catch (e) {
+            console.error("[internal-email] Failed to notify new user signup:", e);
+          }
           return NextResponse.redirect(new URL("/onboarding", process.env.NEXT_PUBLIC_SITE_URL || req.url));
         }
 

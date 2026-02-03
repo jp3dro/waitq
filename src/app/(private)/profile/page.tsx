@@ -1,29 +1,32 @@
 import { createClient } from "@/lib/supabase/server";
+import { getUser } from "@/lib/supabase/auth";
 import ProfileClient from "./ProfileClient";
+import { redirect } from "next/navigation";
 
 export const metadata = { title: "Profile" };
 
 export default async function ProfilePage() {
     const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-        return null;
-    }
+    const { user } = await getUser();
+    if (!user) redirect("/login");
 
     // Get avatar_url from profiles table
-    const { data: profile } = await supabase
-        .from("profiles")
-        .select("avatar_url")
-        .eq("id", user.id)
-        .maybeSingle();
+    let avatarUrl: string | null = null;
+    const profRes = await supabase.from("profiles").select("avatar_url").eq("id", user.id).maybeSingle();
+    if (profRes?.error) {
+        const msg = String(profRes.error.message || "");
+        // If schema cache is stale / column missing, don't fail the whole page.
+        if (!(msg.toLowerCase().includes("avatar_url") && msg.toLowerCase().includes("schema cache"))) {
+            console.error("[profile] Failed to load avatar_url:", profRes.error);
+        }
+    } else {
+        avatarUrl = (profRes.data?.avatar_url as string | null) || null;
+    }
 
     const initialData = {
         name: (user.user_metadata?.full_name as string) || "",
         email: user.email || "",
-        avatarUrl: (profile?.avatar_url as string | null) || null,
+        avatarUrl,
     };
 
     return (

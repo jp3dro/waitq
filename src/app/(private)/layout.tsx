@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getUser } from "@/lib/supabase/auth";
 import PrivateSidebar from "@/components/private-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { getAdminClient } from "@/lib/supabase/admin";
@@ -8,9 +9,7 @@ import { TimeFormatProvider } from "@/components/time-format-provider";
 
 export default async function PrivateLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user } = await getUser();
   if (!user) redirect("/login");
 
   // Best-effort: auto-accept pending invites for this user (by email match).

@@ -1,11 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
+import { getUser } from "@/lib/supabase/auth";
 import PrivateSidebarClient from "@/components/private-sidebar-client";
 
 export default async function PrivateSidebar() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user } = await getUser();
   // Resolve role via memberships (fallback to email admin for legacy)
   const { data: ownedBiz } = user?.id
     ? await supabase

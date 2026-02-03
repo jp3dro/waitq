@@ -10,7 +10,7 @@ import { createServerClient } from "@supabase/ssr";
  * which looks like "random sign-outs" in production.
  */
 export async function middleware(req: NextRequest) {
-  const res = NextResponse.next({
+  let res = NextResponse.next({
     request: { headers: req.headers },
   });
 
@@ -23,6 +23,18 @@ export async function middleware(req: NextRequest) {
           return req.cookies.getAll();
         },
         setAll(cookiesToSet) {
+          // Update the request cookies so downstream Server Components see the
+          // refreshed session *during this same request*.
+          cookiesToSet.forEach(({ name, value }) => {
+            req.cookies.set(name, value);
+          });
+
+          // Recreate the response so the updated request cookies are included.
+          res = NextResponse.next({
+            request: { headers: req.headers },
+          });
+
+          // Also persist cookies to the browser for subsequent requests.
           cookiesToSet.forEach(({ name, value, options }) => {
             res.cookies.set(name, value, options);
           });

@@ -9,10 +9,11 @@ import { Spinner } from "@/components/ui/spinner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { dateToClockLabel, hourToLabel, normalizeTimeFormat, type TimeFormat } from "@/lib/time-format";
+import { hourToLabel, normalizeTimeFormat, type TimeFormat } from "@/lib/time-format";
 import UpgradeRequiredDialog from "@/components/upgrade-required-dialog";
 import type { PlanId } from "@/lib/plans";
 import { HoverClickTooltip } from "@/components/ui/hover-click-tooltip";
+import { cn } from "@/lib/utils";
 
 type CreatedRow = { created_at: string };
 type ServedRow = { created_at: string; notified_at: string | null; waitlist_id: string | null };
@@ -98,7 +99,7 @@ function ChartBarInteractiveMetric({
               <button
                 type="button"
                 aria-label={`About ${title}`}
-                className="inline-flex items-center text-muted-foreground hover:text-foreground"
+                className="inline-flex items-center justify-center rounded-sm p-1 -m-1 text-muted-foreground hover:text-foreground hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <CircleHelp className="h-4 w-4" />
               </button>
@@ -179,7 +180,7 @@ function ChartBarCustomLabelWeekday({
               <button
                 type="button"
                 aria-label={`About ${title}`}
-                className="inline-flex items-center text-muted-foreground hover:text-foreground"
+                className="inline-flex items-center justify-center rounded-sm p-1 -m-1 text-muted-foreground hover:text-foreground hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <CircleHelp className="h-4 w-4" />
               </button>
@@ -565,14 +566,14 @@ export default function AnalyticsPage() {
 
   const helpHourly =
     (isToday
-      ? "Shows how many people joined the waitlist each hour today (for the selected location/list)."
-      : "Shows the average number of people who joined the waitlist each hour during this period (for the selected location/list).");
+      ? "Meaning: how many people joined.\nHow it's calculated: count of waitlist entries created each hour today (midnight → now), for the selected filters."
+      : "Meaning: typical hourly demand.\nHow it's calculated: average count of waitlist entries created in each hour across the selected days, for the selected filters.");
   const helpWaitByHour =
-    "Shows the average time people waited before being called, grouped by the hour they joined (for the selected location/list).";
+    "Meaning: how long people tend to wait depending on when they join.\nHow it's calculated: average minutes from join → called (created_at → notified_at), grouped by the hour people joined, for the selected filters.";
   const helpDailyVisitors =
-    "Shows how many people joined the waitlist each day during this period (for the selected location/list).";
+    "Meaning: daily demand.\nHow it's calculated: count of waitlist entries created each day during the selected period, for the selected filters.";
   const helpWeekday =
-    "Shows which weekdays are usually busier, based on the average number of people who joined on each weekday (for the selected location/list).";
+    "Meaning: which weekdays are typically busiest.\nHow it's calculated: average count of waitlist entries created on each weekday across the selected period, for the selected filters.";
 
   return (
     <main className="py-5">
@@ -658,18 +659,29 @@ export default function AnalyticsPage() {
           
 
           {/* Key Metrics */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+          <div className={cn("grid grid-cols-2 sm:grid-cols-3 gap-2", isToday ? "lg:grid-cols-4" : "lg:grid-cols-5")}>
             <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-2 sm:p-3">
               <div className="flex items-center gap-1">
                 <p className="text-xs text-muted-foreground">{isToday ? "Visitors today" : "Total visitors"}</p>
                 <HoverClickTooltip
-                  content={isToday
-                    ? "Number of people who joined the waitlist today (from midnight to now) for the selected filters."
-                    : "Number of people who joined the waitlist during the selected period for the selected filters."}
+                  content={
+                    <div className="space-y-1">
+                      <div className="font-medium">What it means</div>
+                      <div>
+                        Total number of people who joined the waitlist{isToday ? " today" : " in this period"} for the selected filters.
+                      </div>
+                      <div className="font-medium pt-1">How it’s calculated</div>
+                      <div>Count of rows in `waitlist_entries` by `created_at` (midnight → now for Today).</div>
+                    </div>
+                  }
                   side="bottom"
                 >
-                  <button type="button" className="inline-flex items-center" aria-label="Visitors help">
-                    <CircleHelp className="h-3 w-3 text-muted-foreground" />
+                  <button
+                    type="button"
+                    className="inline-flex items-center justify-center rounded-sm p-1 -m-1 text-muted-foreground hover:text-foreground hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    aria-label="Visitors help"
+                  >
+                    <CircleHelp className="h-4 w-4" />
                   </button>
                 </HoverClickTooltip>
               </div>
@@ -679,33 +691,49 @@ export default function AnalyticsPage() {
               <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-2 sm:p-3">
                 <div className="flex items-center gap-1">
                   <p className="text-xs text-muted-foreground">Daily average</p>
-                  <HoverClickTooltip content="Total visitors divided by the number of days in the selected period." side="bottom">
-                    <button type="button" className="inline-flex items-center" aria-label="Daily average help">
-                      <CircleHelp className="h-3 w-3 text-muted-foreground" />
+                  <HoverClickTooltip
+                    content={
+                      <div className="space-y-1">
+                        <div className="font-medium">What it means</div>
+                        <div>Typical number of visitors per day in this period.</div>
+                        <div className="font-medium pt-1">How it’s calculated</div>
+                        <div>Total visitors ÷ number of days in the selected period.</div>
+                      </div>
+                    }
+                    side="bottom"
+                  >
+                    <button
+                      type="button"
+                      className="inline-flex items-center justify-center rounded-sm p-1 -m-1 text-muted-foreground hover:text-foreground hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      aria-label="Daily average help"
+                    >
+                      <CircleHelp className="h-4 w-4" />
                     </button>
                   </HoverClickTooltip>
                 </div>
                 <p className="mt-0.5 text-base sm:text-lg font-semibold">{analytics.dailyAvg}</p>
               </div>
-            ) : (
-              <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-2 sm:p-3">
-                <div className="flex items-center gap-1">
-                  <p className="text-xs text-muted-foreground">Today (so far)</p>
-                  <HoverClickTooltip content="Today’s analytics are calculated from midnight up to this time." side="bottom">
-                    <button type="button" className="inline-flex items-center" aria-label="Today so far help">
-                      <CircleHelp className="h-3 w-3 text-muted-foreground" />
-                    </button>
-                  </HoverClickTooltip>
-                </div>
-                <p className="mt-0.5 text-base sm:text-lg font-semibold">{dateToClockLabel(new Date(), timeFormat)}</p>
-              </div>
-            )}
+            ) : null}
             <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-2 sm:p-3">
               <div className="flex items-center gap-1">
                 <p className="text-xs text-muted-foreground">Avg wait time</p>
-                <HoverClickTooltip content="Average time from joining the waitlist to being called (based on entries that were called in this period)." side="bottom">
-                  <button type="button" className="inline-flex items-center" aria-label="Average wait time help">
-                    <CircleHelp className="h-3 w-3 text-muted-foreground" />
+                <HoverClickTooltip
+                  content={
+                    <div className="space-y-1">
+                      <div className="font-medium">What it means</div>
+                      <div>How long customers waited before being called.</div>
+                      <div className="font-medium pt-1">How it’s calculated</div>
+                      <div>Average minutes from join → called (`created_at` → `notified_at`) for entries called in this period.</div>
+                    </div>
+                  }
+                  side="bottom"
+                >
+                  <button
+                    type="button"
+                    className="inline-flex items-center justify-center rounded-sm p-1 -m-1 text-muted-foreground hover:text-foreground hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    aria-label="Average wait time help"
+                  >
+                    <CircleHelp className="h-4 w-4" />
                   </button>
                 </HoverClickTooltip>
               </div>
@@ -714,9 +742,23 @@ export default function AnalyticsPage() {
             <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-2 sm:p-3">
               <div className="flex items-center gap-1">
                 <p className="text-xs text-muted-foreground">Avg service time</p>
-                <HoverClickTooltip content="Approximate throughput: the average time between consecutive 'called' events." side="bottom">
-                  <button type="button" className="inline-flex items-center" aria-label="Average service time help">
-                    <CircleHelp className="h-3 w-3 text-muted-foreground" />
+                <HoverClickTooltip
+                  content={
+                    <div className="space-y-1">
+                      <div className="font-medium">What it means</div>
+                      <div>A rough estimate of how quickly you’re calling customers.</div>
+                      <div className="font-medium pt-1">How it’s calculated</div>
+                      <div>Average time gap between consecutive `notified_at` timestamps (throughput proxy).</div>
+                    </div>
+                  }
+                  side="bottom"
+                >
+                  <button
+                    type="button"
+                    className="inline-flex items-center justify-center rounded-sm p-1 -m-1 text-muted-foreground hover:text-foreground hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    aria-label="Average service time help"
+                  >
+                    <CircleHelp className="h-4 w-4" />
                   </button>
                 </HoverClickTooltip>
               </div>
@@ -725,9 +767,25 @@ export default function AnalyticsPage() {
             <div className="bg-card text-card-foreground ring-1 ring-border rounded-xl p-2 sm:p-3">
               <div className="flex items-center gap-1">
                 <p className="text-xs text-muted-foreground">No-show rate</p>
-                <HoverClickTooltip content={`${analytics.seatedCount} showed, ${analytics.noShowCount} no-shows`} side="bottom">
-                  <button type="button" className="inline-flex items-center" aria-label="No-show details">
-                    <CircleHelp className="h-3 w-3 text-muted-foreground" />
+                <HoverClickTooltip
+                  content={
+                    <div className="space-y-1">
+                      <div className="font-medium">What it means</div>
+                      <div>Share of called customers who didn’t show up.</div>
+                      <div className="font-medium pt-1">How it’s calculated</div>
+                      <div>
+                        No-shows ÷ (No-shows + Seated). In this period: {analytics.seatedCount} seated, {analytics.noShowCount} no-shows.
+                      </div>
+                    </div>
+                  }
+                  side="bottom"
+                >
+                  <button
+                    type="button"
+                    className="inline-flex items-center justify-center rounded-sm p-1 -m-1 text-muted-foreground hover:text-foreground hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    aria-label="No-show details"
+                  >
+                    <CircleHelp className="h-4 w-4" />
                   </button>
                 </HoverClickTooltip>
               </div>

@@ -23,18 +23,43 @@ export function HoverClickTooltip({
   contentClassName?: string;
 }) {
   const [open, setOpen] = React.useState(false);
+  const closeTimeoutRef = React.useRef<number | null>(null);
+
+  const clearCloseTimer = React.useCallback(() => {
+    if (closeTimeoutRef.current) {
+      window.clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+  }, []);
+
+  const openNow = React.useCallback(() => {
+    clearCloseTimer();
+    setOpen(true);
+  }, [clearCloseTimer]);
+
+  const closeNow = React.useCallback(() => {
+    clearCloseTimer();
+    setOpen(false);
+  }, [clearCloseTimer]);
+
+  const scheduleClose = React.useCallback(() => {
+    clearCloseTimer();
+    // Small delay prevents "hit and miss" when moving the cursor
+    // from the icon to the tooltip content.
+    closeTimeoutRef.current = window.setTimeout(() => setOpen(false), 120);
+  }, [clearCloseTimer]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
         asChild
-        onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(false)}
-        onFocus={() => setOpen(true)}
-        onBlur={() => setOpen(false)}
+        onMouseEnter={openNow}
+        onMouseLeave={scheduleClose}
+        onFocus={openNow}
+        onBlur={closeNow}
         onClick={(e) => {
           // Toggle on click/tap for mobile; keep default focus behavior.
-          e.preventDefault();
+          clearCloseTimer();
           setOpen((v) => !v);
         }}
       >
@@ -49,8 +74,8 @@ export function HoverClickTooltip({
           "w-fit max-w-xs px-3 py-1.5 text-xs bg-foreground text-background ring-0 shadow-md",
           contentClassName
         )}
-        onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(false)}
+        onMouseEnter={openNow}
+        onMouseLeave={scheduleClose}
       >
         {content}
       </PopoverContent>
