@@ -107,6 +107,7 @@
     }
   ],
   "seo": {
+    "indexable": true,
     "title": "Waitlist Analytics & Insights - WaitQ",
     "description": "Get actionable insights from your waitlist data. Track wait times, no-show rates, and customer patterns to optimize operations.",
     "ogImage": "/images/og-analytics.png"
