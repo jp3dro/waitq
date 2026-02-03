@@ -212,6 +212,7 @@
     }
   ],
   "seo": {
+    "indexable": true,
     "title": "Restaurant Waitlist App - WaitQ",
     "description": "Turn waiting customers into repeat visitors. WaitQ is the waitlist app for restaurants that keeps customers informed and your team coordinated.",
     "ogImage": "/images/WaitQ Vegetarian Restaurant.webp"
