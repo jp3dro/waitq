@@ -5,6 +5,10 @@ import PrivateSidebarClient from "@/components/private-sidebar-client";
 export default async function PrivateSidebar() {
   const supabase = await createClient();
   const { user } = await getUser();
+  // Fetch user avatar (profile picture)
+  const { data: profile } = user?.id
+    ? await supabase.from("profiles").select("avatar_url").eq("id", user.id).maybeSingle()
+    : { data: null as any };
   // Resolve role via memberships (fallback to email admin for legacy)
   const { data: ownedBiz } = user?.id
     ? await supabase
@@ -62,12 +66,14 @@ export default async function PrivateSidebar() {
 
   // Get user's name from onboarding (stored in user_metadata.full_name)
   const userName = user?.user_metadata?.full_name || null;
+  const userAvatarUrl = (profile?.avatar_url as string | null) || null;
 
   return (
     <PrivateSidebarClient
       userName={userName}
       userEmail={user?.email ?? null}
       businessLogoUrl={businessLogoUrl}
+      userAvatarUrl={userAvatarUrl}
       role={role}
     />
   );

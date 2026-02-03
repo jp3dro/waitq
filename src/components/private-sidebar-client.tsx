@@ -51,6 +51,7 @@ type Props = {
     userName: string | null;
     userEmail: string | null;
     businessLogoUrl: string | null;
+    userAvatarUrl: string | null;
     role: string;
 };
 
@@ -128,7 +129,7 @@ function ExternalNavItem({
     );
 }
 
-export default function PrivateSidebarClient({ userName, userEmail, businessLogoUrl, role }: Props) {
+export default function PrivateSidebarClient({ userName, userEmail, businessLogoUrl, userAvatarUrl, role }: Props) {
     const { theme, setTheme } = useTheme();
     const router = useRouter();
     const isAdmin = role === "admin";
@@ -221,10 +222,10 @@ export default function PrivateSidebarClient({ userName, userEmail, businessLogo
                                     size="lg"
                                     className="w-full data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                                 >
-                                    <div className="h-8 w-8 rounded-sm overflow-hidden border border-border bg-background shrink-0 flex items-center justify-center">
-                                        {businessLogoUrl ? (
+                                    <div className="h-8 w-8 rounded-full overflow-hidden border border-border bg-background shrink-0 flex items-center justify-center">
+                                        {userAvatarUrl ? (
                                             // eslint-disable-next-line @next/next/no-img-element
-                                            <img src={businessLogoUrl} alt="Business logo" className="h-full w-full object-cover" />
+                                            <img src={userAvatarUrl} alt="Profile picture" className="h-full w-full object-cover" />
                                         ) : (
                                             <span className="text-xs font-semibold text-muted-foreground">{initials}</span>
                                         )}

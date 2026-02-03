@@ -241,7 +241,7 @@ export default function OnboardingWizard({ initialStep, initialData }: { initial
                                 </CardTitle>
                                 {step === 3 ? (
                                     <p className="text-sm text-muted-foreground text-center max-w-[420px] mt-2">
-                                        A location is a physical place where you run your business (for example: “Downtown” or “Terminal 1”). You can edit this and add more locations later.
+                                        Locations are the physical places where you serve customers, for example ‘Downtown’ or ‘Terminal 1’. You can edit this any time and add new locations later.
                                     </p>
                                 ) : step === 4 ? (
                                     <p className="text-sm text-muted-foreground text-center max-w-[420px] mt-2">

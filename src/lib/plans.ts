@@ -25,7 +25,7 @@ export const plans: Record<PlanId, PlanDefinition> = {
   free: {
     id: "free",
     name: "Free",
-    description: "Perfect for testing the waters and small establishments.",
+    description: "Perfect for testing the waters and small establishments. No credit card needed.",
     priceMonthlyUSD: 0,
     limits: {
       locations: 1,

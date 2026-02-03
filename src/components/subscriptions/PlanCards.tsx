@@ -93,7 +93,7 @@ export default function PlanCards({ mode, currentPlanId, disabled, onFreeAction,
                     disabled={disabled}
                     type="button"
                   >
-                    Start with a free trial
+                    Get started Free
                   </Button>
                 )
               ) : (
