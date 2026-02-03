@@ -30,21 +30,30 @@ export async function generateStaticParams() {
 
   const featureParams =
     featureConn.data.featureConnection.edges?.flatMap((edge) => {
-      const filename = edge?.node?._sys.filename;
-      return filename ? [{ slug: ["features", filename] }] : [];
+      const node = edge?.node;
+      const filename = node?._sys.filename;
+      // Support custom slug from SEO settings, fallback to filename
+      const customSlug = node?.seo?.slug;
+      return filename ? [{ slug: ["features", customSlug || filename] }] : [];
     }) || [];
 
   const legalParams =
     termsConn.data.termsConnection.edges?.flatMap((edge) => {
-      const filename = edge?.node?._sys.filename;
-      return filename ? [{ slug: [filename] }] : [];
+      const node = edge?.node;
+      const filename = node?._sys.filename;
+      // Support custom slug from SEO settings, fallback to filename
+      const customSlug = node?.seo?.slug;
+      return filename ? [{ slug: [customSlug || filename] }] : [];
     }) || [];
 
   const landingParams =
     landingConn.data.landingPageConnection.edges?.flatMap((edge) => {
-      const filename = edge?.node?._sys.filename;
+      const node = edge?.node;
+      const filename = node?._sys.filename;
       if (!filename) return [];
-      return [{ slug: [filename] }];
+      // Support custom slug from SEO settings, fallback to filename
+      const customSlug = node?.seo?.slug;
+      return [{ slug: [customSlug || filename] }];
     }) || [];
 
   // Singleton / fixed-route marketing pages (still Tina-backed)
@@ -194,24 +203,35 @@ export async function generateMetadata({
       },
     };
   }
-  // Legal pages (Terms & Legal Pages collection) — only for known legal slugs
-  if (slug.length === 1 && (slug[0] === "privacy-policy" || slug[0] === "terms-and-conditions")) {
-    const legalSlug = slug[0];
+  // Legal pages - try to match by filename or custom slug
+  if (slug.length === 1) {
     try {
-      const { data } = await client.queries.terms({ relativePath: `${legalSlug}.mdx` });
-      const seo = data.terms.seo;
+      // Try to find legal page by filename first
+      const termsConn = await client.queries.termsConnection();
+      const matchingLegal = termsConn.data.termsConnection.edges?.find((edge) => {
+        const node = edge?.node;
+        const filename = node?._sys.filename;
+        const customSlug = node?.seo?.slug;
+        return customSlug === slug[0] || filename === slug[0];
+      });
 
-      const title = seo?.title || data.terms.title || "Legal";
-      const description = seo?.description || "WaitQ legal information and policies.";
+      if (matchingLegal?.node) {
+        const filename = matchingLegal.node._sys.filename;
+        const { data } = await client.queries.terms({ relativePath: `${filename}.mdx` });
+        const seo = data.terms.seo;
 
-      return {
-        title,
-        description,
-        ...(seo?.indexable === false && { robots: { index: false, follow: true } }),
-        openGraph: { title, description },
-      };
+        const title = seo?.title || data.terms.title || "Legal";
+        const description = seo?.description || "WaitQ legal information and policies.";
+
+        return {
+          title,
+          description,
+          ...(seo?.indexable === false && { robots: { index: false, follow: true } }),
+          openGraph: { title, description },
+        };
+      }
     } catch {
-      return { title: "Page Not Found", robots: { index: false, follow: false } };
+      // Not a legal page, continue to landing pages
     }
   }
 
@@ -283,16 +303,26 @@ export default async function MarketingPage({
     const { data, query, variables } = await getAboutPageData();
     return <AboutClient data={data} query={query} variables={variables} />;
   }
-  // Legal pages
-  if (slug.length === 1 && (slug[0] === "privacy-policy" || slug[0] === "terms-and-conditions")) {
-    const legalSlug = slug[0];
+  // Legal pages - try to match by filename or custom slug
+  if (slug.length === 1) {
     try {
-      const { data, query, variables } = await client.queries.terms({
-        relativePath: `${legalSlug}.mdx`,
+      const termsConn = await client.queries.termsConnection();
+      const matchingLegal = termsConn.data.termsConnection.edges?.find((edge) => {
+        const node = edge?.node;
+        const filename = node?._sys.filename;
+        const customSlug = node?.seo?.slug;
+        return customSlug === slug[0] || filename === slug[0];
       });
-      return <LegalPageClient data={data} query={query} variables={variables} />;
+
+      if (matchingLegal?.node) {
+        const filename = matchingLegal.node._sys.filename;
+        const { data, query, variables } = await client.queries.terms({
+          relativePath: `${filename}.mdx`,
+        });
+        return <LegalPageClient data={data} query={query} variables={variables} />;
+      }
     } catch {
-      notFound();
+      // Not a legal page, continue to landing pages
     }
   }
 
