@@ -74,6 +74,10 @@
             "href": "/pricing"
           },
           {
+            "label": "Blog",
+            "href": "/blog"
+          },
+          {
             "label": "WaitQ for Restaurants",
             "href": "/restaurant-waitlist-app"
           }

@@ -902,6 +902,78 @@ export default defineConfig({
         ],
       },
       // ============================================
+      // BLOG POSTS
+      // ============================================
+      {
+        name: "blog",
+        label: "Blog",
+        path: "content/blog",
+        format: "mdx",
+        ui: {
+          router: ({ document }) => {
+            const slug = (document as any).seo?.slug || document._sys.filename;
+            return `/blog/${slug}`;
+          },
+          filename: {
+            readonly: false,
+            slugify: (values) => {
+              return values?.title
+                ?.toLowerCase()
+                .replace(/\s+/g, "-")
+                .replace(/[^a-z0-9-]/g, "") || "";
+            },
+          },
+        },
+        fields: [
+          { type: "string", name: "title", label: "Title", isTitle: true, required: true },
+          { type: "boolean", name: "draft", label: "Draft (hide from list & sitemap)", ui: { component: "toggle" } },
+          { type: "datetime", name: "publishedAt", label: "Publish Date", required: true },
+          { type: "string", name: "excerpt", label: "Excerpt", ui: { component: "textarea" } },
+          { type: "string", name: "author", label: "Author" },
+          { type: "image", name: "featuredImage", label: "Featured Image" },
+          {
+            type: "string",
+            name: "categories",
+            label: "Categories",
+            list: true,
+            ui: { component: "tags" },
+          },
+          {
+            type: "string",
+            name: "tags",
+            label: "Tags",
+            list: true,
+            ui: { component: "tags" },
+          },
+          {
+            type: "rich-text",
+            name: "body",
+            label: "Body",
+            isBody: true,
+          },
+          {
+            type: "object",
+            name: "seo",
+            label: "SEO Settings",
+            fields: [
+              { type: "string", name: "slug", label: "Custom Slug", description: "Override the default URL slug for this post" },
+              { type: "boolean", name: "indexable", label: "Indexable by Search Engines", description: "When enabled (default), search engines can discover this page. Disable to add noindex tag.", ui: { component: "toggle" } },
+              { type: "string", name: "title", label: "Meta Title" },
+              { type: "string", name: "description", label: "Meta Description", ui: { component: "textarea" } },
+              { type: "string", name: "canonicalUrl", label: "Canonical URL (optional)" },
+              { type: "image", name: "ogImage", label: "Open Graph Image (optional)" },
+              {
+                type: "string",
+                name: "keywords",
+                label: "Keywords",
+                list: true,
+                ui: { component: "tags" },
+              },
+            ],
+          },
+        ],
+      },
+      // ============================================
       // GLOBAL SETTINGS
       // ============================================
       {

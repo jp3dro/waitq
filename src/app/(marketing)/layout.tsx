@@ -88,6 +88,7 @@ export default async function MarketingLayout({
                       </ContactModal>
                     </li>
                     <li><Link href="/pricing" className="hover:text-foreground transition">Pricing</Link></li>
+                    <li><Link href="/blog" className="hover:text-foreground transition">Blog</Link></li>
                     <li><Link href="/restaurant-waitlist-app" className="hover:text-foreground transition">WaitQ for Restaurants</Link></li>
                   </ul>
                 </div>

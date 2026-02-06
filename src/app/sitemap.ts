@@ -10,11 +10,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         landingPagesData,
         legalPagesData,
         aboutData,
+        blogPostsData,
     ] = await Promise.all([
         client.queries.featureConnection(),
         client.queries.landingPageConnection(),
         client.queries.termsConnection(),
         client.queries.aboutConnection(),
+        client.queries.blogConnection(),
     ]);
 
     const features = (featuresData.data.featureConnection.edges || [])
@@ -71,10 +73,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             priority: 0.5,
         }));
 
+    const blogPosts = (blogPostsData.data.blogConnection.edges || [])
+        .filter((edge) => (edge?.node as any)?.draft !== true)
+        .filter((edge) => (edge?.node?.seo as any)?.indexable !== false)
+        .map((edge) => {
+            const node = edge?.node as any;
+            const seo = node?.seo as any;
+            const slug = seo?.slug || node?._sys.filename;
+            const publishedAt = node?.publishedAt ? new Date(node.publishedAt) : new Date();
+            return {
+                url: `${baseUrl}/blog/${slug}`,
+                lastModified: publishedAt,
+                changeFrequency: 'monthly' as const,
+                priority: 0.6,
+            };
+        });
+
     // Static routes
     const routes = [
         '',
         '/pricing',
+        '/blog',
         '/login',
         '/signup',
     ].map((route) => ({
@@ -90,5 +109,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         ...landingPages,
         ...legalPages,
         ...aboutPages,
+        ...blogPosts,
     ];
 }
