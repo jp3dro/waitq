@@ -18,8 +18,14 @@ export function BlogArticleClient(props: BlogArticleClientProps) {
   const post = data.blog;
 
   const publishedAt = post.publishedAt ? new Date(post.publishedAt) : null;
-  const categories = (post.categories || []).filter(Boolean) as string[];
-  const tags = (post.tags || []).filter(Boolean) as string[];
+  const categories = (post.categories || [])
+    .filter(Boolean)
+    .map((c: any) => {
+      // Supports both legacy string lists and the new object-list with reference
+      if (typeof c === "string") return c;
+      return c?.category?.title || c?.category;
+    })
+    .filter(Boolean) as string[];
 
   return (
     <main className="py-20 md:py-24">
@@ -46,16 +52,11 @@ export function BlogArticleClient(props: BlogArticleClientProps) {
             </p>
           )}
 
-          {(categories.length > 0 || tags.length > 0) && (
+          {categories.length > 0 && (
             <div className="mt-6 flex flex-wrap gap-2">
               {categories.map((c) => (
                 <Badge key={`cat-${c}`} variant="secondary">
                   {c}
-                </Badge>
-              ))}
-              {tags.map((t) => (
-                <Badge key={`tag-${t}`} variant="outline">
-                  #{t}
                 </Badge>
               ))}
             </div>

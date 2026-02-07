@@ -59,7 +59,14 @@ export async function generateMetadata({
       canonicalFromSeo ||
       (baseUrl ? `${baseUrl.replace(/\/$/, "")}/blog/${seo?.slug || slug}` : undefined);
 
-    const keywords = (seo?.keywords || post.tags || post.categories || []).filter(Boolean);
+    const keywordCandidates = seo?.keywords || post.categories || [];
+    const keywords = (keywordCandidates || [])
+      .filter(Boolean)
+      .map((k: any) => {
+        if (typeof k === "string") return k;
+        return k?.title || k?.category?.title || k?.category;
+      })
+      .filter(Boolean);
 
     return {
       title,
@@ -96,9 +103,6 @@ export default async function BlogArticlePage({
   if (!result) notFound();
 
   const { data, query, variables } = result;
-
-  const post = data.blog as any;
-  if (post?.draft) notFound();
 
   return <BlogArticleClient data={data} query={query} variables={variables} />;
 }

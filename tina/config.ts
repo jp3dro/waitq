@@ -932,18 +932,23 @@ export default defineConfig({
           { type: "string", name: "author", label: "Author" },
           { type: "image", name: "featuredImage", label: "Featured Image" },
           {
-            type: "string",
             name: "categories",
             label: "Categories",
+            type: "object",
             list: true,
-            ui: { component: "tags" },
-          },
-          {
-            type: "string",
-            name: "tags",
-            label: "Tags",
-            list: true,
-            ui: { component: "tags" },
+            ui: {
+              itemProps: (item: any) => ({
+                label: item?.category?.title || "Category",
+              }),
+            },
+            fields: [
+              {
+                type: "reference",
+                name: "category",
+                label: "Category",
+                collections: ["blogCategory"],
+              },
+            ],
           },
           {
             type: "rich-text",
@@ -971,6 +976,34 @@ export default defineConfig({
               },
             ],
           },
+        ],
+      },
+      // ============================================
+      // BLOG CATEGORIES
+      // ============================================
+      {
+        name: "blogCategory",
+        label: "Blog Categories",
+        path: "content/blog-categories",
+        format: "json",
+        ui: {
+          allowedActions: {
+            create: true,
+            delete: true,
+          },
+          filename: {
+            readonly: false,
+            slugify: (values) => {
+              return values?.title
+                ?.toLowerCase()
+                .replace(/\s+/g, "-")
+                .replace(/[^a-z0-9-]/g, "") || "";
+            },
+          },
+        },
+        fields: [
+          { type: "string", name: "title", label: "Category Name", isTitle: true, required: true },
+          { type: "string", name: "description", label: "Description (optional)", ui: { component: "textarea" } },
         ],
       },
       // ============================================

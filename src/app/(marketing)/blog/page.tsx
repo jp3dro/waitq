@@ -25,8 +25,7 @@ export default async function BlogIndexPage() {
         title: n.title as string,
         excerpt: (n.excerpt as string) || "",
         publishedAt: (n.publishedAt as string) || null,
-        categories: (n.categories as string[] | null) || [],
-        tags: (n.tags as string[] | null) || [],
+        categories: (n.categories as any[] | null) || [],
       }))
       .sort((a, b) => {
         const ad = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
@@ -65,20 +64,23 @@ export default async function BlogIndexPage() {
                       </span>
                     </>
                   )}
-                  {(post.categories?.length || post.tags?.length) ? (
+                  {post.categories?.length ? (
                     <span className="text-muted-foreground/60">•</span>
                   ) : null}
                   <div className="flex flex-wrap gap-2">
-                    {(post.categories || []).filter(Boolean).map((c) => (
-                      <Badge key={`${post.filename}-cat-${c}`} variant="secondary">
-                        {c}
-                      </Badge>
-                    ))}
-                    {(post.tags || []).filter(Boolean).slice(0, 4).map((t) => (
-                      <Badge key={`${post.filename}-tag-${t}`} variant="outline">
-                        #{t}
-                      </Badge>
-                    ))}
+                    {(post.categories || [])
+                      .filter(Boolean)
+                      .map((c: any) => {
+                        if (typeof c === "string") return c;
+                        return c?.category?.title || c?.category;
+                      })
+                      .filter(Boolean)
+                      .slice(0, 4)
+                      .map((c: string) => (
+                        <Badge key={`${post.filename}-cat-${c}`} variant="secondary">
+                          {c}
+                        </Badge>
+                      ))}
                   </div>
                 </div>
 
