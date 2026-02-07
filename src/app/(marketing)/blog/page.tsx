@@ -4,6 +4,8 @@ import Link from "next/link";
 import client from "../../../../tina/__generated__/client";
 import { Badge } from "@/components/ui/badge";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Blog - WaitQ",
   description:
@@ -11,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 export default async function BlogIndexPage() {
-  const conn = await client.queries.blogConnection();
+  const conn = await client.queries.blogConnection({ first: 100 });
   const posts =
     conn.data.blogConnection.edges
       ?.map((e) => e?.node)

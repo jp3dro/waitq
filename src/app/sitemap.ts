@@ -79,7 +79,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         .map((edge) => {
             const node = edge?.node as any;
             const seo = node?.seo as any;
-            const slug = seo?.slug || node?._sys.filename;
+            const slug = seo?.slug || node?._sys?.filename;
             const publishedAt = node?.publishedAt ? new Date(node.publishedAt) : new Date();
             return {
                 url: `${baseUrl}/blog/${slug}`,

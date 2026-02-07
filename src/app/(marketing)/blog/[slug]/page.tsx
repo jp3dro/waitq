@@ -6,33 +6,31 @@ import { BlogArticleClient } from "./blog-article-client";
 
 type RouteParams = { slug: string };
 
-async function resolveBlogFilenameBySlug(slug: string): Promise<string | null> {
-  const conn = await client.queries.blogConnection();
-  const match = conn.data.blogConnection.edges?.find((edge) => {
-    const node = edge?.node;
-    if (!node) return false;
-    const filename = node._sys.filename;
-    const customSlug = (node.seo as any)?.slug;
-    return customSlug === slug || filename === slug;
+export const dynamic = "force-dynamic";
+
+async function getBlogQueryBySlug(slug: string) {
+  // 1) Fast path: most posts will have filename === slug
+  try {
+    return await client.queries.blog({ relativePath: `${slug}.mdx` });
+  } catch {
+    // Continue to SEO slug lookup
+  }
+
+  // 2) SEO slug path: find the matching document without scanning/pagination issues
+  const conn = await client.queries.blogConnection({
+    first: 1,
+    filter: { seo: { slug: { eq: slug } } },
   });
-  return match?.node?._sys.filename ?? null;
-}
 
-export async function generateStaticParams(): Promise<RouteParams[]> {
-  const conn = await client.queries.blogConnection();
-  const params =
-    conn.data.blogConnection.edges?.flatMap((edge) => {
-      const node = edge?.node;
-      if (!node) return [];
-      const draft = (node as any).draft;
-      if (draft) return [];
-      const filename = node._sys.filename;
-      const customSlug = (node.seo as any)?.slug;
-      const slug = customSlug || filename;
-      return slug ? [{ slug }] : [];
-    }) || [];
+  const node = conn.data.blogConnection.edges?.[0]?.node;
+  const filename = node?._sys?.filename;
+  if (!filename) return null;
 
-  return params;
+  try {
+    return await client.queries.blog({ relativePath: `${filename}.mdx` });
+  } catch {
+    return null;
+  }
 }
 
 export async function generateMetadata({
@@ -44,10 +42,10 @@ export async function generateMetadata({
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
 
   try {
-    const filename = await resolveBlogFilenameBySlug(slug);
-    if (!filename) return { title: "Post Not Found", robots: { index: false, follow: false } };
+    const result = await getBlogQueryBySlug(slug);
+    if (!result) return { title: "Post Not Found", robots: { index: false, follow: false } };
 
-    const { data } = await client.queries.blog({ relativePath: `${filename}.mdx` });
+    const { data } = result;
     const post = data.blog as any;
     const seo = post.seo as any;
 
@@ -59,7 +57,7 @@ export async function generateMetadata({
     const canonicalFromSeo = seo?.canonicalUrl;
     const canonical =
       canonicalFromSeo ||
-      (baseUrl ? `${baseUrl.replace(/\/$/, "")}/blog/${seo?.slug || filename}` : undefined);
+      (baseUrl ? `${baseUrl.replace(/\/$/, "")}/blog/${seo?.slug || slug}` : undefined);
 
     const keywords = (seo?.keywords || post.tags || post.categories || []).filter(Boolean);
 
@@ -94,12 +92,10 @@ export default async function BlogArticlePage({
 }) {
   const { slug } = await params;
 
-  const filename = await resolveBlogFilenameBySlug(slug);
-  if (!filename) notFound();
+  const result = await getBlogQueryBySlug(slug);
+  if (!result) notFound();
 
-  const { data, query, variables } = await client.queries.blog({
-    relativePath: `${filename}.mdx`,
-  });
+  const { data, query, variables } = result;
 
   const post = data.blog as any;
   if (post?.draft) notFound();
