@@ -6,7 +6,8 @@
     "primaryCtaLink": "/signup",
     "secondaryCta": "See pricing",
     "secondaryCtaLink": "/pricing",
-    "trustMessage": "No credit card required • 2-minute setup • Cancel anytime"
+    "trustMessage": "No credit card required • 2-minute setup • Cancel anytime",
+    "heroImage": "/images/friends.jpg"
   },
   "sections": [
     {
