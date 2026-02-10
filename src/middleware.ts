@@ -8,6 +8,13 @@ import { createServerClient } from "@supabase/ssr";
  * for the current request (in-memory refresh) but still leave the browser with
  * expired cookies. That then causes authenticated Route Handlers to return 401,
  * which looks like "random sign-outs" in production.
+ *
+ * Guard: If the token refresh *fails* (e.g. the browser client's auto-refresh
+ * already consumed the refresh token due to a race), Supabase fires SIGNED_OUT
+ * and tries to clear the auth cookies. We must NOT forward those deletions to
+ * the browser — the browser client already holds a valid, freshly-rotated
+ * session. Clearing the cookies here would destroy it and cause "random
+ * sign-outs" on the next navigation.
  */
 export async function middleware(req: NextRequest) {
   let res = NextResponse.next({
@@ -44,7 +51,20 @@ export async function middleware(req: NextRequest) {
   );
 
   // Trigger a session refresh if needed.
-  await supabase.auth.getUser();
+  const { data, error } = await supabase.auth.getUser();
+
+  if (error && !data.user) {
+    // The token refresh failed — most likely because the browser client already
+    // rotated the refresh token (race condition). The response built by setAll
+    // at this point would carry Set-Cookie headers that *delete* the auth
+    // cookies, which would log the user out on the next request.
+    //
+    // Instead, return a clean response that does NOT touch the auth cookies.
+    // The browser still has the valid session from its own refresh.
+    return NextResponse.next({
+      request: { headers: req.headers },
+    });
+  }
 
   return res;
 }

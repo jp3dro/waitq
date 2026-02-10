@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { usePathname } from "next/navigation";
 import {
     ListChecks,
     Users2,
@@ -131,7 +130,6 @@ function ExternalNavItem({
 
 export default function PrivateSidebarClient({ userName, userEmail, businessLogoUrl, userAvatarUrl, role }: Props) {
     const { theme, setTheme } = useTheme();
-    const router = useRouter();
     const isAdmin = role === "admin";
     const canSeeInternalAdminLinks = userEmail?.toLowerCase() === "jp3dro@gmail.com";
 
@@ -289,10 +287,14 @@ export default function PrivateSidebarClient({ userName, userEmail, businessLogo
                                     </Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild className="cursor-pointer">
-                                    <Link href="/auth/logout" className="w-full flex items-center">
+                                    {/* Use a plain <a> instead of <Link> to avoid Next.js
+                                        prefetch / soft-navigation. The logout route handler
+                                        (GET /auth/logout) calls signOut(), so any prefetch or
+                                        premature navigation would destroy the session. */}
+                                    <a href="/auth/logout" className="w-full flex items-center">
                                         <LogOut className="mr-2 h-4 w-4" />
                                         Log out
-                                    </Link>
+                                    </a>
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
