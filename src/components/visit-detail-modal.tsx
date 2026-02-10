@@ -499,38 +499,38 @@ export default function VisitDetailModal({
                     </div>
                   ) : null}
 
-                  {showSeatingPrefs ? (
+                  {showSeatingPrefs && seatingPreferences.length > 0 ? (
                     <div className="grid gap-2">
                       <Label>Seating preference</Label>
-                      {seatingPreferences.length > 0 ? (
-                        <div className="flex flex-wrap gap-2">
-                          {seatingPreferences.map((s) => {
-                            const selected = form.seatingPreference === s;
-                            return (
-                              <button
-                                type="button"
-                                key={s}
-                                onClick={() => setForm((p) => ({ ...p, seatingPreference: s }))}
-                                className={`inline-flex items-center rounded-full px-3 h-8 text-sm ring-1 ring-inset transition ${selected ? "bg-primary text-primary-foreground ring-primary" : "bg-card text-foreground ring-border hover:bg-muted"}`}
-                              >
-                                {s}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <Input
-                          type="text"
-                          value={form.seatingPreference}
-                          onChange={(e) => setForm((p) => ({ ...p, seatingPreference: e.target.value }))}
-                          placeholder="e.g. Outside"
-                        />
-                      )}
-                      {form.seatingPreference && seatingPreferences.length === 0 ? (
-                        <div className="text-xs text-muted-foreground">
-                          Current: <SeatingPreferenceBadge>{form.seatingPreference}</SeatingPreferenceBadge>
-                        </div>
-                      ) : null}
+                      <div className="flex flex-wrap gap-2">
+                        {seatingPreferences.map((s) => {
+                          const selected = form.seatingPreference === s;
+                          return (
+                            <button
+                              type="button"
+                              key={s}
+                              onClick={() => setForm((p) => ({ ...p, seatingPreference: selected ? "" : s }))}
+                              className={`inline-flex items-center rounded-full px-3 h-8 text-sm ring-1 ring-inset transition ${selected ? "bg-primary text-primary-foreground ring-primary" : "bg-card text-foreground ring-border hover:bg-muted"}`}
+                            >
+                              {s}
+                            </button>
+                          );
+                        })}
+                        {/* Show current value as a read-only badge if it doesn't match any predefined option (legacy data) */}
+                        {form.seatingPreference && !seatingPreferences.includes(form.seatingPreference) ? (
+                          <span className="inline-flex items-center rounded-full px-3 h-8 text-sm ring-1 ring-inset bg-primary text-primary-foreground ring-primary gap-1.5">
+                            {form.seatingPreference}
+                            <button
+                              type="button"
+                              onClick={() => setForm((p) => ({ ...p, seatingPreference: "" }))}
+                              className="hover:opacity-70"
+                              aria-label="Clear seating preference"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </span>
+                        ) : null}
+                      </div>
                     </div>
                   ) : null}
                 </div>

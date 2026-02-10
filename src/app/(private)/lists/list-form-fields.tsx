@@ -138,21 +138,17 @@ export default function ListFormFields({
           <Label>List type</Label>
           <Select value={listType} onValueChange={(v) => onListTypeChange?.(v as ListType)} disabled={isPending}>
             <SelectTrigger className="w-full">
-              <span className="truncate">
-                {listType === "take_out" ? "Take out" : "Eat in"}
-              </span>
+              <SelectValue placeholder="Select list type" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="eat_in" textValue="Eat in">
                 <div className="flex flex-col items-start">
-                  <span>Eat in</span>
-                  <span className="text-xs text-muted-foreground">Party size and seating preferences</span>
+                  <span>Eat in (with party size and seating preferences)</span>
                 </div>
               </SelectItem>
               <SelectItem value="take_out" textValue="Take out">
                 <div className="flex flex-col items-start">
-                  <span>Take out</span>
-                  <span className="text-xs text-muted-foreground">No party size or seating</span>
+                  <span>Take out (no party size or seating preferences)</span>
                 </div>
               </SelectItem>
             </SelectContent>

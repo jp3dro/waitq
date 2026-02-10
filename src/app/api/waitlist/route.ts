@@ -622,11 +622,11 @@ export async function PATCH(req: NextRequest) {
 
   let payload: Record<string, unknown> = {};
   if (action === "call") {
-    payload = { status: "notified", notified_at: new Date().toISOString(), updated_at: new Date().toISOString() };
+    payload = { status: "notified", notified_at: new Date().toISOString() };
   } else if (action === "archive") {
-    payload = { status: "archived", updated_at: new Date().toISOString() };
+    payload = { status: "archived" };
   } else if (status) {
-    payload = { status, updated_at: new Date().toISOString() };
+    payload = { status };
   } else {
     return NextResponse.json({ error: "No update specified" }, { status: 400 });
   }

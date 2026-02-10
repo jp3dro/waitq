@@ -92,14 +92,8 @@ export default async function PrivateLayout({ children }: { children: React.Reac
             if (profileErr) {
               console.error("[auto-accept] Error updating profile:", profileErr);
             }
-          } else {
-            console.log("[auto-accept] No pending invite found for user:", user.id, "email:", userEmail);
           }
-        } else {
-          console.log("[auto-accept] User already has active membership:", existingMembership.id);
         }
-      } else {
-        console.log("[auto-accept] User owns a business, skipping auto-accept");
       }
     }
   } catch (err) {
