@@ -197,7 +197,7 @@ export async function POST(req: NextRequest) {
         const ctx = await getPlanContext(list.business_id);
         const usedSms = await countSmsInPeriod(list.business_id, ctx.window.start, ctx.window.end);
         if (usedSms < ctx.limits.messagesPerMonth) {
-          const text = `${businessName ? businessName : "WaitQ"} ticket ${typeof data.ticket_number === "number" ? `#${data.ticket_number}` : ""} — Status: ${statusUrl}`.trim();
+          const text = `You have been added to the queue of ${businessName ? businessName : "WaitQ"}. Your number is ${typeof data.ticket_number === "number" ? `#${data.ticket_number}` : ""}. Follow the queue here: ${statusUrl}`.trim();
           await sendSms(normalizedPhone, text);
         } else {
           console.warn("[kiosk-sms] SMS limit reached; skipping SMS send");
