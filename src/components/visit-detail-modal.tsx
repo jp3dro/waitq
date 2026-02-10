@@ -75,7 +75,7 @@ function getWaitTimeCompact(date: string, endDate?: string) {
   const start = new Date(date);
   const end = endDate ? new Date(endDate) : new Date();
   const totalMinutes = differenceInMinutes(end, start);
-  if (totalMinutes < 1) return "Just now";
+  if (totalMinutes < 1) return "< 1m";
   const days = Math.floor(totalMinutes / (60 * 24));
   const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
   const minutes = totalMinutes % 60;
@@ -483,35 +483,34 @@ export default function VisitDetailModal({
                     </div>
                   ) : null}
 
-                  <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-                    {showPartySize ? (
-                      <div className="flex-none grid gap-2">
-                        <Label>Number of people</Label>
-                        <Stepper
-                          value={typeof form.partySize === "number" ? form.partySize : undefined}
-                          onChange={(value) => {
-                            setForm((p) => ({ ...p, partySize: typeof value === "number" ? value : null }));
-                            if (validationError && typeof value === "number" && value >= 1) setValidationError(null);
-                          }}
-                          min={1}
-                          max={30}
-                        />
-                        {validationError && validationError.toLowerCase().includes("people") ? (
-                          <p className="text-sm text-destructive">{validationError}</p>
-                        ) : null}
-                      </div>
-                    ) : null}
-                    {showPhone ? (
-                      <div className="flex-1 grid gap-2">
-                        <Label>Phone (optional)</Label>
-                        <PhoneInput
-                          defaultCountry="PT"
-                          value={form.phone}
-                          onChange={(value) => setForm((p) => ({ ...p, phone: value }))}
-                        />
-                      </div>
-                    ) : null}
-                  </div>
+                  {showPartySize ? (
+                    <div className="grid gap-2">
+                      <Label>Number of people</Label>
+                      <Stepper
+                        value={typeof form.partySize === "number" ? form.partySize : undefined}
+                        onChange={(value) => {
+                          setForm((p) => ({ ...p, partySize: typeof value === "number" ? value : null }));
+                          if (validationError && typeof value === "number" && value >= 1) setValidationError(null);
+                        }}
+                        min={1}
+                        max={30}
+                      />
+                      {validationError && validationError.toLowerCase().includes("people") ? (
+                        <p className="text-sm text-destructive">{validationError}</p>
+                      ) : null}
+                    </div>
+                  ) : null}
+
+                  {showPhone ? (
+                    <div className="grid gap-2">
+                      <Label>Phone (optional)</Label>
+                      <PhoneInput
+                        defaultCountry="PT"
+                        value={form.phone}
+                        onChange={(value) => setForm((p) => ({ ...p, phone: value }))}
+                      />
+                    </div>
+                  ) : null}
 
                   {showEmail ? (
                     <div className="grid gap-2">

@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { differenceInMinutes } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import { toastManager } from "@/hooks/use-toast";
-import { RefreshCw, Archive, Pencil, Trash2, MoreHorizontal, Clock, User, MessageSquare, Crown, Check, X } from "lucide-react";
+import { RefreshCw, Archive, Pencil, Trash2, MoreHorizontal, Clock, User, MessageSquare, Mail, Crown, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SeatingPreferenceBadge } from "@/components/ui/seating-preference-badge";
@@ -250,49 +250,45 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
     sendSms?: boolean | null,
     sendWhatsapp?: boolean | null,
     smsStatus?: 'pending' | 'sent' | 'delivered' | 'failed' | null | undefined,
-    whatsappStatus?: 'pending' | 'sent' | 'delivered' | 'failed' | null | undefined
+    whatsappStatus?: 'pending' | 'sent' | 'delivered' | 'failed' | null | undefined,
+    sendEmail?: boolean | null,
   ) => {
-    const getStatusColor = (status: 'pending' | 'sent' | 'delivered' | 'failed' | null | undefined) => {
-      switch (status) {
-        case 'delivered':
-          return 'text-green-600';
-        case 'sent':
-          return 'text-blue-600';
-        case 'pending':
-          return 'text-yellow-600';
-        case 'failed':
-          return 'text-red-600';
-        default:
-          return 'text-gray-600';
-      }
-    };
+    const isFailed = (s: typeof smsStatus) => s === 'failed';
+    const isSent = (s: typeof smsStatus) => s === 'sent' || s === 'delivered';
 
-    const isNotifiedStatus = (status: 'pending' | 'sent' | 'delivered' | 'failed' | null | undefined) =>
-      status === 'sent' || status === 'delivered';
+    const showSms = isSent(smsStatus);
+    const showWhatsapp = isSent(whatsappStatus);
+    const showEmail = !!sendEmail;
+    const showSmsFailed = isFailed(smsStatus);
+    const showWhatsappFailed = isFailed(whatsappStatus);
 
-    // Show icons only when a notification was actually sent/delivered.
-    const showSms = isNotifiedStatus(smsStatus);
-    const showWhatsapp = isNotifiedStatus(whatsappStatus);
-
-    // If nothing actually sent, fall back to showing "None".
-    if (!showSms && !showWhatsapp) return <span className="text-gray-500">None</span>;
+    if (!showSms && !showWhatsapp && !showEmail && !showSmsFailed && !showWhatsappFailed) {
+      return <span className="text-muted-foreground">None</span>;
+    }
 
     return (
       <div className="inline-flex items-center gap-2">
         {showSms ? (
-          <span
-            className={`inline-flex items-center ${getStatusColor(smsStatus)}`}
-            title={`SMS: ${smsStatus}`}
-          >
+          <span className="inline-flex items-center text-primary" title={`SMS: ${smsStatus}`}>
+            <MessageSquare className="h-4 w-4" />
+          </span>
+        ) : showSmsFailed ? (
+          <span className="inline-flex items-center text-red-500" title={`SMS: ${smsStatus}`}>
             <MessageSquare className="h-4 w-4" />
           </span>
         ) : null}
         {showWhatsapp ? (
-          <span
-            className={`inline-flex items-center ${getStatusColor(whatsappStatus)}`}
-            title={`WhatsApp: ${whatsappStatus}`}
-          >
+          <span className="inline-flex items-center text-primary" title={`WhatsApp: ${whatsappStatus}`}>
             <WhatsAppIcon className="h-4 w-4" />
+          </span>
+        ) : showWhatsappFailed ? (
+          <span className="inline-flex items-center text-red-500" title={`WhatsApp: ${whatsappStatus}`}>
+            <WhatsAppIcon className="h-4 w-4" />
+          </span>
+        ) : null}
+        {showEmail ? (
+          <span className="inline-flex items-center text-primary" title="E-mail sent">
+            <Mail className="h-4 w-4" />
           </span>
         ) : null}
       </div>
@@ -622,7 +618,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
               {showSeatingPrefs && <col className="w-[150px]" />}{/* Preference */}
               <col className="w-auto" />{/* Name */}
               <col className="w-[120px]" />{/* Wait time */}
-              {showPhone && <col className="w-[80px]" />}{/* Alerts */}
+              {(showPhone || showEmail) && <col className="w-[80px]" />}{/* Alerts */}
             </colgroup>
             <thead className="bg-muted sticky top-0 z-10">
               <tr>
@@ -632,7 +628,7 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                 {showSeatingPrefs && <th className="text-left font-medium text-foreground px-4 py-2">Preference</th>}
                 {showName && <th className="text-left font-medium text-foreground px-4 py-2">Name</th>}
                 <th className="text-left font-medium text-foreground px-4 py-2">Wait time</th>
-                {showPhone && <th className="text-left font-medium text-foreground px-4 py-2">Alerts</th>}
+                {(showPhone || showEmail) && <th className="text-left font-medium text-foreground px-4 py-2">Alerts</th>}
               </tr>
             </thead>
             <tbody>
@@ -732,14 +728,15 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
                       </Tooltip>
                     </TooltipProvider>
                   </td>
-                  {showPhone && (
+                  {(showPhone || showEmail) && (
                     <td className="px-4 py-2">
                       <span className="text-xs">
                         {getNotificationDisplay(
                           e.send_sms,
                           e.send_whatsapp,
                           normalizeDeliveryStatus(e.sms_status),
-                          normalizeDeliveryStatus(e.whatsapp_status)
+                          normalizeDeliveryStatus(e.whatsapp_status),
+                          e.send_email,
                         )}
                       </span>
                     </td>
