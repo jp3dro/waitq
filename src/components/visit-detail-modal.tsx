@@ -8,8 +8,8 @@ import {
   CheckCircle2,
   Clock,
   Copy,
-  Mail,
-  Phone,
+  MessageSquare,
+  Send,
   Trash2,
   User,
   X,
@@ -48,6 +48,7 @@ export type VisitEntry = {
   created_at: string;
   notified_at: string | null;
   cancelled_at: string | null;
+  cancelled_by?: string | null;
   updated_at?: string | null;
 
   // Current-cycle
@@ -61,15 +62,18 @@ export type VisitEntry = {
   // Notifications
   send_sms?: boolean | null;
   send_whatsapp?: boolean | null;
+  send_email?: boolean | null;
   sms_status?: string | null;
+  sms_sent_at?: string | null;
   whatsapp_status?: string | null;
+  whatsapp_sent_at?: string | null;
 };
 
 type ListType = "eat_in" | "take_out";
 
-function getWaitTimeCompact(date: string) {
+function getWaitTimeCompact(date: string, endDate?: string) {
   const start = new Date(date);
-  const end = new Date();
+  const end = endDate ? new Date(endDate) : new Date();
   const totalMinutes = differenceInMinutes(end, start);
   if (totalMinutes < 1) return "Just now";
   const days = Math.floor(totalMinutes / (60 * 24));
@@ -82,45 +86,41 @@ function getWaitTimeCompact(date: string) {
 
 function getStatusDisplay(status: string, notifiedAt: string | null) {
   if (status === "seated") {
-    return {
-      label: "Showed",
-      color: "text-emerald-600 dark:text-emerald-400",
-      bgColor: "bg-emerald-50 dark:bg-emerald-950/30",
-    };
+    return { label: "Showed", bgColor: "bg-emerald-50 dark:bg-emerald-950/30" };
   }
   if (status === "cancelled") {
-    return {
-      label: "Cancelled",
-      color: "text-muted-foreground",
-      bgColor: "bg-muted",
-    };
+    return { label: "Cancelled", bgColor: "bg-muted" };
   }
   if (status === "archived") {
     if (notifiedAt) {
-      return {
-        label: "No Show",
-        color: "text-red-600 dark:text-red-400",
-        bgColor: "bg-red-50 dark:bg-red-950/30",
-      };
+      return { label: "No Show", bgColor: "bg-red-50 dark:bg-red-950/30" };
     }
-    return {
-      label: "Archived",
-      color: "text-muted-foreground",
-      bgColor: "bg-muted",
-    };
+    return { label: "Archived", bgColor: "bg-muted" };
   }
   if (status === "notified") {
-    return {
-      label: "Called",
-      color: "text-blue-600 dark:text-blue-400",
-      bgColor: "bg-blue-50 dark:bg-blue-950/30",
-    };
+    return { label: "Called", bgColor: "bg-blue-50 dark:bg-blue-950/30" };
   }
-  return {
-    label: "Waiting",
-    color: "text-yellow-600 dark:text-yellow-400",
-    bgColor: "bg-yellow-50 dark:bg-yellow-950/30",
-  };
+  return { label: "Waiting", bgColor: "bg-yellow-50 dark:bg-yellow-950/30" };
+}
+
+/** Status badge matching the customers table. Works in both light and dark themes. */
+function getStatusBadge(status: string, notifiedAt: string | null) {
+  if (status === "seated") {
+    return <Badge className="bg-emerald-500 dark:bg-emerald-600 text-white">Showed</Badge>;
+  }
+  if (status === "cancelled") {
+    return <Badge className="bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground">Cancelled</Badge>;
+  }
+  if (status === "archived") {
+    if (notifiedAt) {
+      return <Badge className="bg-red-500 dark:bg-red-600 text-white">No show</Badge>;
+    }
+    return <Badge className="bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground">Archived</Badge>;
+  }
+  if (status === "notified") {
+    return <Badge className="bg-blue-500 dark:bg-blue-600 text-white">Called</Badge>;
+  }
+  return <Badge className="bg-yellow-500 dark:bg-yellow-600 text-white dark:text-black">Waiting</Badge>;
 }
 
 export default function VisitDetailModal({
@@ -201,6 +201,29 @@ export default function VisitDetailModal({
         time: formatDateTime(effectiveVisit.created_at, timeFormat),
       },
     ];
+    // Notification events right after joining (SMS / WhatsApp / email)
+    if (effectiveVisit.send_sms && effectiveVisit.sms_sent_at) {
+      events.push({
+        icon: MessageSquare,
+        label: effectiveVisit.sms_status === "failed" ? "SMS failed" : "SMS sent",
+        time: formatDateTime(effectiveVisit.sms_sent_at, timeFormat),
+      });
+    }
+    if (effectiveVisit.send_whatsapp && effectiveVisit.whatsapp_sent_at) {
+      events.push({
+        icon: MessageSquare,
+        label: effectiveVisit.whatsapp_status === "failed" ? "WhatsApp failed" : "WhatsApp sent",
+        time: formatDateTime(effectiveVisit.whatsapp_sent_at, timeFormat),
+      });
+    }
+    if (effectiveVisit.send_email) {
+      // Email is sent at creation time; there is no separate timestamp yet.
+      events.push({
+        icon: Send,
+        label: "E-mail sent",
+        time: formatDateTime(effectiveVisit.created_at, timeFormat),
+      });
+    }
     if (effectiveVisit.notified_at) {
       events.push({
         icon: Bell,
@@ -219,9 +242,14 @@ export default function VisitDetailModal({
     } else if (effectiveVisit.status === "archived" && effectiveVisit.notified_at) {
       events.push({ icon: XCircle, label: "Marked as no-show", time: formatDateTime(statusChangedAt, timeFormat) });
     } else if (effectiveVisit.status === "cancelled") {
+      const cancelLabel = effectiveVisit.cancelled_by === "customer"
+        ? "Cancelled by customer"
+        : effectiveVisit.cancelled_by === "staff"
+          ? "Cancelled by staff"
+          : "Cancelled";
       events.push({
         icon: XCircle,
-        label: "Cancelled",
+        label: cancelLabel,
         time: effectiveVisit.cancelled_at ? formatDateTime(effectiveVisit.cancelled_at, timeFormat) : "—",
       });
     }
@@ -383,31 +411,23 @@ export default function VisitDetailModal({
                         ) : null}
                         <div className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                           <Clock className="h-4 w-4" />
-                          <span>Waiting for {getWaitTimeCompact(effectiveVisit.created_at)}</span>
+                          {(() => {
+                            const isTerminalState = ["cancelled", "archived", "seated"].includes(effectiveVisit.status);
+                            const endTime = isTerminalState
+                              ? (effectiveVisit.cancelled_at || effectiveVisit.updated_at || effectiveVisit.notified_at || undefined)
+                              : undefined;
+                            return (
+                              <span>
+                                {isTerminalState ? "Waited for " : "Waiting for "}
+                                {getWaitTimeCompact(effectiveVisit.created_at, endTime ?? undefined)}
+                              </span>
+                            );
+                          })()}
                         </div>
                       </div>
-                      <h3 className="text-lg font-semibold truncate">
-                        {effectiveVisit.customer_name || "Anonymous Customer"}
-                      </h3>
-                      <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
-                        {effectiveVisit.phone ? (
-                          <div className="flex items-center gap-1">
-                            <Phone className="h-3.5 w-3.5" />
-                            <span className="truncate">{effectiveVisit.phone}</span>
-                          </div>
-                        ) : null}
-                        {effectiveVisit.email ? (
-                          <div className="flex items-center gap-1">
-                            <Mail className="h-3.5 w-3.5" />
-                            <span className="truncate">{effectiveVisit.email}</span>
-                          </div>
-                        ) : null}
-                      </div>
                     </div>
-                    <div className="shrink-0 flex items-start gap-2">
-                      <Badge className={`${statusDisplay.color} bg-transparent border-0`}>
-                        {statusDisplay.label}
-                      </Badge>
+                    <div className="shrink-0 flex items-center gap-2">
+                      {getStatusBadge(effectiveVisit.status, effectiveVisit.notified_at)}
                       {effectiveVisit.token ? (
                         <Button variant="ghost" size="icon" onClick={copyPersonalUrl} title="Copy status URL" disabled={busy}>
                           <Copy className="h-4 w-4 text-muted-foreground" />
@@ -541,30 +561,7 @@ export default function VisitDetailModal({
                   ) : null}
                 </div>
 
-                {/* Notification Status */}
-                {(effectiveVisit.send_sms || effectiveVisit.send_whatsapp) ? (
-                  <div className="rounded-lg border border-border p-4 space-y-2">
-                    <h4 className="text-sm font-semibold">Notifications</h4>
-                    <div className="space-y-1 text-sm">
-                      {effectiveVisit.send_sms ? (
-                        <div className="flex items-center justify-between">
-                          <span>SMS</span>
-                          <Badge variant="secondary" className="text-xs">
-                            {effectiveVisit.sms_status || "pending"}
-                          </Badge>
-                        </div>
-                      ) : null}
-                      {effectiveVisit.send_whatsapp ? (
-                        <div className="flex items-center justify-between">
-                          <span>WhatsApp</span>
-                          <Badge variant="secondary" className="text-xs">
-                            {effectiveVisit.whatsapp_status || "pending"}
-                          </Badge>
-                        </div>
-                      ) : null}
-                    </div>
-                  </div>
-                ) : null}
+                {/* Notification status is shown in the Activity timeline */}
               </div>
 
               {/* Right panel: Activity log */}

@@ -48,6 +48,7 @@ type VisitEntry = {
   created_at: string;
   notified_at: string | null;
   cancelled_at: string | null;
+  cancelled_by?: string | null;
   updated_at?: string | null;
   waitlist_id: string | null;
 };

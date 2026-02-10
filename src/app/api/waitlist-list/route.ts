@@ -44,8 +44,8 @@ export async function GET(req: Request) {
   // Try to select with notification columns first
   // Only owners/admins can view PII (phone) and entry token.
   let selectFields = isAdmin
-    ? "id, customer_name, phone, email, status, queue_position, created_at, notified_at, cancelled_at, ticket_number, token, send_sms, send_whatsapp, party_size, seating_preference, sms_message_id, sms_status, sms_sent_at, sms_delivered_at, sms_error_message, whatsapp_message_id, whatsapp_status, whatsapp_sent_at, whatsapp_delivered_at, whatsapp_error_message"
-    : "id, customer_name, status, queue_position, created_at, notified_at, cancelled_at, ticket_number, party_size, seating_preference";
+    ? "id, customer_name, phone, email, status, queue_position, created_at, notified_at, cancelled_at, cancelled_by, ticket_number, token, send_sms, send_whatsapp, send_email, party_size, seating_preference, sms_message_id, sms_status, sms_sent_at, sms_delivered_at, sms_error_message, whatsapp_message_id, whatsapp_status, whatsapp_sent_at, whatsapp_delivered_at, whatsapp_error_message"
+    : "id, customer_name, status, queue_position, created_at, notified_at, cancelled_at, cancelled_by, ticket_number, party_size, seating_preference";
 
   let q = supabase
     .from("waitlist_entries")
@@ -61,8 +61,8 @@ export async function GET(req: Request) {
   // If the query fails due to missing columns, retry without them
   if (error && (error.message.includes("send_sms") || error.message.includes("send_whatsapp") || error.message.includes("sms_message_id") || error.message.includes("whatsapp_message_id") || error.message.includes("email") || error.message.includes("column"))) {
     selectFields = isAdmin
-      ? "id, customer_name, phone, email, status, queue_position, created_at, notified_at, cancelled_at, ticket_number, token, party_size, seating_preference"
-      : "id, customer_name, status, queue_position, created_at, notified_at, cancelled_at, ticket_number, party_size, seating_preference";
+      ? "id, customer_name, phone, email, status, queue_position, created_at, notified_at, cancelled_at, cancelled_by, ticket_number, token, party_size, seating_preference"
+      : "id, customer_name, status, queue_position, created_at, notified_at, cancelled_at, cancelled_by, ticket_number, party_size, seating_preference";
     q = supabase
       .from("waitlist_entries")
       .select(selectFields)

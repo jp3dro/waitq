@@ -19,7 +19,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-type Entry = { status: string; created_at: string; eta_minutes: number | null; queue_position: number | null; waitlist_id?: string; ticket_number?: number | null; notified_at?: string | null; seating_preference?: string | null; party_size?: number | null };
+type Entry = { status: string; created_at: string; eta_minutes: number | null; queue_position: number | null; waitlist_id?: string; ticket_number?: number | null; notified_at?: string | null; cancelled_at?: string | null; cancelled_by?: string | null; seating_preference?: string | null; party_size?: number | null };
 type Business =
   | {
     name: string | null;
@@ -296,9 +296,13 @@ export default function ClientStatus({ token }: { token: string }) {
 
           {isCancelled ? (
             <div className="bg-card ring-1 ring-border rounded-xl p-6 text-center">
-              <h2 className="text-2xl font-bold text-foreground">This ticket is closed</h2>
+              <h2 className="text-2xl font-bold text-foreground">
+                {data.cancelled_by === "customer" ? "You left the waitlist" : "This ticket is closed"}
+              </h2>
               <p className="mt-2 text-muted-foreground">
-                Your number was called and marked as <span className="font-medium text-foreground">{terminalLabel}</span>.
+                {data.cancelled_by === "customer"
+                  ? "This ticket is no longer valid because you removed yourself from the waitlist."
+                  : "Your ticket has been cancelled."}
               </p>
               {typeof yourNumber === "number" ? (
                 <div className="py-6 border-y border-border mt-6">
@@ -314,22 +318,16 @@ export default function ClientStatus({ token }: { token: string }) {
                 "rounded-xl overflow-hidden shadow-sm ring-1 flex items-center mb-6",
                 (isClosed || isNoShow)
                   ? "bg-red-50 dark:bg-red-950/20 ring-red-200 dark:ring-red-900/50"
-                  : (yourNumber && nowServing && (yourNumber - nowServing === 1))
-                    ? "bg-yellow-50 dark:bg-yellow-950/30 ring-yellow-200 dark:ring-yellow-800/50"
-                    : isUserTurn
-                      ? "bg-emerald-600 text-white shadow-emerald-200/50 dark:shadow-none ring-emerald-500"
-                      : "bg-emerald-50 dark:bg-emerald-950/20 ring-emerald-200 dark:ring-emerald-800/50"
+                  : isUserTurn
+                    ? "bg-emerald-600 text-white shadow-emerald-200/50 dark:shadow-none ring-emerald-500"
+                    : "bg-emerald-50 dark:bg-emerald-950/20 ring-emerald-200 dark:ring-emerald-800/50"
               )}>
                 {!isClosed && !isNoShow && !isSeated && (
                   <div className={cn(
                     "flex items-center gap-3 px-4 py-3 border-r",
-                    isClosed
-                      ? "border-red-100 dark:border-red-900/30 text-red-700"
-                      : (yourNumber && nowServing && (yourNumber - nowServing === 1))
-                        ? "border-yellow-200 dark:border-yellow-800/50 text-yellow-800"
-                        : isUserTurn
-                          ? "border-white/20 text-white"
-                          : "border-emerald-100 dark:border-emerald-800/50 text-emerald-700"
+                    isUserTurn
+                      ? "border-white/20 text-white"
+                      : "border-emerald-100 dark:border-emerald-800/50 text-emerald-700"
                   )}>
                     <span className="relative flex h-2.5 w-2.5">
                       {isLive ? (
@@ -349,15 +347,15 @@ export default function ClientStatus({ token }: { token: string }) {
                 <div className="flex-1 px-4 py-3 leading-tight">
                   <p className={cn(
                     "text-[10px] font-bold uppercase tracking-widest mb-0.5",
-                    (isClosed || isNoShow) ? "text-red-600/70" : (yourNumber && nowServing && (yourNumber - nowServing === 1)) ? "text-yellow-700/70" : isUserTurn ? "text-emerald-100" : "text-emerald-600/70"
+                    (isClosed || isNoShow) ? "text-red-600/70" : isUserTurn ? "text-emerald-100" : "text-emerald-600/70"
                   )}>
-                    {(isClosed || isNoShow) ? "Status" : isSeated ? "Thank you" : "Now calling"}
+                    {(isClosed || isNoShow) ? "Status" : isSeated ? "Thank you" : isUserTurn ? "It's your turn" : "Now calling"}
                   </p>
                   <p className={cn(
                     "text-sm font-bold",
-                    (isClosed || isNoShow) ? "text-red-700" : (yourNumber && nowServing && (yourNumber - nowServing === 1)) ? "text-yellow-800" : isUserTurn ? "text-white" : "text-emerald-700"
+                    (isClosed || isNoShow) ? "text-red-700" : isUserTurn ? "text-white" : "text-emerald-700"
                   )}>
-                    {isClosed ? "Waitlist Closed" : isNoShow ? "Sorry, your place in the waitlist expired and is no longer valid." : isSeated ? "We hope you enjoyed our service!" : isUserTurn ? "It's your turn! Thank you for waiting." : (yourNumber && nowServing && (yourNumber - nowServing === 1)) ? "Almost your turn! Head back to the restaurant." : "Please wait for your turn."}
+                    {isClosed ? "Waitlist Closed" : isNoShow ? "Sorry, your place in the waitlist expired and is no longer valid." : isSeated ? "We hope you enjoyed our service!" : isUserTurn ? "Please head to the restaurant now. Thank you for waiting!" : "Please wait for your turn."}
                   </p>
                 </div>
               </div>

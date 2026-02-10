@@ -9,6 +9,7 @@ import { normalizePhone } from "@/lib/phone";
 import { countEntriesInPeriod, countSmsInPeriod, getPlanContext } from "@/lib/plan-limits";
 import { getLocationOpenState, type RegularHours } from "@/lib/location-hours";
 import { buildWaitlistTicketEmailHtml } from "@/lib/email-templates";
+import { joinedMessage } from "@/lib/sms-templates";
 import { getPostHogClient } from "@/lib/posthog-server";
 import { sendSms } from "@/lib/bulkgate";
 
@@ -199,8 +200,8 @@ export async function POST(req: NextRequest) {
         const ctx = await getPlanContext(list.business_id);
         const usedSms = await countSmsInPeriod(list.business_id, ctx.window.start, ctx.window.end);
         if (usedSms < ctx.limits.messagesPerMonth) {
-          const text = `You have been added to the queue of ${businessName ? businessName : "WaitQ"}. Your number is ${typeof data.ticket_number === "number" ? `#${data.ticket_number}` : ""}. Follow the queue here: ${statusUrl}`.trim();
-          await sendSms(normalizedPhone, text);
+          const built = joinedMessage({ businessName, ticketNumber: data.ticket_number ?? null, statusUrl });
+          await sendSms(normalizedPhone, built.text, { variables: built.variables });
         } else {
           console.warn("[kiosk-sms] SMS limit reached; skipping SMS send");
         }

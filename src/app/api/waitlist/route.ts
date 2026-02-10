@@ -10,6 +10,7 @@ import { normalizePhone } from "@/lib/phone";
 import { countEntriesInPeriod, countSmsInPeriod, getPlanContext } from "@/lib/plan-limits";
 import { getLocationOpenState, type RegularHours } from "@/lib/location-hours";
 import { buildWaitlistTicketEmailHtml, buildWaitlistCalledEmailHtml } from "@/lib/email-templates";
+import { joinedMessage, calledMessage } from "@/lib/sms-templates";
 import { resolveCurrentBusinessId } from "@/lib/current-business";
 import { getPostHogClient } from "@/lib/posthog-server";
 
@@ -85,33 +86,7 @@ const schema = z.object({
   seatingPreference: z.string().optional(),
 });
 
-function buildWaitlistNotificationMessage(opts: { businessName?: string | null; ticketNumber?: number | null; statusUrl: string }) {
-  const businessName = (opts.businessName || "").trim();
-  const brandPrefix = businessName ? `${businessName}: ` : "";
-  const ticketSuffix = opts.ticketNumber ? ` #${opts.ticketNumber}` : "";
-  const text = `${brandPrefix}You're ${ticketSuffix} on the list. Follow the progress here: ${opts.statusUrl}`;
-  const variables = {
-    brand: businessName,
-    ticket: (opts.ticketNumber || "").toString(),
-    link: opts.statusUrl,
-  };
-  const templateParams = [businessName, (opts.ticketNumber || "").toString(), opts.statusUrl];
-  return { text, variables, templateParams };
-}
-
-function buildWaitlistCalledMessage(opts: { businessName?: string | null; ticketNumber?: number | null; statusUrl: string }) {
-  const businessName = (opts.businessName || "").trim();
-  const brandPrefix = businessName ? `${businessName}: ` : "";
-  const ticketSuffix = opts.ticketNumber ? ` (ticket #${opts.ticketNumber})` : "";
-  const text = `${brandPrefix}It's your turn!${ticketSuffix} Please head to the front now. ${opts.statusUrl}`;
-  const variables = {
-    brand: businessName,
-    ticket: (opts.ticketNumber || "").toString(),
-    link: opts.statusUrl,
-  };
-  const templateParams = [businessName, (opts.ticketNumber || "").toString(), opts.statusUrl];
-  return { text, variables, templateParams };
-}
+// SMS templates are defined in @/lib/sms-templates.ts for easy editing.
 
 export async function POST(req: NextRequest) {
   const json = await req.json();
@@ -353,7 +328,7 @@ export async function POST(req: NextRequest) {
 
   if (shouldSendSms || shouldSendWhatsapp) {
     try {
-      const built = buildWaitlistNotificationMessage({
+      const built = joinedMessage({
         businessName,
         ticketNumber: data.ticket_number ?? null,
         statusUrl,
@@ -640,7 +615,11 @@ export async function PATCH(req: NextRequest) {
   } else if (action === "archive") {
     payload = { status: "archived" };
   } else if (status) {
-    payload = { status };
+    payload = { status } as Record<string, unknown>;
+    if (status === "cancelled") {
+      payload.cancelled_at = new Date().toISOString();
+      payload.cancelled_by = "staff";
+    }
   } else {
     return NextResponse.json({ error: "No update specified" }, { status: 400 });
   }
@@ -694,7 +673,7 @@ export async function PATCH(req: NextRequest) {
       if (shouldSendSms) {
         try {
           const phone = (data as any).phone as string;
-          const built = buildWaitlistCalledMessage({
+          const built = calledMessage({
             businessName,
             ticketNumber: data.ticket_number ?? null,
             statusUrl,
@@ -855,7 +834,7 @@ async function handleRetry(
       }
     }
 
-    const built = buildWaitlistNotificationMessage({
+    const built = joinedMessage({
       businessName,
       ticketNumber: entry.ticket_number ?? null,
       statusUrl,

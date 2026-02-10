@@ -30,11 +30,9 @@ type Entry = VisitDetailEntry & {
   visits_count?: number | null;
   is_returning?: boolean | null;
   sms_message_id?: string | null;
-  sms_sent_at?: string | null;
   sms_delivered_at?: string | null;
   sms_error_message?: string | null;
   whatsapp_message_id?: string | null;
-  whatsapp_sent_at?: string | null;
   whatsapp_delivered_at?: string | null;
   whatsapp_error_message?: string | null;
 };
