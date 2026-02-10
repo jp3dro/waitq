@@ -147,6 +147,8 @@ export async function POST(req: NextRequest) {
       ticket_number: nextTicket,
       party_size: typeof partySize === 'number' ? partySize : null,
       seating_preference: seatingPreference || null,
+      send_sms: shouldSendSms,
+      send_email: shouldSendEmail,
     })
     .select("id, token, ticket_number")
     .single();

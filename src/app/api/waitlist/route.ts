@@ -9,7 +9,7 @@ import { resend } from "@/lib/resend";
 import { normalizePhone } from "@/lib/phone";
 import { countEntriesInPeriod, countSmsInPeriod, getPlanContext } from "@/lib/plan-limits";
 import { getLocationOpenState, type RegularHours } from "@/lib/location-hours";
-import { buildWaitlistTicketEmailHtml } from "@/lib/email-templates";
+import { buildWaitlistTicketEmailHtml, buildWaitlistCalledEmailHtml } from "@/lib/email-templates";
 import { resolveCurrentBusinessId } from "@/lib/current-business";
 import { getPostHogClient } from "@/lib/posthog-server";
 
@@ -90,6 +90,20 @@ function buildWaitlistNotificationMessage(opts: { businessName?: string | null; 
   const brandPrefix = businessName ? `${businessName}: ` : "";
   const ticketSuffix = opts.ticketNumber ? ` #${opts.ticketNumber}` : "";
   const text = `${brandPrefix}You're ${ticketSuffix} on the list. Follow the progress here: ${opts.statusUrl}`;
+  const variables = {
+    brand: businessName,
+    ticket: (opts.ticketNumber || "").toString(),
+    link: opts.statusUrl,
+  };
+  const templateParams = [businessName, (opts.ticketNumber || "").toString(), opts.statusUrl];
+  return { text, variables, templateParams };
+}
+
+function buildWaitlistCalledMessage(opts: { businessName?: string | null; ticketNumber?: number | null; statusUrl: string }) {
+  const businessName = (opts.businessName || "").trim();
+  const brandPrefix = businessName ? `${businessName}: ` : "";
+  const ticketSuffix = opts.ticketNumber ? ` (ticket #${opts.ticketNumber})` : "";
+  const text = `${brandPrefix}It's your turn!${ticketSuffix} Please head to the front now. ${opts.statusUrl}`;
   const variables = {
     brand: businessName,
     ticket: (opts.ticketNumber || "").toString(),
@@ -635,7 +649,7 @@ export async function PATCH(req: NextRequest) {
     .from("waitlist_entries")
     .update(payload)
     .eq("id", id)
-    .select("id, status, ticket_number, waitlist_id, token")
+    .select("id, status, ticket_number, waitlist_id, token, send_sms, send_email, phone, email, customer_name")
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
@@ -651,6 +665,73 @@ export async function PATCH(req: NextRequest) {
         ticket_number: data.ticket_number,
       }
     });
+  }
+
+  // Send SMS/email notifications when calling a customer (best-effort)
+  const notifiedChannels: string[] = [];
+  if (action === "call" && data) {
+    const shouldSendSms = !!(data as any).send_sms && (data as any).phone;
+    const shouldSendEmail = !!(data as any).send_email && (data as any).email;
+
+    if (shouldSendSms || shouldSendEmail) {
+      const admin = getAdminClient();
+      const statusUrl = `${process.env.NEXT_PUBLIC_SITE_URL || ""}/w/${data.token || "unknown"}`;
+
+      // Fetch business name for branding
+      let businessName: string | null = null;
+      if (data.waitlist_id) {
+        try {
+          const { data: wl } = await admin.from("waitlists").select("business_id").eq("id", data.waitlist_id).maybeSingle();
+          const businessId = (wl?.business_id as string | undefined) || undefined;
+          if (businessId) {
+            const { data: biz } = await admin.from("businesses").select("name").eq("id", businessId).maybeSingle();
+            businessName = (biz?.name as string | undefined) ?? null;
+          }
+        } catch { }
+      }
+
+      // Send SMS notification
+      if (shouldSendSms) {
+        try {
+          const phone = (data as any).phone as string;
+          const built = buildWaitlistCalledMessage({
+            businessName,
+            ticketNumber: data.ticket_number ?? null,
+            statusUrl,
+          });
+          await sendSms(phone, built.text, { variables: built.variables });
+          notifiedChannels.push("sms");
+        } catch (e) {
+          console.error("[waitlist-call] Failed to send call SMS", e);
+        }
+      }
+
+      // Send email notification
+      if (shouldSendEmail) {
+        try {
+          const email = (data as any).email as string;
+          if (process.env.RESEND_API_KEY) {
+            const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://waitq.com";
+            await resend.emails.send({
+              from: process.env.RESEND_FROM_EMAIL || "WaitQ <noreply@waitq.com>",
+              replyTo: process.env.RESEND_REPLY_TO_EMAIL,
+              to: email,
+              subject: `${businessName ? businessName : "WaitQ"} – It's your turn!`,
+              html: buildWaitlistCalledEmailHtml({
+                businessName,
+                customerName: (data as any).customer_name ?? null,
+                ticketNumber: data.ticket_number ?? null,
+                statusUrl,
+                siteUrl,
+              }),
+            });
+            notifiedChannels.push("email");
+          }
+        } catch (e) {
+          console.error("[waitlist-call] Failed to send call email", e);
+        }
+      }
+    }
   }
 
   // Recalculate ETA for all entries in this waitlist when status changes (including archive)
@@ -677,7 +758,7 @@ export async function PATCH(req: NextRequest) {
     ]);
   } catch { }
 
-  return NextResponse.json({ entry: data });
+  return NextResponse.json({ entry: data, notifiedChannels });
 }
 
 const putSchema = z.object({

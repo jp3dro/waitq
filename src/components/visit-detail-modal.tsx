@@ -302,7 +302,7 @@ export default function VisitDetailModal({
     setBusy(true);
     try {
       if (kind === "call") {
-        await request("/api/waitlist", {
+        const result = await request("/api/waitlist", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ id: visit.id, action: "call" }),
@@ -313,7 +313,13 @@ export default function VisitDetailModal({
           status: "notified",
           notified_at: new Date().toISOString(),
         });
-        toastManager.add({ title: "Called", description: "Customer marked as called", type: "success" });
+        const channels: string[] = (result as any)?.notifiedChannels || [];
+        let callDesc = "Customer marked as called";
+        if (channels.length > 0) {
+          const parts = channels.map((c: string) => c === "sms" ? "SMS" : c === "email" ? "e-mail" : c);
+          callDesc += `. ${parts.length === 1 ? `An ${parts[0]} has` : `An ${parts.join(" and ")} have`} been sent to this customer`;
+        }
+        toastManager.add({ title: "Called", description: callDesc, type: "success" });
       } else if (kind === "checkin") {
         await request("/api/waitlist", {
           method: "PATCH",

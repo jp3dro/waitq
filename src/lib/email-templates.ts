@@ -172,3 +172,46 @@ export function buildWaitlistTicketEmailHtml(opts: {
   });
 }
 
+export function buildWaitlistCalledEmailHtml(opts: {
+  businessName?: string | null;
+  customerName?: string | null;
+  ticketNumber?: number | null;
+  statusUrl: string;
+  siteUrl: string;
+}) {
+  const safeBiz = escapeHtml((opts.businessName || "WaitQ").trim());
+  const safeName = escapeHtml((opts.customerName || "").trim());
+  const safeUrl = escapeHtml(opts.statusUrl);
+  const ticket = typeof opts.ticketNumber === "number" ? `#${opts.ticketNumber}` : "";
+  const safeTicket = escapeHtml(ticket);
+
+  const greeting = safeName ? `Hi ${safeName},` : "Hi there,";
+
+  const bodyHtml = `
+    <p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#334155;">
+      ${greeting} <strong style="color:#0f172a;">It's your turn!</strong>
+    </p>
+    <p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#334155;">
+      <strong style="color:#0f172a;">${safeBiz}</strong> is ready for you${safeTicket ? ` (ticket ${safeTicket})` : ""}. Please head to the front now.
+    </p>
+    <div style="margin:18px 0 18px;text-align:center;">
+      <a href="${safeUrl}" style="display:inline-block;padding:12px 18px;border-radius:999px;background-color:#FF9500;color:#111827;font-weight:700;text-decoration:none;border:1px solid #ea580c;">
+        View your status
+      </a>
+    </div>
+    <p style="margin:0;font-size:13px;line-height:1.6;color:#64748b;">
+      If the button doesn't work, copy and paste this link:
+      <br />
+      <a href="${safeUrl}" style="color:#0f172a;text-decoration:underline;">${safeUrl}</a>
+    </p>
+  `;
+
+  return brandShell({
+    title: `It's your turn at ${safeBiz}!`,
+    preheader: `${safeBiz} is calling you – it's your turn!`,
+    bodyHtml,
+    footerHtml: null,
+    siteUrl: opts.siteUrl,
+  });
+}
+

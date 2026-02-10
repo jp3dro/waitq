@@ -479,9 +479,16 @@ export default function WaitlistTable({ fixedWaitlistId }: { fixedWaitlistId?: s
           body: JSON.stringify({ id, action: "call" }),
         });
         if (res.ok) {
+          const json = await res.json().catch(() => ({}));
+          const channels: string[] = json.notifiedChannels || [];
+          let description = "Customer called successfully";
+          if (channels.length > 0) {
+            const parts = channels.map((c: string) => c === "sms" ? "SMS" : c === "email" ? "e-mail" : c);
+            description += `. ${parts.length === 1 ? `An ${parts[0]} has` : `An ${parts.join(" and ")} have`} been sent to this customer`;
+          }
           toastManager.add({
             title: "Success",
-            description: "Customer called successfully",
+            description,
             type: "success",
           });
           try { window.dispatchEvent(new CustomEvent('wl:refresh', { detail: { waitlistId } })); } catch { }
