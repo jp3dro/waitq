@@ -10,12 +10,17 @@ import { createClient } from "@/lib/supabase/server";
  */
 
 export const getUser = cache(async () => {
-  const supabase = await createClient();
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
 
-  return { user, error };
+    return { user, error };
+  } catch {
+    // Supabase unreachable or returned non-JSON — treat as unauthenticated.
+    return { user: null, error: null };
+  }
 });
 

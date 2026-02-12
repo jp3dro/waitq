@@ -10,9 +10,15 @@ import type {
   FeatureSectionsThreeColumnCards,
   FeatureSectionsTestimonialWithStats,
 } from "../../tina/__generated__/types";
+import dynamic from "next/dynamic";
 import { TestimonialWithStats } from "@/components/sections/testimonial-with-stats";
-import { FAQSection } from "@/components/sections/faq-section";
 import { ArrowLink } from "@/components/sections/arrow-link";
+
+// Dynamic import avoids Radix useId hydration-mismatch inside useTina() context.
+const FAQSection = dynamic(
+  () => import("@/components/sections/faq-section").then((m) => m.FAQSection),
+  { ssr: false }
+);
 import { TwoColumnBenefits } from "@/components/sections/two-column-benefits";
 import { HowItWorksCards } from "@/components/sections/how-it-works-cards";
 import { CTASection } from "@/components/cta-section";

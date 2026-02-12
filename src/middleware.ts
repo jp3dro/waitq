@@ -47,23 +47,71 @@ export async function middleware(req: NextRequest) {
           });
         },
       },
+      // Custom fetch: intercept non-JSON responses (e.g. Cloudflare 522
+      // HTML pages) and remap to a 503 with valid JSON. This prevents the
+      // SDK from throwing AuthUnknownError and marks the error as retryable
+      // so the session isn't prematurely removed.
+      global: {
+        fetch: async (input, init) => {
+          try {
+            const response = await fetch(input, init);
+            const ct = response.headers.get("content-type") || "";
+            if (!response.ok && !ct.includes("application/json")) {
+              return new Response(
+                JSON.stringify({ error: "upstream_unavailable", error_description: "Upstream returned non-JSON" }),
+                { status: 503, headers: { "content-type": "application/json; charset=utf-8" } }
+              );
+            }
+            return response;
+          } catch {
+            return new Response(
+              JSON.stringify({ error: "network_error", error_description: "Network request failed" }),
+              { status: 503, headers: { "content-type": "application/json; charset=utf-8" } }
+            );
+          }
+        },
+      },
     }
   );
 
-  // Trigger a session refresh if needed.
-  const { data, error } = await supabase.auth.getUser();
+  // Only attempt a session refresh if there are Supabase auth cookies present.
+  // Without cookies there's no session to refresh, so calling getUser() would
+  // just trigger a needless network round-trip that can fail with noisy errors
+  // (e.g. AuthUnknownError when the response isn't valid JSON).
+  const hasAuthCookie = req.cookies
+    .getAll()
+    .some((c) => c.name.startsWith("sb-") && c.name.endsWith("-auth-token"));
 
-  if (error && !data.user) {
-    // The token refresh failed — most likely because the browser client already
-    // rotated the refresh token (race condition). The response built by setAll
-    // at this point would carry Set-Cookie headers that *delete* the auth
-    // cookies, which would log the user out on the next request.
-    //
-    // Instead, return a clean response that does NOT touch the auth cookies.
-    // The browser still has the valid session from its own refresh.
-    return NextResponse.next({
-      request: { headers: req.headers },
-    });
+  if (hasAuthCookie) {
+    try {
+      const { data, error } = await supabase.auth.getUser();
+
+      if (error && !data.user) {
+        // Auth failed (expired/invalid session, API unreachable, etc.).
+        // Clear stale auth cookies so subsequent requests don't re-trigger
+        // the same failing refresh cycle and noisy SDK error logs.
+        const clearRes = NextResponse.next({
+          request: { headers: req.headers },
+        });
+        req.cookies.getAll().forEach(({ name }) => {
+          if (name.startsWith("sb-") && name.includes("-auth-token")) {
+            clearRes.cookies.delete(name);
+          }
+        });
+        return clearRes;
+      }
+    } catch {
+      // Supabase API unreachable — clear stale cookies and continue.
+      const clearRes = NextResponse.next({
+        request: { headers: req.headers },
+      });
+      req.cookies.getAll().forEach(({ name }) => {
+        if (name.startsWith("sb-") && name.includes("-auth-token")) {
+          clearRes.cookies.delete(name);
+        }
+      });
+      return clearRes;
+    }
   }
 
   return res;

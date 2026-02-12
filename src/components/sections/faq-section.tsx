@@ -20,6 +20,9 @@ interface FAQSectionProps {
 /**
  * Reusable FAQ section with consistent design across all marketing pages.
  * Features a muted background container with rounded corners and card-style items.
+ *
+ * NOTE: This component is dynamically imported (ssr: false) in files that use
+ * useTina(), to avoid Radix useId hydration-mismatch between SSR and client.
  */
 export function FAQSection({ title, items }: FAQSectionProps) {
   if (!items || items.length === 0) return null;

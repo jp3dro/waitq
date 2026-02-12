@@ -22,7 +22,6 @@ import {
 } from "lucide-react";
 import { useTina } from "tinacms/dist/react";
 import type { LandingPageQuery, LandingPageSections } from "../../../../tina/__generated__/types";
-import { FAQSection } from "@/components/sections/faq-section";
 import { IntroSection } from "@/components/sections/intro-section";
 import { ArrowLink } from "@/components/sections/arrow-link";
 import { BentoGrid } from "@/components/sections/bento-grid";

@@ -1,10 +1,17 @@
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import { Check, Image as ImageIcon, icons } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { ArrowLink } from "@/components/sections/arrow-link";
-import { FAQSection } from "@/components/sections/faq-section";
+
+// Dynamic import avoids Radix useId hydration-mismatch when rendered inside
+// useTina(), which can shift the React tree between SSR and client.
+const FAQSection = dynamic(
+  () => import("@/components/sections/faq-section").then((m) => m.FAQSection),
+  { ssr: false }
+);
 import { IntroSection } from "@/components/sections/intro-section";
 import { HowItWorksCards } from "@/components/sections/how-it-works-cards";
 import { ThreeColumnCards } from "@/components/sections/three-column-cards";

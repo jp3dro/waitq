@@ -33,7 +33,13 @@ export type FeatureItem = {
 
 export default async function Nav() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    const { data, error } = await supabase.auth.getUser();
+    if (!error) user = data.user;
+  } catch {
+    // Supabase unreachable or returned non-JSON — treat as unauthenticated.
+  }
   
   // Fetch feature items from TinaCMS
   let featureItems: FeatureItem[] = [];

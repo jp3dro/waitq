@@ -6,7 +6,6 @@ import { Play } from "lucide-react";
 import { YouTubeLightbox } from "@/components/youtube-lightbox";
 import { useTina } from "tinacms/dist/react";
 import type { HomeQuery } from "../../../tina/__generated__/types";
-import { FAQSection } from "@/components/sections/faq-section";
 import { CTASection } from "@/components/cta-section";
 import { renderMarketingSection } from "@/components/marketing/marketing-section-renderer";
 
