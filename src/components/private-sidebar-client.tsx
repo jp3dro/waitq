@@ -202,9 +202,9 @@ export default function PrivateSidebarClient({ userName, userEmail, businessLogo
                                 label="Polar"
                             />
                             <ExternalNavItem
-                                href="https://portal.bulkgate.com/dashboard/"
+                                href="https://gatewayapi.com/app/"
                                 icon={MessageSquare}
-                                label="BulkGate"
+                                label="GatewayAPI"
                             />
                         </SidebarMenu>
                     </>

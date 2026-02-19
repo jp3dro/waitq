@@ -4,7 +4,7 @@ import { createRouteClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { broadcastRefresh } from "@/lib/realtime-broadcast";
 import { z } from "zod";
-import { sendSms, sendWhatsapp } from "@/lib/bulkgate";
+import { sendSms } from "@/lib/gatewayapi";
 import { resend } from "@/lib/resend";
 import { normalizePhone } from "@/lib/phone";
 import { countEntriesInPeriod, countSmsInPeriod, getPlanContext } from "@/lib/plan-limits";
@@ -14,15 +14,9 @@ import { joinedMessage, calledMessage } from "@/lib/sms-templates";
 import { resolveCurrentBusinessId } from "@/lib/current-business";
 import { getPostHogClient } from "@/lib/posthog-server";
 
-function getBulkGateMessageId(resp: unknown): string | null {
-  const r = resp as { data?: Record<string, unknown> } | null | undefined;
-  const v = r?.data?.message_id;
-  return typeof v === "string" && v.length ? v : null;
-}
-
-function getBulkGateChannel(resp: unknown): string | null {
-  const r = resp as { data?: Record<string, unknown> } | null | undefined;
-  const v = r?.data?.channel;
+function getGatewayApiMessageId(resp: unknown): string | null {
+  const r = resp as { msg_id?: string } | null | undefined;
+  const v = r?.msg_id;
   return typeof v === "string" && v.length ? v : null;
 }
 
@@ -356,13 +350,13 @@ export async function POST(req: NextRequest) {
           console.log("[Waitlist] SMS sent", resp);
 
           // Update the entry with SMS message ID and initial status
-          const messageId = getBulkGateMessageId(resp);
+          const messageId = getGatewayApiMessageId(resp);
           if (messageId) {
             await admin
               .from("waitlist_entries")
               .update({
                 sms_message_id: messageId,
-                sms_status: 'sent', // BulkGate returns 'accepted' which we map to 'sent'
+                sms_status: 'sent',
                 sms_sent_at: new Date().toISOString()
               })
               .eq("id", data.id);
@@ -420,74 +414,17 @@ export async function POST(req: NextRequest) {
             });
         }
       }
+      // WhatsApp is not supported by GatewayAPI - skip WhatsApp sending
       if (shouldSendWhatsapp && normalizedPhone) {
-        try {
-          const resp = await sendWhatsapp(normalizedPhone, message, { templateParams, variables });
-          const actualChannel = getBulkGateChannel(resp) || "whatsapp";
-          console.log(`[Waitlist] Notification sent (${actualChannel})`, resp);
-
-          const messageId = getBulkGateMessageId(resp);
-          if (messageId) {
-            const nowIso = new Date().toISOString();
-
-            if (actualChannel === "sms") {
-              // Provider reported SMS even though we attempted WhatsApp. Persist what actually happened.
-              await admin
-                .from("waitlist_entries")
-                .update({
-                  sms_message_id: messageId,
-                  sms_status: "sent",
-                  sms_sent_at: nowIso,
-                })
-                .eq("id", data.id);
-            } else {
-              await admin
-                .from("waitlist_entries")
-                .update({
-                  whatsapp_message_id: messageId,
-                  whatsapp_status: "sent", // BulkGate returns 'accepted' which we map to 'sent'
-                  whatsapp_sent_at: nowIso,
-                })
-                .eq("id", data.id);
-            }
-
-            await admin.from("notification_logs").insert({
-              user_id: user.id,
-              waitlist_entry_id: data.id,
-              message_type: actualChannel === "sms" ? "sms" : "whatsapp",
-              message_id: messageId,
-              phone_number: normalizedPhone,
-              status: "sent",
-              sent_at: nowIso,
-              message_text: message,
-            });
-          }
-        } catch (err) {
-          console.error("[Waitlist] WhatsApp error", err);
-          const errMsg = err instanceof Error ? err.message : String(err);
-          // Update with failed status
-          await admin
-            .from("waitlist_entries")
-            .update({
-              whatsapp_status: 'failed',
-              whatsapp_error_message: errMsg
-            })
-            .eq("id", data.id);
-
-          // Insert failed WhatsApp log
-          await admin
-            .from("notification_logs")
-            .insert({
-              user_id: user.id,
-              waitlist_entry_id: data.id,
-              message_type: 'whatsapp',
-              message_id: `failed-${Date.now()}`, // Generate a unique ID for failed messages
-              phone_number: normalizedPhone,
-              status: 'failed',
-              error_message: errMsg,
-              message_text: message
-            });
-        }
+        console.warn("[Waitlist] WhatsApp sending requested but GatewayAPI does not support WhatsApp");
+        // Update entry to indicate WhatsApp was requested but not sent
+        await admin
+          .from("waitlist_entries")
+          .update({
+            whatsapp_status: 'failed',
+            whatsapp_error_message: 'WhatsApp is not supported by GatewayAPI'
+          })
+          .eq("id", data.id);
       }
     } catch (e) {
       console.error("[Waitlist] Notification block error", e);
@@ -587,7 +524,7 @@ export async function DELETE(req: NextRequest) {
 
 const patchSchema = z.object({
   id: z.string().uuid(),
-  action: z.enum(["call", "retry_sms", "retry_whatsapp", "archive"]).optional(),
+  action: z.enum(["call", "retry_sms", "archive"]).optional(),
   status: z.enum(["waiting", "notified", "seated", "cancelled", "archived"]).optional(),
 });
 
@@ -605,7 +542,7 @@ export async function PATCH(req: NextRequest) {
   const { id, action, status } = parse.data;
 
   // Handle retry actions
-  if (action === "retry_sms" || action === "retry_whatsapp") {
+  if (action === "retry_sms") {
     return await handleRetry(id, action, supabase, user.id);
   }
 
@@ -801,10 +738,10 @@ export async function PUT(req: NextRequest) {
   return NextResponse.json({ entry: data });
 }
 
-// Handle retry logic for failed SMS/WhatsApp messages
+// Handle retry logic for failed SMS messages
 async function handleRetry(
   entryId: string,
-  action: "retry_sms" | "retry_whatsapp",
+  action: "retry_sms",
   supabase: Awaited<ReturnType<typeof createRouteClient>>,
   userId: string
 ) {
@@ -861,13 +798,12 @@ async function handleRetry(
       }
       const resp = await sendSms(entry.phone, message, { variables });
 
-      if (resp?.data?.message_id) {
-        const messageId = getBulkGateMessageId(resp);
-        if (!messageId) {
-          return NextResponse.json({ error: "BulkGate did not return a message_id" }, { status: 502 });
-        }
+      const messageId = getGatewayApiMessageId(resp);
+      if (!messageId) {
+        return NextResponse.json({ error: "GatewayAPI did not return a msg_id" }, { status: 502 });
+      }
 
-        await admin
+      await admin
           .from("waitlist_entries")
           .update({
             sms_message_id: messageId,
@@ -890,64 +826,21 @@ async function handleRetry(
             sent_at: new Date().toISOString(),
             message_text: message
           });
-      }
-    } else if (action === "retry_whatsapp") {
-      const resp = await sendWhatsapp(entry.phone, message, { templateParams, variables });
-
-      const actualChannel = getBulkGateChannel(resp) || "whatsapp";
-      const messageId = getBulkGateMessageId(resp);
-      if (messageId) {
-        const nowIso = new Date().toISOString();
-        if (actualChannel === "sms") {
-          await admin
-            .from("waitlist_entries")
-            .update({
-              sms_message_id: messageId,
-              sms_status: "sent",
-              sms_sent_at: nowIso,
-              sms_error_message: null,
-            })
-            .eq("id", entryId);
-        } else {
-          await admin
-            .from("waitlist_entries")
-            .update({
-              whatsapp_message_id: messageId,
-              whatsapp_status: "sent",
-              whatsapp_sent_at: nowIso,
-              whatsapp_error_message: null,
-            })
-            .eq("id", entryId);
-        }
-
-        await admin.from("notification_logs").insert({
-          user_id: userId,
-          waitlist_entry_id: entryId,
-          message_type: actualChannel === "sms" ? "sms" : "whatsapp",
-          message_id: messageId,
-          phone_number: entry.phone,
-          status: "sent",
-          sent_at: nowIso,
-          message_text: message,
-        });
-      }
     }
 
-    return NextResponse.json({ success: true, message: `${action === 'retry_sms' ? 'SMS' : 'WhatsApp'} resent successfully` });
+    return NextResponse.json({ success: true, message: 'SMS resent successfully' });
   } catch (error) {
     // Update with failed status
-    const updateField = action === 'retry_sms' ? 'sms_error_message' : 'whatsapp_error_message';
-    const statusField = action === 'retry_sms' ? 'sms_status' : 'whatsapp_status';
     const message = error instanceof Error ? error.message : String(error);
 
     await admin
       .from("waitlist_entries")
       .update({
-        [statusField]: 'failed',
-        [updateField]: message
+        sms_status: 'failed',
+        sms_error_message: message
       })
       .eq("id", entryId);
 
-    return NextResponse.json({ error: `Failed to resend ${action === 'retry_sms' ? 'SMS' : 'WhatsApp'}: ${message}` }, { status: 500 });
+    return NextResponse.json({ error: `Failed to resend SMS: ${message}` }, { status: 500 });
   }
 }

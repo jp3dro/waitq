@@ -11,7 +11,7 @@ import { getLocationOpenState, type RegularHours } from "@/lib/location-hours";
 import { buildWaitlistTicketEmailHtml } from "@/lib/email-templates";
 import { joinedMessage } from "@/lib/sms-templates";
 import { getPostHogClient } from "@/lib/posthog-server";
-import { sendSms } from "@/lib/bulkgate";
+import { sendSms } from "@/lib/gatewayapi";
 
 const schema = z.object({
   token: z.string().min(1),
